@@ -13,19 +13,23 @@ export function localDate(now: Date = new Date()): string {
   return `${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())}`;
 }
 
-/** `household-YYYY-MM-DD.json`: `json` is `store.export()`. */
-export function jsonExport(json: string, now?: Date): ExportFile {
+/** `household-YYYY-MM-DD`, with the build's environment in front of the date unless it is prod. */
+const baseName = (now?: Date, env?: string) =>
+  `household-${env && env !== 'prod' ? `${env}-` : ''}${localDate(now)}`;
+
+/** `household-[env-]YYYY-MM-DD.json`: `json` is `store.export()`. */
+export function jsonExport(json: string, now?: Date, env?: string): ExportFile {
   return {
-    filename: `household-${localDate(now)}.json`,
+    filename: `${baseName(now, env)}.json`,
     text: json,
     mime: 'application/json',
   };
 }
 
 /** `household-YYYY-MM-DD.yaml`: the same document, written as YAML for people who prefer it. */
-export function yamlExport(json: string, now?: Date): ExportFile {
+export function yamlExport(json: string, now?: Date, env?: string): ExportFile {
   return {
-    filename: `household-${localDate(now)}.yaml`,
+    filename: `${baseName(now, env)}.yaml`,
     text: stringify(JSON.parse(json) as unknown, { lineWidth: 0 }),
     mime: 'application/yaml',
   };
@@ -41,7 +45,8 @@ export interface ImportSummary {
 }
 
 export type ImportPreview =
-  { ok: true; json: string; summary: ImportSummary } | { ok: false; error: string };
+  | { ok: true; json: string; summary: ImportSummary; fileEnv: string }
+  | { ok: false; error: string };
 
 /**
  * Reads a file the person picked (JSON or YAML), brings it to the current schema and counts what
@@ -74,6 +79,7 @@ export function previewImport(text: string): ImportPreview {
   return {
     ok: true,
     json: JSON.stringify(doc),
+    fileEnv: doc.meta.env,
     summary: {
       members: doc.household.members.length,
       pets: doc.household.pets.length,

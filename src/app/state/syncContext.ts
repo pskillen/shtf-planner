@@ -12,6 +12,8 @@ export const NO_SYNC_STATE: SyncState = {
   account: null,
   conflicts: [],
   envWarning: null,
+  fileEnv: null,
+  buildEnv: 'prod',
   firstConnect: false,
   notice: null,
   checkedAt: null,

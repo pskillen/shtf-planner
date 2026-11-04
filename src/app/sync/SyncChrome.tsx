@@ -92,10 +92,25 @@ function WhichCopyDialog() {
   );
 }
 
+/** True when either side is not production: then the person is shown which is which. */
+const envsDiffer = (fileEnv: string | null, buildEnv: string) =>
+  fileEnv !== null && !(fileEnv === 'prod' && buildEnv === 'prod');
+
+/** "This household file was last written by next; you are on next." */
+export function EnvLine({ fileEnv, buildEnv }: { fileEnv: string | null; buildEnv: string }) {
+  if (!fileEnv || !envsDiffer(fileEnv, buildEnv)) return null;
+  return (
+    <p className="env-line" data-testid="env-line">
+      This household file was last written by <strong>{fileEnv}</strong>; you are on{' '}
+      <strong>{buildEnv}</strong>.
+    </p>
+  );
+}
+
 /** First connect on a device that already has answers, to a Drive that has a household. */
 function FirstConnectDialog() {
   const sync = useSync();
-  const { firstConnect } = useSyncState();
+  const { firstConnect, fileEnv, buildEnv } = useSyncState();
   if (!sync || !firstConnect) return null;
   return (
     <div className="sync-backdrop">
@@ -105,6 +120,7 @@ function FirstConnectDialog() {
           This device already has a plan, and so does your Drive. Merging keeps both: nothing is
           deleted, and anything you both changed is shown for you to choose.
         </p>
+        <EnvLine fileEnv={fileEnv} buildEnv={buildEnv} />
         <div className="row">
           <button type="button" onClick={() => void sync.resolveFirstConnect('merge')}>
             Merge them
@@ -122,24 +138,31 @@ function FirstConnectDialog() {
   );
 }
 
-/** The env banner: the file on Drive was last written by a different build. */
-export function EnvBanner() {
+/** A pull brought in a file last written by a different build: ask before merging it. */
+export function EnvDialog() {
   const sync = useSync();
   const { envWarning } = useSyncState();
   if (!sync || !envWarning) return null;
   return (
-    <div className="sync-banner" role="alert" data-testid="env-banner">
-      <p>
-        This household file was last written by <strong>{envWarning.fileEnv}</strong>; you are on{' '}
-        <strong>{envWarning.buildEnv}</strong>. Merging mixes test and real data.
-      </p>
-      <div className="row">
-        <button type="button" onClick={() => void sync.resolveEnv('continue')}>
-          Continue
-        </button>
-        <button type="button" className="quiet" onClick={() => void sync.resolveEnv('dont-sync')}>
-          Don&rsquo;t sync
-        </button>
+    <div className="sync-backdrop">
+      <div
+        className="sync-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="env-dialog"
+        data-testid="env-dialog"
+      >
+        <h2 id="env-dialog">Another version&rsquo;s household</h2>
+        <EnvLine fileEnv={envWarning.fileEnv} buildEnv={envWarning.buildEnv} />
+        <p>Merging mixes test and real data.</p>
+        <div className="row">
+          <button type="button" onClick={() => void sync.resolveEnv('continue')}>
+            Continue
+          </button>
+          <button type="button" className="quiet" onClick={() => void sync.resolveEnv('dont-sync')}>
+            Don&rsquo;t sync
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -187,7 +210,7 @@ function SyncToast() {
 export function SyncChrome() {
   return (
     <>
-      <EnvBanner />
+      <EnvDialog />
       <NewerVersionBanner />
       <WhichCopyDialog />
       <FirstConnectDialog />

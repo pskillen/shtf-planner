@@ -17,6 +17,13 @@ describe('export', () => {
     expect(yamlExport('{}', d).filename).toBe('household-2026-11-04.yaml');
   });
 
+  it('puts the build environment in the name unless it is prod', () => {
+    const d = new Date(2026, 10, 4, 12);
+    expect(jsonExport('{}', d, 'next').filename).toBe('household-next-2026-11-04.json');
+    expect(yamlExport('{}', d, 'local').filename).toBe('household-local-2026-11-04.yaml');
+    expect(jsonExport('{}', d, 'prod').filename).toBe('household-2026-11-04.json');
+  });
+
   it('writes the same document as YAML', () => {
     const file = yamlExport(json());
     expect(file.mime).toBe('application/yaml');
@@ -26,6 +33,11 @@ describe('export', () => {
 });
 
 describe('import preview', () => {
+  it('reports the environment the file was written by', () => {
+    const doc = { ...biggarDocument(), meta: { ...biggarDocument().meta, env: 'dev' as const } };
+    expect(previewImport(JSON.stringify(doc))).toMatchObject({ ok: true, fileEnv: 'dev' });
+  });
+
   it('round-trips JSON and YAML to the same document, with counts', () => {
     const fromJson = previewImport(json());
     const fromYaml = previewImport(yamlExport(json()).text);

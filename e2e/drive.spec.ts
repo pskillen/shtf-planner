@@ -173,7 +173,7 @@ test('export downloads JSON and YAML; importing YAML replaces the household and 
     page.waitForEvent('download'),
     page.getByRole('button', { name: 'Download JSON' }).click(),
   ]);
-  expect(jsonDownload.suggestedFilename()).toMatch(/^household-\d{4}-\d{2}-\d{2}\.json$/);
+  expect(jsonDownload.suggestedFilename()).toMatch(/^household-local-\d{4}-\d{2}-\d{2}\.json$/);
   const jsonPath = await jsonDownload.path();
   const { readFileSync } = await import('node:fs');
   const exported = JSON.parse(readFileSync(jsonPath, 'utf8')) as {
@@ -186,7 +186,7 @@ test('export downloads JSON and YAML; importing YAML replaces the household and 
     page.waitForEvent('download'),
     page.getByRole('button', { name: 'Download YAML' }).click(),
   ]);
-  expect(yamlDownload.suggestedFilename()).toMatch(/^household-\d{4}-\d{2}-\d{2}\.yaml$/);
+  expect(yamlDownload.suggestedFilename()).toMatch(/^household-local-\d{4}-\d{2}-\d{2}\.yaml$/);
   const yaml = readFileSync(await yamlDownload.path(), 'utf8');
   expect(yaml).toContain('schemaVersion: 1');
   expect(yaml).toContain('name: Alex');
@@ -201,6 +201,9 @@ test('export downloads JSON and YAML; importing YAML replaces the household and 
     buffer: Buffer.from(stringify(edited)),
   });
   await expect(page.getByTestId('import-preview')).toContainText('2 people');
+  await expect(page.getByTestId('import-preview')).toContainText(
+    'last written by local; you are on local',
+  );
   await page.getByRole('button', { name: 'Replace my plan' }).click();
   await expect(page.getByTestId('import-done')).toBeVisible();
   expect(await names(page)).toHaveLength(2);

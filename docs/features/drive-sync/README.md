@@ -18,7 +18,7 @@ accounts is not built.
 | Forget this device  | `src/store/forget.ts`                                    | Deletes the household and the sync state locally                                                  |
 | Test support        | `src/store/fakeDrive.ts`, `e2e/fakeGoogle.ts`            | An in-memory Drive for unit tests; a faked Google at the network layer for e2e                    |
 | Status pill         | `src/app/sync/SyncPill.tsx`                              | In the top bar on every app screen; tapping it opens Data                                         |
-| Banners and dialogs | `src/app/sync/SyncChrome.tsx`                            | Env banner, newer-version banner, which-copy dialog, first-connect dialog, toast                  |
+| Banners and dialogs | `src/app/sync/SyncChrome.tsx`                            | Newer-version banner, other-build dialog, which-copy dialog, first-connect dialog, toast          |
 | Data screen         | `/app/more/data` (`src/app/screens/data/DataScreen.tsx`) | Connect, Check Drive, Push now, Disconnect; export; import; forget this device                    |
 | Owner setup         | `scripts/setup-google-drive.sh`                          | The Google Cloud project, consent screen and OAuth client                                         |
 
@@ -79,15 +79,15 @@ folder is found by name again (or made), and the pass runs once more.
 
 `SyncStatus` is the contract (the acceptance checklist and later features rely on it):
 
-| Status               | Meaning                                                                        |
-| -------------------- | ------------------------------------------------------------------------------ |
-| `disconnected`       | Not connected to Drive on this device                                          |
-| `synced`             | Up to date as of `at`                                                          |
-| `pending`            | `edits` edits not sent yet, since `since`                                      |
-| `pushing`, `pulling` | A transfer is in progress                                                      |
-| `remoteNewer`        | Drive has changes waiting on an answer (which-copy, env banner, first connect) |
-| `offline`            | The network is down; `edits` waiting, since `since`                            |
-| `error`              | `message` says what; `reconnect` means the fix is the Connect button           |
+| Status               | Meaning                                                                                |
+| -------------------- | -------------------------------------------------------------------------------------- |
+| `disconnected`       | Not connected to Drive on this device                                                  |
+| `synced`             | Up to date as of `at`                                                                  |
+| `pending`            | `edits` edits not sent yet, since `since`                                              |
+| `pushing`, `pulling` | A transfer is in progress                                                              |
+| `remoteNewer`        | Drive has changes waiting on an answer (which-copy, other-build dialog, first connect) |
+| `offline`            | The network is down; `edits` waiting, since `since`                                    |
+| `error`              | `message` says what; `reconnect` means the fix is the Connect button                   |
 
 Edits made offline stay marked as unsent across reloads and are sent when the network returns.
 
@@ -96,11 +96,14 @@ Edits made offline stay marked as unsent across reloads and are sent when the ne
 - **Newer schema.** If `meta.schemaVersion` on Drive (read from the small `household.json` first,
   then from the CRDT itself) is newer than this build, nothing is merged and the status is `error`:
   "Your other device runs a newer version; update this one".
-- **Another build's file.** Each push stamps `meta.env`. If the file on Drive was last written by a
-  different build than this one (a `dev` or `next` file opened on `prod`, say) a banner says "This
-  household file was last written by {env}; you are on {env}", with **Continue** (merge) and
-  **Don't sync** (leave sync off until the page reloads). The same env on both sides is quiet.
-  After Don't sync the banner goes and the pill keeps saying "Sync is off: ..." (Check Drive and
+- **Another build's file.** Each push stamps `meta.env`. There is no standing banner: the file's
+  environment is shown where files come in or go out. "This household file was last written by
+  {env}; you are on {env}" appears in the **first-connect dialog**, in the **import preview**, and
+  in the dialog a **pull** raises when the file's `meta.env` differs from this build, with
+  **Continue** (merge) and **Don't sync** (leave sync off until the page reloads). The line is shown
+  whenever the two are not both `prod`; the pull dialog only when they differ. Export names the file
+  with the environment unless it is `prod` (`household-next-YYYY-MM-DD.json`).
+  After Don't sync the dialog goes and the pill keeps saying "Sync is off: ..." (Check Drive and
   the network coming back do not clear it); edits made meanwhile are counted as unsent and go out
   once sync is on again.
 
@@ -128,7 +131,7 @@ hour) is kept in localStorage; there is no refresh token. Nothing opens a popup 
 
 ## Export and import
 
-The Data screen downloads `household-YYYY-MM-DD.json` (the same text as `household.json`) or `.yaml`.
+The Data screen downloads `household-[env-]YYYY-MM-DD.json` (the same text as `household.json`) or `.yaml`.
 Import takes either, shows counts, and on confirmation replaces the household
 (`importJson(..., 'replace')`, which migrates and validates) and pushes. A file from a newer
 version is refused.
@@ -152,7 +155,7 @@ sync switched off. For tests and local development, a client id kept in localSto
    then "Synced", and the other phone gets the edit.
 4. Edit the same record on both while one is offline, then reconnect it: the which-copy dialog
    lists both values; either choice ends up on both phones.
-5. Open a household file written by a `dev` build on a `next` build: the env banner appears and
+5. Open a household file written by a `dev` build on a `next` build: the other-build dialog appears and
    nothing merges until you choose.
 6. Leave a phone for over an hour, open the app: it either syncs quietly or asks you to reconnect;
    no popup appears by itself.

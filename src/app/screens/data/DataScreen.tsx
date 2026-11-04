@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { clock, describeStatus } from '../../sync/syncText';
 import { forgetThisDevice, useStoreFiles, useSync, useSyncState } from '../../state';
+import { EnvLine } from '../../sync/SyncChrome';
 import '../../sync/sync.css';
 import {
   download,
@@ -96,10 +97,16 @@ function ExportSection() {
       <h2 id="export-h">Export</h2>
       <p className="muted">A copy of your whole plan, to keep or to read.</p>
       <div className="row">
-        <button type="button" onClick={() => download(jsonExport(files.export()))}>
+        <button
+          type="button"
+          onClick={() => download(jsonExport(files.export(), undefined, __BUILD_ENV__))}
+        >
           Download JSON
         </button>
-        <button type="button" onClick={() => download(yamlExport(files.export()))}>
+        <button
+          type="button"
+          onClick={() => download(yamlExport(files.export(), undefined, __BUILD_ENV__))}
+        >
           Download YAML
         </button>
       </div>
@@ -165,6 +172,7 @@ function ImportSection() {
             <li>{plural(preview.summary.assets, 'asset')}</li>
             <li>{plural(preview.summary.items, 'item')}</li>
           </ul>
+          <EnvLine fileEnv={preview.fileEnv} buildEnv={__BUILD_ENV__} />
           <p>Importing replaces everything on this device.</p>
           <div className="row">
             <button type="button" onClick={confirm}>

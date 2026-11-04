@@ -57,8 +57,12 @@ export interface SyncState {
   account: string | null;
   /** The which-copy dialog: non-empty while questions are waiting. */
   conflicts: Conflict[];
-  /** The file on Drive was last written by another build. */
+  /** A pull is waiting on continue / don't sync: the file on Drive was written by another build. */
   envWarning: EnvWarning | null;
+  /** `meta.env` of the file on Drive as last read (null before the first look). */
+  fileEnv: string | null;
+  /** This build's environment. */
+  buildEnv: string;
   /** This device has data and Drive has a household: ask before merging them. */
   firstConnect: boolean;
   /** A one-line message to toast ("3 changes from your other device"). */
@@ -131,7 +135,7 @@ export interface Sync {
   /** Answers the which-copy dialog; keys absent from `choices` stay as merged. */
   resolveConflicts(choices: Record<string, 'mine' | 'theirs'>): Promise<void>;
   resolveAll(side: 'mine' | 'theirs'): Promise<void>;
-  /** The env banner: merge anyway, or leave sync off for this visit. */
+  /** The other-build dialog: merge anyway, or leave sync off for this visit. */
   resolveEnv(choice: 'continue' | 'dont-sync'): Promise<void>;
   /** The first-connect question. */
   resolveFirstConnect(choice: 'merge' | 'cancel'): Promise<void>;
@@ -159,6 +163,7 @@ export function createSync(options: SyncOptions): Sync {
   let busy: SyncStatus | undefined;
   let paused = false;
   let envWarning: EnvWarning | null = null;
+  let fileEnv: string | null = null;
   let firstConnect = false;
   let firstConnectOk = false;
   const envAccepted = new Set<string>();
@@ -203,6 +208,8 @@ export function createSync(options: SyncOptions): Sync {
       account: drive.accountEmail(),
       conflicts: rec.conflicts,
       envWarning,
+      fileEnv,
+      buildEnv: env,
       firstConnect,
       notice,
       checkedAt,
@@ -216,6 +223,8 @@ export function createSync(options: SyncOptions): Sync {
     account: null,
     conflicts: [],
     envWarning: null,
+    fileEnv: null,
+    buildEnv: env,
     firstConnect: false,
     notice: null,
     checkedAt: null,
@@ -504,9 +513,10 @@ export function createSync(options: SyncOptions): Sync {
       problem = { kind: 'error', message: NEWER_VERSION_MESSAGE };
       return false;
     }
-    const fileEnv = typeof meta?.env === 'string' ? meta.env : undefined;
-    if (fileEnv && fileEnv !== env && !envAccepted.has(fileEnv)) {
-      envWarning = { fileEnv, buildEnv: env };
+    const seenEnv = typeof meta?.env === 'string' ? meta.env : undefined;
+    if (seenEnv) fileEnv = seenEnv;
+    if (seenEnv && seenEnv !== env && !envAccepted.has(seenEnv)) {
+      envWarning = { fileEnv: seenEnv, buildEnv: env };
       return false;
     }
     return true;

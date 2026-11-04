@@ -139,14 +139,30 @@ describe('the sync chrome', () => {
     ]);
   });
 
-  it('shows the env banner and passes the choice on', () => {
+  it("asks in a dialog, not a banner, when a pull brings in another build's file", () => {
     const f = fakeSync({ envWarning: { fileEnv: 'dev', buildEnv: 'prod' } });
     wrap(f.sync, <SyncChrome />);
-    expect(screen.getByTestId('env-banner').textContent).toContain('dev');
-    expect(screen.getByTestId('env-banner').textContent).toContain('prod');
+    expect(screen.queryByTestId('env-banner')).toBeNull();
+    const dialog = screen.getByTestId('env-dialog');
+    expect(dialog.getAttribute('role')).toBe('dialog');
+    expect(screen.getByTestId('env-line').textContent).toBe(
+      'This household file was last written by dev; you are on prod.',
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
     fireEvent.click(screen.getByRole('button', { name: /sync/i }));
     expect(f.calls).toEqual(['env:continue', 'env:dont-sync']);
+  });
+
+  it("shows the file's env in the first-connect dialog unless both are prod", () => {
+    const f = fakeSync({ firstConnect: true, fileEnv: 'next', buildEnv: 'next' });
+    wrap(f.sync, <SyncChrome />);
+    expect(screen.getByTestId('env-line').textContent).toBe(
+      'This household file was last written by next; you are on next.',
+    );
+    cleanup();
+    const prod = fakeSync({ firstConnect: true, fileEnv: 'prod', buildEnv: 'prod' });
+    wrap(prod.sync, <SyncChrome />);
+    expect(screen.queryByTestId('env-line')).toBeNull();
   });
 
   it('asks the first-connect question', () => {
