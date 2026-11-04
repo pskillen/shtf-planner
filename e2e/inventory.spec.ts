@@ -117,7 +117,7 @@ test('Quick add: ten items, two of them same-again and one custom, each in few t
   await expect(page.getByTestId('added-count')).toHaveText('Added this session: 3');
   await page.getByRole('button', { name: 'Next item' }).click();
 
-  // The place is remembered: a plain item is a few taps.
+  // The place starts where the type lives, else the last one used: a plain item is a few taps.
   await plain('bottled', /Bottled water/, { more: 1, chip: '+1 y' });
   await plain('tinned', /Tinned food/, { chip: '+2 y' });
   await plain('rice', /Rice \(10 kg sack\)/);
@@ -135,7 +135,8 @@ test('Quick add: ten items, two of them same-again and one custom, each in few t
   await page.getByLabel('About how many kcal?').fill('600');
   await page.getByRole('button', { name: 'Save item' }).click();
   await page.getByRole('button', { name: 'Add', exact: true }).click();
-  await expect(page.getByText("Added 1 × Gran's soup to Garage")).toBeVisible();
+  // a type with no stock anywhere goes to the place last used
+  await expect(page.getByText(/^Added 1 × Gran's soup to /)).toBeVisible();
   await page.getByRole('button', { name: 'Close' }).click();
 
   // Ten entries: the stock list shows what was added.
@@ -163,8 +164,16 @@ test('Quick add: ten items, two of them same-again and one custom, each in few t
   await gapsLink.click();
   await page.getByRole('button', { name: /^Done: Write down 999 or 112/ }).click();
   await expect(page.getByRole('button', { name: /^Done: Write down 999 or 112/ })).toHaveCount(0);
-  const plans = (await doc(page)).plans['plans-base:emergency-numbers'];
-  expect(plans?.doneAt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  // Done waits five seconds behind an Undo toast before it is written.
+  await expect(page.getByRole('status')).toContainText('marked done');
+  await expect
+    .poll(async () => (await doc(page)).plans['plans-base:emergency-numbers']?.doneAt, {
+      timeout: 10_000,
+    })
+    .toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  await expect(
+    page.getByRole('button', { name: /^Undo done: Write down 999 or 112/ }),
+  ).toBeVisible();
   expect(plansBefore).toBe(4);
   expect(await scoreOf(page, 'Plans')).toBe(10);
 });
@@ -235,6 +244,9 @@ test('the three tabs and Quick add fit a 375 px phone with big targets', async (
   }
   await page.goto('/app/stores?debug=1');
   await page.getByRole('button', { name: 'Add stock' }).click();
+  // with nothing typed the types sit under collapsed categories, not in one long list
+  await expect(page.getByRole('dialog').locator('details.type-group').first()).toBeVisible();
+  await page.getByRole('searchbox', { name: 'What are you adding?' }).fill('tinned');
   await page
     .getByRole('dialog')
     .getByRole('button', { name: /Tinned food/ })
