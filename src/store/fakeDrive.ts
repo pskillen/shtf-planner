@@ -38,6 +38,8 @@ export interface FakePort extends DrivePort {
   authExpired: boolean;
   /** The next `connect()` is cancelled (the popup was closed). */
   cancelNextConnect: boolean;
+  /** Runs once, right after the next `listFiles` has read Drive: another device acts in the gap. */
+  afterNextList?: () => Promise<void>;
   /** Folder lookups made. */
   calls: { list: number; read: number };
 }
@@ -102,9 +104,13 @@ export function createFakeCloud(): FakeCloud {
         async listFiles(id): Promise<DriveRemoteFile[]> {
           gate();
           port.calls.list++;
-          return Array.from(files.values())
+          const seen = Array.from(files.values())
             .filter((f) => f.folderId === id)
             .map(({ id: fid, name, modifiedTime }) => ({ id: fid, name, modifiedTime }));
+          const hook = port.afterNextList;
+          port.afterNextList = undefined;
+          await hook?.();
+          return seen;
         },
         async readBytes(id) {
           gate();

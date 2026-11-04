@@ -42,12 +42,19 @@ export function freshPlain(schemaVersion: number): Obj {
   }
 }
 
-/** True when `local` has at least one structure that `remote` has not seen. */
-export function hasExtraStructs(localBytes: Uint8Array, remoteBytes: Uint8Array): boolean {
-  const local = Y.decodeStateVector(Y.encodeStateVectorFromUpdate(localBytes));
-  const remote = Y.decodeStateVector(Y.encodeStateVectorFromUpdate(remoteBytes));
-  for (const [client, clock] of local) if (clock > (remote.get(client) ?? 0)) return true;
-  return false;
+/**
+ * True when `local` holds something `remote` has not seen: a structure it lacks, or a deletion it
+ * lacks. A deletion adds no clock, so state vectors alone would call "I deleted x" and "I did
+ * nothing" the same.
+ */
+export function hasUnseenChanges(localBytes: Uint8Array, remoteBytes: Uint8Array): boolean {
+  const remote = new Y.Doc();
+  try {
+    Y.applyUpdate(remote, remoteBytes);
+    return !Y.snapshotContainsUpdate(Y.snapshot(remote), localBytes);
+  } finally {
+    remote.destroy();
+  }
 }
 
 /** The household has no answers yet: nothing the person would lose by taking Drive's copy. */

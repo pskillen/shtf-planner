@@ -6,7 +6,7 @@ import {
   applyChoice,
   classify,
   freshPlain,
-  hasExtraStructs,
+  hasUnseenChanges,
   isBlank,
   plainFromBytes,
   recordsOf,
@@ -213,8 +213,29 @@ describe('bytes helpers', () => {
       d.items.a = item('a', 2);
     });
     expect(isBlank(a.get())).toBe(false);
-    expect(hasExtraStructs(a.bytes(), before)).toBe(true);
-    expect(hasExtraStructs(before, a.bytes())).toBe(false);
+    expect(hasUnseenChanges(a.bytes(), before)).toBe(true);
+    expect(hasUnseenChanges(before, a.bytes())).toBe(false);
+    await a.close();
+  });
+
+  it('counts a deletion as something the other side has not seen', async () => {
+    const a = await openStore({
+      name: `rec-del-${Math.random()}`,
+      env: 'local',
+      deviceId: 'a',
+      channel: false,
+    });
+    a.change('add', (d) => {
+      d.items.a = item('a', 2);
+    });
+    const withItem = a.bytes();
+    a.change('delete', (d) => {
+      delete d.items.a;
+    });
+    // no new structure, only a delete set entry
+    expect(hasUnseenChanges(a.bytes(), withItem)).toBe(true);
+    expect(hasUnseenChanges(withItem, a.bytes())).toBe(false);
+    expect(hasUnseenChanges(a.bytes(), a.bytes())).toBe(false);
     await a.close();
   });
 });

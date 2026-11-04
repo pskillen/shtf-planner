@@ -327,6 +327,102 @@ describe('pulling', () => {
   });
 });
 
+describe('a stale write must not undo a deletion', () => {
+  const has = (text: string | undefined, id: string) =>
+    Object.keys(JSON.parse(text!).items).includes(id);
+
+  async function pair() {
+    const cloud = createFakeCloud();
+    const a = await device(cloud);
+    const b = await device(cloud);
+    setItem(a, 'x', 1);
+    await a.sync.connect();
+    await b.sync.connect();
+    expect(has(b.store.export(), 'x')).toBe(true);
+    return { cloud, a, b };
+  }
+
+  it('B looked before A deleted and pushed: B merges before writing, all four copies lack x', async () => {
+    const { cloud, a, b } = await pair();
+    setItem(b, 'other', 2);
+    // B has looked at Drive when A deletes x and pushes
+    b.port.afterNextList = async () => {
+      a.store.change('delete x', (d) => {
+        delete d.items.x;
+      });
+      await a.sync.flush();
+    };
+    await b.sync.flush();
+    // B did not overwrite A's deletion: it merged first
+    expect(has(cloud.text(JSON_FILE_NAME), 'x')).toBe(false);
+    await a.sync.checkDrive();
+    await b.sync.checkDrive();
+    for (const text of [a.store.export(), b.store.export(), cloud.text(JSON_FILE_NAME)]) {
+      expect(has(text, 'x')).toBe(false);
+      expect(has(text, 'other')).toBe(true);
+    }
+    const c = await device(cloud);
+    await c.sync.connect();
+    expect(has(c.store.export(), 'x')).toBe(false);
+    expect(has(c.store.export(), 'other')).toBe(true);
+  });
+
+  it('a stale file that gets onto Drive anyway is corrected by the device that deleted', async () => {
+    const { cloud, a, b } = await pair();
+    const stale = b.store.bytes(); // still has x
+    a.store.change('delete x', (d) => {
+      delete d.items.x;
+    });
+    await a.sync.flush();
+    setItem(b, 'other', 2);
+    // B's earlier overwrite lands after A's push
+    const merged = b.store.bytes();
+    cloud.put(YJS_FILE_NAME, merged);
+    expect(stale.length).toBeGreaterThan(0);
+    await a.sync.checkDrive();
+    await a.sync.whenIdle();
+    await b.sync.checkDrive();
+    await b.sync.whenIdle();
+    for (const text of [a.store.export(), b.store.export(), cloud.text(JSON_FILE_NAME)]) {
+      expect(has(text, 'x')).toBe(false);
+      expect(has(text, 'other')).toBe(true);
+    }
+    const c = await device(cloud);
+    await c.sync.connect();
+    expect(has(c.store.export(), 'x')).toBe(false);
+  });
+
+  it('unsent edits survive a lost dirty flag: sync works out what Drive lacks at start', async () => {
+    const cloud = createFakeCloud();
+    const persistence = createMemoryPersistence();
+    const a = await device(cloud, { persistence, name: 'lost-flag' });
+    setItem(a, 'x', 1);
+    await a.sync.connect();
+    a.sync.stop();
+    // edits whose dirty flag never reached storage (the page died first)
+    a.store.change('delete x', (d) => {
+      delete d.items.x;
+    });
+    const before = cloud.writes[YJS_FILE_NAME];
+    // same persisted sync state, new page load
+    const again = createSync({
+      store: a.store,
+      drive: a.port,
+      persistence,
+      env: 'local',
+      host: fakeHost(),
+      debounceMs: DEBOUNCE,
+      retryMs: 10_000_000,
+    });
+    opened.push({ store: a.store, sync: again });
+    await again.start();
+    await again.whenIdle();
+    expect(cloud.writes[YJS_FILE_NAME]).toBe(before + 1);
+    expect(has(cloud.text(JSON_FILE_NAME), 'x')).toBe(false);
+    expect(again.state().status.kind).toBe('synced');
+  });
+});
+
 describe('both devices changed the same thing', () => {
   async function conflicted() {
     const cloud = createFakeCloud();

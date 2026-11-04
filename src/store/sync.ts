@@ -17,7 +17,7 @@ import {
   applyChoice,
   classify,
   freshPlain,
-  hasExtraStructs,
+  hasUnseenChanges,
   isBlank,
   plainFromBytes,
   type Conflict,
@@ -349,6 +349,15 @@ export function createSync(options: SyncOptions): Sync {
     });
   }
 
+  /**
+   * Edits Drive has not got, worked out from the store against the last state both sides had
+   * (deletions included), so a flag that was lost or never written cannot hide them.
+   */
+  async function deriveDirty(): Promise<void> {
+    if (rec.dirty || !base || store.status().kind !== 'ok') return;
+    if (hasUnseenChanges(store.bytes(), base)) await markDirty();
+  }
+
   // ---- reading Drive --------------------------------------------------------------------
 
   interface Remote {
@@ -433,10 +442,10 @@ export function createSync(options: SyncOptions): Sync {
     const wasFirst = !base;
     base = bytes;
     await persistence.saveBase(bytes);
-    // Drive has a copy that lacks something we have (unsent edits, or a first connect with
-    // data): push the merge. The base is now Drive's state, so a later pull still sees our
+    // Drive has a copy that lacks something we have (unsent edits, a deletion, or a first connect
+    // with data): push the merge. The base is now Drive's state, so a later pull still sees our
     // unsent edits as ours.
-    const needsPush = rec.dirty || hasExtraStructs(localBytes, bytes);
+    const needsPush = rec.dirty || hasUnseenChanges(localBytes, bytes);
     await save({
       remoteModified: yjs.modifiedTime,
       lastSyncedAt: iso(),
@@ -479,12 +488,13 @@ export function createSync(options: SyncOptions): Sync {
       return;
     }
     try {
+      await deriveDirty();
       setBusy({ kind: 'pulling' });
       const remote = await look();
       if ((await pull(remote)) === 'blocked') return finish();
       if (!remote.yjs && !rec.dirty) await markDirty(); // nothing on Drive yet: send ours
       clearProblem();
-      await pushIfDirty(remote);
+      await pushIfDirty();
     } catch (e) {
       fail(e);
       return;
@@ -504,7 +514,7 @@ export function createSync(options: SyncOptions): Sync {
       const remote = await look();
       if ((await pull(remote)) === 'blocked') return finish(); // merge anything newer first
       clearProblem();
-      await pushIfDirty(remote);
+      await pushIfDirty();
     } catch (e) {
       fail(e);
       return;
@@ -512,9 +522,28 @@ export function createSync(options: SyncOptions): Sync {
     finish();
   }
 
-  async function pushIfDirty(remote: Remote): Promise<void> {
+  /** How many times a push re-reads Drive and merges before giving up for now. */
+  const MAX_PUSH_ROUNDS = 5;
+
+  async function pushIfDirty(): Promise<void> {
     if (!rec.dirty || blocked()) return;
     setBusy({ kind: 'pushing' });
+    // Look again immediately before writing: if the file moved since we last pulled, someone
+    // wrote in the meantime, and overwriting it would drop their edits.
+    let remote: Remote | undefined;
+    for (let round = 0; round < MAX_PUSH_ROUNDS && !remote; round++) {
+      const fresh = await look();
+      if (fresh.yjs?.modifiedTime === rec.remoteModified) {
+        remote = fresh;
+      } else {
+        if ((await pull(fresh)) === 'blocked') return;
+        if (!rec.dirty || blocked()) return;
+      }
+    }
+    if (!remote) {
+      schedulePush(); // Drive keeps moving: try again shortly
+      return;
+    }
     const seq = editSeq;
     const bytes = store.bytes();
     const text = store.export();
@@ -565,6 +594,7 @@ export function createSync(options: SyncOptions): Sync {
       const loaded = await persistence.load();
       rec = loaded.record;
       base = loaded.base;
+      if (connected()) await deriveDirty();
       started = true;
       unsubscribeStore = store.subscribe(onLocalEdit);
       removers.push(
