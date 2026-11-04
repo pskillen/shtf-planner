@@ -63,11 +63,18 @@ one member never clobbers another.
 - **A newer schema makes the store read-only**: if a merge brings `meta.schemaVersion` above this
   build's, `change` throws `SchemaTooNewError` and subscribers get the `too-new` status, so the app
   can say "update this device". Nothing is written until the app is updated.
-- **The container layout of a new document is frozen per schema** (`SKELETON_V1` in the store). Two
-  devices that both start from nothing write the same maps and arrays under a fixed client id, so
-  they merge as one instead of one device's `items` map replacing the other's. Later schemas add
-  containers in their migration step.
-- A first-run device should still merge Drive's copy before it writes anything of its own (P6).
+- **The content of a new document is frozen** (`src/store/init.ts`). Yjs breaks ties between
+  concurrent sets of one key by client id, not by time, so two devices that start from nothing must
+  not write rival copies. Every first-run device writes the containers and every default value
+  (`home.type`, `settings.horizonDays`, `home.risks`, ...) as identical operations under one fixed
+  client id, a hash of that content. They merge as one, and a real edit on either device descends
+  from those shared items, so it always wins over a default. Only what legitimately differs per
+  device (`meta.createdAt`, `meta.env`, `meta.devices`) is written under the device's own id.
+  Editing `emptyDocument`, or a list it uses such as `DEFAULT_PACKS`, changes the hash: a golden
+  test fails and says so. Later schemas add containers in their migration step instead.
+- A first-run device opens and writes its defaults before Drive's copy arrives. That is safe
+  because of the rule above: when the copy is merged in, edits made on either side win over
+  defaults, and two devices' records and list entries union.
 
 ## The fixture rule
 

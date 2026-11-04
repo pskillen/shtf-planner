@@ -5,12 +5,12 @@ import {
   MIGRATIONS,
   SCHEMA_VERSION,
   SchemaTooNewError,
-  emptyDocument,
   type Document,
   type Env,
   type MigrationStep,
 } from '../model';
 import { bringForward, getDeviceId, stampOpen, type Loaded } from './migrateOnOpen';
+import { applyInit } from './init';
 import { deepEqual, deepFreeze, sortKeys, syncMap, toPlain } from './yconvert';
 
 /** The one document's id in IndexedDB. One document per browser profile. */
@@ -77,39 +77,6 @@ export interface OpenOptions {
 }
 
 const REMOTE = Symbol('tab-relay');
-const INIT_CLIENT_BASE = 0x53480000;
-
-/**
- * The container layout of a schema-1 document, frozen. Every first-run device writes exactly these
- * operations under one fixed client id, so devices that all start from nothing create the *same*
- * maps and arrays (the operations merge as one) instead of rival siblings of which one wins and
- * the other's records vanish. Never edit this to follow `emptyDocument`: later schemas add
- * containers in their migration step.
- */
-const SKELETON_V1 = {
-  meta: { devices: [], packVersions: {} },
-  household: { members: [], pets: [] },
-  home: {},
-  locations: {},
-  assets: {},
-  items: {},
-  floors: {},
-  plans: {},
-  reviews: {},
-  settings: { packs: [] },
-};
-
-/** Empty containers only: objects become maps, arrays empty arrays, values are left out. */
-function skeleton(map: Y.Map<unknown>, shape: Record<string, unknown>): void {
-  for (const [key, value] of Object.entries(shape)) {
-    if (Array.isArray(value)) map.set(key, new Y.Array());
-    else if (typeof value === 'object' && value !== null) {
-      const child = new Y.Map<unknown>();
-      map.set(key, child);
-      skeleton(child, value as Record<string, unknown>);
-    }
-  }
-}
 const ROOT = 'doc';
 
 const toBase64 = (bytes: Uint8Array): string => {
@@ -184,26 +151,17 @@ export async function openStore(options: OpenOptions = {}): Promise<DocumentStor
   }
 
   /**
-   * Creates a first-run document: the frozen skeleton (and `meta.schemaVersion`) under fixed
-   * client ids, so devices that both start from nothing write identical operations that merge as
-   * one, and when their versions differ the higher one wins. The values are written normally.
+   * Creates a first-run document: the shared content (containers and every default value) under
+   * a fixed client id (see `init.ts`), then the values that differ per device under this
+   * device's own id, so real edits always win over the defaults.
    */
   function initialise(): void {
-    const real = ydoc.clientID;
-    try {
-      ydoc.clientID = INIT_CLIENT_BASE + 1;
-      ydoc.transact(() => skeleton(root, SKELETON_V1), 'init');
-      ydoc.clientID = INIT_CLIENT_BASE + target;
-      ydoc.transact(
-        () => (root.get('meta') as Y.Map<unknown>).set('schemaVersion', target),
-        'init',
-      );
-    } finally {
-      ydoc.clientID = real;
-    }
-    const fresh = emptyDocument(env);
-    fresh.meta.schemaVersion = target;
-    write(fresh, 'init');
+    applyInit(ydoc, root, target);
+    ydoc.transact(() => {
+      const meta = root.get('meta') as Y.Map<unknown>;
+      meta.set('env', env);
+      meta.set('createdAt', new Date().toISOString());
+    }, 'init');
   }
 
   root.observeDeep(() => refresh());
