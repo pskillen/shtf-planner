@@ -162,7 +162,7 @@ export function buildGapsView(input: {
 
   const cover = new Map(coverage.map((c) => [c.targetId, c]));
   const enough: EnoughRow[] = score.capabilities
-    .filter((c) => c.targetCount > 0 && c.raw >= 100)
+    .filter((c) => c.targetCount > 0 && c.percent >= 100)
     .map((c) => {
       const name = CAPABILITY_LABEL[c.capability];
       const t = c.weakestTarget;

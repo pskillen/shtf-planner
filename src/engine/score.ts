@@ -4,11 +4,30 @@ import { CAPABILITY_ORDER } from './context';
 import { analyse, type Analysis } from './coverage';
 import type { Target } from './targets';
 
+/**
+ * Plans score (done / total) to this power, so one plan item done of nine is 4 %, not 11 %, and
+ * only all done is 100 %. A chosen number, not a sourced one.
+ */
+export const PLANS_EXPONENT = 1.5;
+
+/** A capability's percent from its targets' cover ratios: their product, each capped at 1. */
+export function productPercent(ratios: readonly number[]): number {
+  return ratios.reduce((n, r) => n * Math.min(1, Math.max(0, r)), 1) * 100;
+}
+
+/** The plans percent: the share of plan items done, to the power {@link PLANS_EXPONENT}. */
+export function plansPercent(done: number, total: number): number {
+  return total > 0 ? (done / total) ** PLANS_EXPONENT * 100 : 100;
+}
+
 export interface CapabilityScore {
   capability: CapabilityId;
-  /** 0 to 100: the lowest cover ratio among the capability's targets, capped at 100. */
+  /**
+   * 0 to 100: the product of the capability's targets' cover ratios, each capped at 1 (so a
+   * forgotten dog scores the whole capability 0). Plans: the share done, to the power 1.5.
+   */
   percent: number;
-  /** The same ratio as a percentage without the cap (250 is two and a half times enough). */
+  /** The lowest target's ratio as a percentage without the cap (250 is two and a half times enough). */
   raw: number;
   /** The mean ratio over the targets (each capped at 100%): breaks a tie for the weakest. */
   meanPercent: number;
@@ -47,9 +66,13 @@ function scoreFrom(a: Analysis): Omit<Score, 'nextHorizonDays' | 'nextHorizonPre
       if (ratio(t) < ratio(lowest)) lowest = t;
       sum += Math.min(1, ratio(t));
     }
+    const percent =
+      capability === 'plans'
+        ? plansPercent(mine.filter((t) => ratio(t) >= 1).length, mine.length)
+        : productPercent(mine.map(ratio));
     return {
       capability,
-      percent: Math.min(100, ratio(lowest) * 100),
+      percent,
       raw: ratio(lowest) * 100,
       meanPercent: (sum / mine.length) * 100,
       targetCount: mine.length,
@@ -70,9 +93,10 @@ function scoreFrom(a: Analysis): Omit<Score, 'nextHorizonDays' | 'nextHorizonPre
 }
 
 /**
- * The preparedness score for a date and horizon. Each capability scores the cover ratio of its
- * weakest target, so an empty medication cannot hide behind a full first aid kit; the overall
- * score is the mean over capabilities. Over 100% is "enough" and is capped.
+ * The preparedness score for a date and horizon. A capability scores the product of its targets'
+ * cover ratios (each capped at 1), so an empty medication, a forgotten dog or a missing baby
+ * cannot hide behind the rest; plans score the share done to the power 1.5. The overall score is
+ * the mean over capabilities. Over 100% is "enough" and is capped.
  */
 export function score(
   doc: Document,

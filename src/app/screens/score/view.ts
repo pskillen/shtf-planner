@@ -36,7 +36,7 @@ export function scoreView(score: Score): ScoreView {
       capability: c.capability,
       name: CAPABILITY_LABEL[c.capability],
       percent: wholePercent(c.percent),
-      enough: c.raw >= 100,
+      enough: c.percent >= 100,
       reason: c.weakestTarget?.rules[0]?.text ?? c.weakestTarget?.label ?? '',
     }));
   return {

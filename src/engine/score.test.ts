@@ -4,7 +4,7 @@ import type { Asset, Document } from '../model';
 import { bundledPacks } from '../packs/bundled';
 import { CAPABILITY_ORDER } from './context';
 import { preview } from './preview';
-import { score } from './score';
+import { PLANS_EXPONENT, plansPercent, productPercent, score } from './score';
 
 const NOW = '2026-11-15';
 const packs = bundledPacks();
@@ -31,7 +31,7 @@ describe('score', () => {
   it('breaks a tie of zeros by the lower mean cover, then by capability order', () => {
     const s = score(biggarDocument(), packs, NOW, 3);
     const zeros = s.capabilities.filter((c) => c.targetCount > 0 && c.percent === 0);
-    // food, heat, comms, sanitation and plans are all at 0 on the fixture
+    // food, heat, comms and sanitation are all at 0 on the fixture
     expect(zeros.map((c) => c.capability)).toEqual(
       expect.arrayContaining(['food', 'heat', 'comms', 'sanitation']),
     );
@@ -92,8 +92,8 @@ describe('score', () => {
     const s = score(biggarDocument(), packs, NOW, 3);
     const plans = s.capabilities.find((c) => c.capability === 'plans')!;
     expect(plans.targetCount).toBeGreaterThan(5);
-    // one of nine done: the plans score is the weakest target, 0; the EPS plan does not zero power
-    expect(plans.percent).toBe(0);
+    // one of nine done: (1/9)^1.5 = 3.7 %; the EPS plan does not zero power
+    expect(plans.percent).toBeCloseTo(100 / 27, 9);
     expect(plans.meanPercent).toBeGreaterThan(0);
   });
 
@@ -117,6 +117,49 @@ describe('score', () => {
     const s = score(doc, packs, NOW, 3);
     expect(s.capabilities.find((c) => c.capability === 'water')!.targetCount).toBe(0);
     expect(Number.isFinite(s.overall)).toBe(true);
+  });
+});
+
+describe('the capability rule: the product of the cover ratios', () => {
+  it.each([
+    // [ratios, percent]: the owner's worked examples first
+    [[0.5, 0.9], 45],
+    [[0.8, 0.9], 72],
+    [[0, 1], 0],
+    [[1, 0], 0],
+    [[0.7], 70],
+    [[1, 1, 1], 100],
+    [[0.5, 0.5, 0.5], 12.5],
+    [[2.5, 0.9], 90],
+    [[3, 4], 100],
+  ])('%j scores %d', (ratios, percent) => {
+    expect(productPercent(ratios as number[])).toBeCloseTo(percent as number, 9);
+  });
+});
+
+describe('the plans rule: (done / total) to the power 1.5', () => {
+  it('uses 1.5 as one named constant', () => {
+    expect(PLANS_EXPONENT).toBe(1.5);
+  });
+
+  it('gives 4, 10, 19, 30, 41, 54, 69, 84 % for 1 to 8 of 9, and 100 only when all are done', () => {
+    const rounded = [1, 2, 3, 4, 5, 6, 7, 8].map((d) => Math.round(plansPercent(d, 9)));
+    expect(rounded).toEqual([4, 10, 19, 30, 41, 54, 69, 84]);
+    expect(plansPercent(0, 9)).toBe(0);
+    expect(plansPercent(9, 9)).toBe(100);
+  });
+
+  it('rises as plan items are marked done', () => {
+    const doc = biggarDocument();
+    const before = pct(doc, 'plans').percent;
+    const target = score(doc, packs, NOW, 3).capabilities.find(
+      (c) => c.capability === 'plans',
+    )!.weakestTarget!;
+    const open = target.id.replace(/^plan:/, '');
+    doc.plans[open] = { doneAt: NOW };
+    const after = pct(doc, 'plans').percent;
+    expect(after).toBeGreaterThan(before);
+    expect(after).toBeCloseTo(100 * (2 / 9) ** 1.5, 9);
   });
 });
 

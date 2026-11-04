@@ -155,15 +155,18 @@ test('Quick add: ten items, two of them same-again and one custom, each in few t
   expect(await scoreOf(page, 'Water')).toBeGreaterThan(waterBefore);
   expect(await waterShort(page)).toBeLessThan(shortBefore);
 
-  // A plan item marked done is recorded, with its date. The plans score is the engine's: it is
-  // the share of plan items done, so it moves when they all are.
-  const done = page.getByRole('button', { name: /^Done: / });
+  // A plan item marked done is recorded, with its date. The plans score is (done / total) to the
+  // power 1.5, so one more done moves it: 1 of 9 is 4 %, 2 of 9 is 10 %.
+  const gapsLink = page
+    .getByRole('navigation', { name: 'Main' })
+    .getByRole('link', { name: 'Gaps' });
+  await gapsLink.click();
   await page.getByRole('button', { name: /^Done: Write down 999 or 112/ }).click();
   await expect(page.getByRole('button', { name: /^Done: Write down 999 or 112/ })).toHaveCount(0);
   const plans = (await doc(page)).plans['plans-base:emergency-numbers'];
   expect(plans?.doneAt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-  while ((await done.count()) > 0) await done.first().click();
-  expect(await scoreOf(page, 'Plans')).toBeGreaterThan(plansBefore);
+  expect(plansBefore).toBe(4);
+  expect(await scoreOf(page, 'Plans')).toBe(10);
 });
 
 test('a pantry floor counts towards food, and Gaps hands a ticked row to Quick add', async ({

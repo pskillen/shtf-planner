@@ -36,8 +36,9 @@ The Gaps and Score tabs. Both only show what the engine returns for the chosen h
   beside it) and precached by the service worker; nothing is requested from another host.
 - A bar per need, weakest first, with the percent, "Enough" once at target, and the weakest
   target's own wording as the reason. Below the headline, "At 28 days you'd be at 41 %".
-- How a percent is worked out (the weakest target of each need; the overall is their mean) is the
-  engine's rule. If it changes, only the engine does.
+- How a percent is worked out (the product of a need's cover ratios, plans as (done / total) to the
+  power 1.5, the overall as their mean) is the engine's rule: see [Engine](../engine/README.md#score)
+  for the rules and the worked examples. If it changes, only the engine does.
 
 ## Equipment and the horizon table
 
