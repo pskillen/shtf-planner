@@ -37,7 +37,8 @@ the document are keyed by them).
 - **`items`**: `ItemType { id, name, category, unit, gives: [{ store, amount }], suitability,
 shelfLife, ageBand?, typicalPricePence?, tags, barcodes? }`. `gives` may not name
   `medicationDays` (computed from the document). Tags the engine reads: `needs-cooking` (counts
-  only while cooking is covered), `radio-rx` (receives broadcasts: meets the comms radio),
+  only while cooking is covered), `radio-rx` (receives broadcasts: meets the comms radio and is suggested for it; PMR446
+  walkie-talkies are `radio-tx` only),
   `treatment` (makes raw water safe) and `no-suggest` (never a first suggestion: the engine offers
   it only when nothing else gives the store).
 - **`assets`**: `AssetType { id, name, category, questions, contributes, maintenance }`. A

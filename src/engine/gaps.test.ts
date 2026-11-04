@@ -158,6 +158,11 @@ describe('gaps', () => {
   it('suggests a radio when there is none', () => {
     const radio = find(gaps(biggarDocument(), packs, NOW, 3), 'comms:radio')!;
     expect(radio.suggestions[0]!.itemTypeId).toBe('items-base:wind-up-radio');
+    // only things that receive broadcasts: a walkie-talkie pair does not
+    for (const s of radio.suggestions)
+      expect(packs.items[s.itemTypeId!]!.tags).toContain('radio-rx');
+    const all = Object.values(packs.items).filter((i) => i.tags.includes('radio-rx'));
+    expect(all.map((i) => i.id)).not.toContain('items-base:pmr446-pair');
   });
 
   it('leaves no acquire gap for what is covered', () => {

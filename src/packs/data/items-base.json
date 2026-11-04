@@ -2,7 +2,7 @@
   "format": 1,
   "id": "items-base",
   "kind": "items",
-  "version": 2,
+  "version": 3,
   "name": "Base household items",
   "sources": [
     {
@@ -908,7 +908,7 @@
       "suitability": [],
       "shelfLife": "none",
       "typicalPricePence": 5000,
-      "tags": ["radio-tx", "radio-rx"]
+      "tags": ["radio-tx"]
     },
     {
       "id": "items-base:cb-rig",
