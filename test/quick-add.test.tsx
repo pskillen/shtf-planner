@@ -77,3 +77,19 @@ describe('Quick add: the search step', () => {
     expect(screen.queryByText(/may freeze/)).toBeNull();
   });
 });
+
+describe('Quick add: a custom item', () => {
+  it('with the kcal left blank, focuses the field and says what is missing beside it', () => {
+    open();
+    fireEvent.click(screen.getByRole('button', { name: 'Add as a custom item' }));
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: "Gran's soup" } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save item' }));
+    const kcal = screen.getByLabelText(/About how many kcal/);
+    expect(document.activeElement).toBe(kcal);
+    const hint = kcal.closest('label')!.querySelector('[role="alert"]');
+    expect(hint?.textContent).toMatch(/How many kcal of food in one each\?/);
+    // typing the amount clears the complaint
+    fireEvent.change(kcal, { target: { value: '300' } });
+    expect(kcal.closest('label')!.querySelector('[role="alert"]')).toBeNull();
+  });
+});

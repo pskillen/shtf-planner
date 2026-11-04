@@ -311,6 +311,9 @@ function CustomItemForm({
   const [store, setStore] = useState<StoreId | ''>(DEFAULT_STORE.food ?? '');
   const [amount, setAmount] = useState<number | undefined>(undefined);
   const [problem, setProblem] = useState<string | null>(null);
+  // The amount is what is usually missing: say so beside it and put the cursor there.
+  const [amountMissing, setAmountMissing] = useState(false);
+  const amountBox = useRef<HTMLDivElement>(null);
 
   function pickCategory(c: Category): void {
     setCategory(c);
@@ -338,8 +341,11 @@ function CustomItemForm({
                 { name, category, unit, store: store || undefined, amount },
                 crypto.randomUUID(),
               );
-              if (r.ok) onMade(r.type);
-              else setProblem(r.problem);
+              if (r.ok) return onMade(r.type);
+              const missing = Boolean(store) && !(amount !== undefined && amount > 0);
+              setAmountMissing(missing && name.trim() !== '');
+              setProblem(r.problem);
+              if (missing && name.trim() !== '') amountBox.current?.querySelector('input')?.focus();
             }}
           >
             Save item
@@ -389,22 +395,39 @@ function CustomItemForm({
         </Field>
       )}
       {store ? (
-        <Field
-          label={
-            store === 'foodKcal'
-              ? 'About how many kcal?'
-              : store === 'waterL'
-                ? 'About how many litres?'
-                : prompt
-          }
-          hint={store === 'foodKcal' || store === 'waterL' ? prompt : undefined}
-        >
-          <NumberInput value={amount} min={0} onChange={setAmount} />
-        </Field>
+        <div ref={amountBox}>
+          <Field
+            label={
+              store === 'foodKcal'
+                ? 'About how many kcal?'
+                : store === 'waterL'
+                  ? 'About how many litres?'
+                  : prompt
+            }
+            hint={
+              amountMissing ? (
+                <span className="warn" role="alert">
+                  {problem}
+                </span>
+              ) : store === 'foodKcal' || store === 'waterL' ? (
+                prompt
+              ) : undefined
+            }
+          >
+            <NumberInput
+              value={amount}
+              min={0}
+              onChange={(v) => {
+                setAmount(v);
+                setAmountMissing(false);
+              }}
+            />
+          </Field>
+        </div>
       ) : (
         <p className="muted">{prompt}</p>
       )}
-      {problem ? (
+      {problem && !amountMissing ? (
         <p className="warn" role="alert">
           {problem}
         </p>
