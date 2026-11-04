@@ -22,7 +22,7 @@ leaving half-way.
 | Equipment            | `/app/assets`, `AssetsScreen.tsx`       | Grouped by category. Add: search the asset types of the enabled packs, answer the type's questions, say where it is and when it was bought. The form says in words what it gives with the answers applied.                                                                                                               |
 | Risks                | `/app/risks`, `RisksScreen.tsx`         | The local-risk chips, and for each chosen risk the region's "check" links (open in a new tab).                                                                                                                                                                                                                           |
 | How long to plan for | `/app/horizon`, `HorizonScreen.tsx`     | Pick 3, 7, 14 or 28 days (a sentence says what each means). Below it the table of what that is for this household at every horizon.                                                                                                                                                                                      |
-| More, Settings       | `/app/more`, `/app/more/settings`       | Region, content packs (name, version, on or off), review reminder (3 or 6 months), anonymise names. The data section (`settings/DataSection.tsx`) is a placeholder: export, import and Google Drive are separate work.                                                                                                   |
+| More, Settings       | `/app/more`, `/app/more/settings`       | Region, content packs (name, version, on or off), review reminder (3 or 6 months), anonymise names. The data section (`settings/DataSection.tsx`) links to the Data screen (see [Drive sync](../drive-sync/README.md)).                                                                                                  |
 | Read-only notice     | `StoreBanner.tsx`, `Shell.tsx`          | A document saved by a newer version shows a banner and the controls that write are disabled; an unreadable one points to More, Settings, data. See "Read-only".                                                                                                                                                          |
 | Shared controls      | `src/app/components/`                   | `Sheet` (bottom sheet), `controls.tsx` (chips, segmented buttons, switch, number box, field), `ScreenHeader`, `useDeferredDelete` (delete with undo), `EditArea` (read-only), `useSavedChange` ("Saved").                                                                                                                |
 | Pure helpers         | `src/util/`, `src/app/screens/**`       | `age.ts`, `medication.ts`, `units.ts`; `assets/questionnaire.ts` (answers and the in-words description); `region.ts` (risk links, region, all-electric); `memberTags.ts` (medication and dietary tags); `locations.ts` (delete cascade); `settings/packs.ts` (pack switches); `horizon/previewSource.ts`.                |
@@ -93,7 +93,6 @@ leaving half-way.
 
 - No maintenance dates on equipment.
 - Wales and Northern Ireland have no flood links of their own.
-- The Settings data section is a placeholder.
 
 ## Tests
 
