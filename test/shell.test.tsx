@@ -1,36 +1,45 @@
 // @vitest-environment jsdom
+import 'fake-indexeddb/auto';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 import { Landing } from '../src/app/Landing';
 import { Shell } from '../src/app/Shell';
 import { installDebugHook } from '../src/app/debug';
+import { DocumentProvider } from '../src/app/state';
 import { paragraphs } from '../src/util/text';
 
 function renderShell(path: string) {
   return render(
     <MemoryRouter initialEntries={[path]}>
       <Routes>
-        <Route path="/app/*" element={<Shell />} />
+        <Route
+          path="/app/*"
+          element={
+            <DocumentProvider>
+              <Shell />
+            </DocumentProvider>
+          }
+        />
       </Routes>
     </MemoryRouter>,
   );
 }
 
 describe('the shell', () => {
-  it('shows the top bar, the five tabs and the footer', () => {
+  it('shows the top bar, the five tabs and the footer', async () => {
     renderShell('/app');
+    const nav = await screen.findByRole('navigation', { name: 'Main' });
     expect(screen.getAllByText('SHTF Planner').length).toBeGreaterThan(0);
-    const nav = screen.getByRole('navigation', { name: 'Main' });
     for (const label of ['Home', 'Stores', 'Gaps', 'Score', 'More']) {
       expect(nav.textContent).toContain(label);
     }
     expect(screen.getByTestId('footer').textContent).toBe('SHTF Planner · local · local');
   });
 
-  it('renders a placeholder for each tab', () => {
+  it('renders a placeholder for the tabs built later', async () => {
     renderShell('/app/stores');
-    expect(screen.getByRole('heading', { name: 'Stores' })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'Stores' })).toBeTruthy();
     expect(screen.getByText('Coming in a later phase.')).toBeTruthy();
   });
 });
