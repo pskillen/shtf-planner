@@ -23,7 +23,7 @@ describe('the Gaps tab: plan items marked done', () => {
 
     fireEvent.click(done());
     expect(screen.queryByRole('button', { name: new RegExp(`^Done: ${NUMBERS}`) })).toBeNull();
-    expect(screen.getByRole('status').textContent).toContain('marked done');
+    expect(screen.getByRole('status').textContent).toContain('Marked done: Write down 999 or 112');
     expect(s.doc().plans['plans-base:emergency-numbers']?.doneAt).toBeUndefined();
 
     tick(5100);

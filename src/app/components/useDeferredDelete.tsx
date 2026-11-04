@@ -6,12 +6,12 @@ const UNDO_MS = 5000;
  * Delete with undo. `request(id, label)` hides the record at once and shows a toast; the real
  * `commit(id)` runs after five seconds unless Undo was tapped. Leaving the screen commits what is
  * still pending, so a delete is never lost. Render `toast` somewhere on the screen and skip the
- * ids in `pending` when listing. `verb` is what the toast says happened.
+ * ids in `pending` when listing. `message` words the toast.
  */
 export function useDeferredDelete(
   commit: (id: string) => void,
-  /** What the toast says happened: "deleted" by default, or "marked done" for a plan item. */
-  verb = 'deleted',
+  /** The toast's words for a label: "<label> deleted." by default, "Marked done: <label>" for a plan item. */
+  message: (label: string) => string = (label) => `${label} deleted.`,
 ): {
   pending: ReadonlySet<string>;
   request: (id: string, label: string) => void;
@@ -71,9 +71,7 @@ export function useDeferredDelete(
   const last = [...pending.entries()].at(-1);
   const toast = last ? (
     <div className="toast" role="status">
-      <span>
-        {last[1]} {verb}.
-      </span>
+      <span>{message(last[1])}</span>
       <button type="button" onClick={() => finish(last[0], false)}>
         Undo
       </button>

@@ -165,7 +165,7 @@ test('Quick add: ten items, two of them same-again and one custom, each in few t
   await page.getByRole('button', { name: /^Done: Write down 999 or 112/ }).click();
   await expect(page.getByRole('button', { name: /^Done: Write down 999 or 112/ })).toHaveCount(0);
   // Done waits five seconds behind an Undo toast before it is written.
-  await expect(page.getByRole('status')).toContainText('marked done');
+  await expect(page.getByRole('status')).toContainText('Marked done: Write down 999 or 112');
   await expect
     .poll(async () => (await doc(page)).plans['plans-base:emergency-numbers']?.doneAt, {
       timeout: 10_000,

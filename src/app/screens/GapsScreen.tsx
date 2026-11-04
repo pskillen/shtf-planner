@@ -38,16 +38,19 @@ export function GapsScreen() {
   );
 
   // Done waits five seconds with an Undo before it is written, like a delete.
-  const done = useDeferredDelete((planItemId) => {
-    const months = packs.plans[planItemId]?.expiresMonths;
-    change('plan done', (d) => {
-      d.plans[planItemId] = {
-        ...d.plans[planItemId],
-        doneAt: now,
-        ...(months ? { expires: addMonths(now, months) } : {}),
-      };
-    });
-  }, 'marked done');
+  const done = useDeferredDelete(
+    (planItemId) => {
+      const months = packs.plans[planItemId]?.expiresMonths;
+      change('plan done', (d) => {
+        d.plans[planItemId] = {
+          ...d.plans[planItemId],
+          doneAt: now,
+          ...(months ? { expires: addMonths(now, months) } : {}),
+        };
+      });
+    },
+    (label) => `Marked done: ${label}`,
+  );
 
   function undoDone(planItemId: string): void {
     change('plan undone', (d) => {
