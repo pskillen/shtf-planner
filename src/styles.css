@@ -598,8 +598,19 @@ button:disabled {
   flex: 1;
 }
 
-.sheet-actions > * {
+.sheet-actions > fieldset {
+  display: flex;
   flex: 1;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sheet-actions > fieldset > * {
+  flex: 1;
+}
+
+.sheet-readonly {
+  margin: 0 16px 4px;
 }
 
 .add-bar {

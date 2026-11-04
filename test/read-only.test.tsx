@@ -45,6 +45,7 @@ describe('a read-only household', () => {
 
     fireEvent.click(row);
     expect(screen.getByRole('dialog')).toBeTruthy();
+    expect(screen.getByText('Read-only')).toBeTruthy();
     expect(screen.getByLabelText('Name', { selector: 'input' }).matches(':disabled')).toBe(true);
     expect(screen.getByRole('button', { name: 'Save' }).matches(':disabled')).toBe(true);
     expect(screen.getByRole('button', { name: 'Close' }).matches(':disabled')).toBe(false);

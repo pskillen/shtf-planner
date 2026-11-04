@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { useEditable } from '../state';
 import { EditArea } from './EditArea';
 
 // How many sheets are open, and whether one history entry stands for them. Sheets open one after
@@ -43,6 +44,7 @@ export function Sheet({
   dirty?: boolean;
 }) {
   const titleId = useId();
+  const editable = useEditable();
   const ref = useRef<HTMLDivElement>(null);
   const [confirming, setConfirming] = useState(false);
   const live = useRef({ onClose, dirty });
@@ -98,6 +100,7 @@ export function Sheet({
             ✕
           </button>
         </div>
+        {editable ? null : <p className="sheet-readonly muted">Read-only</p>}
         <div className="sheet-body">
           <EditArea>{children}</EditArea>
         </div>

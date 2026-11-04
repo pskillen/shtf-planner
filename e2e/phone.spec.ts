@@ -47,6 +47,23 @@ test('Back closes an open sheet first, and a stray tap asks before dropping edit
   await expect(page.getByRole('button', { name: 'Edit Pat' })).toBeVisible();
 });
 
+test('sheet buttons keep their gap, and a lone Save is full width', async ({ page }) => {
+  await page.goto('/?debug=1');
+  await page.evaluate(() =>
+    (window as unknown as { __shtf: { loadFixture: () => Promise<void> } }).__shtf.loadFixture(),
+  );
+  await page.goto('/app/people');
+  await page.getByRole('button', { name: 'Edit Pat' }).click();
+  const del = (await page.getByRole('button', { name: 'Delete' }).boundingBox())!;
+  const save = (await page.getByRole('button', { name: 'Save' }).boundingBox())!;
+  expect(save.x - (del.x + del.width)).toBeGreaterThanOrEqual(8);
+  await page.goBack();
+  await page.getByRole('button', { name: 'Add a person' }).click();
+  const lone = (await page.getByRole('button', { name: 'Save' }).boundingBox())!;
+  const sheet = (await page.getByRole('dialog').boundingBox())!;
+  expect(lone.width).toBeGreaterThan(sheet.width - 40);
+});
+
 test('a 60-character name does not widen the page', async ({ page }) => {
   await page.goto('/?debug=1');
   await page.evaluate(() =>
