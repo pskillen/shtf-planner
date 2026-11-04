@@ -1,0 +1,25 @@
+{
+  "name": "shtf-prototype",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "vite-plugin-wasm": "^3.6.0"
+  },
+  "dependencies": {
+    "@automerge/automerge": "^3.5.0",
+    "@automerge/automerge-repo": "^2.5.6",
+    "@automerge/automerge-repo-network-broadcastchannel": "^2.5.6",
+    "@automerge/automerge-repo-storage-indexeddb": "^2.5.6",
+    "@zxing/browser": "^0.2.1",
+    "@zxing/library": "^0.23.0",
+    "y-indexeddb": "^9.0.12",
+    "yjs": "^13.6.33"
+  }
+}

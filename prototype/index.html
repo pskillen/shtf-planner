@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SHTF prototype</title>
+<style>
+  body { font: 15px system-ui, sans-serif; margin: 12px; }
+  nav a { display: inline-block; margin: 0 8px 8px 0; padding: 8px 12px; border: 1px solid #888; border-radius: 6px; text-decoration: none; color: inherit; }
+  button { padding: 8px 12px; margin: 3px 3px 3px 0; }
+  pre { white-space: pre-wrap; background: #eee; color: #000; padding: 8px; max-height: 40vh; overflow: auto; font-size: 12px; }
+  video { width: 100%; max-height: 50vh; background: #000; }
+  table { border-collapse: collapse; } td, th { border: 1px solid #aaa; padding: 3px 6px; }
+</style>
+</head>
+<body>
+<nav>
+  <a href="#/">menu</a>
+  <a href="#/barcode">A barcode</a>
+  <a href="#/crdt">B crdt</a>
+  <a href="#/drive">C drive</a>
+  <a href="#/env">D env guard</a>
+</nav>
+<div id="app"></div>
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>
