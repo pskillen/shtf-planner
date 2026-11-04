@@ -75,17 +75,17 @@ export function StoresScreen() {
       );
   };
 
+  const equipmentMatches = (a: Asset): boolean => {
+    if (q === '') return true;
+    const type = packs.assets[a.typeId];
+    return [a.name ?? '', type?.name ?? ''].some((n) => n.toLowerCase().includes(q.toLowerCase()));
+  };
+
   /** The equipment kept in a place, shown read-only: it is edited on the Equipment screen. */
   const equipmentFor = (location: Location): Asset[] =>
     Object.values(doc.assets)
       .filter((a) => a.locationId === location.id)
-      .filter((a) => {
-        if (q === '') return true;
-        const type = packs.assets[a.typeId];
-        return [a.name ?? '', type?.name ?? ''].some((n) =>
-          n.toLowerCase().includes(q.toLowerCase()),
-        );
-      })
+      .filter(equipmentMatches)
       .sort((a, b) => (a.name ?? a.typeId).localeCompare(b.name ?? b.typeId));
 
   const locations = useMemo(
@@ -96,6 +96,12 @@ export function StoresScreen() {
   const lost = Object.values(doc.items).filter(
     (i) => !knownIds.has(i.locationId) && !remove.pending.has(i.id) && matches(i.typeId),
   );
+
+  // Equipment with no place, or whose place has gone, so the two screens never hide each other.
+  const unplaced = Object.values(doc.assets)
+    .filter((a) => !a.locationId || !knownIds.has(a.locationId))
+    .filter((a) => equipmentMatches(a))
+    .sort((a, b) => (a.name ?? a.typeId).localeCompare(b.name ?? b.typeId));
 
   const toggle = (id: string) =>
     setCollapsed((cur) => {
@@ -252,6 +258,13 @@ export function StoresScreen() {
           </section>
         );
       })}
+
+      {unplaced.length > 0 ? (
+        <section className="store-group" aria-label="Equipment, no place">
+          <h2>Equipment, no place</h2>
+          <ul className="row-list">{unplaced.map((a) => renderEquipment(a))}</ul>
+        </section>
+      ) : null}
 
       {lost.length > 0 ? (
         <section className="store-group" aria-label="Unknown place">

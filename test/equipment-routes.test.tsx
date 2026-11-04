@@ -90,9 +90,31 @@ describe('Stores shows the equipment kept in each place', () => {
     expect(screen.getByText('Edit Gas BBQ')).toBeTruthy();
   });
 
-  it('leaves equipment with no place out of the places', () => {
-    app('/app/stores');
-    expect(screen.queryByRole('link', { name: 'Edit equipment Roof solar' })).toBeNull();
+  it('lists equipment with no place, or a place that has gone, under its own group', () => {
+    const s = liveStore(biggarDocument());
+    s.store.change('orphan', (d) => {
+      d.assets['asset-lost'] = {
+        id: 'asset-lost',
+        typeId: 'assets-base:co-alarm',
+        name: 'Spare alarm',
+        locationId: 'loc-gone',
+        answers: {},
+        maintenance: {},
+      };
+    });
+    render(
+      <MemoryRouter initialEntries={['/app/stores']}>
+        <StoreContext.Provider value={s.store}>
+          <StoresScreen />
+        </StoreContext.Provider>
+      </MemoryRouter>,
+    );
+    const group = screen.getByRole('region', { name: 'Equipment, no place' });
+    // Roof solar has no place at all; the spare alarm's place no longer exists
+    expect(within(group).getByRole('link', { name: 'Edit equipment Roof solar' })).toBeTruthy();
+    expect(within(group).getByRole('link', { name: 'Edit equipment Spare alarm' })).toBeTruthy();
+    // placed equipment stays with its place
+    expect(within(group).queryByRole('link', { name: 'Edit equipment Gas BBQ' })).toBeNull();
   });
 });
 

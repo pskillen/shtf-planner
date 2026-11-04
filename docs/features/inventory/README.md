@@ -22,8 +22,7 @@ The Stores tab: what the household has, by where it is kept, and the quick way t
   amber within three months), a "floor 6" badge in a rotating place. Tapping a row edits it.
 - **Equipment in a place.** Under a place's stock, the equipment kept there (its "Where is it
   kept?" answer) is listed read-only with an Equipment badge, its name, type and key answer
-  ("110 Ah"); tapping it opens its edit form on the Equipment screen. Equipment with no place is
-  not listed in Stores. Search matches equipment names too.
+  ("110 Ah"); tapping it opens its edit form on the Equipment screen. Equipment with no place, or whose place no longer exists, is listed after the places under "Equipment, no place", with the same rows. Search matches equipment names too.
 - **Rotating places.** "The floor counts, not today's stock": the engine counts the lower of what is
   on the shelf and the floor. "Set floors" lists the types in that place with a stepper each; 0
   removes the floor. A floor with nothing on the shelf is still listed, at 0.
