@@ -1,13 +1,17 @@
-import type { CapabilityId, Document, Packs } from '../model';
+import type { CapabilityId, Document, Packs, StoreId } from '../model';
 import { HORIZONS } from './assumptions';
 import { analyse } from './coverage';
 import { suggestContext } from './gaps';
 import { closeHours, closeStore } from './suggest';
 import { fmt } from './context';
+import type { Target, TargetKind } from './targets';
 
 export interface PreviewRow {
   capability: CapabilityId;
+  /** The target's short name, lower case: "water", "heat", "radio". */
   label: string;
+  /** What a screen shows for the row, in sentence case: "Drinking water", "Power for phones". */
+  title: string;
   amount: number;
   unit: string;
   /** What that looks like in the item catalogue: "about 3 × Water can (10 L)". */
@@ -15,9 +19,41 @@ export interface PreviewRow {
 }
 
 export interface PreviewHorizon {
-  horizonDays: number;
+  horizonDays: (typeof HORIZONS)[number];
   rows: PreviewRow[];
 }
+
+const STORE_TITLES: Partial<Record<StoreId, string>> = {
+  waterL: 'Drinking water',
+  foodKcal: 'Food',
+  formulaG: 'Infant formula',
+  petFoodKcal: 'Pet food',
+  lumenHours: 'Light',
+  batteryWh: 'Power for phones',
+  sanitationUses: 'Toilet',
+  hygieneUses: 'Hygiene supplies',
+  nappies: 'Nappies',
+  firstAid: 'First aid',
+};
+
+const KIND_TITLES: Partial<Record<TargetKind, string>> = {
+  range: 'Driving range',
+  device: 'Radio',
+};
+
+const CAPABILITY_TITLES: Partial<Record<CapabilityId, string>> = {
+  heat: 'Heat',
+  cooking: 'Cooking',
+};
+
+/** The sentence-case name a screen shows for a target (a medication is shown by its own name). */
+function titleOf(t: Target): string {
+  if (t.kind === 'medication') return t.label;
+  if (t.kind === 'store') return STORE_TITLES[t.store as StoreId] ?? sentence(t.label);
+  return KIND_TITLES[t.kind] ?? CAPABILITY_TITLES[t.capability] ?? sentence(t.label);
+}
+
+const sentence = (text: string): string => text.charAt(0).toUpperCase() + text.slice(1);
 
 /**
  * What 3, 7, 14 and 28 days would need for this household on `asOf`, ignoring what it already
@@ -57,6 +93,7 @@ export function preview(doc: Document, packs: Packs, asOf: string): PreviewHoriz
       rows.push({
         capability: t.capability,
         label: t.label,
+        title: titleOf(t),
         amount: t.amount,
         unit: t.unit,
         example,

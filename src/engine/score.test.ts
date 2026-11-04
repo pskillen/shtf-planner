@@ -149,6 +149,31 @@ describe('preview', () => {
     expect(rows[0]!.rows.every((r) => r.capability !== 'plans')).toBe(true);
   });
 
+  it('gives every row a sentence-case title for screens', () => {
+    const titles = rows[0]!.rows.map((r) => r.title);
+    expect(titles).toEqual(
+      expect.arrayContaining([
+        'Drinking water',
+        'Food',
+        'Heat',
+        'Cooking',
+        'Light',
+        'Power for phones',
+        'Radio',
+        'Toilet',
+        'First aid',
+        'Driving range',
+        'Ramipril',
+      ]),
+    );
+    for (const h of rows) for (const r of h.rows) expect(r.title, r.label).toMatch(/^[A-Z]/);
+  });
+
+  it('types horizonDays as one of the offered horizons', () => {
+    const first: 3 | 7 | 14 | 28 = rows[0]!.horizonDays;
+    expect(first).toBe(3);
+  });
+
   it('does not change the document', () => {
     const before = structuredClone(doc);
     preview(doc, packs, NOW);

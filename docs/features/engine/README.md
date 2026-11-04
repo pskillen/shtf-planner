@@ -109,6 +109,14 @@ have targets. `weakest` is the lowest; a tie goes to the lower mean ratio across
 targets, then to the earlier capability in the list. `nextHorizonPreview` is the overall score at
 the next horizon (3, 7, 14, 28).
 
+## Preview
+
+`preview(doc, packs, asOf)` returns one `PreviewHorizon` per offered horizon (`horizonDays` is typed
+`(typeof HORIZONS)[number]`, so it drops into code keyed by the horizons). Each `PreviewRow` has the
+target's `capability`, a lower-case `label` ("water"), a sentence-case `title` for screens
+("Drinking water", "Power for phones", "Radio"; a medication shows its own name), the `amount` and
+`unit`, and an `example` from the item catalogue.
+
 ## Where the numbers come from
 
 Almost none come from official guidance. The UK Be Ready site gives 3 days, 3 litres of water per
