@@ -701,7 +701,11 @@ export function createSync(options: SyncOptions): Sync {
         await drive.connect();
       } catch (e) {
         if (e instanceof DriveCancelledError) return publish(); // quiet: still "Connect"
-        problem = { kind: 'error', message: driveErrorMessage(e) };
+        problem = {
+          kind: 'error',
+          message: driveErrorMessage(e),
+          reconnect: e instanceof DriveAuthError,
+        };
         publish();
         return;
       }
@@ -709,8 +713,10 @@ export function createSync(options: SyncOptions): Sync {
       paused = false;
       await enqueue(async () => {
         const account = drive.accountEmail() ?? undefined;
-        if (rec.account && account && rec.account !== account) {
-          // Another Google account: its folder, files and history are not ours to compare with.
+        if (base && (!account || rec.account !== account)) {
+          // Another Google account, or one we cannot tell apart from the last (the email could
+          // not be read): its folder, files and history are not ours to compare with, so start
+          // afresh and ask first rather than merge silently.
           base = undefined;
           rec = emptySyncRecord();
           await persistence.clear();
@@ -730,10 +736,9 @@ export function createSync(options: SyncOptions): Sync {
         firstConnect = false;
         firstConnectOk = false;
         paused = false;
-        // Only the connection and the pending questions go. The last synced state and the Drive
-        // ids stay, so connecting again on the same account compares against what both sides
-        // last had instead of asking about the whole household.
-        await save({ conflicts: [] });
+        // Only the connection goes. The last synced state, the Drive ids and any which-copy
+        // questions stay: connecting again on the same account compares against what both sides
+        // last had, and a question left open is still open (nothing is pushed until answered).
         publish();
       });
     },

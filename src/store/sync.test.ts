@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { Document, Env } from '../model';
 import { openStore, type DocumentStore } from './documentStore';
-import { JSON_FILE_NAME, YJS_FILE_NAME } from './drive';
+import { DriveAuthError, JSON_FILE_NAME, YJS_FILE_NAME } from './drive';
 import { createFakeCloud, type FakeCloud, type FakePort } from './fakeDrive';
 import {
   NEWER_VERSION_MESSAGE,
@@ -251,12 +251,70 @@ describe('disconnect and reconnect', () => {
     expect(cloud.writes[YJS_FILE_NAME]).toBe(writes);
   });
 
-  it('drops pending questions and keeps the household as merged', async () => {
-    const { a } = await pairWithConflict();
+  it('keeps an open which-copy question across disconnect, and pushes nothing until it is answered', async () => {
+    const { cloud, a, b } = await pairWithConflict(); // same field: 2 here, 3 there
     expect(a.sync.state().conflicts.length).toBeGreaterThan(0);
+    const writes = cloud.writes[YJS_FILE_NAME];
     await a.sync.disconnect();
-    expect(a.sync.state().conflicts).toEqual([]);
-    expect(a.store.get().items.x).toBeDefined();
+    expect(a.sync.state().conflicts.length).toBeGreaterThan(0);
+    await a.sync.connect();
+    await a.sync.whenIdle();
+    expect(a.sync.state().conflicts.length).toBeGreaterThan(0);
+    expect(cloud.writes[YJS_FILE_NAME]).toBe(writes);
+
+    await a.sync.resolveAll('mine');
+    await a.sync.whenIdle();
+    expect(a.store.get().items.x).toMatchObject({ qty: 2 });
+    await b.sync.checkDrive();
+    expect(b.store.get().items.x).toMatchObject({ qty: 2 });
+  });
+
+  it('keeps a delete-versus-edit question across disconnect, so the edit is not lost', async () => {
+    const { cloud, a, b } = await pair();
+    a.port.offline = true;
+    a.store.change('delete x', (d) => {
+      delete d.items.x;
+    });
+    await settle(a);
+    setItem(b, 'x', 7);
+    await b.sync.flush();
+    a.port.offline = false;
+    await a.sync.checkDrive();
+    expect(a.sync.state().conflicts.length).toBeGreaterThan(0);
+    const writes = cloud.writes[YJS_FILE_NAME];
+
+    await a.sync.disconnect();
+    await a.sync.connect();
+    await a.sync.whenIdle();
+    expect(a.sync.state().conflicts.length).toBeGreaterThan(0);
+    expect(cloud.writes[YJS_FILE_NAME]).toBe(writes);
+    expect(JSON.parse(cloud.text(JSON_FILE_NAME)!).items.x.qty).toBe(7);
+
+    await a.sync.resolveAll('theirs');
+    await a.sync.whenIdle();
+    expect(a.store.get().items.x).toMatchObject({ qty: 7 });
+  });
+
+  it('a failed Connect press that Google needs the person for offers Reconnect', async () => {
+    const cloud = createFakeCloud();
+    const a = await device(cloud);
+    await a.sync.connect();
+    a.port.connectError = new DriveAuthError('popup_failed_to_open');
+    await a.sync.connect();
+    expect(a.sync.state().status).toMatchObject({ kind: 'error', reconnect: true });
+    a.port.connectError = new Error('boom');
+    await a.sync.connect();
+    expect(a.sync.state().status).toMatchObject({ kind: 'error' });
+    expect(a.sync.state().status).toHaveProperty('reconnect', false);
+  });
+
+  it('an account whose email cannot be read asks first instead of merging silently', async () => {
+    const { a } = await pair();
+    await a.sync.disconnect();
+    setItem(a, 'mine', 2);
+    a.port.email = '';
+    await a.sync.connect();
+    expect(a.sync.state().firstConnect).toBe(true);
   });
 
   it('a different Google account starts afresh and asks first', async () => {

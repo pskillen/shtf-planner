@@ -41,6 +41,8 @@ export interface FakePort extends DrivePort {
   authExpired: boolean;
   /** The next `connect()` is cancelled (the popup was closed). */
   cancelNextConnect: boolean;
+  /** The next `connect()` fails with this (for example a blocked popup). */
+  connectError?: Error;
   /** Runs once, right after the next `listFiles` has read Drive: another device acts in the gap. */
   afterNextList?: () => Promise<void>;
   /** The account `connect()` signs in; change it to model a different Google account. */
@@ -97,6 +99,11 @@ export function createFakeCloud(): FakeCloud {
         isConnected: () => connected,
         accountEmail: () => (connected ? port.email : null),
         async connect() {
+          if (port.connectError) {
+            const err = port.connectError;
+            port.connectError = undefined;
+            throw err;
+          }
           if (port.cancelNextConnect) {
             port.cancelNextConnect = false;
             throw new DriveCancelledError();
