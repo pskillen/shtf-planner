@@ -956,8 +956,27 @@ div.row-main {
   display: flex;
 }
 
-.gaps h3 {
+.gaps h3,
+.recent h3 {
   margin: 1rem 0 0.25rem;
   font-size: 0.95rem;
   color: var(--muted);
+}
+
+.search-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+.search-row .field {
+  flex: 1;
+  min-width: 0;
+}
+.type-group > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: 600;
 }

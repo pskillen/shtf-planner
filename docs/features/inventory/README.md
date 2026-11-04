@@ -27,7 +27,9 @@ The Stores tab: what the household has, by where it is kept, and the quick way t
   damp; indoor and stable asks for nothing) shows a warning such as "Water can (10 L) may freeze in
   the Shed", on the row and in Quick add. Quick add still allows it.
 - **Quick add** remembers the last place and recent items in `localStorage` (per device, never in the
-  document). Stock of the same type, place and best-before is added to rather than listed twice. The
+  document); the recent list is read again after each add. With nothing typed it shows up to eight
+  recent types, then the other types under collapsed categories; a search lists matches flat.
+  "Add as a custom item" sits beside the search box. Stock of the same type, place and best-before is added to rather than listed twice. The
   best-before is optional; the chips follow how long the type keeps (+1 y, +2 y, +5 y for things that
   keep for years). A counter shows what was added this session.
 - **Custom items.** "Add as a custom item" asks for a name, a category and, for food and water, what

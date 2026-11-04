@@ -31,6 +31,9 @@ export interface QuickAddPrefill {
   qty?: number;
 }
 
+/** How many recent types sit above the list when nothing is typed. */
+const RECENT_SHOWN = 8;
+
 type Step = 'search' | 'form' | 'custom';
 
 /**
@@ -56,7 +59,7 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
     () => Object.values(doc.locations).sort((a, b) => a.name.localeCompare(b.name)),
     [doc.locations],
   );
-  const [recent] = useState(readRecent);
+  const [recent, setRecent] = useState(readRecent);
 
   const start = prefill ? packs.items[prefill.typeId] : undefined;
   const [step, setStep] = useState<Step>(start ? 'form' : 'search');
@@ -82,6 +85,40 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
   const location = doc.locations[locationId];
   const warning = type && location ? suitabilityWarning(type, location) : undefined;
   const shown = useMemo(() => matchTypes(types, query, recent), [types, query, recent]);
+  // With nothing typed: the few types added lately, then every other type under its category.
+  const searching = query.trim() !== '';
+  const recentTypes = useMemo(
+    () =>
+      recent
+        .map((id) => types.find((t) => t.id === id))
+        .filter((t): t is ItemType => t !== undefined)
+        .slice(0, RECENT_SHOWN),
+    [recent, types],
+  );
+  const byCategory = useMemo(() => {
+    const skip = new Set(recentTypes.map((t) => t.id));
+    const groups = new Map<Category, ItemType[]>();
+    for (const t of types)
+      if (!skip.has(t.id)) groups.set(t.category, [...(groups.get(t.category) ?? []), t]);
+    return [...groups.entries()]
+      .map(
+        ([category, list]) =>
+          [category, list.sort((a, b) => a.name.localeCompare(b.name))] as const,
+      )
+      .sort(([a], [b]) => labelOf(CATEGORY_LABEL, a).localeCompare(labelOf(CATEGORY_LABEL, b)));
+  }, [types, recentTypes]);
+
+  const typeRow = (t: ItemType) => (
+    <li className="row-item" key={t.id}>
+      <button type="button" className="row-main" onClick={() => pick(t)}>
+        <strong>{t.name}</strong>
+        <span className="muted">
+          {t.unitSize ? `${t.unit} · ${t.unitSize}` : t.unit}
+          {t.id.startsWith('custom:') ? ' · yours' : ''}
+        </span>
+      </button>
+    </li>
+  );
 
   /** Any edit to the details means the last Add is no longer what the form shows. */
   const edit =
@@ -98,6 +135,7 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
     });
     writeLastLocation(locationId);
     pushRecent(type.id);
+    setRecent(readRecent());
     setAdded((n) => n + qty);
     setLast(`Added ${qty} × ${type.name} to ${location.name}`);
   }
@@ -171,33 +209,44 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
       {step === 'search' ? (
         <>
           {counter}
-          <Field label="What are you adding?">
-            <input
-              ref={searchRef}
-              type="search"
-              value={query}
-              autoComplete="off"
-              placeholder="Water, tinned soup, torch…"
-              onChange={(e) => setQuery(e.target.value)}
-            />
-          </Field>
-          {shown.length === 0 ? <p className="muted">Nothing matches “{query}”.</p> : null}
-          <ul className="row-list">
-            {shown.map((t) => (
-              <li className="row-item" key={t.id}>
-                <button type="button" className="row-main" onClick={() => pick(t)}>
-                  <strong>{t.name}</strong>
-                  <span className="muted">
-                    {t.unitSize ? `${t.unit} · ${t.unitSize}` : t.unit}
-                    {t.id.startsWith('custom:') ? ' · yours' : ''}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-          <button type="button" className="secondary" onClick={() => setStep('custom')}>
-            Add as a custom item
-          </button>
+          <div className="search-row">
+            <Field label="What are you adding?">
+              <input
+                ref={searchRef}
+                type="search"
+                value={query}
+                autoComplete="off"
+                placeholder="Water, tinned soup, torch…"
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </Field>
+            <button type="button" className="secondary" onClick={() => setStep('custom')}>
+              Add as a custom item
+            </button>
+          </div>
+          {searching ? (
+            <>
+              {shown.length === 0 ? <p className="muted">Nothing matches “{query}”.</p> : null}
+              <ul className="row-list">{shown.map(typeRow)}</ul>
+            </>
+          ) : (
+            <>
+              {recentTypes.length > 0 ? (
+                <section aria-label="Recent" className="recent">
+                  <h3>Recent</h3>
+                  <ul className="row-list">{recentTypes.map(typeRow)}</ul>
+                </section>
+              ) : null}
+              {byCategory.map(([category, list]) => (
+                <details className="type-group" key={category}>
+                  <summary>
+                    {labelOf(CATEGORY_LABEL, category)} ({list.length})
+                  </summary>
+                  <ul className="row-list">{list.map(typeRow)}</ul>
+                </details>
+              ))}
+            </>
+          )}
         </>
       ) : type ? (
         <>
