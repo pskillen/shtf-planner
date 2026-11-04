@@ -1,0 +1,113 @@
+name: Deploy to Cloudflare Pages
+
+on:
+  workflow_call:
+    inputs:
+      build_env:
+        required: true
+        type: string
+      build_version:
+        required: false
+        type: string
+      cloudflare_branch:
+        description: Preview branch alias. Empty deploys production.
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cf-pages-${{ inputs.build_env }}-${{ inputs.cloudflare_branch }}
+  cancel-in-progress: true
+
+env:
+  CF_PAGES_PROJECT_NAME: shtf-planner
+  CF_PAGES_PRODUCTION_BRANCH: main
+
+jobs:
+  # Secrets can't be read in a job-level `if`, so check them in a step and pass the answer on.
+  secrets:
+    runs-on: ubuntu-latest
+    outputs:
+      configured: ${{ steps.check.outputs.configured }}
+    steps:
+      - id: check
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Cloudflare secrets are not set; skipping the deploy."
+          fi
+
+  deploy:
+    needs: secrets
+    if: ${{ needs.secrets.outputs.configured == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set BUILD_VERSION and BUILD_SHA
+        run: |
+          echo "BUILD_SHA=$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
+          if [ -n "${{ inputs.build_version }}" ]; then
+            echo "BUILD_VERSION=${{ inputs.build_version }}" >> "$GITHUB_ENV"
+          else
+            # Continuous builds show the bare SHA as their version.
+            echo "BUILD_VERSION=$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
+          fi
+
+      - name: Bake the changelog from GitHub Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/releases.mjs
+
+      - name: Build SPA
+        env:
+          BUILD_ENV: ${{ inputs.build_env }}
+        run: npm run build
+
+      - name: Create the Pages project if it doesn't exist
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set +e
+          out=$(npx --yes wrangler@4 pages project create "$CF_PAGES_PROJECT_NAME" \
+            --production-branch="$CF_PAGES_PRODUCTION_BRANCH" 2>&1)
+          code=$?
+          echo "$out"
+          if [ $code -ne 0 ] && ! echo "$out" | grep -qi "already exists"; then
+            exit $code
+          fi
+
+      - name: Deploy to Cloudflare Pages (production)
+        if: ${{ inputs.cloudflare_branch == '' }}
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy --branch=${{ env.CF_PAGES_PRODUCTION_BRANCH }}
+
+      - name: Deploy to Cloudflare Pages (preview)
+        if: ${{ inputs.cloudflare_branch != '' }}
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy --branch=${{ inputs.cloudflare_branch }}
