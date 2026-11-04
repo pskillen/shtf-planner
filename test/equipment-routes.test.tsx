@@ -53,6 +53,19 @@ describe('equipment is added to the home, never as stock', () => {
     expect(added.some((a) => a.typeId === 'assets-base:camping-stove')).toBe(true);
   });
 
+  it('shows the equipment route right under the search, before any stock matches', () => {
+    app('/app/stores');
+    fireEvent.click(screen.getByRole('button', { name: 'Add stock' }));
+    search('heater');
+    const route = screen.getByRole('region', { name: 'Equipment: add to your home' });
+    const stock = document.querySelector('.row-list:not(section *)') ?? route;
+    const searchRow = document.querySelector('.search-row')!;
+    expect(
+      searchRow.compareDocumentPosition(route) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(route.compareDocumentPosition(stock) & Node.DOCUMENT_POSITION_PRECEDING).toBeFalsy();
+  });
+
   it('finds equipment by the name of the thing people buy for it', () => {
     app('/app/stores');
     fireEvent.click(screen.getByRole('button', { name: 'Add stock' }));
