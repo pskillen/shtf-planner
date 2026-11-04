@@ -28,11 +28,16 @@ const show = (doc: ReturnType<typeof biggarDocument>) =>
   );
 
 describe('the Equipment "blocked" badge', () => {
-  it('marks solar and the home battery with no EPS, with the engine’s reason', () => {
+  it('marks solar and the home battery with no EPS, in plain words, and keeps the engine’s reason to open', () => {
     show(biggarDocument());
     const solar = screen.getByRole('button', { name: 'Edit Roof solar' });
     expect(within(solar).getByText('Blocked')).toBeTruthy();
-    expect(solar.textContent).toMatch(/gives nothing in an outage/);
+    expect(solar.textContent).toContain('No EPS fitted');
+    // the engine's full reason (the question and the answer) is behind "Why?", not in the row
+    expect(solar.textContent).not.toMatch(/answered|gives nothing in an outage/);
+    const details = solar.closest('li')!.querySelector('details')!;
+    expect(details.open).toBe(false);
+    expect(details.textContent).toMatch(/gives nothing in an outage/);
     expect(
       within(screen.getByRole('button', { name: 'Edit Home battery' })).getByText('Blocked'),
     ).toBeTruthy();
@@ -60,5 +65,6 @@ describe('the Equipment "blocked" badge', () => {
     show(doc);
     const ev = screen.getByRole('button', { name: 'Edit Family EV' });
     expect(within(ev).getByText('Blocked')).toBeTruthy();
+    expect(ev.textContent).toContain('No vehicle-to-load');
   });
 });

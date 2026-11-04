@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { Asset, AssetType } from '../../model';
-import { coverage } from '../../engine';
+import { coverage, type BlockedAsset } from '../../engine';
+import { blockedBadge } from '../blocked';
 import { formatVolume, today } from '../../util';
 import { Field } from '../components/controls';
 import { EditArea } from '../components/EditArea';
@@ -161,11 +162,11 @@ export function AssetsScreen() {
 
   // Assets that give the plan nothing, and why, from the engine (never worked out here).
   const blocked = useMemo(() => {
-    const out = new Map<string, string[]>();
+    const out = new Map<string, BlockedAsset[]>();
     for (const c of coverage(doc, packs, today())) {
       for (const b of c.blockedAssets ?? []) {
         const list = out.get(b.assetId) ?? [];
-        if (!list.includes(b.reason)) out.set(b.assetId, [...list, b.reason]);
+        if (!list.some((x) => x.reason === b.reason)) out.set(b.assetId, [...list, b]);
       }
     }
     return out;
@@ -208,7 +209,7 @@ export function AssetsScreen() {
               const where = a.locationId ? doc.locations[a.locationId]?.name : undefined;
               const why = blocked.get(a.id);
               return (
-                <li className="row-item" key={a.id}>
+                <li className={why ? 'row-item row-item-wrap' : 'row-item'} key={a.id}>
                   <button
                     type="button"
                     className="row-main"
@@ -226,8 +227,16 @@ export function AssetsScreen() {
                       {a.name && type ? `${type.name} · ` : ''}
                       {type ? (where ?? 'No place set') : 'Its content pack is not loaded'}
                     </span>
-                    {why ? <span className="warn">{why.join(' ')}</span> : null}
+                    {why ? (
+                      <span className="warn">{[...new Set(why.map(blockedBadge))].join(', ')}</span>
+                    ) : null}
                   </button>
+                  {why ? (
+                    <details className="why">
+                      <summary>Why?</summary>
+                      <p className="muted">{why.map((b) => b.reason).join(' ')}</p>
+                    </details>
+                  ) : null}
                 </li>
               );
             })}

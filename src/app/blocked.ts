@@ -14,3 +14,15 @@ export function blockedLine(b: Pick<BlockedAsset, 'name' | 'question'>): string 
       return `${b.name} gives nothing in a power cut until a question about it is answered`;
   }
 }
+
+/** The short reason for a Blocked badge, from the question that is not answered yes. */
+export function blockedBadge(b: Pick<BlockedAsset, 'question'>): string {
+  switch (b.question) {
+    case 'hasEps':
+      return 'No EPS fitted';
+    case 'v2l':
+      return 'No vehicle-to-load';
+    default:
+      return 'Needs an answer';
+  }
+}

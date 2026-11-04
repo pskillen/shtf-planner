@@ -980,3 +980,19 @@ div.row-main {
   cursor: pointer;
   font-weight: 600;
 }
+
+.row-item-wrap {
+  flex-wrap: wrap;
+}
+.row-item-wrap .row-main {
+  flex: 1 1 auto;
+}
+.row-item .why {
+  flex-basis: 100%;
+}
+.row-item .why summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}

@@ -8,14 +8,14 @@ The Gaps and Score tabs. Both only show what the engine returns for the chosen h
 
 ## Map
 
-| Piece         | Where                              | What                                                                    |
-| ------------- | ---------------------------------- | ----------------------------------------------------------------------- |
-| Gaps tab      | `/app/gaps`, `GapsScreen.tsx`      | Shopping, To do, Enough.                                                |
-| Gaps view     | `screens/gaps/view.ts`             | Groups, orders and words the engine's `gaps`, `score` and `coverage`.   |
-| Score tab     | `/app/score`, `ScoreScreen.tsx`    | The headline on a notebook-page card, a bar per need, the next horizon. |
-| Score view    | `screens/score/view.ts`            | Orders the bars, rounds, picks the words.                               |
-| Horizon table | `screens/horizon/previewSource.ts` | The engine's `preview`; the three biggest asks.                         |
-| Blocked badge | `AssetsScreen.tsx`                 | From `coverage(...).blockedAssets`, with the engine's reason.           |
+| Piece         | Where                              | What                                                                         |
+| ------------- | ---------------------------------- | ---------------------------------------------------------------------------- |
+| Gaps tab      | `/app/gaps`, `GapsScreen.tsx`      | Shopping, To do, Enough.                                                     |
+| Gaps view     | `screens/gaps/view.ts`             | Groups, orders and words the engine's `gaps`, `score` and `coverage`.        |
+| Score tab     | `/app/score`, `ScoreScreen.tsx`    | The headline on a notebook-page card, a bar per need, the next horizon.      |
+| Score view    | `screens/score/view.ts`            | Orders the bars, rounds, picks the words.                                    |
+| Horizon table | `screens/horizon/previewSource.ts` | The engine's `preview`; the three biggest asks.                              |
+| Blocked badge | `AssetsScreen.tsx`                 | From `coverage(...).blockedAssets`: a plain reason, the engine's under Why?. |
 
 ## Gaps
 
@@ -49,7 +49,8 @@ The Gaps and Score tabs. Both only show what the engine returns for the chosen h
 ## Equipment and the horizon table
 
 Equipment that gives the plan nothing (solar with no EPS, an EV with no vehicle-to-load) carries a
-Blocked badge and the engine's reason. The horizon table shows the engine's preview with sentence-case
+Blocked badge and a plain reason from its type ("No EPS fitted", "No vehicle-to-load"); the engine's
+full reason, with the question and the answer, is under "Why?" and only shows when opened. The horizon table shows the engine's preview with sentence-case
 titles; rows are matched across horizons by need, and the three needs furthest short of their target
 at 28 days are in bold.
 
