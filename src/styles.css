@@ -966,12 +966,12 @@ div.row-main {
 
 .search-row {
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 0.5rem;
 }
 .search-row .field {
-  flex: 1;
-  min-width: 0;
+  align-self: stretch;
 }
 .type-group > summary {
   min-height: 44px;
