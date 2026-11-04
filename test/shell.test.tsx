@@ -40,7 +40,7 @@ describe('the shell', () => {
   it('renders a placeholder for the tabs built later', async () => {
     renderShell('/app/stores');
     expect(await screen.findByRole('heading', { name: 'Stores' })).toBeTruthy();
-    expect(screen.getByText('Coming in a later phase.')).toBeTruthy();
+    expect(screen.getByText('Not in this version yet.')).toBeTruthy();
   });
 });
 
