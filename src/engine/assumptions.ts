@@ -1,7 +1,7 @@
 /**
  * The numbers the engine itself uses, beyond the ones in the packs. Each is an assumption (no
  * source gives it), listed here so they can be sanity-checked in one place; `docs/features/engine`
- * and the PR description repeat the list. Pack numbers are read with `grep '"assumption"'`.
+ * repeats the list. Pack numbers are read with `grep '"assumption"'`.
  */
 export interface EngineAssumption {
   id: string;

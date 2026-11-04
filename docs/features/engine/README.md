@@ -5,8 +5,8 @@
 
 Pure functions over the household document and the content packs: what the household needs for a
 horizon, what it has, what is missing, and a score. No React, no IndexedDB, no Drive (the lint
-fence enforces it). Nothing here is visible in the app yet; screens call it later. Everything is
-computed **for a date**, so previewing six months ahead is the same call with a later `asOf`.
+fence enforces it). Everything is computed **for a date**, so previewing six months ahead is the
+same call with a later `asOf`.
 
 ## Map
 
