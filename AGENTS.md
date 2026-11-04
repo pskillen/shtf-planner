@@ -78,8 +78,10 @@ passes `BUILD_ENV=main`, which `src/util/build-env.ts` maps to `next`; `preview`
 `vite.config.ts` and declared in `src/vite-env.d.ts`. The footer shows both.
 
 With `?debug=1`, `window.__shtf` exists (`src/app/debug.ts`) with `doc()`, `change(fn)` and
-`loadFixture()` (the invented Biggar household, `src/app/state/debugStore.ts`). Later phases hang
-test hooks on it; without the flag nothing is installed.
+`loadFixture()` (the invented Biggar household, `src/app/state/debugStore.ts`), plus
+`engine.{targets,coverage,gaps,score,preview}(asOf?, horizonDays?)` over the live document
+(`src/app/state/debugEngine.ts`). Later phases hang test hooks on it; without the flag nothing is
+installed.
 
 ## Git
 

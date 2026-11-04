@@ -110,7 +110,7 @@ no number of days. The 14-day US band is therefore this planner's choice, not Re
 
 ## Known gaps
 
-- No screens read the packs yet.
+- No screens read the packs yet; the engine (`docs/features/engine`) does.
 - `perHousehold` expresses a one-off amount of a store (the first aid kit). A one-off that has no
   store (a radio, a torch as a thing rather than as light) cannot be a rule: the radio is the
   engine's own comms target, and torches count as light.
