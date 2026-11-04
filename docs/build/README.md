@@ -26,6 +26,10 @@ npm run dev
 
 Open the URL Vite prints (typically `http://localhost:5173/`). `?debug=1` installs `window.__shtf`.
 
+On a fresh clone run one hooked script (`npm run dev`, `build`, `test` or `typecheck`) before calling
+`vitest` or `tsc` directly: the `pre*` hooks create the baked `src/generated/releases.json` they need.
+`test:e2e` reuses a server already on its port, so if something else holds 4173 set `E2E_PORT`.
+
 ## Scripts
 
 | Script                            | Purpose                                                                            |
