@@ -66,13 +66,17 @@ describe('the gaps view on the fixture household', () => {
     expect(byWeakest[0]!.capability).toBe(weakest);
 
     const byCost = view(14, 'cost').shopping.filter((r) => r.kind === 'acquire');
-    const priced = byCost.map((r) => r.perUnitPence).filter((p): p is number => p !== undefined);
-    expect(priced.length).toBeGreaterThan(1);
-    expect(priced).toEqual([...priced].sort((a, b) => a - b));
-    // what has no price per unit comes after everything that has
-    const firstUnpriced = byCost.findIndex((r) => r.perUnitPence === undefined);
-    if (firstUnpriced >= 0) {
-      expect(byCost.slice(firstUnpriced).every((r) => r.perUnitPence === undefined)).toBe(true);
+    // rows are in different units (litres, kcal, hours, radios): compare their own prices
+    expect(new Set(byCost.map((r) => r.capability)).size).toBeGreaterThan(3);
+    const prices = byCost.map((r) => r.pricePence ?? Infinity);
+    expect(prices).toEqual([...prices].sort((a, b) => a - b));
+    expect(prices.filter(Number.isFinite).length).toBeGreaterThan(1);
+    // the same price keeps the weakest first
+    const rank = byWeakest.map((r) => r.key);
+    for (let i = 1; i < byCost.length; i++) {
+      if (prices[i] === prices[i - 1]) {
+        expect(rank.indexOf(byCost[i - 1]!.key)).toBeLessThan(rank.indexOf(byCost[i]!.key));
+      }
     }
   });
 

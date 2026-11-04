@@ -14,8 +14,6 @@ export interface ShoppingRow {
   /** "water: 20 L short of 14 days" */
   closes: string;
   pricePence?: number;
-  /** Price per unit of the store, for sorting by cost per coverage. */
-  perUnitPence?: number;
   /** What Quick add opens with when the row is ticked; absent for advice with nothing to add. */
   itemTypeId?: string;
   qty?: number;
@@ -85,9 +83,6 @@ function shoppingRowsFor(gap: Gap, horizonDays: number, region: 'UK' | 'US', at:
     key: `${gap.target.id}|${gap.kind}|${at}|${i}`,
     label: s.label,
     ...(s.pricePence !== undefined ? { pricePence: s.pricePence } : {}),
-    ...(s.pricePence !== undefined && s.qty && s.perUnitCoverage
-      ? { perUnitPence: s.pricePence / (s.qty * s.perUnitCoverage) }
-      : {}),
     ...(s.itemTypeId ? { itemTypeId: s.itemTypeId } : {}),
     ...(s.qty ? { qty: s.qty } : {}),
     alternatives,
@@ -136,9 +131,10 @@ export function buildGapsView(input: {
   shopping.sort((a, b) => {
     if (kindOrder(a) !== kindOrder(b)) return kindOrder(a) - kindOrder(b);
     if (sort === 'cost') {
-      // Priced by cost per unit given, cheapest first; what has no price comes last.
-      const pa = a.perUnitPence ?? Infinity;
-      const pb = b.perUnitPence ?? Infinity;
+      // The row's own price, cheapest first (units differ across needs, so a per-unit price
+      // would not compare); what has no price comes last. A tie keeps the weakest first.
+      const pa = a.pricePence ?? Infinity;
+      const pb = b.pricePence ?? Infinity;
       if (pa !== pb) return pa < pb ? -1 : 1;
     }
     return capOrder(a) - capOrder(b);

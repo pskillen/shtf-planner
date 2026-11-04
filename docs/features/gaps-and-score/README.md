@@ -23,7 +23,7 @@ The Gaps and Score tabs. Both only show what the engine returns for the chosen h
   14 days"), a rough price when the pack has one. Restocking a rotating place comes first, then
   buying. A store or radio shortfall lists the best choice with "or" alternatives; a shortfall of
   heat or cooking hours lists a heater and its fuel as separate lines. Sort by weakest need first
-  or by cheapest cover (price per unit given, unpriced last). The tick opens Quick add with that
+  or by cheapest cover (the row's own price, unpriced last). The tick opens Quick add with that
   item and quantity.
 - **To do.** Plan items with Done, which writes `plans[id].doneAt` and `expires` (from the plan's
   `expiresMonths`). Tasks, such as "Fit an EPS to the solar PV", link to Equipment.
