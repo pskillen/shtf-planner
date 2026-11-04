@@ -8,6 +8,8 @@ export const SYNC_DB_NAME = 'shtf-planner-sync';
  * a lost record, never touches the household.
  */
 export interface SyncRecord {
+  /** The Google account these ids and the base belong to (a different one starts afresh). */
+  account?: string;
   /** Drive ids, found by name on first connect. */
   folderId?: string;
   yjsFileId?: string;

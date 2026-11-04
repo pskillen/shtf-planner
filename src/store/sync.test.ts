@@ -193,6 +193,82 @@ describe('connecting', () => {
   });
 });
 
+async function pairWithConflict() {
+  const cloud = createFakeCloud();
+  const a = await device(cloud);
+  const b = await device(cloud);
+  setItem(a, 'x', 1);
+  await a.sync.connect();
+  await b.sync.connect();
+  a.port.offline = true;
+  setItem(a, 'x', 2);
+  await settle(a);
+  setItem(b, 'x', 3);
+  await b.sync.flush();
+  a.port.offline = false;
+  await a.sync.checkDrive();
+  return { cloud, a, b };
+}
+
+describe('disconnect and reconnect', () => {
+  async function pair() {
+    const cloud = createFakeCloud();
+    const a = await device(cloud);
+    const b = await device(cloud);
+    setItem(a, 'x', 1);
+    await a.sync.connect();
+    await b.sync.connect();
+    return { cloud, a, b };
+  }
+
+  it('edits made while disconnected survive a reconnect, with no false questions', async () => {
+    const { cloud, a, b } = await pair();
+    await a.sync.disconnect();
+    setItem(a, 'x', 5); // A edits x while disconnected
+    setItem(b, 'y', 7); // B edits y and pushes
+    await b.sync.flush();
+
+    await a.sync.connect();
+    await a.sync.whenIdle();
+    expect(a.sync.state().firstConnect).toBe(false);
+    expect(a.sync.state().conflicts).toEqual([]);
+    expect(kind(a)).toBe('synced');
+    expect(a.store.get().items.x).toMatchObject({ qty: 5 });
+    expect(a.store.get().items.y).toMatchObject({ qty: 7 });
+    expect(JSON.parse(cloud.text(JSON_FILE_NAME)!).items.x.qty).toBe(5);
+
+    await b.sync.checkDrive();
+    expect(b.store.get().items.x).toMatchObject({ qty: 5 });
+  });
+
+  it('reconnecting with nothing changed asks nothing and writes nothing', async () => {
+    const { cloud, a } = await pair();
+    await a.sync.disconnect();
+    const writes = cloud.writes[YJS_FILE_NAME];
+    await a.sync.connect();
+    expect(a.sync.state().firstConnect).toBe(false);
+    expect(kind(a)).toBe('synced');
+    expect(cloud.writes[YJS_FILE_NAME]).toBe(writes);
+  });
+
+  it('drops pending questions and keeps the household as merged', async () => {
+    const { a } = await pairWithConflict();
+    expect(a.sync.state().conflicts.length).toBeGreaterThan(0);
+    await a.sync.disconnect();
+    expect(a.sync.state().conflicts).toEqual([]);
+    expect(a.store.get().items.x).toBeDefined();
+  });
+
+  it('a different Google account starts afresh and asks first', async () => {
+    const { a } = await pair();
+    await a.sync.disconnect();
+    setItem(a, 'mine', 2);
+    a.port.email = 'someone-else@example.test';
+    await a.sync.connect();
+    expect(a.sync.state().firstConnect).toBe(true);
+  });
+});
+
 describe('pushing', () => {
   it('two edits within the debounce window make one upload of two files', async () => {
     const cloud = createFakeCloud();

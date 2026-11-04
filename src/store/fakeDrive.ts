@@ -40,6 +40,8 @@ export interface FakePort extends DrivePort {
   cancelNextConnect: boolean;
   /** Runs once, right after the next `listFiles` has read Drive: another device acts in the gap. */
   afterNextList?: () => Promise<void>;
+  /** The account `connect()` signs in; change it to model a different Google account. */
+  email: string;
   /** Folder lookups made. */
   calls: { list: number; read: number };
 }
@@ -78,11 +80,12 @@ export function createFakeCloud(): FakeCloud {
       const port: FakePort = {
         offline: false,
         authExpired: false,
+        email: options.email ?? 'me@example.test',
         cancelNextConnect: false,
         calls: { list: 0, read: 0 },
         configured: () => true,
         isConnected: () => connected,
-        accountEmail: () => (connected ? (options.email ?? 'me@example.test') : null),
+        accountEmail: () => (connected ? port.email : null),
         async connect() {
           if (port.cancelNextConnect) {
             port.cancelNextConnect = false;

@@ -652,8 +652,18 @@ export function createSync(options: SyncOptions): Sync {
       }
       clearProblem();
       paused = false;
-      publish();
-      await requestSync();
+      await enqueue(async () => {
+        const account = drive.accountEmail() ?? undefined;
+        if (rec.account && account && rec.account !== account) {
+          // Another Google account: its folder, files and history are not ours to compare with.
+          base = undefined;
+          rec = emptySyncRecord();
+          await persistence.clear();
+        }
+        if (account) await save({ account });
+        await deriveDirty(); // edits made while disconnected
+      });
+      await requestSync(); // publishes as it starts: no "Synced" flash before the first pull
     },
 
     async disconnect() {
@@ -665,9 +675,10 @@ export function createSync(options: SyncOptions): Sync {
         firstConnect = false;
         firstConnectOk = false;
         paused = false;
-        base = undefined;
-        rec = emptySyncRecord();
-        await persistence.clear();
+        // Only the connection and the pending questions go. The last synced state and the Drive
+        // ids stay, so connecting again on the same account compares against what both sides
+        // last had instead of asking about the whole household.
+        await save({ conflicts: [] });
         publish();
       });
     },
