@@ -1,5 +1,5 @@
 import { HORIZONS, preview, score, type PreviewHorizon, type PreviewRow } from '../../../engine';
-import type { CapabilityId, Document, Packs } from '../../../model';
+import type { Document, Packs } from '../../../model';
 
 export type { PreviewHorizon, PreviewRow };
 
@@ -16,20 +16,23 @@ export const rowKey = (row: Pick<PreviewRow, 'capability' | 'label'>): string =>
   `${row.capability}|${row.label}`;
 
 /**
- * The capabilities that are the biggest ask: those furthest short of their target at the longest
- * horizon, as a share of the target, so a thousand kcal is not "bigger" than ten litres. The
- * engine's own score says how far each is; ties are broken the way it breaks them for "weakest".
- * Plans are not something to store, so they are never one.
+ * The rows that are the biggest ask: the weakest row of each of the three capabilities furthest
+ * short of their target at the longest horizon (so a thousand kcal is not "bigger" than ten
+ * litres). The engine's own score says how far each capability is and which of its targets holds
+ * it back; ties are broken the way it breaks them for "weakest". Plans are never one. The keys are
+ * `rowKey`s, so a table row can ask for itself.
  */
 export function biggestAsks(
   doc: Document,
   packs: Packs,
   asOf: string,
   count = 3,
-): ReadonlySet<CapabilityId> {
+): ReadonlySet<string> {
   const longest = Math.max(...HORIZONS);
   const result = score(doc, packs, asOf, longest);
   const order = result.capabilities.filter((c) => c.targetCount > 0 && c.capability !== 'plans');
   order.sort((a, b) => a.percent - b.percent || a.meanPercent - b.meanPercent);
-  return new Set(order.slice(0, count).map((c) => c.capability));
+  return new Set(
+    order.slice(0, count).flatMap((c) => (c.weakestTarget ? [rowKey(c.weakestTarget)] : [])),
+  );
 }

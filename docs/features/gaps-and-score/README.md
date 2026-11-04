@@ -53,7 +53,8 @@ Equipment that gives the plan nothing (solar with no EPS, an EV with no vehicle-
 Blocked badge and a plain reason from its type ("No EPS fitted", "No vehicle-to-load"); the engine's
 full reason, with the question and the answer, is under "Why?" and only shows when opened. The
 horizon table shows the engine's preview with sentence-case titles; rows are matched across horizons
-by need, and the three needs furthest short of their target at 28 days are in bold.
+by need, and only the weakest row of each of the three needs furthest short of their target at 28
+days is in bold.
 
 ## Tests
 

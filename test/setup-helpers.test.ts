@@ -211,26 +211,34 @@ describe('the horizon preview', () => {
     for (const h of p) expect(keys(h)).toEqual(keys(p[0]!));
   });
 
-  it('picks the three capabilities furthest short of their target at 28 days', () => {
+  it('bolds the weakest row of each of the three capabilities furthest short at 28 days', () => {
     const doc = biggarDocument();
     const asks = biggestAsks(doc, packs, asOf);
     expect(asks.size).toBe(3);
-    // the engine's own score at the longest horizon says which are shortest
+    // the engine's own score at the longest horizon says which are shortest, and which target
     const s = score(doc, packs, asOf, 28);
     const shortest = s.capabilities
       .filter((c) => c.targetCount > 0 && c.capability !== 'plans')
       .sort((a, b) => a.percent - b.percent || a.meanPercent - b.meanPercent)
-      .slice(0, 3)
-      .map((c) => c.capability);
-    expect([...asks].sort()).toEqual([...shortest].sort());
-    expect(asks.has('plans')).toBe(false);
+      .slice(0, 3);
+    expect([...asks].sort()).toEqual(shortest.map((c) => rowKey(c.weakestTarget!)).sort());
+    expect([...asks].some((k) => k.startsWith('plans|'))).toBe(false);
+  });
+
+  it('bolds one row, not every row, of a capability with several targets', () => {
+    const asks = biggestAsks(biggarDocument(), packs, asOf);
+    const rows = previewFor(biggarDocument(), packs, asOf)[3]!.rows;
+    const bold = rows.filter((r) => asks.has(rowKey(r)));
+    expect(bold.length).toBe(3);
+    // food has three rows on the fixture; at most one of them is bold
+    expect(bold.filter((r) => r.capability === 'food').length).toBeLessThanOrEqual(1);
   });
 
   it('judges by share of the target, not by the size of the number', () => {
     const asks = biggestAsks(biggarDocument(), packs, asOf);
     // water is the biggest amount (441 L at 28 days) but is partly stocked; heat has nothing
     expect(previewFor(biggarDocument(), packs, asOf)[3]!.rows[0]!.amount).toBe(441);
-    expect(asks.has('water')).toBe(false);
-    expect(asks.has('heat')).toBe(true);
+    expect(asks.has('water|water')).toBe(false);
+    expect(asks.has('heat|heat')).toBe(true);
   });
 });
