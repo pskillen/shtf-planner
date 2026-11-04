@@ -98,6 +98,7 @@
       "grid"
     ],
     "solar": true,
+    "subregion": "scotland",
     "type": "detached"
   },
   "household": {
@@ -165,7 +166,7 @@
   },
   "items": {
     "item-aa": {
-      "added": "2026-02-01",
+      "added": "2026-09-01",
       "bestBefore": "2031-01",
       "id": "item-aa",
       "locationId": "loc-hall",
@@ -174,7 +175,7 @@
       "typeId": "items-base:aa-cells-8"
     },
     "item-first-aid": {
-      "added": "2026-02-01",
+      "added": "2026-09-01",
       "bestBefore": "2028-01",
       "id": "item-first-aid",
       "locationId": "loc-hall",
@@ -183,7 +184,7 @@
       "typeId": "items-base:first-aid-kit"
     },
     "item-lpg": {
-      "added": "2026-02-01",
+      "added": "2026-09-01",
       "id": "item-lpg",
       "locationId": "loc-shed",
       "qty": 1,
@@ -191,7 +192,7 @@
       "typeId": "items-base:lpg-bottle-13kg"
     },
     "item-nappies": {
-      "added": "2026-02-01",
+      "added": "2026-09-01",
       "id": "item-nappies",
       "locationId": "loc-hall",
       "qty": 1,
@@ -199,7 +200,7 @@
       "typeId": "items-base:nappies-size-2"
     },
     "item-oats": {
-      "added": "2026-02-01",
+      "added": "2026-09-01",
       "bestBefore": "2026-12",
       "id": "item-oats",
       "locationId": "loc-pantry",
@@ -208,7 +209,7 @@
       "typeId": "items-base:porridge-oats"
     },
     "item-pasta": {
-      "added": "2026-02-01",
+      "added": "2026-09-01",
       "bestBefore": "2027-09",
       "id": "item-pasta",
       "locationId": "loc-pantry",
@@ -217,7 +218,7 @@
       "typeId": "items-base:dried-pasta"
     },
     "item-rice": {
-      "added": "2026-02-01",
+      "added": "2026-09-01",
       "bestBefore": "2027-12",
       "id": "item-rice",
       "locationId": "loc-pantry",
@@ -226,7 +227,7 @@
       "typeId": "items-base:rice-sack"
     },
     "item-tea": {
-      "added": "2026-02-01",
+      "added": "2026-09-01",
       "bestBefore": "2027-03",
       "id": "item-tea",
       "locationId": "loc-pantry",
@@ -235,7 +236,7 @@
       "typeId": "items-base:tea-and-sugar"
     },
     "item-tinned": {
-      "added": "2026-02-01",
+      "added": "2026-09-01",
       "bestBefore": "2028-06",
       "id": "item-tinned",
       "locationId": "loc-pantry",
@@ -244,7 +245,7 @@
       "typeId": "items-base:tinned-food"
     },
     "item-torch-1": {
-      "added": "2026-02-01",
+      "added": "2026-09-01",
       "id": "item-torch-1",
       "locationId": "loc-hall",
       "qty": 1,
@@ -252,7 +253,7 @@
       "typeId": "items-base:torch-led-200lm"
     },
     "item-torch-2": {
-      "added": "2026-02-01",
+      "added": "2026-09-01",
       "id": "item-torch-2",
       "locationId": "loc-pantry",
       "qty": 1,
@@ -260,7 +261,7 @@
       "typeId": "items-base:torch-led-200lm"
     },
     "item-torch-3": {
-      "added": "2026-02-01",
+      "added": "2026-09-01",
       "id": "item-torch-3",
       "locationId": "loc-garage",
       "qty": 1,
@@ -268,7 +269,7 @@
       "typeId": "items-base:torch-led-200lm"
     },
     "item-uht": {
-      "added": "2026-02-01",
+      "added": "2026-09-01",
       "bestBefore": "2026-10",
       "id": "item-uht",
       "locationId": "loc-pantry",
@@ -277,7 +278,7 @@
       "typeId": "items-base:uht-milk"
     },
     "item-water": {
-      "added": "2026-02-01",
+      "added": "2026-09-01",
       "id": "item-water",
       "locationId": "loc-garage",
       "qty": 2,
@@ -337,7 +338,7 @@
     }
   },
   "meta": {
-    "createdAt": "2026-01-15T09:00:00.000Z",
+    "createdAt": "2026-09-01T09:00:00.000Z",
     "devices": [
       "device-fixture"
     ],
@@ -349,7 +350,7 @@
       "guidance-us-ready": 2,
       "items-base": 1,
       "plans-base": 1,
-      "regions": 1
+      "regions": 2
     },
     "schemaVersion": 1
   },

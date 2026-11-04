@@ -2,10 +2,10 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { DocumentSchema, migrate } from '../src/model';
-import { bundledPacks } from '../src/packs';
-import { biggarDocument } from './fixtures/household-biggar';
+import { bundledPacks, subregionIssue } from '../src/packs';
+import { biggarDocument } from '../src/fixtures/household-biggar';
 
-const jsonPath = fileURLToPath(new URL('./fixtures/household-biggar.json', import.meta.url));
+const jsonPath = fileURLToPath(new URL('../src/fixtures/household-biggar.json', import.meta.url));
 
 /** The committed export: sorted keys, two-space indent, trailing newline (what `export()` writes). */
 function exportText(doc: unknown): string {
@@ -76,5 +76,24 @@ describe('the Biggar fixture household', () => {
     for (const [id, version] of Object.entries(doc.meta.packVersions)) {
       expect(packs.byId[id]?.version, id).toBe(version);
     }
+  });
+
+  it('is in Scotland, a subregion the regions pack knows', () => {
+    expect(doc.home.subregion).toBe('scotland');
+    expect(subregionIssue(doc.home, bundledPacks())).toBeUndefined();
+    expect(subregionIssue({ region: 'UK', subregion: 'atlantis' }, bundledPacks())).toMatch(
+      /not one of UK's/,
+    );
+    expect(subregionIssue({ region: 'US', subregion: 'scotland' }, bundledPacks())).toMatch(/none/);
+  });
+
+  it('has sane dates: created and added from 2026-09-01, one expired item, the rest not yet', () => {
+    expect(doc.meta.createdAt >= '2026-09-01').toBe(true);
+    for (const i of Object.values(doc.items)) expect(i.added >= '2026-09-01', i.id).toBe(true);
+    const expired = Object.values(doc.items)
+      .filter((i) => i.bestBefore !== undefined && i.bestBefore < '2026-11')
+      .map((i) => i.id);
+    expect(expired).toEqual(['item-uht']);
+    for (const m of doc.household.members) expect(m.dob <= doc.meta.createdAt, m.id).toBe(true);
   });
 });

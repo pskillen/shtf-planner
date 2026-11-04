@@ -1,7 +1,7 @@
 # Data model
 
-**Status:** Done (model, store and fixture; no screens yet)
-**Tracking:** none (no tickets yet)
+**Status:** Done
+**Tracking:** none
 
 The household document, the store that holds it in the browser, its migrations and the test
 household. Nothing here is visible in the app yet: the shell still shows placeholders.
@@ -15,7 +15,7 @@ household. Nothing here is visible in the app yet: the shell still shows placeho
 | The store      | `src/store/documentStore.ts`                          | `openStore()` returns a `DocumentStore`.                                                              |
 | Open and sync  | `src/store/migrateOnOpen.ts`, `src/store/yconvert.ts` | Bring-forward on open, device id and env stamp; plain JSON to and from the CRDT.                      |
 | React side     | `src/app/state/`                                      | `DocumentProvider`, `useDocument()`, `useChange()`, `useStoreStatus()`.                               |
-| Test household | `test/fixtures/household-biggar.{ts,json}`            | The invented family in Biggar, also the e2e seed.                                                     |
+| Test household | `src/fixtures/household-biggar.{ts,json}`             | The invented family in Biggar, also the e2e seed.                                                     |
 
 ## The document
 
@@ -41,13 +41,13 @@ runs `fn` on a draft and writes only the difference, in one transaction labelled
 different records or fields never conflict; arrays of records with ids are diffed by id, so editing
 one member never clobbers another.
 
-| Method                         | For                                                                                    |
-| ------------------------------ | -------------------------------------------------------------------------------------- |
-| `get`, `status`                | The snapshot; `ok`, or why the store is read-only.                                     |
-| `change`, `subscribe`          | Edit; hear about every change, local or merged (the listener also gets the status).    |
-| `export`, `importJson`         | JSON with sorted keys (byte-identical for equal documents); replace from an export.    |
-| `heads`, `bytes`, `mergeBytes` | Drive sync (P6): an opaque sync point, the CRDT binary, merge another device's binary. |
-| `flush`, `close`               | Wait for IndexedDB; release it.                                                        |
+| Method                         | For                                                                                 |
+| ------------------------------ | ----------------------------------------------------------------------------------- |
+| `get`, `status`                | The snapshot; `ok`, or why the store is read-only.                                  |
+| `change`, `subscribe`          | Edit; hear about every change, local or merged (the listener also gets the status). |
+| `export`, `importJson`         | JSON with sorted keys (byte-identical for equal documents); replace from an export. |
+| `heads`, `bytes`, `mergeBytes` | Drive sync: an opaque sync point, the CRDT binary, merge another device's binary.   |
+| `flush`, `close`               | Wait for IndexedDB; release it.                                                     |
 
 `src/app` reaches the store only through `DocumentProvider`.
 
@@ -90,12 +90,23 @@ one member never clobbers another.
 
 ## The fixture rule
 
-`test/fixtures/household-biggar.ts` builds the test household (area ML12, detached, heat pump, solar
+`src/fixtures/household-biggar.ts` builds the test household (area ML12, detached, heat pump, solar
 and battery without an EPS, two V2L cars, a baby, a child, an elderly person on a critical
 medication, a dog); `household-biggar.json` is its export. They are **invented**: never put the
 owner's real data in a fixture. Regenerate the JSON with
 `WRITE_FIXTURE=1 npx vitest run test/fixtures.test.ts`. Fixture ids are fixed so tests can name
-them. With `?debug=1`, `window.__shtf.loadFixture()` replaces the document with it.
+them. With `?debug=1`, `window.__shtf.loadFixture()` replaces the document with it. The fixture
+lives under `src/` because the debug hook loads it (as its own lazily fetched chunk); nothing in
+`src/` imports from `test/`, and a test enforces that.
+
+Its dates assume "today" is 2026-11-04: the document is created and items are added from
+2026-09-01, best-before dates are in the future except one deliberately expired item (UHT milk),
+and it is set in Scotland (`home.subregion: 'scotland'`). The fixture never reads the clock; a test
+that depends on dates passes `now` in.
+
+`home.subregion` is optional and picks the regional risk links; it must be one of the `subregions`
+the home's region lists in `regions.json` (for the UK: `scotland`, `england`, `wales`,
+`northern-ireland`). `subregionIssue` in `src/packs/loader.ts` checks it.
 
 ## Debug hook
 
@@ -103,6 +114,6 @@ With `?debug=1`: `window.__shtf.doc()`, `.change(fn)` and `.loadFixture()` (all 
 
 ## Known gaps
 
-- No screens read or write the document yet (P4 onwards).
-- No Drive sync (P6): `bytes`, `mergeBytes` and `heads` are the whole contract.
+- No screens read or write the document yet.
+- No Drive sync yet: `bytes`, `mergeBytes` and `heads` are the whole contract.
 - No diesel store, so a diesel generator cannot be modelled.

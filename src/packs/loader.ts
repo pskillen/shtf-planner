@@ -212,6 +212,22 @@ export function loadPacks(raws: ReadonlyArray<{ label: string; raw: unknown }>):
   };
 }
 
+/**
+ * Why a home's `subregion` is not valid, or undefined when it is fine (or unset): it must be one
+ * of the `subregions` its region lists in `regions.json`. The document schema cannot check this
+ * itself because it cannot see the packs.
+ */
+export function subregionIssue(
+  home: { region: Region; subregion?: string },
+  packs: Packs,
+): string | undefined {
+  if (home.subregion === undefined) return undefined;
+  const known = (packs.regions[home.region]?.subregions ?? []).map((s) => s.id);
+  return known.includes(home.subregion)
+    ? undefined
+    : `subregion "${home.subregion}" is not one of ${home.region}'s: ${known.join(', ') || 'none'}`;
+}
+
 /** Pack versions the document has not recorded, and those that differ from what it recorded. */
 export function packVersionReport(
   meta: Pick<Meta, 'packVersions'>,

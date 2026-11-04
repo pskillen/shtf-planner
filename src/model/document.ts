@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 /**
  * The household document: the one thing a user owns. It lives in a CRDT in the browser and merges
- * through Google Drive (P6), so records that devices add concurrently are keyed objects, not
+ * through Google Drive, so records that devices add concurrently are keyed objects, not
  * arrays. `members` and `pets` are small arrays whose elements carry ids.
  *
  * Ids are strings: `crypto.randomUUID()` for instances, `"<packId>:<localId>"` for pack things.
@@ -148,6 +148,12 @@ export const HomeSchema = z.object({
   /** A postcode district or a coarse label; never a full address. */
   area: z.string().optional(),
   region: RegionSchema,
+  /**
+   * A subregion id from `regions.json` (for the UK: `'scotland' | 'england' | 'wales' |
+   * 'northern-ireland'`), which picks the regional risk links. Checked against the regions pack by
+   * `subregionIssue` in `src/packs/loader.ts`, not by this schema, which cannot see the packs.
+   */
+  subregion: z.string().optional(),
 });
 export type Home = z.infer<typeof HomeSchema>;
 

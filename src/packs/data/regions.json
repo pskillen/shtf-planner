@@ -2,7 +2,7 @@
   "format": 1,
   "id": "regions",
   "kind": "regions",
-  "version": 1,
+  "version": 2,
   "name": "Regions",
   "sources": [
     {
@@ -72,6 +72,9 @@
         }
       ],
       "subregions": [
+        { "id": "england", "name": "England", "riskLinks": [] },
+        { "id": "wales", "name": "Wales", "riskLinks": [] },
+        { "id": "northern-ireland", "name": "Northern Ireland", "riskLinks": [] },
         {
           "id": "scotland",
           "name": "Scotland",

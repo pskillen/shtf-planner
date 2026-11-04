@@ -6,17 +6,28 @@ import {
   type Document,
   type ItemInstance,
   type Location,
-} from '../../src/model';
+} from '../model';
 
 /**
  * The test household: an invented family in Biggar (ML12), Scotland. Not a real household; it is
  * the owner's situation fuzzed. Ids are fixed (not random) so tests and later phases can name them.
  * `household-biggar.json` is its export; `test/fixtures.test.ts` keeps the two in step.
+ *
+ * The fixture's "today" is 2026-11-04: best-before dates are in the future of it except the one
+ * deliberately expired item named below. Nothing here reads the clock, and neither should a test:
+ * tests that depend on dates inject `now` (2026-11-04) into whatever they call.
  */
 
 const ITEMS = 'items-base';
 const ASSETS = 'assets-base';
-const TODAY = '2026-02-01';
+// Items are "added" and the document created on or after this date.
+const TODAY = '2026-09-01';
+/** The pack versions the fixture was written against (a test checks they are current). */
+const PACK_VERSIONS: Record<string, number> = {
+  'assets-base': 2,
+  'guidance-us-ready': 2,
+  regions: 2,
+};
 
 const loc = (id: string, name: string, o: Omit<Location, 'id' | 'name'>): Location => ({
   id,
@@ -113,6 +124,7 @@ export function biggarDocument(): Document {
     item('item-pasta', 'dried-pasta', 2, L.pantry, '2027-09'),
     item('item-rice', 'rice-sack', 1, L.pantry, '2027-12'),
     item('item-oats', 'porridge-oats', 1, L.pantry, '2026-12'),
+    // The one deliberately expired item: best before 2026-10 is past on the fixture's "today".
     item('item-uht', 'uht-milk', 6, L.pantry, '2026-10'),
     item('item-tea', 'tea-and-sugar', 1, L.pantry, '2027-03'),
     item('item-water', 'water-can', 2, L.garage),
@@ -131,10 +143,8 @@ export function biggarDocument(): Document {
       schemaVersion: SCHEMA_VERSION,
       env: 'local',
       devices: ['device-fixture'],
-      createdAt: '2026-01-15T09:00:00.000Z',
-      packVersions: Object.fromEntries(
-        DEFAULT_PACKS.map((id) => [id, id === 'assets-base' || id === 'guidance-us-ready' ? 2 : 1]),
-      ),
+      createdAt: '2026-09-01T09:00:00.000Z',
+      packVersions: Object.fromEntries(DEFAULT_PACKS.map((id) => [id, PACK_VERSIONS[id] ?? 1])),
     },
     household: {
       members: [
@@ -174,6 +184,7 @@ export function biggarDocument(): Document {
       growing: 'small',
       risks: ['storm', 'snow', 'grid'],
       area: 'ML12',
+      subregion: 'scotland',
       region: 'UK',
     },
     locations: Object.fromEntries(locations.map((l) => [l.id, l])),

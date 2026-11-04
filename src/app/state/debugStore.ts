@@ -15,7 +15,7 @@ export function installStoreDebug(hook: Record<string, unknown> | undefined): vo
   };
   hook.loadFixture = async () => {
     // Loaded only here, so the fixture is a separate chunk that normal use never fetches.
-    const { biggarDocument } = await import('../../../test/fixtures/household-biggar');
+    const { biggarDocument } = await import('../../fixtures/household-biggar');
     const store = await getStore();
     store.importJson(JSON.stringify(biggarDocument()), 'replace');
     await store.flush();

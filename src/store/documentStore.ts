@@ -45,7 +45,7 @@ export interface DocumentStore {
   importJson(json: string, mode: 'replace'): void;
   /** An opaque sync point (the encoded state vector, base64) for "what changed since". */
   heads(): string;
-  /** The CRDT's full binary state, for Drive (P6). */
+  /** The CRDT's full binary state, for Drive. */
   bytes(): Uint8Array;
   /** Merges another device's `bytes()`; goes read-only if it carries a newer schema. */
   mergeBytes(bytes: Uint8Array): void;
