@@ -262,11 +262,15 @@ export function createSync(options: SyncOptions): Sync {
 
   // ---- gates ----------------------------------------------------------------------------
 
+  /** A silent renewal failed: only the Connect button gets past this. */
+  const needsReconnect = () => problem?.kind === 'error' && problem.reconnect === true;
+
   /** Everything that stops sync from touching Drive. */
   function blocked(): boolean {
     return (
       !connected() ||
       paused ||
+      needsReconnect() ||
       store.status().kind !== 'ok' ||
       rec.conflicts.length > 0 ||
       envWarning !== null ||
@@ -533,7 +537,7 @@ export function createSync(options: SyncOptions): Sync {
     let remote: Remote | undefined;
     for (let round = 0; round < MAX_PUSH_ROUNDS && !remote; round++) {
       const fresh = await look();
-      if (fresh.yjs?.modifiedTime === rec.remoteModified) {
+      if (!fresh.yjs || fresh.yjs.modifiedTime === rec.remoteModified) {
         remote = fresh;
       } else {
         if ((await pull(fresh)) === 'blocked') return;
@@ -606,11 +610,11 @@ export function createSync(options: SyncOptions): Sync {
         }),
         host.on('visible', () => void requestSync()),
         host.on('online', () => {
-          clearProblem();
+          if (!needsReconnect()) clearProblem();
           void requestSync();
         }),
         host.on('offline', () => {
-          if (!connected()) return;
+          if (!connected() || needsReconnect()) return;
           problem = { kind: 'offline', since: iso(), edits: rec.edits };
           publish();
         }),
@@ -674,7 +678,7 @@ export function createSync(options: SyncOptions): Sync {
     },
 
     async checkDrive() {
-      clearProblem();
+      if (!needsReconnect()) clearProblem(); // a reconnect waits for the button, not a retry
       await requestSync();
     },
 

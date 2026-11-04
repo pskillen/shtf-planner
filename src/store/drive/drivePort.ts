@@ -48,7 +48,10 @@ export interface DrivePort {
   /** Interactive: only from a button. Throws `DriveCancelledError` when the popup is closed. */
   connect(): Promise<void>;
   disconnect(): Promise<void>;
-  /** One non-interactive token request; false means the person must press Reconnect. */
+  /**
+   * One non-interactive token request; false means the person must press Reconnect. After a
+   * failure it answers false at once, without asking Google, until `connect()` succeeds.
+   */
   renew(): Promise<boolean>;
   /** The app folder, found by name or created. */
   folder(): Promise<string>;
@@ -78,8 +81,14 @@ export function createDrivePort(deps?: Partial<DrivePortDeps>): DrivePort {
   const now = deps?.now ?? Date.now;
 
   let renewing: Promise<boolean> | undefined;
+  /**
+   * A silent renewal failed: Google needs the person. Nothing asks Google again, from any
+   * trigger, until a button press connects successfully; a new page load starts unlatched.
+   */
+  let renewalFailed = false;
 
   function renew(): Promise<boolean> {
+    if (renewalFailed) return Promise.resolve(false);
     renewing ??= (async () => {
       const clientId = getClientId();
       if (!clientId) return false;
@@ -88,6 +97,7 @@ export function createDrivePort(deps?: Partial<DrivePortDeps>): DrivePort {
         saveDriveSession({ ...tokens, accountEmail: loadDriveAccount() ?? undefined });
         return true;
       } catch {
+        renewalFailed = true;
         clearDriveToken();
         return false;
       }
@@ -100,6 +110,7 @@ export function createDrivePort(deps?: Partial<DrivePortDeps>): DrivePort {
   async function session(): Promise<DriveSession> {
     const current = loadDriveSession();
     if (driveSessionIsValid(current, now())) return current;
+    if (renewalFailed) throw new DriveAuthError();
     if (await renew()) {
       const renewed = loadDriveSession();
       if (renewed) return renewed;
@@ -138,6 +149,7 @@ export function createDrivePort(deps?: Partial<DrivePortDeps>): DrivePort {
         // The account label is a nicety.
       }
       saveDriveSession({ ...tokens, accountEmail });
+      renewalFailed = false;
     },
 
     async disconnect() {

@@ -102,6 +102,28 @@ describe('drivePort', () => {
     expect(localStorage.getItem(DRIVE_ACCESS_TOKEN_KEY)).toBeNull();
   });
 
+  it('after a failed renewal it fails at once, without asking Google, until connect() works', async () => {
+    saveDriveSession({ accessToken: 'old', expiresAt: NOW - 1 });
+    let allow = false;
+    const a = auth(async () => {
+      if (!allow) throw new DriveAuthError('popup blocked');
+      return { accessToken: 'fresh', expiresAt: NOW + 3_600_000 };
+    });
+    const p = port(fakeApi(), a);
+    await expect(p.listFiles('f')).rejects.toBeInstanceOf(DriveAuthError);
+    for (let i = 0; i < 3; i++) {
+      await expect(p.listFiles('f')).rejects.toBeInstanceOf(DriveAuthError);
+      await expect(p.folder()).rejects.toBeInstanceOf(DriveAuthError);
+    }
+    expect(await p.renew()).toBe(false);
+    expect(a.authorize).toHaveBeenCalledTimes(1);
+
+    allow = true;
+    await p.connect();
+    expect(a.authorize).toHaveBeenCalledTimes(2);
+    await expect(p.listFiles('f')).resolves.toEqual([]);
+  });
+
   it('a 401 renews once and retries once, then gives up', async () => {
     saveDriveSession({ accessToken: 'stale', expiresAt: NOW + 3_600_000 });
     const list = vi
