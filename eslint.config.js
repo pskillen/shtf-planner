@@ -38,7 +38,7 @@ const modelFence = (denyPackages) => ({
   ],
 });
 
-const engineFence = (denyPackages) => ({
+const engineFence = (denyPackages, allowPacks = false) => ({
   paths: [
     ...UI,
     { name: 'idb', message: 'the engine never touches IndexedDB' },
@@ -46,7 +46,10 @@ const engineFence = (denyPackages) => ({
   ],
   patterns: [
     UI_SUBPATHS,
-    reach(['app', 'store', 'packs'], 'src/engine imports only src/model, src/util and src/engine'),
+    reach(
+      allowPacks ? ['app', 'store'] : ['app', 'store', 'packs'],
+      'src/engine imports only src/model, src/util and src/engine',
+    ),
     // Nothing from node_modules, not even zod: the engine is plain functions.
     ...(denyPackages
       ? [{ regex: '^(?!\\.{1,2}/)[^.]', message: 'src/engine imports no packages' }]
@@ -96,9 +99,10 @@ export default tseslint.config(
     rules: { 'no-restricted-imports': ['error', engineFence(true)] },
   },
   {
-    // Unit tests beside the engine may import a test runner: only the bare-package deny is lifted.
+    // Unit tests beside the engine may import a test runner and load the bundled packs
+    // (`src/packs`): the bare-package deny and the packs reach are lifted, nothing else.
     files: ['src/engine/**/*.test.{ts,tsx}'],
-    rules: { 'no-restricted-imports': ['error', engineFence(false)] },
+    rules: { 'no-restricted-imports': ['error', engineFence(false, true)] },
   },
   {
     // The store never reaches the UI.

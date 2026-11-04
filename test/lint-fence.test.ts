@@ -94,6 +94,16 @@ describe('the lint fence', () => {
       "import { useParams } from 'react-router';\nuseParams;",
     ],
     ['an engine test imports React', 'src/engine/x.test.ts', "import React from 'react';\nReact;"],
+    [
+      'an engine test imports the app',
+      'src/engine/x.test.ts',
+      "import { App } from '../app/App';\nApp;",
+    ],
+    [
+      'an engine file (not a test) imports the packs',
+      'src/engine/x.ts',
+      "import { bundledPacks } from '../packs';\nbundledPacks;",
+    ],
     ['a model test imports React', 'src/model/x.test.ts', "import React from 'react';\nReact;"],
     [
       'a .tsx in the engine imports the app',
@@ -122,6 +132,11 @@ describe('the lint fence', () => {
       'an engine test imports vitest',
       'src/engine/x.test.ts',
       "import { describe, it, expect } from 'vitest';\ndescribe;\nit;\nexpect;",
+    ],
+    [
+      'an engine test loads the bundled packs and the fixture',
+      'src/engine/x.test.ts',
+      "import { bundledPacks } from '../packs';\nimport { biggarDocument } from '../fixtures/household-biggar';\nbundledPacks;\nbiggarDocument;",
     ],
     [
       'a model test imports vitest',
