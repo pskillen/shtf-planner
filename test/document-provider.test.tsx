@@ -56,6 +56,13 @@ describe('DocumentProvider', () => {
     );
     await screen.findByTestId('count');
     const flush = vi.spyOn(await getStore(), 'flush');
+    // The provider registers its page listeners in an effect: wait until they are really there
+    // (a probe event that flushes) before counting calls, so a slow machine cannot beat them.
+    await vi.waitFor(() => {
+      window.dispatchEvent(new Event('pagehide'));
+      expect(flush).toHaveBeenCalled();
+    });
+    flush.mockClear();
 
     window.dispatchEvent(new Event('pagehide'));
     expect(flush).toHaveBeenCalledTimes(1);
