@@ -6,8 +6,14 @@ import type { Sync, SyncState } from '../src/store';
 import { SyncChrome } from '../src/app/sync/SyncChrome';
 import { SyncPill } from '../src/app/sync/SyncPill';
 import { describeStatus } from '../src/app/sync/syncText';
+import { DataScreen } from '../src/app/screens/data/DataScreen';
 import { SyncContext } from '../src/app/state/syncContext';
 import { NO_SYNC_STATE, useSyncState } from '../src/app/state/syncContext';
+
+vi.mock('../src/app/state', async (importActual) => ({
+  ...(await importActual<typeof import('../src/app/state')>()),
+  useStoreFiles: () => ({ export: () => '{}', importJson: () => ({}) }),
+}));
 
 afterEach(cleanup);
 
@@ -165,6 +171,28 @@ describe('the sync chrome', () => {
     });
     wrap(f.sync, <SyncChrome />);
     expect(screen.getByTestId('newer-banner').textContent).toContain('newer version');
+  });
+});
+
+describe('Data screen', () => {
+  const reconnect = () => screen.queryByRole('button', { name: 'Reconnect Google Drive' });
+
+  it('offers Reconnect only when the fix is the Connect button', () => {
+    const f = fakeSync({
+      connected: true,
+      account: 'me@example.test',
+      status: { kind: 'error', message: 'Reconnect Google Drive', reconnect: true },
+    });
+    wrap(f.sync, <DataScreen />);
+    expect(reconnect()).not.toBeNull();
+
+    f.set({
+      status: { kind: 'error', message: 'Sync is off: the file on Drive was last written by dev' },
+    });
+    expect(reconnect()).toBeNull();
+    f.set({ status: { kind: 'error', message: 'The copy on Drive could not be read.' } });
+    expect(reconnect()).toBeNull();
+    expect(screen.getByRole('button', { name: 'Check Drive' })).toBeTruthy();
   });
 });
 

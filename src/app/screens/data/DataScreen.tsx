@@ -43,7 +43,7 @@ function DriveSection() {
         {state.checkedAt ? ` Last looked at Drive at ${clock(state.checkedAt)}.` : ''}
       </p>
       <div className="row">
-        {!state.connected || state.status.kind === 'error' ? (
+        {!state.connected || (state.status.kind === 'error' && state.status.reconnect) ? (
           <button type="button" disabled={!sync} onClick={() => void sync?.connect()}>
             {state.connected ? 'Reconnect Google Drive' : 'Connect Google Drive'}
           </button>

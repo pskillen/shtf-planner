@@ -317,7 +317,7 @@ export function createSync(options: SyncOptions): Sync {
   // ---- dirty tracking -------------------------------------------------------------------
 
   function onLocalEdit(): void {
-    if (merging || !started || !connected() || paused) return;
+    if (merging || !started || !connected()) return;
     editSeq++;
     const wasDirty = rec.dirty;
     rec = {
@@ -328,7 +328,7 @@ export function createSync(options: SyncOptions): Sync {
     };
     void persistence.save({ dirty: true, dirtySince: rec.dirtySince, edits: rec.edits });
     publish();
-    schedulePush();
+    if (!paused) schedulePush(); // "Don't sync": counted as unsent, but nothing is sent
   }
 
   function schedulePush(): void {
@@ -633,11 +633,11 @@ export function createSync(options: SyncOptions): Sync {
         }),
         host.on('visible', () => void requestSync()),
         host.on('online', () => {
-          if (!needsReconnect()) clearProblem();
+          if (!needsReconnect() && !paused) clearProblem();
           void requestSync();
         }),
         host.on('offline', () => {
-          if (!connected() || needsReconnect()) return;
+          if (!connected() || needsReconnect() || paused) return;
           problem = { kind: 'offline', since: iso(), edits: rec.edits };
           publish();
         }),
@@ -712,7 +712,7 @@ export function createSync(options: SyncOptions): Sync {
     },
 
     async checkDrive() {
-      if (!needsReconnect()) clearProblem(); // a reconnect waits for the button, not a retry
+      if (!needsReconnect() && !paused) clearProblem(); // a reconnect waits for the button, not a retry
       await requestSync();
     },
 
@@ -752,6 +752,7 @@ export function createSync(options: SyncOptions): Sync {
           kind: 'error',
           message: `Sync is off: the file on Drive was last written by ${envWarning.fileEnv}`,
         };
+        envWarning = null; // answered: the banner and its buttons go, the message stays
         publish();
         return;
       }

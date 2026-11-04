@@ -704,6 +704,38 @@ describe('guards', () => {
     expect(cloud.writes[YJS_FILE_NAME]).toBe(1);
   });
 
+  it('"don’t sync" stays answered: no banner, the message survives Check Drive and the network coming back, edits count as unsent', async () => {
+    const cloud = createFakeCloud();
+    const a = await device(cloud, { env: 'dev' });
+    setItem(a, 'a', 1);
+    await a.sync.connect();
+    const b = await device(cloud, { env: 'prod' });
+    await b.sync.connect();
+    expect(b.sync.state().envWarning).not.toBeNull();
+    await b.sync.resolveEnv('dont-sync');
+    expect(b.sync.state().envWarning).toBeNull();
+    const off = b.sync.state().status;
+    expect(off).toMatchObject({ kind: 'error' });
+    expect(off).not.toHaveProperty('reconnect');
+
+    await b.sync.checkDrive();
+    b.host.fire('offline');
+    b.host.fire('online');
+    await b.sync.whenIdle();
+    expect(b.sync.state().status).toEqual(off);
+    expect(b.sync.state().envWarning).toBeNull();
+
+    setItem(b, 'b', 2);
+    await settle(b);
+    expect(cloud.writes[YJS_FILE_NAME]).toBe(1);
+    // the edit is remembered as unsent, so it goes out once sync is back on
+    await b.sync.connect();
+    await b.sync.resolveEnv('continue');
+    await b.sync.resolveFirstConnect('merge'); // b made its first answers while sync was off
+    await b.sync.whenIdle();
+    expect(Object.keys(JSON.parse(cloud.text(JSON_FILE_NAME)!).items).sort()).toEqual(['a', 'b']);
+  });
+
   it('is quiet when both devices run the same build, whichever it is', async () => {
     const cloud = createFakeCloud();
     const a = await device(cloud, { env: 'next' });
