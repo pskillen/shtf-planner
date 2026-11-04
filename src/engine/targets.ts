@@ -1,4 +1,5 @@
 import { STORE_INFO, type CapabilityId, type Document, type Packs, type StoreId } from '../model';
+import { compareText } from '../util';
 import { ASSUMPTIONS } from './assumptions';
 import { CAPABILITY_ORDER, guidanceRules, peopleAt, type Person } from './context';
 import { addMonths } from './dates';
@@ -281,5 +282,5 @@ export function targets(
   const order = (t: Target) => CAPABILITY_ORDER.indexOf(t.capability);
   return [...byId.values()]
     .filter((t) => t.amount > 0)
-    .sort((a, b) => order(a) - order(b) || a.id.localeCompare(b.id));
+    .sort((a, b) => order(a) - order(b) || compareText(a.id, b.id));
 }

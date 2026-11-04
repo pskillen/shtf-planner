@@ -1,4 +1,5 @@
 import type { CapabilityId, Document, Packs } from '../model';
+import { compareText } from '../util';
 import { CAPABILITY_ORDER } from './context';
 import { analyse, capabilityTargetId, type Analysis, type Coverage } from './coverage';
 import { closeHours, closeStore, type SuggestContext, type Suggestion } from './suggest';
@@ -162,7 +163,7 @@ export function gapsFrom(doc: Document, packs: Packs, a: Analysis): Gap[] {
     (x, y) =>
       cap(x) - cap(y) ||
       KIND_ORDER.indexOf(x.kind) - KIND_ORDER.indexOf(y.kind) ||
-      x.target.id.localeCompare(y.target.id),
+      compareText(x.target.id, y.target.id),
   );
 }
 

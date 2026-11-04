@@ -1,4 +1,5 @@
 import type { CapabilityId, Document, ItemType, Packs } from '../model';
+import { compareText } from '../util';
 import { MAX_OVERSHOOT } from './assumptions';
 import { activeConverters } from './coverage';
 import { fitsHousehold, localId, type Person } from './context';
@@ -69,7 +70,7 @@ export function closeStore(
     if (pa !== pb) return pa ? -1 : 1;
     if (!pa) return b.per - a.per;
     return (
-      perUnitPrice(a) - perUnitPrice(b) || a.price! - b.price! || a.type.id.localeCompare(b.type.id)
+      perUnitPrice(a) - perUnitPrice(b) || a.price! - b.price! || compareText(a.type.id, b.type.id)
     );
   });
   return pool.slice(0, limit).map((c) => ({
@@ -128,7 +129,7 @@ export function closeHours(
     const pa = a.total !== undefined;
     const pb = b.total !== undefined;
     if (pa !== pb) return pa ? -1 : 1;
-    return (a.total ?? 0) - (b.total ?? 0) || a.assetTypeId.localeCompare(b.assetTypeId);
+    return (a.total ?? 0) - (b.total ?? 0) || compareText(a.assetTypeId, b.assetTypeId);
   });
   const best = options.find((o) => o.item && o.total !== undefined) ?? options[0];
   if (!best) return [];
