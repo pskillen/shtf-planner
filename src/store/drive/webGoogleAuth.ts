@@ -10,13 +10,18 @@ export interface DriveAuthTokens {
   expiresAt: number;
 }
 
+export interface AuthorizeOptions {
+  /** `''` lets Google decide (the default); `'none'` never shows an account chooser or consent. */
+  prompt?: '' | 'none';
+}
+
 export interface DriveAuthProvider {
   /**
    * One token request with `prompt: ''`: Google shows nothing when consent already exists, and
    * its popup when it does not. Called from a button press (connect) or, once, without one
    * (renewal), where a blocked popup surfaces as a `DriveAuthError`.
    */
-  authorize(clientId: string): Promise<DriveAuthTokens>;
+  authorize(clientId: string, options?: AuthorizeOptions): Promise<DriveAuthTokens>;
   revoke(session: DriveSession): Promise<void>;
 }
 
@@ -24,6 +29,7 @@ function requestAccessToken(
   identity: GoogleIdentityClient,
   clientId: string,
   now: () => number,
+  prompt: '' | 'none',
 ): Promise<DriveAuthTokens> {
   return new Promise((resolve, reject) => {
     const client = identity.accounts.oauth2.initTokenClient({
@@ -58,7 +64,7 @@ function requestAccessToken(
       },
     });
     // `prompt: ''` lets Google decide: no dialog when consent already exists.
-    client.requestAccessToken({ prompt: '' });
+    client.requestAccessToken({ prompt });
   });
 }
 
@@ -71,9 +77,9 @@ export function createWebAuthProvider(deps?: Partial<WebGoogleAuthDeps>): DriveA
   const loadIdentity = deps?.loadIdentity ?? loadGoogleIdentity;
   const now = deps?.now ?? Date.now;
   return {
-    async authorize(clientId) {
+    async authorize(clientId, options) {
       const identity = await loadIdentity();
-      return requestAccessToken(identity, clientId, now);
+      return requestAccessToken(identity, clientId, now, options?.prompt ?? '');
     },
     async revoke(session) {
       if (!session.accessToken) return;

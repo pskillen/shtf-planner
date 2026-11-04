@@ -146,7 +146,17 @@ export function createDrivePort(deps?: Partial<DrivePortDeps>): DrivePort {
     async connect() {
       const clientId = getClientId();
       if (!clientId) throw new DriveConfigError();
-      const tokens = await auth.authorize(clientId);
+      // Reconnect (already connected, only the token is gone): ask Google not to show anything
+      // first; its window may still flash. If that fails, the usual request.
+      let tokens;
+      if (isDriveConnected()) {
+        try {
+          tokens = await auth.authorize(clientId, { prompt: 'none' });
+        } catch {
+          tokens = undefined;
+        }
+      }
+      tokens ??= await auth.authorize(clientId, { prompt: '' });
       let accountEmail = loadDriveAccount() ?? undefined;
       for (let attempt = 0; attempt < 2; attempt++) {
         try {

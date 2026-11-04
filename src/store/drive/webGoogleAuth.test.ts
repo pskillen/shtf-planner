@@ -41,6 +41,12 @@ describe('webGoogleAuth', () => {
     expect(requestAccessToken).toHaveBeenCalledWith({ prompt: '' });
   });
 
+  it('passes the prompt on: none for a quiet reconnect', async () => {
+    const { auth, requestAccessToken } = provider(respond({ access_token: 'abc' }));
+    await auth.authorize('client', { prompt: 'none' });
+    expect(requestAccessToken).toHaveBeenCalledWith({ prompt: 'none' });
+  });
+
   it('a closed popup (both callbacks) and access_denied are quiet cancels', async () => {
     const closed = provider((c) => c.error_callback?.({ type: 'popup_closed' }));
     await expect(closed.auth.authorize('c')).rejects.toBeInstanceOf(DriveCancelledError);

@@ -129,6 +129,31 @@ describe('drivePort', () => {
     await expect(p.listFiles('f')).resolves.toEqual([]);
   });
 
+  it('a first connect asks once, with Google deciding what to show', async () => {
+    const a = auth();
+    await port(fakeApi(), a).connect();
+    expect(a.authorize).toHaveBeenCalledTimes(1);
+    expect(a.authorize).toHaveBeenCalledWith('client', { prompt: '' });
+  });
+
+  it('Reconnect asks for no prompt first and falls back to the usual request', async () => {
+    saveDriveSession({ accessToken: 'old', expiresAt: NOW - 1 }); // connected, token gone
+    const calls: string[] = [];
+    const a = auth(async (_id, options) => {
+      calls.push(options?.prompt ?? '?');
+      if (options?.prompt === 'none') throw new DriveAuthError('interaction_required');
+      return { accessToken: 'fresh', expiresAt: NOW + 3_600_000 };
+    });
+    await port(fakeApi(), a).connect();
+    expect(calls).toEqual(['none', '']);
+    expect(loadDriveSession()?.accessToken).toBe('fresh');
+
+    const quiet = auth();
+    await port(fakeApi(), quiet).connect();
+    expect(quiet.authorize).toHaveBeenCalledTimes(1); // 'none' worked: no second request
+    expect(quiet.authorize).toHaveBeenCalledWith('client', { prompt: 'none' });
+  });
+
   it('a script that will not load is not latched: the next call may try again', async () => {
     saveDriveSession({ accessToken: 'old', expiresAt: NOW - 1 });
     const a = auth(async () => {

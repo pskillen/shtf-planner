@@ -119,6 +119,9 @@ hour) is kept in localStorage; there is no refresh token. Nothing opens a popup 
   failure is remembered: no focus, poll, edit, network-return or Check Drive asks Google again, and
   sync does no Drive work, until the person presses the button and it works. (A page reload starts
   with one new silent attempt.) The Data screen shows the Reconnect button only for this error.
+  Reconnect takes one tap: it asks Google for a token with `prompt: 'none'` first and falls back
+  to the usual request if that fails. Google's own window still flashes open and shut on its own
+  (renewal is never fully invisible), but there is nothing to choose or type.
 - **Disconnect** revokes the token and forgets the connection; the household here, the files on
   Drive, and what sync remembers (the folder and file ids, the last state both sides had, and any
   which-copy questions still open) are kept. An open question is still open after Connect, and
