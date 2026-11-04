@@ -7,7 +7,12 @@ import {
   loadDriveSession,
   saveDriveSession,
 } from './drivePrefs';
-import { DriveAuthError, DriveCancelledError, DriveConfigError } from './driveTypes';
+import {
+  DriveAuthError,
+  DriveCancelledError,
+  DriveConfigError,
+  DriveNetworkError,
+} from './driveTypes';
 import { memoryStorage } from './testStorage';
 import type { DriveAuthProvider } from './webGoogleAuth';
 
@@ -122,6 +127,28 @@ describe('drivePort', () => {
     await p.connect();
     expect(a.authorize).toHaveBeenCalledTimes(2);
     await expect(p.listFiles('f')).resolves.toEqual([]);
+  });
+
+  it('a script that will not load is not latched: the next call may try again', async () => {
+    saveDriveSession({ accessToken: 'old', expiresAt: NOW - 1 });
+    const a = auth(async () => {
+      throw new DriveNetworkError('Failed to load Google Identity Services.');
+    });
+    const p = port(fakeApi(), a);
+    await expect(p.listFiles('f')).rejects.toBeInstanceOf(DriveAuthError);
+    await expect(p.listFiles('f')).rejects.toBeInstanceOf(DriveAuthError);
+    expect(a.authorize).toHaveBeenCalledTimes(2);
+  });
+
+  it('reads the account email again once when the first lookup fails', async () => {
+    const getUserEmail = vi
+      .fn<DriveApiClient['getUserEmail']>()
+      .mockRejectedValueOnce(new Error('flaky'))
+      .mockResolvedValueOnce('me@example.test');
+    const p = port(fakeApi({ getUserEmail }), auth());
+    await p.connect();
+    expect(p.accountEmail()).toBe('me@example.test');
+    expect(getUserEmail).toHaveBeenCalledTimes(2);
   });
 
   it('a 401 renews once and retries once, then gives up', async () => {

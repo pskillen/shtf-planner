@@ -7,6 +7,7 @@ import {
   loadGoogleIdentity,
   resetGoogleIdentityLoaderForTests,
 } from './loadGoogleIdentity';
+import { DriveNetworkError } from './driveTypes';
 
 describe('getGoogleClientId', () => {
   beforeEach(() => localStorage.clear());
@@ -65,6 +66,7 @@ describe('loadGoogleIdentity', () => {
     const attempt = loadGoogleIdentity();
     (document.querySelector('script') as HTMLScriptElement).onerror?.(new Event('error'));
     await expect(attempt).rejects.toThrow(/Failed to load/);
+    await expect(attempt).rejects.toBeInstanceOf(DriveNetworkError);
     document.head.innerHTML = '';
     const again = loadGoogleIdentity();
     expect(document.querySelectorAll('script')).toHaveLength(1);

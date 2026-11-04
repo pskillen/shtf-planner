@@ -17,6 +17,7 @@ import {
   APP_ROOT_FOLDER_NAME,
   DRIVE_ROOT_FOLDER_ID,
   DriveAuthError,
+  DriveCancelledError,
   DriveConfigError,
   type DriveFileMetadata,
 } from './driveTypes';
@@ -96,8 +97,12 @@ export function createDrivePort(deps?: Partial<DrivePortDeps>): DrivePort {
         const tokens = await auth.authorize(clientId);
         saveDriveSession({ ...tokens, accountEmail: loadDriveAccount() ?? undefined });
         return true;
-      } catch {
-        renewalFailed = true;
+      } catch (err) {
+        // Only "Google needs the person" is latched; a script that would not load or a dead
+        // network is worth another try on the next trigger.
+        if (err instanceof DriveAuthError || err instanceof DriveCancelledError) {
+          renewalFailed = true;
+        }
         clearDriveToken();
         return false;
       }
@@ -143,10 +148,13 @@ export function createDrivePort(deps?: Partial<DrivePortDeps>): DrivePort {
       if (!clientId) throw new DriveConfigError();
       const tokens = await auth.authorize(clientId);
       let accountEmail = loadDriveAccount() ?? undefined;
-      try {
-        accountEmail = (await api.getUserEmail(tokens.accessToken)) || accountEmail;
-      } catch {
-        // The account label is a nicety.
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          accountEmail = (await api.getUserEmail(tokens.accessToken)) || accountEmail;
+          break;
+        } catch {
+          // Tried twice; sync treats an unreadable account as "cannot tell".
+        }
       }
       saveDriveSession({ ...tokens, accountEmail });
       renewalFailed = false;

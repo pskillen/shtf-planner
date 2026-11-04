@@ -1,5 +1,7 @@
 // Adapted from Codeplug Studio (src/integrations/cloud/loadGoogleIdentity.ts).
 
+import { DriveNetworkError } from './driveTypes';
+
 export interface GoogleTokenClient {
   requestAccessToken: (overrideConfig?: { prompt?: string }) => void;
 }
@@ -50,7 +52,7 @@ export function loadGoogleIdentity(): Promise<GoogleIdentityClient> {
   loadPromise = new Promise<GoogleIdentityClient>((resolve, reject) => {
     const fail = (message: string) => {
       loadPromise = null; // let a later attempt retry
-      reject(new Error(message));
+      reject(new DriveNetworkError(message));
     };
     const done = () => {
       if (window.google?.accounts?.oauth2) resolve(window.google);
