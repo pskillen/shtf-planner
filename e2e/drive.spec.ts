@@ -1,4 +1,5 @@
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
+import { parse, stringify } from 'yaml';
 import { createBackend, installFakeGoogle, type Backend } from './fakeGoogle';
 
 type Shtf = {
@@ -159,9 +160,14 @@ test('the pill is on every app screen and opens the Data screen', async ({ page 
   await expect(page.getByRole('link', { name: /^Data/ })).toBeVisible();
 });
 
-test('export downloads JSON and YAML; import replaces the household', async ({ page }) => {
-  await page.goto('/app/more/data?debug=1');
+test('export downloads JSON and YAML; importing YAML replaces the household and reaches Drive', async ({
+  browser,
+}) => {
+  const backend = createBackend();
+  const { context, page } = await device(browser, backend);
   await page.evaluate(() => (window as unknown as Win).__shtf.loadFixture());
+  await page.getByRole('button', { name: 'Connect Google Drive' }).click();
+  await expect(pill(page)).toHaveAttribute('data-status', 'synced');
 
   const [jsonDownload] = await Promise.all([
     page.waitForEvent('download'),
@@ -185,22 +191,28 @@ test('export downloads JSON and YAML; import replaces the household', async ({ p
   expect(yaml).toContain('schemaVersion: 1');
   expect(yaml).toContain('name: Alex');
 
-  // Import: a smaller household, from YAML, replaces the loaded one.
-  const smaller = {
-    ...exported,
-    household: { ...exported.household, members: exported.household.members.slice(0, 2) },
-    home: { ...exported.home, area: 'Imported' },
-  };
+  // Import: a smaller household, from the YAML export edited, replaces the loaded one.
+  const edited = parse(yaml) as typeof exported;
+  edited.household.members = edited.household.members.slice(0, 2);
+  edited.home.area = 'Imported';
   await page.getByLabel('Choose an export file').setInputFiles({
-    name: 'household.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(smaller)),
+    name: 'household.yaml',
+    mimeType: 'application/yaml',
+    buffer: Buffer.from(stringify(edited)),
   });
   await expect(page.getByTestId('import-preview')).toContainText('2 people');
   await page.getByRole('button', { name: 'Replace my plan' }).click();
   await expect(page.getByTestId('import-done')).toBeVisible();
   expect(await names(page)).toHaveLength(2);
   expect(await area(page)).toBe('Imported');
+
+  // ...and the import is pushed: the sidecar on the fake Drive is the imported household.
+  const pushed = () =>
+    JSON.parse(backend.byName('household.json')!.data.toString('utf8')) as typeof exported;
+  await expect.poll(() => pushed().home.area, { timeout: 20_000 }).toBe('Imported');
+  expect(pushed().household.members).toHaveLength(2);
+  await expect(pill(page)).toHaveAttribute('data-status', 'synced');
+  await context.close();
 });
 
 test('forgetting this device deletes the household here and leaves Drive alone', async ({
