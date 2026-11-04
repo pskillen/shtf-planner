@@ -49,6 +49,46 @@ describe('the gaps view on the fixture household', () => {
     expect(water.closes).not.toMatch(/restocking/);
   });
 
+  it('makes a restock plus the buy row equal the target’s shortfall, with nothing counted twice', () => {
+    const doc = biggarDocument();
+    // stock below the floors: milk at 1 of 3, pasta gone
+    doc.items['item-uht']!.qty = 1;
+    delete doc.items['item-pasta'];
+    const all = gaps(doc, packs, asOf, 14);
+    const cover = new Map(coverage(doc, packs, asOf, 14).map((c) => [c.targetId, c.amount]));
+    const restocks = all.filter((g) => g.kind === 'replenish');
+    expect(restocks.length).toBeGreaterThanOrEqual(2);
+    const targetId = restocks[0]!.target.id;
+    const mine = restocks.filter((g) => g.target.id === targetId);
+    const buy = all.find((g) => g.kind === 'acquire' && g.target.id === targetId)!;
+    expect(buy).toBeDefined();
+    const need = buy.target.amount - (cover.get(targetId) ?? 0);
+    const restocked = mine.reduce((n, g) => n + g.shortfall, 0);
+    expect(restocked).toBeGreaterThan(0);
+    expect(restocked + buy.shortfall).toBeCloseTo(need, 6);
+    // and the view words the buy row with the reduced amount
+    const row = view(14, 'capability', doc).shopping.find(
+      (r) => r.kind === 'acquire' && r.capability === buy.capability,
+    )!;
+    expect(row.closes).toContain(`${Math.round(buy.shortfall * 10) / 10} kcal short`);
+    expect(row.closes).toMatch(/, beyond restocking$/);
+  });
+
+  it('shows no buy row when restocking alone closes the gap', () => {
+    const doc = biggarDocument();
+    const kcal = packs.items['items-base:uht-milk']!.gives[0]!.amount;
+    doc.floors['loc-pantry|items-base:uht-milk'] = 1;
+    doc.items['item-uht']!.qty = 1;
+    const food = (d: typeof doc) =>
+      gaps(d, packs, asOf, 14).filter((g) => g.target.id === 'food:foodKcal');
+    const open = food(doc).find((g) => g.kind === 'acquire')!;
+    // raise the floor so that putting the milk back covers the whole food shortfall
+    doc.floors['loc-pantry|items-base:uht-milk'] = 1 + Math.ceil(open.shortfall / kcal);
+    const after = food(doc);
+    expect(after.some((g) => g.kind === 'replenish')).toBe(true);
+    expect(after.some((g) => g.kind === 'acquire')).toBe(false);
+  });
+
   it('says what each row closes, with a price when the pack has one', () => {
     const water = view(14).shopping.find((r) => r.capability === 'water')!;
     expect(water.label).toMatch(/^\d+ × /);

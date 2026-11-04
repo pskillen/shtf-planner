@@ -73,8 +73,9 @@ food is 4 x 2,000 kcal a day while Jo is on formula.)
 
 A `rotating` location (a pantry) counts a type at most at its **floor**: `min(held, floor)`. With
 no floor for that type it counts nothing, and says so in `from`. A `stored` location counts what is
-there. A type below its floor also yields a `replenish` gap, which is part of the same shortfall,
-not on top of it. Items past their best-before month (`bestBefore` before `asOf`'s month) count
+there. A type below its floor also yields a `replenish` gap. The missing stock is part of the target's shortfall, so the store's
+`acquire` gap is the shortfall less what restocking puts back (none if restocking closes it): the
+two add up to the target's shortfall. Items past their best-before month (`bestBefore` before `asOf`'s month) count
 zero and are listed with `expired: true`. An item with an `ageBand` (nappies, formula, baby food)
 counts only while someone in the household is in the band (half-open, in months, on `asOf`).
 
