@@ -12,6 +12,7 @@ import {
 } from '../components/controls';
 import { EditArea } from '../components/EditArea';
 import { ScreenHeader } from '../components/ScreenHeader';
+import { isDirty } from '../components/isDirty';
 import { Sheet } from '../components/Sheet';
 import { useDeferredDelete } from '../components/useDeferredDelete';
 import { RISK_TAG_LABEL, SIZE_LABEL, SPECIES_LABEL, labelOf } from '../labels';
@@ -89,6 +90,7 @@ function MemberSheet({
     <Sheet
       title={isNew ? 'Add a person' : `Edit ${initial.name || 'person'}`}
       onClose={onClose}
+      dirty={isDirty(m, initial)}
       actions={
         <>
           {onDelete ? (
@@ -252,6 +254,7 @@ function PetSheet({
     <Sheet
       title={isNew ? 'Add a pet' : `Edit ${initial.name || 'pet'}`}
       onClose={onClose}
+      dirty={isDirty(p, initial)}
       actions={
         <>
           {onDelete ? (

@@ -5,6 +5,7 @@ import { formatVolume } from '../../util';
 import { Field } from '../components/controls';
 import { EditArea } from '../components/EditArea';
 import { ScreenHeader } from '../components/ScreenHeader';
+import { isDirty } from '../components/isDirty';
 import { Sheet } from '../components/Sheet';
 import { useDeferredDelete } from '../components/useDeferredDelete';
 import { CATEGORY_LABEL, labelOf } from '../labels';
@@ -67,6 +68,7 @@ function AssetForm({
     <Sheet
       title={isNew ? `Add ${type.name}` : `Edit ${a.name || type.name}`}
       onClose={onClose}
+      dirty={isDirty(a, initial)}
       actions={
         <>
           {onDelete ? (

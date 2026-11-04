@@ -4,6 +4,7 @@ import { formatVolume } from '../../util';
 import { ChipGroup, Field, FieldGroup, NumberInput, Segmented } from '../components/controls';
 import { EditArea } from '../components/EditArea';
 import { ScreenHeader } from '../components/ScreenHeader';
+import { isDirty } from '../components/isDirty';
 import { Sheet } from '../components/Sheet';
 import { useDeferredDelete } from '../components/useDeferredDelete';
 import { CONDITION_LABEL, SIZE_LABEL, labelOf } from '../labels';
@@ -43,6 +44,7 @@ function LocationSheet({
     <Sheet
       title={isNew ? 'Add a place' : `Edit ${initial.name}`}
       onClose={onClose}
+      dirty={isDirty(l, initial)}
       actions={
         <>
           {onDelete ? (

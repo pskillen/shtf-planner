@@ -570,6 +570,25 @@ button:disabled {
   border-top: 1px solid var(--border);
 }
 
+.sheet-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border);
+}
+
+.sheet-confirm p {
+  flex: 1 1 100%;
+  margin: 0;
+  font-weight: 600;
+}
+
+.sheet-confirm button {
+  flex: 1;
+}
+
 .sheet-actions > * {
   flex: 1;
 }
