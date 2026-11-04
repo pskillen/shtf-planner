@@ -1,4 +1,13 @@
 import { z } from 'zod';
+import { ItemTypeSchema } from './packs';
+import {
+  ConditionSchema,
+  InsulationSchema,
+  IsoDateSchema,
+  LocalRiskSchema,
+  RegionSchema,
+  RiskTagSchema,
+} from './primitives';
 
 /**
  * The household document: the one thing a user owns. It lives in a CRDT in the browser and merges
@@ -8,7 +17,7 @@ import { z } from 'zod';
  * Ids are strings: `crypto.randomUUID()` for instances, `"<packId>:<localId>"` for pack things.
  * Dates are ISO `YYYY-MM-DD`, month-only dates `YYYY-MM`, timestamps ISO strings.
  */
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 /** The deploy targets (the footer shows one; `src/util/build-env.ts` re-exports this type). */
 export const ENVS = ['local', 'preview', 'dev', 'next', 'staging', 'prod'] as const;
@@ -16,13 +25,8 @@ export const EnvSchema = z.enum(ENVS);
 export type Env = z.infer<typeof EnvSchema>;
 
 const Id = z.string().min(1);
-export const IsoDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'expected YYYY-MM-DD');
 export const YearMonthSchema = z.string().regex(/^\d{4}-\d{2}$/, 'expected YYYY-MM');
 const Timestamp = z.iso.datetime({ offset: true });
-
-export const REGIONS = ['UK', 'US'] as const;
-export const RegionSchema = z.enum(REGIONS);
-export type Region = z.infer<typeof RegionSchema>;
 
 /**
  * The packs a new document enables. Region-specific packs are filtered by `settings.region`, so
@@ -48,20 +52,6 @@ export const MetaSchema = z.object({
   packVersions: z.record(z.string(), z.number().int()),
 });
 export type Meta = z.infer<typeof MetaSchema>;
-
-export const RISK_TAGS = [
-  'infant',
-  'child',
-  'pregnant',
-  'elderly',
-  'reduced-mobility',
-  'hearing-or-sight',
-  'dietary',
-  'powered-equipment',
-  'takes-medication',
-] as const;
-export const RiskTagSchema = z.enum(RISK_TAGS);
-export type RiskTag = z.infer<typeof RiskTagSchema>;
 
 export const MedicationSchema = z.object({
   id: Id,
@@ -108,30 +98,12 @@ export const HEATINGS = [
   'other',
 ] as const;
 export const COOKINGS = ['gas', 'electric', 'induction', 'lpg', 'other'] as const;
-export const INSULATIONS = ['poor', 'average', 'good', 'excellent'] as const;
-export const LOCAL_RISKS = [
-  'flood',
-  'coastal',
-  'storm',
-  'snow',
-  'heat',
-  'wildfire',
-  'grid',
-  'water-supply',
-  'remote',
-  'unrest',
-  'pandemic',
-] as const;
 export const HomeTypeSchema = z.enum(HOME_TYPES);
 export const HeatingSchema = z.enum(HEATINGS);
 export const CookingSchema = z.enum(COOKINGS);
-export const InsulationSchema = z.enum(INSULATIONS);
-export const LocalRiskSchema = z.enum(LOCAL_RISKS);
 export type HomeType = z.infer<typeof HomeTypeSchema>;
 export type Heating = z.infer<typeof HeatingSchema>;
 export type Cooking = z.infer<typeof CookingSchema>;
-export type Insulation = z.infer<typeof InsulationSchema>;
-export type LocalRisk = z.infer<typeof LocalRiskSchema>;
 
 export const HomeSchema = z.object({
   type: HomeTypeSchema,
@@ -156,10 +128,6 @@ export const HomeSchema = z.object({
   subregion: z.string().optional(),
 });
 export type Home = z.infer<typeof HomeSchema>;
-
-export const CONDITIONS = ['frost', 'heat', 'damp', 'indoor-stable'] as const;
-export const ConditionSchema = z.enum(CONDITIONS);
-export type Condition = z.infer<typeof ConditionSchema>;
 
 export const LocationSchema = z.object({
   id: Id,
@@ -234,6 +202,12 @@ export const DocumentSchema = z.object({
   locations: z.record(Id, LocationSchema),
   assets: z.record(Id, AssetSchema),
   items: z.record(Id, ItemInstanceSchema),
+  /**
+   * Item types the household made itself ("Add as a custom item"), keyed by id (`custom:<uuid>`).
+   * The packs are read-only content; these sit beside them as a pseudo-pack `custom`
+   * (`withCustomTypes` in `src/packs`). Added in schema 2.
+   */
+  customTypes: z.record(Id, ItemTypeSchema),
   /** Minimum level counted for rotating locations, keyed by `floorKey`. */
   floors: z.record(z.string(), z.number().min(0)),
   /** Keyed by pack-namespaced plan item id. */
@@ -265,6 +239,7 @@ export function emptyDocument(env: Env, now: string = new Date().toISOString()):
     locations: {},
     assets: {},
     items: {},
+    customTypes: {},
     floors: {},
     plans: {},
     reviews: {},

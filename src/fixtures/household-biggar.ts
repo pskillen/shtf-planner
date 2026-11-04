@@ -25,11 +25,11 @@ const TODAY = '2026-09-01';
 /** The pack versions the fixture was written against (a test checks they are current). */
 const PACK_VERSIONS: Record<string, number> = {
   'assets-base': 2,
-  'items-base': 3,
+  'items-base': 4,
   'guidance-grid-free': 2,
   'guidance-uk-prepare': 2,
   'guidance-us-ready': 3,
-  regions: 2,
+  regions: 3,
 };
 
 const loc = (id: string, name: string, o: Omit<Location, 'id' | 'name'>): Location => ({
@@ -193,6 +193,7 @@ export function biggarDocument(): Document {
     locations: Object.fromEntries(locations.map((l) => [l.id, l])),
     assets: Object.fromEntries(assets.map((a) => [a.id, a])),
     items: Object.fromEntries(items.map((i) => [i.id, i])),
+    customTypes: {},
     floors: {
       [floorKey(L.pantry, `${ITEMS}:tinned-food`)]: 2,
       [floorKey(L.pantry, `${ITEMS}:dried-pasta`)]: 1,

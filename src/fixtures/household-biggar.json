@@ -75,6 +75,7 @@
       "typeId": "assets-base:solar-pv"
     }
   },
+  "customTypes": {},
   "floors": {
     "loc-pantry|items-base:dried-pasta": 1,
     "loc-pantry|items-base:rice-sack": 1,
@@ -348,11 +349,11 @@
       "guidance-grid-free": 2,
       "guidance-uk-prepare": 2,
       "guidance-us-ready": 3,
-      "items-base": 3,
+      "items-base": 4,
       "plans-base": 1,
-      "regions": 2
+      "regions": 3
     },
-    "schemaVersion": 1
+    "schemaVersion": 2
   },
   "plans": {
     "plans-base:documents": {

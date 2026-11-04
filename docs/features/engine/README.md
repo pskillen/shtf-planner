@@ -33,7 +33,7 @@ loader returns (`bundledPacks()`); the engine reads only the packs enabled in `d
    days); if every banded pack is above the horizon, the lowest-banded one applies anyway.
 2. **Coverage.** What the household has against each target, from items, floors and assets (below).
 3. **Gaps.** Target minus coverage where positive, with suggestions.
-4. **Score.** Per capability the cover ratio of its weakest target; overall the mean.
+4. **Score.** Per capability the product of its targets' cover ratios; plans (done / total) to the power 1.5; overall the mean.
 
 A `Target` has a stable `id` (`water:waterL`, `heat:hours`, `medical:medication:<id>`,
 `plan:<planItemId>`), its `kind` (`store`, `hours`, `medication`, `range`, `device`, `plan`), the
@@ -73,8 +73,9 @@ food is 4 x 2,000 kcal a day while Jo is on formula.)
 
 A `rotating` location (a pantry) counts a type at most at its **floor**: `min(held, floor)`. With
 no floor for that type it counts nothing, and says so in `from`. A `stored` location counts what is
-there. A type below its floor also yields a `replenish` gap, which is part of the same shortfall,
-not on top of it. Items past their best-before month (`bestBefore` before `asOf`'s month) count
+there. A type below its floor also yields a `replenish` gap. The missing stock is part of the target's shortfall, so the store's
+`acquire` gap is the shortfall less what restocking puts back (none if restocking closes it): the
+two add up to the target's shortfall. Items past their best-before month (`bestBefore` before `asOf`'s month) count
 zero and are listed with `expired: true`. An item with an `ageBand` (nappies, formula, baby food)
 counts only while someone in the household is in the band (half-open, in months, on `asOf`).
 
@@ -110,18 +111,26 @@ capabilities' rows and the score, not the earlier row's display.
 Whole units of one item type that give the store, cheapest per unit first, not overshooting the
 shortfall by more than 3 times (unless nothing else is left), at most three. `pricePence` is the
 whole suggestion's price. Items that need cooking are skipped while cooking is not covered, and
-items whose age band fits nobody are skipped. An item type tagged `no-suggest` (the bath water
-bladder, loose D, AA and AAA cells) is cheap per unit but an odd first answer, so it is suggested
-only when no other type gives the store.
+items whose age band fits nobody are skipped. The household's own custom item types are never
+suggested. An item type tagged `no-suggest` (the bath water bladder, loose D, AA and AAA cells) is
+cheap per unit but an odd first answer, so it is suggested only when no other type gives the store.
 
 ## Score
 
-Per capability: the lowest cover ratio among its targets, capped at 100 (`raw` is uncapped), so one
-empty medication cannot hide behind a full first aid kit. Overall is the mean over capabilities that
-have targets. `weakest` is the lowest; a tie goes to the lower mean ratio across the capability's
-targets, then to the earlier capability in the list. On the Biggar fixture heat and comms both have
-one empty target (mean 0), so heat wins on capability order alone. `nextHorizonPreview` is the overall score at
-the next horizon (3, 7, 14, 28).
+Per capability, the **product of its targets' cover ratios**, each ratio capped at 1, so a part of
+the household that is forgotten cannot hide behind the rest. A capability with one target is just
+that target's ratio. Examples: a baby at 0.5 and adults at 0.9 score 0.5 x 0.9 = **45 %**; 0.8 and
+0.9 score **72 %**; a forgotten dog or baby (0) scores the whole capability **0**. `raw` is the
+lowest target's ratio uncapped (250 is two and a half times enough).
+
+**Plans** are different: (done / total) to the power 1.5 (`PLANS_EXPONENT` in `score.ts`, one named
+constant), so a few done items do not look like progress. With nine items, 1 to 8 done score 4, 10,
+19, 30, 41, 54, 69 and 84 %; only all done is 100 %.
+
+Overall is the mean over capabilities that have targets. `weakest` is the lowest percent; a tie goes
+to the lower mean ratio across the capability's targets, then to the earlier capability in the list.
+On the Biggar fixture heat and comms both have one empty target (mean 0), so heat wins on capability
+order alone. `nextHorizonPreview` is the overall score at the next horizon (3, 7, 14, 28).
 
 ## Preview
 

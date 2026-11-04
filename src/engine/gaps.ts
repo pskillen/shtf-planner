@@ -1,6 +1,6 @@
 import type { CapabilityId, Document, Packs } from '../model';
 import { compareText } from '../util';
-import { CAPABILITY_ORDER } from './context';
+import { CAPABILITY_ORDER, fitsHousehold } from './context';
 import { analyse, capabilityTargetId, type Analysis, type Coverage } from './coverage';
 import { closeHours, closeStore, type SuggestContext, type Suggestion } from './suggest';
 import type { Target } from './targets';
@@ -17,13 +17,15 @@ export interface Gap {
   /** The cheapest sensible ways to close it, best first. */
   suggestions: Suggestion[];
   /**
-   * `acquire`: buy or get more. `replenish`: a rotating location is below its floor (part of the
-   * same shortfall, not on top of it). `task`: an asset gives nothing until a question is put
+   * `acquire`: buy or get more (a store's shortfall less what restocking puts back, so the two
+   * add up to the target's shortfall). `replenish`: a rotating location is below its floor. `task`: an asset gives nothing until a question is put
    * right, or a driving range needs keeping up. `plan`: a plan item to do or redo.
    */
   kind: 'acquire' | 'replenish' | 'task' | 'plan';
   /** A critical medication. */
   critical?: boolean;
+  /** For `replenish`: which floor, so a screen can say "3 below its floor of 6". */
+  restock?: { place: string; typeName: string; floor: number; actual: number };
 }
 
 const KIND_ORDER: Gap['kind'][] = ['acquire', 'replenish', 'task', 'plan'];
@@ -39,6 +41,21 @@ export function gapsFrom(doc: Document, packs: Packs, a: Analysis): Gap[] {
   const cov = new Map(a.coverage.map((c) => [c.targetId, c]));
   const tById = new Map(a.targets.map((t) => [t.id, t]));
   const out: Gap[] = [];
+
+  // Stock below a rotating place's floor counts only as far as it goes, so the missing part is in
+  // the target's shortfall. A restock puts it back; the buy row is the shortfall beyond that.
+  const restocking = new Map<string, number>();
+  for (const b of a.belowFloor) {
+    const type = packs.items[b.typeId];
+    const give = type?.gives[0];
+    const t = give
+      ? a.targets.find((x) => x.kind === 'store' && x.store === give.store)
+      : undefined;
+    if (!type || !give || !t) continue;
+    if (!fitsHousehold(type, a.people)) continue;
+    if (type.tags.includes('needs-cooking') && !a.cookingMet) continue;
+    restocking.set(t.id, (restocking.get(t.id) ?? 0) + (b.floor - b.actual) * give.amount);
+  }
 
   for (const t of a.targets) {
     const c = cov.get(t.id) ?? null;
@@ -100,13 +117,17 @@ export function gapsFrom(doc: Document, packs: Packs, a: Analysis): Gap[] {
         });
         break;
       }
-      case 'store':
+      case 'store': {
+        const buy = shortfall - (restocking.get(t.id) ?? 0);
+        if (buy <= EPS) break;
         out.push({
           ...base,
+          shortfall: buy,
           kind: 'acquire',
-          suggestions: closeStore(ctx, t.store as string, shortfall),
+          suggestions: closeStore(ctx, t.store as string, buy),
         });
         break;
+      }
     }
   }
 
@@ -127,6 +148,7 @@ export function gapsFrom(doc: Document, packs: Packs, a: Analysis): Gap[] {
       shortfall: qty * give.amount,
       unit: t.unit,
       kind: 'replenish',
+      restock: { place: where, typeName: type.name, floor: b.floor, actual: b.actual },
       suggestions: [
         {
           itemTypeId: type.id,

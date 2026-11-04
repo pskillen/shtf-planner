@@ -2,7 +2,7 @@
   "format": 1,
   "id": "items-base",
   "kind": "items",
-  "version": 3,
+  "version": 4,
   "name": "Base household items",
   "sources": [
     {
@@ -342,7 +342,7 @@
       "id": "items-base:tinned-food",
       "name": "Tinned food (1 week, 1 person)",
       "category": "food",
-      "unit": "week",
+      "unit": "week's worth",
       "unitSize": "one person, one week",
       "gives": [
         {

@@ -13,6 +13,7 @@ export function installStoreDebug(hook: Record<string, unknown> | undefined): vo
     store.change('debug', fn);
     await store.flush();
   };
+  hook.flush = async () => (await getStore()).flush();
   hook.loadFixture = async () => {
     // Loaded only here, so the fixture is a separate chunk that normal use never fetches.
     const { biggarDocument } = await import('../../fixtures/household-biggar');

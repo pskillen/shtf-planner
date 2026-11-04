@@ -1,6 +1,10 @@
 import { expect, test } from '@playwright/test';
 
+type Shtf = { loadFixture: () => Promise<void> };
+
 test('landing page, Start, shell and footer', async ({ page }) => {
+  await page.goto('/?debug=1');
+  await page.evaluate(() => (window as unknown as { __shtf: Shtf }).__shtf.loadFixture());
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'SHTF Planner' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Changelog' })).toBeVisible();
@@ -13,7 +17,7 @@ test('landing page, Start, shell and footer', async ({ page }) => {
 
   await nav.getByRole('link', { name: 'Stores' }).click();
   await expect(page).toHaveURL(/\/app\/stores$/);
-  await expect(page.getByText('Coming in a later phase.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Stores' })).toBeVisible();
   await expect(page.getByTestId('footer')).toHaveText('SHTF Planner · local · local');
 });
 
