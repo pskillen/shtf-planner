@@ -93,6 +93,8 @@ describe('the lint fence', () => {
       'src/store/x.ts',
       "import { useParams } from 'react-router';\nuseParams;",
     ],
+    ['an engine test imports React', 'src/engine/x.test.ts', "import React from 'react';\nReact;"],
+    ['a model test imports React', 'src/model/x.test.ts', "import React from 'react';\nReact;"],
     [
       'a .tsx in the engine imports the app',
       'src/engine/x.tsx',
@@ -116,6 +118,16 @@ describe('the lint fence', () => {
   }
 
   const good: [string, string, string][] = [
+    [
+      'an engine test imports vitest',
+      'src/engine/x.test.ts',
+      "import { describe, it, expect } from 'vitest';\ndescribe;\nit;\nexpect;",
+    ],
+    [
+      'a model test imports vitest',
+      'src/model/x.test.ts',
+      "import { describe, it, expect } from 'vitest';\ndescribe;\nit;\nexpect;",
+    ],
     [
       'the engine imports the model, the util and itself',
       'src/engine/x.ts',
