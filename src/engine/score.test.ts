@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { biggarDocument } from '../fixtures/household-biggar';
 import type { Asset, Document } from '../model';
 import { bundledPacks } from '../packs/bundled';
+import { CAPABILITY_ORDER } from './context';
 import { preview } from './preview';
 import { score } from './score';
 
@@ -35,8 +36,14 @@ describe('score', () => {
       expect.arrayContaining(['food', 'heat', 'comms', 'sanitation']),
     );
     const heat = zeros.find((c) => c.capability === 'heat')!;
+    const comms = zeros.find((c) => c.capability === 'comms')!;
     expect(heat.meanPercent).toBe(0);
     for (const z of zeros) expect(z.meanPercent).toBeGreaterThanOrEqual(heat.meanPercent);
+    // heat and comms each have one empty target, so they tie on the mean too: heat wins only
+    // because it comes first in the capability order
+    expect(comms.meanPercent).toBe(heat.meanPercent);
+    expect(CAPABILITY_ORDER.indexOf('heat')).toBeLessThan(CAPABILITY_ORDER.indexOf('comms'));
+    expect(s.weakest).toBe('heat');
   });
 
   it('caps at 100 but keeps the raw ratio', () => {

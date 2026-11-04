@@ -106,7 +106,8 @@ only when no other type gives the store.
 Per capability: the lowest cover ratio among its targets, capped at 100 (`raw` is uncapped), so one
 empty medication cannot hide behind a full first aid kit. Overall is the mean over capabilities that
 have targets. `weakest` is the lowest; a tie goes to the lower mean ratio across the capability's
-targets, then to the earlier capability in the list. `nextHorizonPreview` is the overall score at
+targets, then to the earlier capability in the list. On the Biggar fixture heat and comms both have
+one empty target (mean 0), so heat wins on capability order alone. `nextHorizonPreview` is the overall score at
 the next horizon (3, 7, 14, 28).
 
 ## Preview
