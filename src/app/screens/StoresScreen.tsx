@@ -43,7 +43,9 @@ export function StoresScreen() {
   const matches = (typeId: string): boolean => {
     if (q === '') return true;
     const type = packs.items[typeId];
-    return type ? matchTypes([type], q).length > 0 : typeName(type, typeId).includes(q);
+    return type
+      ? matchTypes([type], q).length > 0
+      : typeName(type, typeId).toLowerCase().includes(q.toLowerCase());
   };
 
   /** The rows of one place: its stock, and for a rotating place a row per floor with none. */
