@@ -36,5 +36,5 @@ export function getSync(): Promise<Sync> {
 export async function forgetThisDevice(): Promise<void> {
   const sync = await getSync();
   sync.stop();
-  await forgetDeviceData(await getStore(), persistence);
+  await forgetDeviceData(await getStore(), persistence, createDrivePort());
 }

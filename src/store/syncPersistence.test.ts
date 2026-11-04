@@ -63,4 +63,26 @@ describe('forgetDeviceData', () => {
     await reopened.close();
     await deleteSyncDatabase();
   });
+
+  it('revokes the Drive token first, and still forgets when revoking fails', async () => {
+    const order: string[] = [];
+    const sync = createIdbPersistence();
+    await forgetDeviceData(undefined, sync, {
+      disconnect: async () => {
+        order.push('revoked');
+      },
+    });
+    expect(order).toEqual(['revoked']);
+
+    await sync.save({ folderId: 'f' });
+    await forgetDeviceData(undefined, sync, {
+      disconnect: async () => {
+        throw new Error('offline');
+      },
+    });
+    const again = createIdbPersistence();
+    expect((await again.load()).record.folderId).toBeUndefined();
+    await again.close();
+    await deleteSyncDatabase();
+  });
 });
