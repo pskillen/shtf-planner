@@ -89,14 +89,35 @@ describe('coverage: stores from items', () => {
     expect(cov(doc, 'sanitation:nappies', '2027-05-15').amount).toBe(100);
   });
 
-  it('counts a radio by the item or the asset', () => {
+  it('counts a radio by its asset, and a stock row of the same radio type counts nothing', () => {
     const doc = biggarDocument();
     expect(cov(doc, 'comms:radio').amount).toBe(0);
-    doc.items['item-radio'] = item('item-radio', 'wind-up-radio', 1, L.hall);
+    // A radio with no equipment type of its own is still a stock item.
+    doc.items['item-sw'] = item('item-sw', 'shortwave-receiver', 1, L.hall);
     expect(cov(doc, 'comms:radio').amount).toBe(1);
+    delete doc.items['item-sw'];
+    // The wind-up radio is equipment: a stock row of it is not counted (and says why).
+    doc.items['item-radio'] = item('item-radio', 'wind-up-radio', 1, L.hall);
+    expect(cov(doc, 'comms:radio').amount).toBe(0);
+    expect(
+      cov(doc, 'comms:radio')
+        .from.map((s) => s.note)
+        .join(' '),
+    ).toMatch(/equipment/);
     delete doc.items['item-radio'];
     doc.assets['asset-radio'] = asset('asset-radio', 'wind-up-radio');
     expect(cov(doc, 'comms:radio')).toMatchObject({ amount: 1, from: [{ kind: 'asset' }] });
+  });
+
+  it('does not count a leisure battery twice, as stock and as equipment', () => {
+    const doc = biggarDocument();
+    const before = cov(doc, 'power:batteryWh').amount;
+    doc.assets['asset-lb'] = asset('asset-lb', 'leisure-battery', { ah: 110 });
+    const once = cov(doc, 'power:batteryWh').amount;
+    expect(once).toBeGreaterThan(before);
+    // The same battery also entered as a stock row adds nothing.
+    doc.items['item-lb'] = item('item-lb', 'leisure-battery', 1, L.garage);
+    expect(cov(doc, 'power:batteryWh').amount).toBe(once);
   });
 
   it('leaves a type out of the coverage when none of it is left', () => {

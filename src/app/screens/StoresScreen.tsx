@@ -1,10 +1,13 @@
 import { useMemo, useState } from 'react';
-import { floorKey, type ItemInstance, type ItemType, type Location } from '../../model';
+import { Link } from 'react-router-dom';
+import { floorKey, type Asset, type ItemInstance, type ItemType, type Location } from '../../model';
 import { today } from '../../util';
 import { EditArea } from '../components/EditArea';
 import { useDeferredDelete } from '../components/useDeferredDelete';
 import { useChange, useDocument } from '../state';
 import { usePacks } from '../usePacks';
+import { equipmentEditPath } from './assets/route';
+import { keyAnswer } from './assets/questionnaire';
 import { FloorSheet, type FloorRow } from './stores/FloorSheet';
 import { ItemSheet } from './stores/ItemSheet';
 import { QuickAdd } from './stores/QuickAdd';
@@ -72,6 +75,19 @@ export function StoresScreen() {
       );
   };
 
+  /** The equipment kept in a place, shown read-only: it is edited on the Equipment screen. */
+  const equipmentFor = (location: Location): Asset[] =>
+    Object.values(doc.assets)
+      .filter((a) => a.locationId === location.id)
+      .filter((a) => {
+        if (q === '') return true;
+        const type = packs.assets[a.typeId];
+        return [a.name ?? '', type?.name ?? ''].some((n) =>
+          n.toLowerCase().includes(q.toLowerCase()),
+        );
+      })
+      .sort((a, b) => (a.name ?? a.typeId).localeCompare(b.name ?? b.typeId));
+
   const locations = useMemo(
     () => Object.values(doc.locations).sort((a, b) => a.name.localeCompare(b.name)),
     [doc.locations],
@@ -117,6 +133,29 @@ export function StoresScreen() {
           </span>
           {warning ? <span className="warn">⚠ {warning}</span> : null}
         </button>
+      </li>
+    );
+  }
+
+  function renderEquipment(asset: Asset) {
+    const type = packs.assets[asset.typeId];
+    const name = asset.name || type?.name || asset.typeId;
+    const detail = [
+      asset.name && type ? type.name : undefined,
+      type ? keyAnswer(type, asset.answers) : undefined,
+    ].filter(Boolean);
+    return (
+      <li className="row-item" key={asset.id}>
+        <Link
+          className="row-main"
+          to={equipmentEditPath(asset.id)}
+          aria-label={`Edit equipment ${name}`}
+        >
+          <strong>
+            {name} <span className="badge">Equipment</span>
+          </strong>
+          <span className="muted">{detail.length > 0 ? detail.join(' · ') : 'Equipment'}</span>
+        </Link>
       </li>
     );
   }
@@ -169,7 +208,8 @@ export function StoresScreen() {
 
       {locations.map((l) => {
         const rows = rowsFor(l);
-        if (q !== '' && rows.length === 0) return null;
+        const equipment = equipmentFor(l);
+        if (q !== '' && rows.length === 0 && equipment.length === 0) return null;
         const open = q !== '' || !collapsed.has(l.id);
         return (
           <section key={l.id} className="store-group" aria-label={l.name}>
@@ -181,7 +221,7 @@ export function StoresScreen() {
                 onClick={() => toggle(l.id)}
               >
                 <span aria-hidden="true">{open ? '▾' : '▸'}</span> {l.name}{' '}
-                <span className="muted">({rows.length})</span>
+                <span className="muted">({rows.length + equipment.length})</span>
               </button>
             </h2>
             {open ? (
@@ -196,11 +236,17 @@ export function StoresScreen() {
                     </EditArea>
                   </div>
                 ) : null}
-                {rows.length === 0 ? (
+                {rows.length === 0 && equipment.length === 0 ? (
                   <p className="muted">Nothing here yet.</p>
-                ) : (
+                ) : null}
+                {rows.length > 0 ? (
                   <ul className="row-list">{rows.map((r) => renderRow(r, l))}</ul>
-                )}
+                ) : null}
+                {equipment.length > 0 ? (
+                  <ul className="row-list" aria-label={`Equipment in ${l.name}`}>
+                    {equipment.map((a) => renderEquipment(a))}
+                  </ul>
+                ) : null}
               </>
             ) : null}
           </section>

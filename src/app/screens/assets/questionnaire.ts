@@ -89,3 +89,16 @@ export function describeContributions(type: AssetType, answers: Answers): Contri
   }
   return lines;
 }
+
+/**
+ * The one answer that says most about a piece of equipment, for a short row: its first answered
+ * number with its unit ("110 Ah"), else its first choice ("Petrol"). A yes/no answer is not one.
+ */
+export function keyAnswer(type: AssetType, answers: Answers): string | undefined {
+  for (const q of type.questions) {
+    const a = answers[q.id];
+    if (q.kind === 'number' && typeof a === 'number') return q.unit ? `${a} ${q.unit}` : String(a);
+    if (q.kind === 'choice' && typeof a === 'string') return a;
+  }
+  return undefined;
+}

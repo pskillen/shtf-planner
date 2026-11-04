@@ -39,16 +39,12 @@
       "name": "Camping stove",
       "category": "food",
       "unit": "each",
-      "gives": [
-        {
-          "store": "gasCanister",
-          "amount": 2
-        }
-      ],
+      "gives": [],
       "suitability": ["frost", "heat", "damp"],
       "shelfLife": "none",
       "typicalPricePence": 3500,
-      "tags": ["cooking", "heat"]
+      "tags": ["cooking", "heat"],
+      "assetTypeId": "assets-base:camping-stove"
     },
     {
       "id": "items-base:gas-canisters",
@@ -75,7 +71,8 @@
       "suitability": ["frost", "heat"],
       "shelfLife": "none",
       "typicalPricePence": 6000,
-      "tags": ["heat"]
+      "tags": ["heat"],
+      "assetTypeId": "assets-base:paraffin-heater"
     },
     {
       "id": "items-base:paraffin",
@@ -155,7 +152,7 @@
       "suitability": [],
       "shelfLife": "years",
       "typicalPricePence": 4000,
-      "tags": ["power"]
+      "tags": ["power", "phone"]
     },
     {
       "id": "items-base:solar-panel",
@@ -166,7 +163,8 @@
       "suitability": [],
       "shelfLife": "none",
       "typicalPricePence": 7000,
-      "tags": ["power"]
+      "tags": ["power"],
+      "assetTypeId": "assets-base:solar-pv"
     },
     {
       "id": "items-base:generator",
@@ -177,7 +175,8 @@
       "suitability": [],
       "shelfLife": "none",
       "typicalPricePence": 15000,
-      "tags": ["power", "noise"]
+      "tags": ["power", "noise"],
+      "assetTypeId": "assets-base:generator"
     },
     {
       "id": "items-base:petrol-can",
@@ -232,7 +231,8 @@
       "suitability": [],
       "shelfLife": "none",
       "typicalPricePence": 2500,
-      "tags": ["radio-rx", "light"]
+      "tags": ["radio-rx", "light"],
+      "assetTypeId": "assets-base:wind-up-radio"
     },
     {
       "id": "items-base:blackout-curtains",
@@ -358,7 +358,8 @@
       "suitability": ["frost", "heat", "damp"],
       "shelfLife": "none",
       "typicalPricePence": 5000,
-      "tags": ["water", "outdoor", "needs-garden", "untreated"]
+      "tags": ["water", "outdoor", "needs-garden", "untreated"],
+      "assetTypeId": "assets-base:water-butt"
     },
     {
       "id": "items-base:purification-tablets",
@@ -401,7 +402,7 @@
       "id": "items-base:tinned-food",
       "name": "Tinned food (1 week, 1 person)",
       "category": "food",
-      "unit": "week's worth",
+      "unit": "pack",
       "unitSize": "one person, one week",
       "gives": [
         {
@@ -647,7 +648,8 @@
       "suitability": ["frost", "heat", "damp"],
       "shelfLife": "none",
       "typicalPricePence": 4000,
-      "tags": ["cooking", "outdoor-use"]
+      "tags": ["cooking", "outdoor-use"],
+      "assetTypeId": "assets-base:rocket-stove"
     },
     {
       "id": "items-base:logs-and-kindling",
@@ -713,7 +715,8 @@
       "suitability": [],
       "shelfLife": "years",
       "typicalPricePence": 35000,
-      "tags": ["power"]
+      "tags": ["power", "portable-power"],
+      "assetTypeId": "assets-base:power-station"
     },
     {
       "id": "items-base:solar-kit",
@@ -724,7 +727,8 @@
       "suitability": [],
       "shelfLife": "none",
       "typicalPricePence": 25000,
-      "tags": ["power", "outdoor"]
+      "tags": ["power", "outdoor"],
+      "assetTypeId": "assets-base:solar-pv"
     },
     {
       "id": "items-base:leisure-battery",
@@ -740,7 +744,8 @@
       "suitability": [],
       "shelfLife": "years",
       "typicalPricePence": 10000,
-      "tags": ["power", "12v"]
+      "tags": ["power", "12v"],
+      "assetTypeId": "assets-base:leisure-battery"
     },
     {
       "id": "items-base:inverter",
@@ -762,7 +767,8 @@
       "suitability": [],
       "shelfLife": "none",
       "typicalPricePence": 55000,
-      "tags": ["power", "noise"]
+      "tags": ["power", "noise"],
+      "assetTypeId": "assets-base:generator"
     },
     {
       "id": "items-base:petrol-jerrycan",
@@ -817,7 +823,8 @@
       "suitability": ["frost", "heat"],
       "shelfLife": "none",
       "typicalPricePence": 9000,
-      "tags": ["heat"]
+      "tags": ["heat"],
+      "assetTypeId": "assets-base:cabinet-heater"
     },
     {
       "id": "items-base:gas-bottle",
@@ -845,7 +852,8 @@
       "suitability": ["frost", "heat"],
       "shelfLife": "none",
       "typicalPricePence": 5000,
-      "tags": ["heat"]
+      "tags": ["heat"],
+      "assetTypeId": "assets-base:catalytic-heater"
     },
     {
       "id": "items-base:winter-sleeping-bag",
@@ -1251,7 +1259,8 @@
       "suitability": ["frost", "heat", "damp"],
       "shelfLife": "none",
       "typicalPricePence": 4500,
-      "tags": ["safety", "fire"]
+      "tags": ["safety", "fire"],
+      "assetTypeId": "assets-base:fire-extinguisher"
     },
     {
       "id": "items-base:co-alarm",
@@ -1262,7 +1271,8 @@
       "suitability": ["frost", "heat", "damp"],
       "shelfLife": "none",
       "typicalPricePence": 2000,
-      "tags": ["safety"]
+      "tags": ["safety"],
+      "assetTypeId": "assets-base:co-alarm"
     },
     {
       "id": "items-base:games-and-books",
@@ -1766,7 +1776,8 @@
       "suitability": ["frost"],
       "shelfLife": "none",
       "typicalPricePence": 2500,
-      "tags": ["radio-rx", "light", "manual"]
+      "tags": ["radio-rx", "light", "manual"],
+      "assetTypeId": "assets-base:wind-up-radio"
     }
   ]
 }

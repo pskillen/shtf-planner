@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
-import type { Asset, AssetType } from '../../model';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { CATEGORIES, type Asset, type AssetType, type Category } from '../../model';
 import { coverage, type BlockedAsset } from '../../engine';
 import { blockedBadge } from '../blocked';
 import { formatVolume, today } from '../../util';
@@ -19,8 +20,14 @@ const newId = () => crypto.randomUUID();
 
 function TypePicker({ types, onPick }: { types: AssetType[]; onPick: (t: AssetType) => void }) {
   const [query, setQuery] = useState('');
+  const [category, setCategory] = useState<Category | null>(null);
   const q = query.trim().toLowerCase();
-  const shown = q ? types.filter((t) => t.name.toLowerCase().includes(q)) : types;
+  // Only the categories that have a type to pick, in the usual order.
+  const categories = CATEGORIES.filter((c) => types.some((t) => t.category === c));
+  const shown = types.filter(
+    (t) =>
+      (category === null || t.category === category) && (!q || t.name.toLowerCase().includes(q)),
+  );
   return (
     <>
       <Field label="Search equipment">
@@ -31,7 +38,22 @@ function TypePicker({ types, onPick }: { types: AssetType[]; onPick: (t: AssetTy
           onChange={(e) => setQuery(e.target.value)}
         />
       </Field>
-      {shown.length === 0 ? <p className="muted">Nothing matches “{query}”.</p> : null}
+      <div className="chips" role="group" aria-label="Show category">
+        {[null, ...categories].map((c) => (
+          <button
+            key={c ?? 'all'}
+            type="button"
+            className={c === category ? 'chip on' : 'chip'}
+            aria-pressed={c === category}
+            onClick={() => setCategory(c)}
+          >
+            {c === null ? 'All' : labelOf(CATEGORY_LABEL, c)}
+          </button>
+        ))}
+      </div>
+      {shown.length === 0 ? (
+        <p className="muted">{q ? `Nothing matches “${query}”.` : 'Nothing in this category.'}</p>
+      ) : null}
       <ul className="row-list">
         {shown.map((t) => (
           <li className="row-item" key={t.id}>
@@ -159,6 +181,7 @@ export function AssetsScreen() {
   const change = useChange();
   const [editing, setEditing] = useState<Editing>(null);
   const packs = usePacks();
+  const [params, setParams] = useSearchParams();
 
   // Assets that give the plan nothing, and why, from the engine (never worked out here).
   const blocked = useMemo(() => {
@@ -176,6 +199,28 @@ export function AssetsScreen() {
     const enabled = new Set(packs.enabledPacks(doc.settings).map((p) => p.id));
     return Object.values(packs.assets).filter((t) => enabled.has(t.id.split(':')[0]!));
   }, [packs, doc.settings]);
+
+  // Deep links from elsewhere: ?add=<asset type id> opens the add form for that type (Quick add,
+  // the shopping list), ?edit=<asset id> the edit form (Stores). Unknown ids are ignored.
+  const addParam = params.get('add');
+  const editParam = params.get('edit');
+  useEffect(() => {
+    if (addParam === null && editParam === null) return;
+    const type = addParam ? packs.assets[addParam] : undefined;
+    const existing = editParam ? doc.assets[editParam] : undefined;
+    const existingType = existing ? packs.assets[existing.typeId] : undefined;
+    if (type) {
+      setEditing({
+        step: 'form',
+        type,
+        isNew: true,
+        asset: { id: newId(), typeId: type.id, answers: defaultAnswers(type), maintenance: {} },
+      });
+    } else if (existing && existingType) {
+      setEditing({ step: 'form', type: existingType, asset: existing, isNew: false });
+    }
+    setParams({}, { replace: true });
+  }, [addParam, editParam, packs, doc.assets, setParams]);
 
   const remove = useDeferredDelete((id) =>
     change('delete asset', (d) => {

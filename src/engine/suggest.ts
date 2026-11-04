@@ -2,7 +2,7 @@ import type { CapabilityId, Document, ItemType, Packs } from '../model';
 import { compareText } from '../util';
 import { MAX_OVERSHOOT } from './assumptions';
 import { activeConverters } from './coverage';
-import { fitsHousehold, localId, type Person } from './context';
+import { fitsHousehold, type Person } from './context';
 
 export interface Suggestion {
   itemTypeId?: string;
@@ -77,6 +77,8 @@ export function closeStore(
   });
   return pool.slice(0, limit).map((c) => ({
     itemTypeId: c.type.id,
+    // Equipment is bought, then added under Home, Equipment: say which type it is.
+    ...(c.type.assetTypeId ? { assetTypeId: c.type.assetTypeId } : {}),
     qty: c.units,
     label: `${c.units} × ${c.type.name}`,
     ...(c.price !== undefined ? { pricePence: c.price } : {}),
@@ -114,7 +116,7 @@ export function closeHours(
   for (const asset of Object.values(ctx.packs.assets)) {
     const c = asset.contributes.find((x) => x.capability === capability && x.converts?.perHour);
     if (!c?.converts?.perHour) continue;
-    const item = Object.values(ctx.packs.items).find((i) => localId(i.id) === localId(asset.id));
+    const item = Object.values(ctx.packs.items).find((i) => i.assetTypeId === asset.id);
     const fuel = closeStore(ctx, c.converts.store, shortfallHours * c.converts.perHour, 1)[0];
     const price =
       item?.typicalPricePence !== undefined && fuel?.pricePence !== undefined

@@ -962,8 +962,13 @@ button.tick {
   font-size: 0.9rem;
 }
 
-div.row-main {
+div.row-main,
+a.row-main {
   display: flex;
+}
+
+a.row-main {
+  text-decoration: none;
 }
 
 .gaps h3,
