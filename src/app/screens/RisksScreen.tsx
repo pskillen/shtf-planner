@@ -27,7 +27,6 @@ export function RisksScreen({ embedded = false }: { embedded?: boolean }) {
         value={home.risks}
         onChange={(risks) =>
           change('risks', (d) => {
-            // Keep the order of LOCAL_RISKS so the same choices always read the same.
             d.home.risks = LOCAL_RISKS.filter((r) => risks.includes(r));
           })
         }

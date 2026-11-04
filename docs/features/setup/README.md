@@ -1,0 +1,82 @@
+# Setup screens
+
+**Status:** Done
+**Tracking:** none (no tickets yet)
+
+Where a household describes itself: people, home, locations, equipment, risks, how long to plan
+for, and the settings. Everything saves as you type or tap, straight into the household document
+(`docs/features/data-model/README.md`); there is no Save-everything step and nothing to lose by
+leaving half-way.
+
+## Map
+
+| Piece                | Where                                   | Behaviour                                                                                                                                                                                                              |
+| -------------------- | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Onboarding           | `/app/setup/:step`, `Onboarding.tsx`    | Four steps, People, Home, Risks, How long to plan for. Each is the same component as its editing screen. Next and Back with a progress line; Next on People waits for one person. Finish lands on the Home hub.        |
+| Home hub             | `/app`, `HomeHub.tsx`                   | A card per part (people, home, locations, equipment, risks, horizon), each opening its screen. A household with nobody in it is sent to the first onboarding step.                                                     |
+| People               | `/app/people`, `PeopleScreen.tsx`       | Members and pets. A sheet per person: name, date of birth (age shown as "2 y 5 m" or "3 months"), risk chips, dietary note, medication with days of supply. Pets: name, species, size.                                 |
+| Home                 | `/app/home`, `HomeScreen.tsx`           | Every home field in plain language. Region and, for the UK, the part of the UK.                                                                                                                                        |
+| Locations            | `/app/locations`, `LocationsScreen.tsx` | Places with a kind (rotating or stored), conditions, size and optional litres. Pantry, Garage, Loft, Shed and Grab bags are suggestions: tapping one opens the form filled in, and nothing exists until Save.          |
+| Equipment            | `/app/assets`, `AssetsScreen.tsx`       | Grouped by category. Add: search the asset types of the enabled packs, answer the type's questions, say where it is and when it was bought. The form says in words what it gives with the answers applied.             |
+| Risks                | `/app/risks`, `RisksScreen.tsx`         | The local-risk chips, and for each chosen risk the region's "check" links (open in a new tab).                                                                                                                         |
+| How long to plan for | `/app/horizon`, `HorizonScreen.tsx`     | Pick 3, 7, 14 or 28 days (a sentence says what each means). Below it the table of what that is for this household at every horizon.                                                                                    |
+| More, Settings       | `/app/more`, `/app/more/settings`       | Region, content packs (name, version, on or off), review reminder (3 or 6 months), anonymise names. The data section (`settings/DataSection.tsx`) is a placeholder: export, import and Google Drive are separate work. |
+| Read-only notice     | `StoreBanner.tsx`, `Shell.tsx`          | A document saved by a newer version shows a banner and every control is disabled; an unreadable one points to More, Settings, data. See "Read-only".                                                                   |
+| Shared controls      | `src/app/components/`                   | `Sheet` (bottom sheet), `controls.tsx` (chips, segmented buttons, switch, number box, field), `ScreenHeader`, `useDeferredDelete` (delete with undo).                                                                  |
+| Pure helpers         | `src/util/`, `src/app/screens/**`       | `age.ts`, `medication.ts`, `units.ts`; `assets/questionnaire.ts` (answers and the in-words description); `region.ts` (risk links, region, all-electric); `horizon/previewSource.ts`.                                   |
+
+## Behaviour worth knowing
+
+- **Screens never compute targets.** How much water or food a household needs is the engine's job
+  (`src/engine`). The setup screens collect facts and show what the engine says. The horizon table
+  reads `previewFor` in `screens/horizon/previewSource.ts`.
+- **Age tags follow the date of birth, until you edit the tags.** Under 24 months suggests
+  `infant`, 24 months to under 18 years `child`, 65 and over `elderly`. Editing the chips by hand
+  stops the date from changing them; for someone already saved the date never rewrites their tags.
+  Adding a medication adds `takes-medication` on Save, and a dietary note adds `dietary`.
+- **Days of supply** is units on hand divided by units per day, rounded down. With no dose set it
+  says so instead of dividing by zero.
+- **Rotating means "the level you never go below".** A rotating location (a pantry you eat from and
+  restock) counts the lowest stock it holds, not what is in it today; a stored one counts what is
+  there. The location form says this in one line.
+- **All-electric homes get a plain warning** when heating and cooking are electric (or a heat pump,
+  or induction) and there is no mains gas: "In a power cut this home has no heat or cooking; the
+  score will show that."
+- **Equipment questions.** A yes/no is a switch, a number is a box with its unit, a choice is a row
+  of buttons. A new asset starts with every yes/no off and every choice on its first option;
+  numbers start empty, because an invented capacity would be counted as real. The description
+  folds contributions to one capability into one line ("Gives power in an outage: no, answer yes to
+  ..."). A solar array without an emergency power supply gives nothing in a power cut.
+- **Risk links.** The region's links are shown for the chosen risks. A UK part with links of its own
+  replaces the region's for the same risk (Scotland: SEPA flood maps instead of the Environment
+  Agency's). England, Wales and Northern Ireland have none of their own yet, and none is invented.
+  The Environment Agency link says "(England)" in its label and is also what Wales and Northern
+  Ireland see for flooding until they get their own.
+- **Region lives in two places** (`home.region`, `settings.region`). The Home and Settings screens
+  both set the two together; leaving the UK drops the part-of-the-UK choice.
+- **Delete with undo.** Deleting a person, pet, place or piece of equipment hides it at once and
+  shows "... deleted. Undo" for five seconds; the real change is written when the time runs out or
+  when you leave the screen. A place that still holds stock cannot be deleted; deleting one clears
+  it from any equipment kept there.
+- **Read-only.** When the store reports `too-new` or `invalid`, `Shell` wraps the screens in a
+  disabled `<fieldset>`, so no control can write. Navigation still works.
+- **Phones.** Tap targets are 44 px or more; inputs are 16 px or more so Chrome on Android does not
+  zoom the page on focus; colours come from the theme variables, so dark mode follows the system.
+- **Units.** `formatVolume` shows litres in the UK and US gallons in the US; `formatTemp` shows
+  Celsius or Fahrenheit. Amounts shown to a person go through them.
+
+## Known gaps
+
+- The horizon table has no amounts yet: the planning engine is not in this build, so it lists the
+  needs with a dash and says so. Wiring it is one function, `previewFor`.
+- No "blocked" badge on equipment, and no maintenance dates on equipment; both come with later
+  work.
+- Wales and Northern Ireland have no flood links of their own.
+- The Settings data section is a placeholder.
+
+## Tests
+
+`test/setup-helpers.test.ts` (age, supply, units, questionnaire, links, preview helpers),
+`test/store-banner.test.tsx` (read-only banners and disabled controls), and `e2e/setup.spec.ts`
+(onboarding by hand with two people, three places, a solar array and 14 days, then a reload; the
+fixture household with a medication edit and delete with undo).

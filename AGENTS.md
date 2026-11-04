@@ -45,6 +45,9 @@ project of the SHTF game (`shtf-game`). Working title.
   - `src/store` never imports `src/app` or React.
   - `src/app` may import everything, but reaches the store only through `DocumentProvider` and the
     `useDocument()` / `useChange()` hooks (`src/app/state/`); it never calls `openStore` itself.
+- **Screens never compute targets.** How much a household needs is the engine's job; screens
+  collect facts (`useChange`) and show what the engine returns. Screens live in
+  `src/app/screens/`, sheets and form controls in `src/app/components/`.
 - **Packs.** Content (items, assets, guidance, plans, regions) is JSON in `src/packs/data/`,
   validated by `src/packs/loader.ts`. Every guidance rule has a `source` URL (listed in the pack's
   `sources` with the date checked) or `"assumption"`; never invent an official number. Bump a
