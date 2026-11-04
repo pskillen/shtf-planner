@@ -155,13 +155,13 @@ write_env() {
 set_secret() {
   local name="$1" value="$2"
   if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
-    if printf '%s' "$value" | gh secret set "$name" >/dev/null 2>&1; then
+    if printf '%s' "$value" | gh secret set "$name" -R pskillen/shtf-planner >/dev/null 2>&1; then
       WRITTEN_SECRET+=("$name")
       printf '  %s✓ set%s GitHub secret %s\n' "$GREEN" "$RESET" "$name"
       return
     fi
   fi
-  SKIPPED+=("GitHub secret $name (set it manually: gh secret set $name)")
+  SKIPPED+=("GitHub secret $name (set it manually: gh secret set $name -R pskillen/shtf-planner)")
   warn "skipped GitHub secret $name: gh not ready; set it later"
 }
 
@@ -250,7 +250,7 @@ step "prep.mm9pdy.net                (production, branch main)"
 step "next.prep.mm9pdy.net           (branch next: every push to main)"
 step "staging.prep.mm9pdy.net        (branch staging: pre-releases)"
 step "dev.prep.mm9pdy.net            (branch dev)"
-note "Pages attaches custom domains to the production deployment; for the other three, point the hostname at the branch alias (<branch>.shtf-planner.pages.dev) in DNS."
+note "UNVERIFIED: Pages normally attaches custom domains to the production deployment only. For the other three, pointing the hostname at the branch alias (<branch>.shtf-planner.pages.dev) in DNS may not serve; if it does not, they need a Pages project each. Check after the first deploy."
 pause "All four attached? Press Enter."
 
 finish

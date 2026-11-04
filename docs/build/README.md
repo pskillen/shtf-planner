@@ -64,4 +64,10 @@ fails, it writes `[]` and the page says "No releases yet". Nothing is fetched at
 ## Owner setup
 
 Run `scripts/setup-cloudflare.sh`: it collects the account id and an API token (Pages edit rights),
-sets the two repo secrets with `gh secret set`, and lists the custom domains to attach.
+sets the two repo secrets with `gh secret set -R pskillen/shtf-planner`, and lists the custom domains
+to attach.
+
+**Unverified:** Cloudflare Pages normally attaches a custom domain to a project's production
+deployment only. Whether `next.`, `staging.` and `dev.` hostnames can be pointed at the branch aliases
+(`<branch>.shtf-planner.pages.dev`) of this one project, or need a Pages project each, has not been
+tried. Confirm it on the first real deploy and update this section.
