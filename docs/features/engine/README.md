@@ -97,7 +97,9 @@ converter that is missing becomes an asset plus its fuel in the suggestions.
 Whole units of one item type that give the store, cheapest per unit first, not overshooting the
 shortfall by more than 3 times (unless nothing else is left), at most three. `pricePence` is the
 whole suggestion's price. Items that need cooking are skipped while cooking is not covered, and
-items whose age band fits nobody are skipped.
+items whose age band fits nobody are skipped. An item type tagged `no-suggest` (the bath water
+bladder, loose D, AA and AAA cells) is cheap per unit but an odd first answer, so it is suggested
+only when no other type gives the store.
 
 ## Score
 

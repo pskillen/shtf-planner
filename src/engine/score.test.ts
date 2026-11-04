@@ -132,6 +132,16 @@ describe('preview', () => {
     expect(water(28).example).toMatch(/×/);
   });
 
+  it('does not offer a bath bladder or loose cells as the example at 7, 14 or 28 days', () => {
+    for (const days of [7, 14, 28]) {
+      const h = rows.find((r) => r.horizonDays === days)!;
+      const water = h.rows.find((r) => r.capability === 'water')!;
+      expect(water.example, `water at ${days}`).not.toMatch(/bladder/i);
+      const power = h.rows.find((r) => r.capability === 'power')!;
+      expect(power.example, `power at ${days}`).not.toMatch(/cells|batteries/i);
+    }
+  });
+
   it('names the heater and its fuel for heat, and leaves plan items out', () => {
     const heat = rows[1]!.rows.find((r) => r.capability === 'heat')!;
     expect(heat.unit).toBe('h');

@@ -53,6 +53,34 @@ describe('gaps', () => {
     }
   });
 
+  it('does not make a bath bladder or loose cells the first suggestion at 14 days', () => {
+    const doc = empty();
+    const list = gaps(doc, packs, NOW, 14);
+    const water = find(list, 'water:waterL')!;
+    expect(water.suggestions[0]!.itemTypeId).not.toBe('items-base:bath-bladder');
+    for (const s of water.suggestions) expect(s.itemTypeId).not.toBe('items-base:bath-bladder');
+    const power = find(list, 'power:batteryWh')!;
+    expect(power.shortfall).toBeGreaterThan(0);
+    for (const s of power.suggestions) {
+      expect(packs.items[s.itemTypeId!]!.tags, s.label).not.toContain('cells');
+      expect(packs.items[s.itemTypeId!]!.tags, s.label).not.toContain('no-suggest');
+    }
+  });
+
+  it('falls back to a no-suggest type when nothing else gives the store', () => {
+    const only = {
+      ...packs,
+      items: Object.fromEntries(
+        Object.entries(packs.items).filter(
+          ([id, t]) =>
+            !t.gives.some((g) => g.store === 'waterL') || id === 'items-base:bath-bladder',
+        ),
+      ),
+    };
+    const water = find(gaps(empty(), only, NOW, 14), 'water:waterL')!;
+    expect(water.suggestions[0]!.itemTypeId).toBe('items-base:bath-bladder');
+  });
+
   it('sizes the quantity to the shortfall', () => {
     const doc = biggarDocument(); // 47.25 L wanted, 20 L held: 27.25 L short
     const water = find(gaps(doc, packs, NOW, 3), 'water:waterL')!;

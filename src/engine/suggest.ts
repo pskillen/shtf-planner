@@ -24,12 +24,16 @@ export interface SuggestContext {
 
 const EPS = 1e-9;
 
+/** The item tag that keeps a type out of the suggestions unless nothing else would do. */
+export const NO_SUGGEST = 'no-suggest';
+
 /**
  * The cheapest sensible ways to close a shortfall of `store`, best first (at most `limit`).
  * Each is a whole number of units of one item type. "Sensible" means the units do not overshoot
  * the shortfall by more than `MAX_OVERSHOOT` times (unless nothing else is left); they are sorted
  * by price per unit of the store, then by total price, and unpriced types come last, largest
- * unit first.
+ * unit first. Item types tagged `no-suggest` (a bath bladder, loose cells: cheap per unit but an
+ * odd first answer) are used only when nothing else gives the store.
  */
 export function closeStore(
   ctx: SuggestContext,
@@ -54,8 +58,10 @@ export function closeStore(
       ...(type.typicalPricePence !== undefined ? { price: units * type.typicalPricePence } : {}),
     });
   }
-  const sensible = all.filter((c) => c.total <= shortfall * MAX_OVERSHOOT + EPS);
-  const pool = sensible.length > 0 ? sensible : all;
+  const usual = all.filter((c) => !c.type.tags.includes(NO_SUGGEST));
+  const candidates = usual.length > 0 ? usual : all;
+  const sensible = candidates.filter((c) => c.total <= shortfall * MAX_OVERSHOOT + EPS);
+  const pool = sensible.length > 0 ? sensible : candidates;
   const perUnitPrice = (c: Candidate) => (c.type.typicalPricePence ?? 0) / c.per;
   pool.sort((a, b) => {
     const pa = a.price !== undefined;

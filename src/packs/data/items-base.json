@@ -2,7 +2,7 @@
   "format": 1,
   "id": "items-base",
   "kind": "items",
-  "version": 1,
+  "version": 2,
   "name": "Base household items",
   "sources": [
     {
@@ -271,7 +271,7 @@
       "suitability": ["frost", "heat", "damp"],
       "shelfLife": "weeks",
       "typicalPricePence": 3000,
-      "tags": ["water"]
+      "tags": ["water", "no-suggest"]
     },
     {
       "id": "items-base:water-carriers",
@@ -628,7 +628,7 @@
       "suitability": [],
       "shelfLife": "years",
       "typicalPricePence": 1200,
-      "tags": ["power"]
+      "tags": ["power", "no-suggest"]
     },
     {
       "id": "items-base:crank-charger",
@@ -1490,7 +1490,7 @@
       "suitability": [],
       "shelfLife": "years",
       "typicalPricePence": 500,
-      "tags": ["power", "cells"]
+      "tags": ["power", "cells", "no-suggest"]
     },
     {
       "id": "items-base:aaa-cells-8",
@@ -1506,7 +1506,7 @@
       "suitability": [],
       "shelfLife": "years",
       "typicalPricePence": 500,
-      "tags": ["power", "cells"]
+      "tags": ["power", "cells", "no-suggest"]
     },
     {
       "id": "items-base:d-cells-4",
@@ -1522,7 +1522,7 @@
       "suitability": [],
       "shelfLife": "years",
       "typicalPricePence": 800,
-      "tags": ["power", "cells"]
+      "tags": ["power", "cells", "no-suggest"]
     },
     {
       "id": "items-base:power-bank-20000mah",
