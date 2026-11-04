@@ -15,6 +15,12 @@ import { Sheet } from '../components/Sheet';
 import { useDeferredDelete } from '../components/useDeferredDelete';
 import { RISK_TAG_LABEL, SIZE_LABEL, SPECIES_LABEL } from '../labels';
 import { useChange, useDocument } from '../state';
+import {
+  finishMember,
+  medicationComplete,
+  medicationTagSetByHand,
+  syncMedicationTag,
+} from './memberTags';
 
 const AGE_TAGS: readonly RiskTag[] = ['infant', 'child', 'elderly'];
 const TAG_OPTIONS = RISK_TAGS.map((t) => ({ value: t, label: RISK_TAG_LABEL[t] }));
@@ -49,6 +55,7 @@ function MemberSheet({
 }) {
   const [m, setM] = useState<Member>(initial);
   const [touched, setTouched] = useState(!isNew);
+  const [medTagByHand, setMedTagByHand] = useState(() => medicationTagSetByHand(initial));
   const now = today();
 
   const setDob = (dob: string) =>
@@ -62,23 +69,20 @@ function MemberSheet({
       };
     });
 
+  /** Changes the medication list; the `takes-medication` tag follows it unless set by hand. */
+  const setMeds = (update: (list: Medication[]) => Medication[]) =>
+    setM((cur) => {
+      const medication = update(cur.medication);
+      return { ...cur, medication, tags: syncMedicationTag(cur.tags, medication, medTagByHand) };
+    });
   const setMed = (id: string, patch: Partial<Medication>) =>
-    setM((cur) => ({
-      ...cur,
-      medication: cur.medication.map((x) => (x.id === id ? { ...x, ...patch } : x)),
-    }));
+    setMeds((list) => list.map((x) => (x.id === id ? { ...x, ...patch } : x)));
 
   const suggested = suggestedAgeTags(m.dob, now).filter((t) => !m.tags.includes(t));
-  const valid = m.name.trim() !== '' && /^\d{4}-\d{2}-\d{2}$/.test(m.dob);
+  const medsOk = medicationComplete(m.medication);
+  const valid = m.name.trim() !== '' && /^\d{4}-\d{2}-\d{2}$/.test(m.dob) && medsOk;
 
-  const save = () => {
-    const tags = [...m.tags];
-    if (m.medication.length > 0 && !tags.includes('takes-medication'))
-      tags.push('takes-medication');
-    if (m.dietary?.trim() && !tags.includes('dietary')) tags.push('dietary');
-    const dietary = m.dietary?.trim() || undefined;
-    onSave({ ...m, name: m.name.trim(), tags, dietary });
-  };
+  const save = () => onSave(finishMember(m));
 
   return (
     <Sheet
@@ -142,6 +146,9 @@ function MemberSheet({
           value={m.tags}
           onChange={(tags) => {
             setTouched(true);
+            if (tags.includes('takes-medication') !== m.tags.includes('takes-medication')) {
+              setMedTagByHand(true);
+            }
             setM({ ...m, tags });
           }}
         />
@@ -207,9 +214,7 @@ function MemberSheet({
             <button
               type="button"
               className="secondary"
-              onClick={() =>
-                setM({ ...m, medication: m.medication.filter((x) => x.id !== med.id) })
-              }
+              onClick={() => setMeds((list) => list.filter((x) => x.id !== med.id))}
             >
               Remove {med.name || 'medicine'}
             </button>
@@ -219,10 +224,11 @@ function MemberSheet({
       <button
         type="button"
         className="secondary"
-        onClick={() => setM({ ...m, medication: [...m.medication, blankMedication()] })}
+        onClick={() => setMeds((list) => [...list, blankMedication()])}
       >
         Add medication
       </button>
+      {!medsOk ? <p className="muted">Give each medicine a name to save.</p> : null}
     </Sheet>
   );
 }
