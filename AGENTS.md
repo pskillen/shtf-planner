@@ -11,8 +11,9 @@ project of the SHTF game (`shtf-game`). Working title.
 - Vite + TypeScript (strict) + React 19; React Router (`BrowserRouter`; the PWA serves
   `index.html` for every path). Plain CSS with theme variables in `src/styles.css`, dark mode by
   `prefers-color-scheme`, 44 px minimum tap targets, no component library.
-- `vite-plugin-pwa` (`registerType: 'autoUpdate'`) for the manifest, service worker and the
-  "update available" toast (`src/app/UpdateToast.tsx`).
+- `vite-plugin-pwa` (`registerType: 'prompt'`) for the manifest, service worker and the
+  "update available" toast (`src/app/UpdateToast.tsx`). A new version waits until the user taps
+  Reload; it never reloads the page by itself, so it cannot replace the app under an edit.
 - Zod validates the document and the content packs. `idb` wraps IndexedDB.
 - Vitest (unit, React Testing Library with jsdom where a test says so) and Playwright (`e2e/`).
 - Cloudflare Pages hosting, deployed by GitHub Actions. See `docs/build/README.md`.
