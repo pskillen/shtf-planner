@@ -8,10 +8,12 @@ import { sortKeys } from './yconvert';
  *
  * The same race as a first run (see `init.ts`): two replicas that both run a step that adds
  * `contacts: {}` before they sync would otherwise each create a rival `contacts` map, and after
- * the merge only one map, and so one device's records, survives. So the *empty containers* a step
- * creates are written under a client id that is a hash of the step (name and versions) and of the
- * containers it creates. Every replica writes the same operations, which merge as one. The
- * records inside them are written normally, under the device's own id.
+ * the merge only one map, and so one device's records, survives. So each *empty container* a step
+ * creates is written, in its own transaction, under a client id that is a hash of the step (name
+ * and versions) and of that container (its path and initial shape). Every replica writes the same
+ * operations for it, which merge as one, whatever else each replica holds: a container inside a
+ * record (`assets.<id>.maintenance`) agrees wherever the record exists. The records inside the
+ * containers are written normally, under the device's own id.
  */
 
 type Obj = Record<string, unknown>;
@@ -68,17 +70,29 @@ function locate(
   return node instanceof Y.Map ? { parent: node, key: path[path.length - 1]! } : undefined;
 }
 
-/** The client id for the containers one step creates: a hash of the step and of what it makes. */
-export function stepClientId(step: MigrationStep, created: Created[]): number {
-  const wanted = [...created].sort((a, b) => a.path.join('/').localeCompare(b.path.join('/')));
+/**
+ * The client id for one container a step creates: a hash of the step (name, versions) and of that
+ * container alone (its path and initial shape). It never depends on which other containers the
+ * replica happens to create, so replicas holding different record sets still agree.
+ */
+export function stepClientId(step: MigrationStep, created: Created): number {
   return hash32(
-    JSON.stringify(sortKeys({ name: step.name, from: step.from, to: step.to, created: wanted })),
+    JSON.stringify(
+      sortKeys({
+        name: step.name,
+        from: step.from,
+        to: step.to,
+        path: created.path,
+        shape: created.shape,
+      }),
+    ),
   );
 }
 
 /**
  * Before a brought-forward document is written back, creates the containers the steps make, each
- * step's under its own fixed client id. Containers already in the document are left alone.
+ * in its own transaction under its own fixed client id. Containers already in the document are
+ * left alone.
  */
 export function ensureStepContainers(
   ydoc: Y.Doc,
@@ -90,19 +104,12 @@ export function ensureStepContainers(
   const real = ydoc.clientID;
   try {
     for (const { step, input, output } of traceSteps(plain, steps, target)) {
-      const created = createdContainers(input, output);
-      const missing = created.filter((c) => {
+      for (const c of createdContainers(input, output)) {
         const at = locate(root, c.path);
-        return at !== undefined && at.parent.get(at.key) === undefined;
-      });
-      if (missing.length === 0) continue;
-      ydoc.clientID = stepClientId(step, created);
-      ydoc.transact(() => {
-        for (const c of missing) {
-          const at = locate(root, c.path);
-          if (at && at.parent.get(at.key) === undefined) at.parent.set(at.key, toYShape(c.shape));
-        }
-      }, 'reconcile');
+        if (!at || at.parent.get(at.key) !== undefined) continue;
+        ydoc.clientID = stepClientId(step, c);
+        ydoc.transact(() => at.parent.set(at.key, toYShape(c.shape)), 'reconcile');
+      }
     }
   } finally {
     ydoc.clientID = real;
