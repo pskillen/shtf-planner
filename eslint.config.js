@@ -45,7 +45,7 @@ export default tseslint.config(
   },
   {
     // The model is types and Zod schemas only: it imports zod and itself, nothing else.
-    files: ['src/model/**/*.ts'],
+    files: ['src/model/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -66,7 +66,7 @@ export default tseslint.config(
   {
     // The engine is pure functions over the document and the packs: no React, no IndexedDB, no
     // Drive or Google, no store, no app.
-    files: ['src/engine/**/*.ts'],
+    files: ['src/engine/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -93,7 +93,7 @@ export default tseslint.config(
   },
   {
     // The store never reaches the UI.
-    files: ['src/store/**/*.ts'],
+    files: ['src/store/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': [
         'error',

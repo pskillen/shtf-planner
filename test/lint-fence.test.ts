@@ -46,6 +46,21 @@ describe('the lint fence', () => {
     ['the model imports a package', 'src/model/x.ts', "import { openDB } from 'idb';\nopenDB;"],
     ['the store imports the app', 'src/store/x.ts', "import { App } from '../app/App';\nApp;"],
     ['the store imports React', 'src/store/x.ts', "import { useState } from 'react';\nuseState;"],
+    [
+      'a .tsx in the engine imports the app',
+      'src/engine/x.tsx',
+      "import { App } from '../app/App';\nApp;",
+    ],
+    [
+      'a .tsx in the model imports the engine',
+      'src/model/x.tsx',
+      "import { f } from '../engine/f';\nf;",
+    ],
+    [
+      'a .tsx in the store imports the app',
+      'src/store/x.tsx',
+      "import { App } from '../app/App';\nApp;",
+    ],
   ];
   for (const [name, file, code] of bad) {
     it(`fails when ${name}`, async () => {
