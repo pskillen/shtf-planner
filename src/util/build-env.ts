@@ -1,7 +1,12 @@
-/** The deploy targets the footer can show. */
-export type BuildEnv = 'local' | 'preview' | 'dev' | 'next' | 'staging' | 'prod';
+import { ENVS, type Env } from '../model/document';
 
-const KNOWN: readonly BuildEnv[] = ['local', 'preview', 'dev', 'next', 'staging', 'prod'];
+/**
+ * The deploy targets the footer can show. One source of truth: the document's `Env`
+ * (`src/model/document.ts`), because the document records which build wrote it.
+ */
+export type BuildEnv = Env;
+
+const KNOWN: readonly BuildEnv[] = ENVS;
 
 /**
  * Maps the `BUILD_ENV` a workflow passes to a build environment. The workflow for a push to

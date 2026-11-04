@@ -144,6 +144,11 @@ describe('the lint fence', () => {
       "import { openDB } from 'idb';\nimport { Doc } from '../model/doc';\nimport { score } from '../engine/score';\nopenDB;\nDoc;\nscore;",
     ],
     [
+      'the engine imports the Packs type from the model',
+      'src/engine/x.ts',
+      "import type { Packs } from '../model';\nexport type P = Packs;",
+    ],
+    [
       'the app imports everything',
       'src/app/x.tsx',
       "import { useState } from 'react';\nimport { score } from '../engine/score';\nimport { open } from '../store/db';\nuseState;\nscore;\nopen;",

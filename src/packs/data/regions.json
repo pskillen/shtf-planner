@@ -1,0 +1,156 @@
+{
+  "format": 1,
+  "id": "regions",
+  "kind": "regions",
+  "version": 2,
+  "name": "Regions",
+  "sources": [
+    {
+      "url": "https://check-long-term-flood-risk.service.gov.uk/",
+      "title": "Check your long term flood risk (Environment Agency)",
+      "checked": "2026-11-04"
+    },
+    {
+      "url": "https://map.sepa.org.uk/floodmaps/",
+      "title": "SEPA flood maps",
+      "checked": "2026-11-04"
+    },
+    {
+      "url": "https://www.metoffice.gov.uk/weather/warnings-and-advice/uk-warnings",
+      "title": "Met Office weather warnings",
+      "checked": "2026-11-04"
+    },
+    {
+      "url": "https://www.fema.gov/flood-maps/products-tools/national-risk-index",
+      "title": "FEMA National Risk Index",
+      "checked": "2026-11-04"
+    }
+  ],
+  "regions": [
+    {
+      "id": "UK",
+      "units": {
+        "volume": "L",
+        "temperature": "C"
+      },
+      "currency": "GBP",
+      "riskLinks": [
+        {
+          "risk": "flood",
+          "label": "Environment Agency: check your long term flood risk (England)",
+          "url": "https://check-long-term-flood-risk.service.gov.uk/"
+        },
+        {
+          "risk": "coastal",
+          "label": "Environment Agency: check your long term flood risk (England)",
+          "url": "https://check-long-term-flood-risk.service.gov.uk/"
+        },
+        {
+          "risk": "storm",
+          "label": "Met Office weather warnings",
+          "url": "https://www.metoffice.gov.uk/weather/warnings-and-advice/uk-warnings"
+        },
+        {
+          "risk": "snow",
+          "label": "Met Office weather warnings",
+          "url": "https://www.metoffice.gov.uk/weather/warnings-and-advice/uk-warnings"
+        },
+        {
+          "risk": "heat",
+          "label": "Met Office weather warnings",
+          "url": "https://www.metoffice.gov.uk/weather/warnings-and-advice/uk-warnings"
+        },
+        {
+          "risk": "grid",
+          "label": "Be Ready: prepare for emergencies",
+          "url": "https://beready.campaign.gov.uk/be-ready-for-emergencies/"
+        },
+        {
+          "risk": "pandemic",
+          "label": "Be Ready: prepare for emergencies",
+          "url": "https://beready.campaign.gov.uk/be-ready-for-emergencies/"
+        }
+      ],
+      "subregions": [
+        { "id": "england", "name": "England", "riskLinks": [] },
+        { "id": "wales", "name": "Wales", "riskLinks": [] },
+        { "id": "northern-ireland", "name": "Northern Ireland", "riskLinks": [] },
+        {
+          "id": "scotland",
+          "name": "Scotland",
+          "riskLinks": [
+            {
+              "risk": "flood",
+              "label": "SEPA flood maps",
+              "url": "https://map.sepa.org.uk/floodmaps/"
+            },
+            {
+              "risk": "coastal",
+              "label": "SEPA flood maps",
+              "url": "https://map.sepa.org.uk/floodmaps/"
+            }
+          ]
+        }
+      ],
+      "suggestedPacks": [
+        "items-base",
+        "assets-base",
+        "guidance-grid-free",
+        "guidance-uk-prepare",
+        "plans-base"
+      ]
+    },
+    {
+      "id": "US",
+      "units": {
+        "volume": "gal",
+        "temperature": "F"
+      },
+      "currency": "USD",
+      "riskLinks": [
+        {
+          "risk": "flood",
+          "label": "FEMA National Risk Index",
+          "url": "https://www.fema.gov/flood-maps/products-tools/national-risk-index"
+        },
+        {
+          "risk": "coastal",
+          "label": "FEMA National Risk Index",
+          "url": "https://www.fema.gov/flood-maps/products-tools/national-risk-index"
+        },
+        {
+          "risk": "storm",
+          "label": "FEMA National Risk Index",
+          "url": "https://www.fema.gov/flood-maps/products-tools/national-risk-index"
+        },
+        {
+          "risk": "snow",
+          "label": "FEMA National Risk Index",
+          "url": "https://www.fema.gov/flood-maps/products-tools/national-risk-index"
+        },
+        {
+          "risk": "heat",
+          "label": "FEMA National Risk Index",
+          "url": "https://www.fema.gov/flood-maps/products-tools/national-risk-index"
+        },
+        {
+          "risk": "wildfire",
+          "label": "FEMA National Risk Index",
+          "url": "https://www.fema.gov/flood-maps/products-tools/national-risk-index"
+        },
+        {
+          "risk": "grid",
+          "label": "Ready.gov: build a kit",
+          "url": "https://www.ready.gov/kit"
+        }
+      ],
+      "suggestedPacks": [
+        "items-base",
+        "assets-base",
+        "guidance-grid-free",
+        "guidance-us-ready",
+        "plans-base"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,592 @@
+{
+  "format": 1,
+  "id": "assets-base",
+  "kind": "assets",
+  "version": 2,
+  "name": "Base household assets",
+  "sources": [
+    {
+      "url": "https://beready.campaign.gov.uk/be-ready-for-emergencies/",
+      "title": "Be Ready: be ready for emergencies (UK Government)",
+      "checked": "2026-11-04"
+    }
+  ],
+  "assets": [
+    {
+      "id": "assets-base:cabinet-heater",
+      "name": "Cabinet gas heater (butane, 4.2 kW max)",
+      "category": "heat",
+      "questions": [
+        {
+          "id": "setting",
+          "text": "Which setting do you run it on?",
+          "kind": "choice",
+          "choices": ["1.3 kW", "4.2 kW"]
+        }
+      ],
+      "contributes": [
+        {
+          "capability": "heat",
+          "when": {
+            "question": "setting",
+            "equals": "1.3 kW"
+          },
+          "converts": {
+            "store": "lpgKg",
+            "perHour": 0.095
+          },
+          "source": "assumption",
+          "note": "Butane is about 12.9 kWh/kg, so 1.3 kW is roughly 0.1 kg/h; 95 g/h as the figure to plan on."
+        },
+        {
+          "capability": "heat",
+          "when": {
+            "question": "setting",
+            "equals": "4.2 kW"
+          },
+          "converts": {
+            "store": "lpgKg",
+            "perHour": 0.3
+          },
+          "source": "assumption",
+          "note": "About 300 g/h at 4.2 kW (4.2 / 12.9 is 0.33 kg/h before efficiency). Verify against the manual."
+        }
+      ],
+      "maintenance": [
+        {
+          "id": "fuel-rotate",
+          "text": "Check the gas bottle and hose; swap old bottles",
+          "everyMonths": 12
+        },
+        {
+          "id": "service",
+          "text": "Check the regulator and hose for wear",
+          "everyMonths": 12
+        }
+      ]
+    },
+    {
+      "id": "assets-base:catalytic-heater",
+      "name": "Catalytic gas heater (1.3 kW)",
+      "category": "heat",
+      "questions": [],
+      "contributes": [
+        {
+          "capability": "heat",
+          "converts": {
+            "store": "lpgKg",
+            "perHour": 0.1
+          },
+          "source": "assumption",
+          "note": "1.3 kW of butane or propane, about 0.1 kg/h."
+        }
+      ],
+      "maintenance": [
+        {
+          "id": "fuel-rotate",
+          "text": "Check the gas bottle and hose; swap old bottles",
+          "everyMonths": 12
+        }
+      ]
+    },
+    {
+      "id": "assets-base:wood-burner",
+      "name": "Wood burner",
+      "category": "heat",
+      "questions": [],
+      "contributes": [
+        {
+          "capability": "heat",
+          "converts": {
+            "store": "woodKg",
+            "perHour": 1.5
+          },
+          "source": "assumption",
+          "note": "Assumption: about 1.5 kg of seasoned logs an hour for a few kW."
+        }
+      ],
+      "maintenance": [
+        {
+          "id": "sweep",
+          "text": "Sweep the chimney",
+          "everyMonths": 12
+        }
+      ]
+    },
+    {
+      "id": "assets-base:paraffin-heater",
+      "name": "Paraffin heater (2.5 kW)",
+      "category": "heat",
+      "questions": [],
+      "contributes": [
+        {
+          "capability": "heat",
+          "converts": {
+            "store": "paraffinL",
+            "perHour": 0.25
+          },
+          "source": "assumption",
+          "note": "Paraffin is about 10 kWh/L, so 2.5 kW is about 0.25 L/h."
+        }
+      ],
+      "maintenance": [
+        {
+          "id": "fuel-rotate",
+          "text": "Use or replace stored paraffin",
+          "everyMonths": 12
+        },
+        {
+          "id": "wick",
+          "text": "Check the wick and ventilate when used",
+          "everyMonths": 12
+        }
+      ]
+    },
+    {
+      "id": "assets-base:camping-stove",
+      "name": "Camping stove (gas canister)",
+      "category": "food",
+      "questions": [],
+      "contributes": [
+        {
+          "capability": "cooking",
+          "converts": {
+            "store": "gasCanister",
+            "perHour": 0.4
+          },
+          "source": "assumption",
+          "note": "From the game: about 90 g of butane an hour on a small burner."
+        }
+      ],
+      "maintenance": [
+        {
+          "id": "fuel-rotate",
+          "text": "Check canisters are in date and undamaged",
+          "everyMonths": 12
+        }
+      ]
+    },
+    {
+      "id": "assets-base:gas-bbq",
+      "name": "Gas BBQ (LPG)",
+      "category": "food",
+      "questions": [
+        {
+          "id": "bottleKg",
+          "text": "Size of the attached LPG bottle?",
+          "kind": "number",
+          "unit": "kg"
+        }
+      ],
+      "contributes": [
+        {
+          "capability": "cooking",
+          "converts": {
+            "store": "lpgKg",
+            "perHour": 0.3
+          },
+          "source": "assumption",
+          "note": "Assumption: a 3-4 kW burner, about 0.3 kg/h. Outdoors only."
+        }
+      ],
+      "maintenance": [
+        {
+          "id": "fuel-rotate",
+          "text": "Check the bottle and hose",
+          "everyMonths": 12
+        }
+      ]
+    },
+    {
+      "id": "assets-base:rocket-stove",
+      "name": "Rocket stove",
+      "category": "food",
+      "questions": [],
+      "contributes": [
+        {
+          "capability": "cooking",
+          "converts": {
+            "store": "woodKg",
+            "perHour": 1
+          },
+          "source": "assumption",
+          "note": "Assumption: about 1 kg of dry sticks an hour. Outdoors only."
+        }
+      ],
+      "maintenance": []
+    },
+    {
+      "id": "assets-base:power-station",
+      "name": "Portable power station",
+      "category": "power",
+      "questions": [
+        {
+          "id": "wh",
+          "text": "Capacity?",
+          "kind": "number",
+          "unit": "Wh"
+        }
+      ],
+      "contributes": [
+        {
+          "capability": "power",
+          "storesWh": {
+            "fromQuestion": "wh",
+            "usableFraction": 0.85,
+            "perUnitWh": 1
+          },
+          "source": "assumption",
+          "note": "Assumption: about 85% is usable after inverter losses."
+        }
+      ],
+      "maintenance": [
+        {
+          "id": "recharge",
+          "text": "Recharge to about 60-80% and check it holds",
+          "everyMonths": 3
+        }
+      ]
+    },
+    {
+      "id": "assets-base:leisure-battery",
+      "name": "Leisure battery",
+      "category": "power",
+      "questions": [
+        {
+          "id": "ah",
+          "text": "Capacity?",
+          "kind": "number",
+          "unit": "Ah"
+        }
+      ],
+      "contributes": [
+        {
+          "capability": "power",
+          "storesWh": {
+            "fromQuestion": "ah",
+            "usableFraction": 0.5,
+            "perUnitWh": 12
+          },
+          "source": "assumption",
+          "note": "Assumption: 12 V nominal, and only half is usable from a lead-acid battery."
+        }
+      ],
+      "maintenance": [
+        {
+          "id": "recharge",
+          "text": "Recharge and check the voltage",
+          "everyMonths": 3
+        }
+      ]
+    },
+    {
+      "id": "assets-base:generator",
+      "name": "Generator",
+      "category": "power",
+      "questions": [
+        {
+          "id": "fuel",
+          "text": "What does it run on?",
+          "kind": "choice",
+          "choices": ["petrol", "lpg"]
+        },
+        {
+          "id": "watts",
+          "text": "Continuous output?",
+          "kind": "number",
+          "unit": "W"
+        },
+        {
+          "id": "fuelPerHour",
+          "text": "Fuel use per hour at that load (litres for petrol, kg for LPG)?",
+          "kind": "number",
+          "unit": "per hour"
+        }
+      ],
+      "contributes": [
+        {
+          "capability": "power",
+          "when": {
+            "question": "fuel",
+            "equals": "petrol"
+          },
+          "converts": {
+            "store": "petrolL",
+            "perHourFrom": "fuelPerHour"
+          },
+          "outputPerHour": {
+            "fromQuestion": "watts"
+          },
+          "source": "assumption"
+        },
+        {
+          "capability": "power",
+          "when": {
+            "question": "fuel",
+            "equals": "lpg"
+          },
+          "converts": {
+            "store": "lpgKg",
+            "perHourFrom": "fuelPerHour"
+          },
+          "outputPerHour": {
+            "fromQuestion": "watts"
+          },
+          "source": "assumption"
+        }
+      ],
+      "maintenance": [
+        {
+          "id": "run",
+          "text": "Run it on load for 20 minutes",
+          "everyMonths": 1
+        },
+        {
+          "id": "fuel-rotate",
+          "text": "Use or replace stored fuel",
+          "everyMonths": 12
+        }
+      ]
+    },
+    {
+      "id": "assets-base:solar-pv",
+      "name": "Solar PV array",
+      "category": "power",
+      "questions": [
+        {
+          "id": "kwp",
+          "text": "Array size?",
+          "kind": "number",
+          "unit": "kWp"
+        },
+        {
+          "id": "hasEps",
+          "text": "Does it keep running in a grid outage (an emergency power supply fitted)?",
+          "kind": "bool"
+        }
+      ],
+      "contributes": [
+        {
+          "capability": "power",
+          "when": {
+            "question": "hasEps",
+            "equals": true
+          },
+          "providesPerDayFrom": {
+            "question": "kwp",
+            "factor": 800
+          },
+          "source": "assumption",
+          "note": "Assumption: about 800 Wh per kWp on a winter day in the UK. Without an EPS a grid-tied array stops with the grid, so it contributes nothing."
+        }
+      ],
+      "maintenance": [
+        {
+          "id": "inspect",
+          "text": "Inspect the panels and inverter display",
+          "everyMonths": 12
+        }
+      ]
+    },
+    {
+      "id": "assets-base:home-battery",
+      "name": "Home battery",
+      "category": "power",
+      "questions": [
+        {
+          "id": "kwh",
+          "text": "Capacity?",
+          "kind": "number",
+          "unit": "kWh"
+        },
+        {
+          "id": "hasEps",
+          "text": "Does it supply the house in a grid outage (EPS or islanding)?",
+          "kind": "bool"
+        }
+      ],
+      "contributes": [
+        {
+          "capability": "power",
+          "when": {
+            "question": "hasEps",
+            "equals": true
+          },
+          "storesWh": {
+            "fromQuestion": "kwh",
+            "usableFraction": 0.9,
+            "perUnitWh": 1000
+          },
+          "source": "assumption",
+          "note": "Assumption: about 90% usable. Without an EPS the battery cannot supply the house in an outage."
+        }
+      ],
+      "maintenance": []
+    },
+    {
+      "id": "assets-base:ev",
+      "name": "Electric car",
+      "category": "power",
+      "questions": [
+        {
+          "id": "kwh",
+          "text": "Battery size?",
+          "kind": "number",
+          "unit": "kWh"
+        },
+        {
+          "id": "v2l",
+          "text": "Can it power a socket (vehicle-to-load)?",
+          "kind": "bool"
+        }
+      ],
+      "contributes": [
+        {
+          "capability": "power",
+          "when": {
+            "question": "v2l",
+            "equals": true
+          },
+          "storesWh": {
+            "fromQuestion": "kwh",
+            "usableFraction": 0.5,
+            "perUnitWh": 1000
+          },
+          "source": "assumption",
+          "note": "Half the battery is counted as usable, so there is charge left to drive."
+        }
+      ],
+      "maintenance": []
+    },
+    {
+      "id": "assets-base:ev-granny-charger",
+      "name": "EV granny charger",
+      "category": "power",
+      "questions": [],
+      "contributes": [],
+      "maintenance": []
+    },
+    {
+      "id": "assets-base:water-butt",
+      "name": "Water butt",
+      "category": "water",
+      "questions": [
+        {
+          "id": "litres",
+          "text": "Size?",
+          "kind": "number",
+          "unit": "L"
+        }
+      ],
+      "contributes": [
+        {
+          "capability": "water",
+          "holds": {
+            "store": "waterRaw",
+            "fromQuestion": "litres"
+          },
+          "source": "assumption",
+          "note": "Untreated: it must be filtered or boiled before drinking."
+        }
+      ],
+      "maintenance": [
+        {
+          "id": "clean",
+          "text": "Empty, clean and refill",
+          "everyMonths": 6
+        }
+      ]
+    },
+    {
+      "id": "assets-base:smoke-alarm",
+      "name": "Smoke alarm",
+      "category": "security",
+      "questions": [],
+      "contributes": [],
+      "maintenance": [
+        {
+          "id": "test",
+          "text": "Press the test button",
+          "everyMonths": 1
+        },
+        {
+          "id": "replace",
+          "text": "Replace the alarm",
+          "everyMonths": 120
+        }
+      ]
+    },
+    {
+      "id": "assets-base:co-alarm",
+      "name": "Carbon monoxide alarm",
+      "category": "security",
+      "questions": [],
+      "contributes": [],
+      "maintenance": [
+        {
+          "id": "test",
+          "text": "Press the test button",
+          "everyMonths": 1
+        },
+        {
+          "id": "replace",
+          "text": "Replace the alarm",
+          "everyMonths": 120
+        }
+      ]
+    },
+    {
+      "id": "assets-base:fire-extinguisher",
+      "name": "Fire extinguisher",
+      "category": "security",
+      "questions": [],
+      "contributes": [],
+      "maintenance": [
+        {
+          "id": "check",
+          "text": "Check the pressure gauge and seal",
+          "everyMonths": 12
+        }
+      ]
+    },
+    {
+      "id": "assets-base:wind-up-radio",
+      "name": "Wind-up radio",
+      "category": "comms",
+      "questions": [],
+      "contributes": [
+        {
+          "capability": "comms",
+          "note": "Receives the news with no mains or batteries."
+        }
+      ],
+      "maintenance": []
+    },
+    {
+      "id": "assets-base:handheld-radio",
+      "name": "Handheld radio",
+      "category": "comms",
+      "questions": [
+        {
+          "id": "kind",
+          "text": "What kind?",
+          "kind": "choice",
+          "choices": ["pmr446", "amateur", "cb"]
+        }
+      ],
+      "contributes": [
+        {
+          "capability": "comms",
+          "note": "Two-way; needs another station in range."
+        }
+      ],
+      "maintenance": [
+        {
+          "id": "charge",
+          "text": "Charge the radio and check it works",
+          "everyMonths": 3
+        }
+      ]
+    }
+  ]
+}

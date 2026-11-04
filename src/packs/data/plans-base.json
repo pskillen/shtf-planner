@@ -1,0 +1,69 @@
+{
+  "format": 1,
+  "id": "plans-base",
+  "kind": "plans",
+  "version": 1,
+  "name": "Base household plans",
+  "items": [
+    {
+      "id": "plans-base:meeting-point",
+      "capability": "plans",
+      "text": "Agree a meeting point for the household if you cannot get home or have to leave."
+    },
+    {
+      "id": "plans-base:shut-offs",
+      "capability": "plans",
+      "text": "Everyone knows where the water and electricity shut-offs are and how to use them."
+    },
+    {
+      "id": "plans-base:documents",
+      "capability": "plans",
+      "text": "Copy important documents on paper and in an encrypted file, kept apart from the originals."
+    },
+    {
+      "id": "plans-base:grab-bags",
+      "capability": "mobility",
+      "text": "A grab bag packed for each person: water, snacks, torch, radio, medication, a power bank, copies of key documents."
+    },
+    {
+      "id": "plans-base:first-aid-course",
+      "capability": "medical",
+      "text": "Take a first aid course and refresh it.",
+      "expiresMonths": 36
+    },
+    {
+      "id": "plans-base:water-butt",
+      "capability": "water",
+      "text": "Plan how you would filter or boil water from the butt, and keep the butt clean.",
+      "requires": {
+        "asset": ["assets-base:water-butt"]
+      }
+    },
+    {
+      "id": "plans-base:eps",
+      "capability": "power",
+      "text": "Have an emergency power supply (EPS) fitted so solar or the home battery keeps working in a power cut.",
+      "requires": {
+        "asset": ["assets-base:solar-pv", "assets-base:home-battery"]
+      }
+    },
+    {
+      "id": "plans-base:neighbours",
+      "capability": "comms",
+      "text": "Swap phone numbers with your neighbours and know who may need help."
+    },
+    {
+      "id": "plans-base:pets",
+      "capability": "plans",
+      "text": "Plan for your pets: food, water, carriers, vaccination records and somewhere that takes them.",
+      "requires": {
+        "pets": true
+      }
+    },
+    {
+      "id": "plans-base:emergency-numbers",
+      "capability": "comms",
+      "text": "Write down 999 or 112 and your local emergency numbers (power, water, gas, council) where everyone can find them."
+    }
+  ]
+}

@@ -14,7 +14,8 @@ project of the SHTF game (`shtf-game`). Working title.
 - `vite-plugin-pwa` (`registerType: 'prompt'`) for the manifest, service worker and the
   "update available" toast (`src/app/UpdateToast.tsx`). A new version waits until the user taps
   Reload; it never reloads the page by itself, so it cannot replace the app under an edit.
-- Zod validates the document and the content packs. `idb` wraps IndexedDB.
+- Zod validates the document and the content packs. The document lives in a Yjs CRDT persisted by
+  `y-indexeddb`, with a `BroadcastChannel` relay between tabs.
 - Vitest (unit, React Testing Library with jsdom where a test says so) and Playwright (`e2e/`).
 - Cloudflare Pages hosting, deployed by GitHub Actions. See `docs/build/README.md`.
 
@@ -42,7 +43,15 @@ project of the SHTF game (`shtf-game`). Working title.
   - `src/engine` imports only `src/model`, `src/util` and `src/engine`; never React, `src/app`,
     `src/store`, `src/packs`, `idb`, or anything Drive or Google.
   - `src/store` never imports `src/app` or React.
-  - `src/app` may import everything.
+  - `src/app` may import everything, but reaches the store only through `DocumentProvider` and the
+    `useDocument()` / `useChange()` hooks (`src/app/state/`); it never calls `openStore` itself.
+- **Packs.** Content (items, assets, guidance, plans, regions) is JSON in `src/packs/data/`,
+  validated by `src/packs/loader.ts`. Every guidance rule has a `source` URL (listed in the pack's
+  `sources` with the date checked) or `"assumption"`; never invent an official number. Bump a
+  pack's `version` when its content changes. See `docs/features/content-packs/`.
+- **The document shape is a schema.** Changing it means a `SCHEMA_VERSION` bump and an idempotent
+  migration step in `src/model/migrate.ts`; the container layout of a new document is frozen per
+  schema. See `docs/features/data-model/`.
 - **Privacy.** Nothing leaves the browser except the user's own document to the user's own Google
   Drive. No analytics, no server, no third-party calls at runtime. The changelog is baked at build
   time from GitHub Releases, never fetched at runtime.
@@ -68,8 +77,9 @@ passes `BUILD_ENV=main`, which `src/util/build-env.ts` maps to `next`; `preview`
 (`local`, a short SHA for continuous builds, a bare SemVer tag for releases) are defined in
 `vite.config.ts` and declared in `src/vite-env.d.ts`. The footer shows both.
 
-With `?debug=1`, `window.__shtf` exists (`src/app/debug.ts`). Later phases hang test hooks on it;
-without the flag nothing is installed.
+With `?debug=1`, `window.__shtf` exists (`src/app/debug.ts`) with `doc()`, `change(fn)` and
+`loadFixture()` (the invented Biggar household, `src/app/state/debugStore.ts`). Later phases hang
+test hooks on it; without the flag nothing is installed.
 
 ## Git
 
