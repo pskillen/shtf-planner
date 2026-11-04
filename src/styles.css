@@ -755,6 +755,7 @@ table.horizon .big td {
 .group-toggle {
   width: 100%;
   justify-content: flex-start;
+  gap: 0.4rem;
   background: transparent;
   color: var(--text);
   padding: 0;
