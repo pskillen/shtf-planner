@@ -2,6 +2,7 @@ import {
   DriveAuthError,
   DriveCancelledError,
   DriveNetworkError,
+  DriveNotFoundError,
   type DrivePort,
   type DriveRemoteFile,
   type DriveWrite,
@@ -23,6 +24,8 @@ export interface FakeCloud {
   port(options?: FakePortOptions): FakePort;
   /** Content of a file by name, as text. */
   text(name: string): string | undefined;
+  /** The app folder is trashed: its id answers "not found" and the next `folder()` is a new one. */
+  trashFolder(): void;
   /** Replaces a file's content (another device, or a hand edit) and bumps its time. */
   put(name: string, content: Uint8Array | string): void;
 }
@@ -52,10 +55,13 @@ export function createFakeCloud(): FakeCloud {
   let clock = 0;
   let nextId = 0;
   const stamp = () => `2026-01-01T00:00:${String(++clock).padStart(6, '0')}Z`;
-  const folderId = 'folder-1';
+  let folderId = 'folder-1';
+  let folderCount = 1;
+  const trashed = new Set<string>();
   const enc = new TextEncoder();
 
-  const byName = (name: string) => Array.from(files.values()).find((f) => f.name === name);
+  const byName = (name: string) =>
+    Array.from(files.values()).find((f) => f.name === name && !trashed.has(f.folderId));
 
   const cloud: FakeCloud = {
     files,
@@ -63,6 +69,10 @@ export function createFakeCloud(): FakeCloud {
     text: (name) => {
       const f = byName(name);
       return f ? new TextDecoder().decode(f.bytes) : undefined;
+    },
+    trashFolder() {
+      trashed.add(folderId);
+      folderId = `folder-${++folderCount}`;
     },
     put(name, content) {
       const bytes = typeof content === 'string' ? enc.encode(content) : content.slice();
@@ -106,6 +116,7 @@ export function createFakeCloud(): FakeCloud {
         },
         async listFiles(id): Promise<DriveRemoteFile[]> {
           gate();
+          if (trashed.has(id)) throw new DriveNotFoundError();
           port.calls.list++;
           const seen = Array.from(files.values())
             .filter((f) => f.folderId === id)
@@ -127,6 +138,7 @@ export function createFakeCloud(): FakeCloud {
         },
         async write(params: DriveWrite): Promise<DriveRemoteFile> {
           gate();
+          if (trashed.has(params.folderId)) throw new DriveNotFoundError();
           const bytes =
             typeof params.content === 'string'
               ? enc.encode(params.content)

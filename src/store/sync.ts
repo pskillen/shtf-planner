@@ -4,6 +4,7 @@ import {
   DriveAuthError,
   DriveCancelledError,
   DriveNetworkError,
+  DriveNotFoundError,
   JSON_FILE_NAME,
   JSON_MIME,
   YJS_FILE_NAME,
@@ -392,8 +393,16 @@ export function createSync(options: SyncOptions): Sync {
   }
 
   async function look(): Promise<Remote> {
-    const folderId = rec.folderId ?? (await drive.folder());
-    const files = await drive.listFiles(folderId);
+    let folderId = rec.folderId ?? (await drive.folder());
+    let files: DriveRemoteFile[];
+    try {
+      files = await drive.listFiles(folderId);
+    } catch (e) {
+      if (!(e instanceof DriveNotFoundError)) throw e;
+      // The remembered folder was deleted or trashed: find it by name again (or make a new one).
+      folderId = await drive.folder();
+      files = await drive.listFiles(folderId);
+    }
     const yjs = files.find((f) => f.name === YJS_FILE_NAME);
     const json = files.find((f) => f.name === JSON_FILE_NAME);
     checkedAt = iso();
@@ -505,6 +514,25 @@ export function createSync(options: SyncOptions): Sync {
 
   // ---- the operations -------------------------------------------------------------------
 
+  /**
+   * Runs one pass; if a folder or file we remembered by id has gone, forgets the ids, so the next
+   * look finds them by name again, and runs it once more. That is not "offline".
+   */
+  async function recoveringIds(pass: () => Promise<void>): Promise<void> {
+    try {
+      return await pass();
+    } catch (e) {
+      if (!(e instanceof DriveNotFoundError)) throw e;
+      await save({
+        folderId: undefined,
+        yjsFileId: undefined,
+        jsonFileId: undefined,
+        remoteModified: undefined,
+      });
+      return pass();
+    }
+  }
+
   /** Pull, then push if there is anything to send. */
   async function syncOnce(): Promise<void> {
     await refresh();
@@ -515,12 +543,14 @@ export function createSync(options: SyncOptions): Sync {
     }
     try {
       await deriveDirty();
-      setBusy({ kind: 'pulling' });
-      const remote = await look();
-      if ((await pull(remote)) === 'blocked') return finish();
-      if (!remote.yjs && !rec.dirty) await markDirty(); // nothing on Drive yet: send ours
-      clearProblem();
-      await pushIfDirty();
+      await recoveringIds(async () => {
+        setBusy({ kind: 'pulling' });
+        const remote = await look();
+        if ((await pull(remote)) === 'blocked') return;
+        if (!remote.yjs && !rec.dirty) await markDirty(); // nothing on Drive yet: send ours
+        clearProblem();
+        await pushIfDirty();
+      });
     } catch (e) {
       fail(e);
       return;
@@ -537,11 +567,13 @@ export function createSync(options: SyncOptions): Sync {
       return;
     }
     try {
-      setBusy({ kind: 'pushing' });
-      const remote = await look();
-      if ((await pull(remote)) === 'blocked') return finish(); // merge anything newer first
-      clearProblem();
-      await pushIfDirty();
+      await recoveringIds(async () => {
+        setBusy({ kind: 'pushing' });
+        const remote = await look();
+        if ((await pull(remote)) === 'blocked') return; // merge anything newer first
+        clearProblem();
+        await pushIfDirty();
+      });
     } catch (e) {
       fail(e);
       return;

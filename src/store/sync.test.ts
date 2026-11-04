@@ -552,6 +552,36 @@ describe('a stale write must not undo a deletion', () => {
   });
 });
 
+describe('when Drive moves things under us', () => {
+  it('a trashed app folder is found (or made) again, not reported as offline', async () => {
+    const cloud = createFakeCloud();
+    const a = await device(cloud);
+    const b = await device(cloud);
+    setItem(a, 'a', 1);
+    await a.sync.connect();
+    await b.sync.connect();
+
+    cloud.trashFolder();
+    setItem(a, 'a2', 2);
+    await a.sync.flush();
+    expect(kind(a)).toBe('synced');
+    expect(Object.keys(JSON.parse(cloud.text(JSON_FILE_NAME)!).items).sort()).toEqual(['a', 'a2']);
+
+    // B still remembers the old folder: it recovers on its own too, and picks up A's edit
+    await b.sync.checkDrive();
+    expect(kind(b)).toBe('synced');
+    expect(Object.keys(b.store.get().items).sort()).toEqual(['a', 'a2']);
+    setItem(b, 'b', 3);
+    await b.sync.flush();
+    expect(kind(b)).toBe('synced');
+    expect(Object.keys(JSON.parse(cloud.text(JSON_FILE_NAME)!).items).sort()).toEqual([
+      'a',
+      'a2',
+      'b',
+    ]);
+  });
+});
+
 describe('both devices changed the same thing', () => {
   async function conflicted() {
     const cloud = createFakeCloud();

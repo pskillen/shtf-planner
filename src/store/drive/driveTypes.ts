@@ -64,6 +64,15 @@ export class DriveScopeError extends Error {
   }
 }
 
+/** A folder or file we remembered by id is gone (deleted or trashed in Drive). */
+export class DriveNotFoundError extends Error {
+  readonly code = 'notFound' as const;
+  constructor(message = 'That file or folder is no longer on Google Drive.') {
+    super(message);
+    this.name = 'DriveNotFoundError';
+  }
+}
+
 export class DriveNameConflictError extends Error {
   readonly code = 'nameConflict' as const;
   constructor(message = 'A file with that name already exists.') {

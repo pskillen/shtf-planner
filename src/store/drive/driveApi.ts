@@ -8,6 +8,7 @@ import {
   DriveAuthError,
   DriveNameConflictError,
   DriveNetworkError,
+  DriveNotFoundError,
   DriveScopeError,
   type DriveFileMetadata,
 } from './driveTypes';
@@ -28,6 +29,7 @@ export interface DriveApiClient {
    */
   findAppFolders(accessToken: string): Promise<DriveFileMetadata[]>;
   createFolder(parentId: string, name: string, accessToken: string): Promise<DriveFileMetadata>;
+  /** The folder's files, oldest first. Throws `DriveNotFoundError` when the folder is gone. */
   listChildren(parentId: string, accessToken: string): Promise<DriveFileMetadata[]>;
   getFileMetadata(fileId: string, accessToken: string): Promise<DriveFileMetadata>;
   readBytes(fileId: string, accessToken: string): Promise<Uint8Array>;
@@ -55,6 +57,7 @@ async function parseDriveError(response: Response): Promise<never> {
     throw new DriveAuthError(detail || undefined);
   }
   if (response.status === 403) throw new DriveScopeError(detail || undefined);
+  if (response.status === 404) throw new DriveNotFoundError(detail || undefined);
   if (response.status === 409) throw new DriveNameConflictError(detail || undefined);
   throw new DriveNetworkError(detail || `Drive API error ${response.status}`);
 }
@@ -108,8 +111,9 @@ export function createDriveApiClient(fetchImpl: typeof fetch = fetch): DriveApiC
         'createdTime',
       ),
 
+    // Oldest first, as for folders: if two devices raced to create a file, the oldest wins.
     listChildren: (parentId, accessToken) =>
-      list(`'${parentId}' in parents and trashed=false`, accessToken),
+      list(`'${parentId}' in parents and trashed=false`, accessToken, 'createdTime'),
 
     async createFolder(parentId, name, accessToken) {
       const response = await driveFetch(

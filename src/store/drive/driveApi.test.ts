@@ -6,6 +6,7 @@ import {
   DriveAuthError,
   DriveNameConflictError,
   DriveNetworkError,
+  DriveNotFoundError,
   DriveScopeError,
 } from './driveTypes';
 
@@ -37,6 +38,12 @@ describe('driveApi', () => {
     const files = await api().listChildren('folder-1', 'tok');
     expect(files).toEqual([{ id: 'a', name: 'household.yjs', modifiedTime: 't1' }]);
     expect(decodeURIComponent(url())).toContain("'folder-1' in parents");
+    expect(decodeURIComponent(url())).toContain('orderBy=createdTime'); // oldest file wins
+  });
+
+  it('maps a 404 to "not found", which is not "offline"', async () => {
+    fetchMock.mockResolvedValueOnce(json({ error: { message: 'File not found: f' } }, 404));
+    await expect(api().listChildren('f', 'tok')).rejects.toBeInstanceOf(DriveNotFoundError);
   });
 
   it('creates a folder under a parent', async () => {

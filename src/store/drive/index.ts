@@ -18,6 +18,7 @@ export {
   DriveCancelledError,
   DriveConfigError,
   DriveNetworkError,
+  DriveNotFoundError,
   DriveScopeError,
   driveErrorMessage,
 } from './driveTypes';
