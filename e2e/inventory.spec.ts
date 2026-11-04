@@ -249,7 +249,7 @@ test('the three tabs and Quick add fit a 375 px phone with big targets', async (
   await page.getByRole('searchbox', { name: 'What are you adding?' }).fill('tinned');
   await page
     .getByRole('dialog')
-    .getByRole('button', { name: /Tinned food/ })
+    .getByRole('button', { name: /Tinned food \(1 week/ })
     .click();
   for (const name of [/^One more/, /^One fewer/, 'Add']) {
     const box = await page.getByRole('button', { name }).first().boundingBox();

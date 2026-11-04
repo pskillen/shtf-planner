@@ -179,9 +179,33 @@ type Editing =
 export function AssetsScreen() {
   const doc = useDocument();
   const change = useChange();
-  const [editing, setEditing] = useState<Editing>(null);
   const packs = usePacks();
   const [params, setParams] = useSearchParams();
+  // Deep links from elsewhere: ?add=<asset type id> opens the add form for that type (Quick add,
+  // the shopping list), ?edit=<asset id> the edit form (Stores). Unknown ids are ignored. The
+  // screen mounts when the link is followed, so the link is read once, as the initial state.
+  const [editing, setEditing] = useState<Editing>(() => {
+    const addId = params.get('add');
+    const editId = params.get('edit');
+    const type = addId ? packs.assets[addId] : undefined;
+    if (type)
+      return {
+        step: 'form',
+        type,
+        isNew: true,
+        asset: { id: newId(), typeId: type.id, answers: defaultAnswers(type), maintenance: {} },
+      };
+    const existing = editId ? doc.assets[editId] : undefined;
+    const existingType = existing ? packs.assets[existing.typeId] : undefined;
+    return existing && existingType
+      ? { step: 'form', type: existingType, asset: existing, isNew: false }
+      : null;
+  });
+  // Take the link off the address so a reload or a Back does not open the form again.
+  const hasLink = params.has('add') || params.has('edit');
+  useEffect(() => {
+    if (hasLink) setParams({}, { replace: true });
+  }, [hasLink, setParams]);
 
   // Assets that give the plan nothing, and why, from the engine (never worked out here).
   const blocked = useMemo(() => {
@@ -199,28 +223,6 @@ export function AssetsScreen() {
     const enabled = new Set(packs.enabledPacks(doc.settings).map((p) => p.id));
     return Object.values(packs.assets).filter((t) => enabled.has(t.id.split(':')[0]!));
   }, [packs, doc.settings]);
-
-  // Deep links from elsewhere: ?add=<asset type id> opens the add form for that type (Quick add,
-  // the shopping list), ?edit=<asset id> the edit form (Stores). Unknown ids are ignored.
-  const addParam = params.get('add');
-  const editParam = params.get('edit');
-  useEffect(() => {
-    if (addParam === null && editParam === null) return;
-    const type = addParam ? packs.assets[addParam] : undefined;
-    const existing = editParam ? doc.assets[editParam] : undefined;
-    const existingType = existing ? packs.assets[existing.typeId] : undefined;
-    if (type) {
-      setEditing({
-        step: 'form',
-        type,
-        isNew: true,
-        asset: { id: newId(), typeId: type.id, answers: defaultAnswers(type), maintenance: {} },
-      });
-    } else if (existing && existingType) {
-      setEditing({ step: 'form', type: existingType, asset: existing, isNew: false });
-    }
-    setParams({}, { replace: true });
-  }, [addParam, editParam, packs, doc.assets, setParams]);
 
   const remove = useDeferredDelete((id) =>
     change('delete asset', (d) => {
