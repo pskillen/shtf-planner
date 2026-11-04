@@ -28,6 +28,13 @@ function Placeholder({ title }: { title: string }) {
   );
 }
 
+/**
+ * A screen's identity for the error boundary: each path is its own, except the setup steps, which
+ * share one so `Onboarding` (and what it remembers between steps) stays mounted.
+ */
+const screenKey = (pathname: string): string =>
+  pathname.startsWith('/app/setup') ? '/app/setup' : pathname;
+
 /** The app proper: top bar, one screen per tab, bottom nav, footer. */
 export function Shell() {
   const { pathname } = useLocation();
@@ -40,7 +47,7 @@ export function Shell() {
       </header>
       <StoreBanner />
       <main className="main">
-        <ScreenBoundary key={pathname}>
+        <ScreenBoundary key={screenKey(pathname)}>
           <Routes>
             <Route index element={<HomeHub />} />
             <Route path="setup/:step" element={<Onboarding />} />

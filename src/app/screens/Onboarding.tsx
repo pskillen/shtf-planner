@@ -13,7 +13,7 @@ export function Onboarding() {
   const { step } = useParams();
   const navigate = useNavigate();
   const doc = useDocument();
-  // Which Home questions were answered on purpose this time round (kept while moving between steps).
+  // Which Home questions were answered on purpose this time round (kept while moving between steps: the shell keeps this component mounted across the setup steps).
   const [answered, setAnswered] = useState<ReadonlySet<HomeQuestion>>(new Set());
   const homeAnswers: HomeAnswers = {
     answered,

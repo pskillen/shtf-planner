@@ -72,7 +72,7 @@ leaving half-way.
   the screen.
 - **Onboarding asks.** The type of home, heating and cooking start on a "Choose" placeholder and
   mains gas is a Yes/No with neither picked; Next waits for all four. Which were answered is kept
-  while moving between steps but not saved, so a reload in the middle of setup asks again.
+  while moving between steps (and Back) but not saved, so a reload in the middle of setup asks again.
 - **Postcode area** saves a moment after typing stops, on blur and when the screen is left.
 - **Unknown values.** A value in the document the app does not know (a hand-edited file, another
   version) shows as "Unknown" through `labelOf`, and a screen that still fails to draw is caught by

@@ -66,6 +66,17 @@ test('a fresh household completes onboarding by hand and it survives a reload', 
   await expect(page.getByText('this home has no heat or cooking', { exact: false })).toBeVisible();
   await page.getByRole('button', { name: 'Next' }).click();
 
+  // Back keeps the four answers and Next stays on.
+  await expect(page.getByText('Step 3 of 4: Risks')).toBeVisible();
+  await page.getByRole('link', { name: 'Back' }).click();
+  await expect(page.getByLabel('How is the house heated?')).toHaveValue('electric');
+  await expect(page.getByRole('radio', { name: 'No', exact: true })).toHaveAttribute(
+    'aria-checked',
+    'true',
+  );
+  await expect(page.getByRole('button', { name: 'Next' })).toBeEnabled();
+  await page.getByRole('button', { name: 'Next' }).click();
+
   // Risks.
   await expect(page.getByText('Step 3 of 4: Risks')).toBeVisible();
   await page.getByRole('button', { name: 'Power cuts' }).click();
