@@ -17,7 +17,7 @@ test('landing page, Start, shell and footer', async ({ page }) => {
 
   await nav.getByRole('link', { name: 'Stores' }).click();
   await expect(page).toHaveURL(/\/app\/stores$/);
-  await expect(page.getByText('Not in this version yet.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Stores' })).toBeVisible();
   await expect(page.getByTestId('footer')).toHaveText('SHTF Planner · local · local');
 });
 
