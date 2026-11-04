@@ -41,6 +41,7 @@ export interface ImportSummary {
   locations: number;
   assets: number;
   items: number;
+  customTypes: number;
   reviews: number;
 }
 
@@ -86,6 +87,7 @@ export function previewImport(text: string): ImportPreview {
       locations: Object.keys(doc.locations).length,
       assets: Object.keys(doc.assets).length,
       items: Object.keys(doc.items).length,
+      customTypes: Object.keys(doc.customTypes).length,
       reviews: Object.keys(doc.reviews).length,
     },
   };

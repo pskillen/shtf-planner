@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { ScreenHeader } from '../../components/ScreenHeader';
 import { clock, describeStatus } from '../../sync/syncText';
 import { forgetThisDevice, useStoreFiles, useSync, useSyncState } from '../../state';
 import { EnvLine } from '../../sync/SyncChrome';
@@ -171,6 +172,7 @@ function ImportSection() {
             <li>{plural(preview.summary.locations, 'location')}</li>
             <li>{plural(preview.summary.assets, 'asset')}</li>
             <li>{plural(preview.summary.items, 'item')}</li>
+            <li>{plural(preview.summary.customTypes, 'custom item type')}</li>
           </ul>
           <EnvLine fileEnv={preview.fileEnv} buildEnv={__BUILD_ENV__} />
           <p>Importing replaces everything on this device.</p>
@@ -233,7 +235,7 @@ function ForgetSection() {
 export function DataScreen() {
   return (
     <section className="screen">
-      <h1>Data</h1>
+      <ScreenHeader title="Data" back="/app/more/settings" backLabel="Settings" />
       <DriveSection />
       <ExportSection />
       <ImportSection />

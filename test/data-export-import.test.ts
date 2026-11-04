@@ -58,6 +58,13 @@ describe('custom types in export and import', () => {
     }
   });
 
+  it('counts them in the preview like the other record sets', () => {
+    const p = previewImport(JSON.stringify(withType()));
+    if (!p.ok) throw new Error(p.error);
+    expect(p.summary.customTypes).toBe(1);
+    expect(p.summary.items).toBeGreaterThan(0);
+  });
+
   it('a schema-1 export imports with no custom types', () => {
     const v1: Record<string, unknown> = JSON.parse(json());
     delete v1.customTypes;

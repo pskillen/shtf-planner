@@ -193,6 +193,13 @@ describe('the sync chrome', () => {
 describe('Data screen', () => {
   const reconnect = () => screen.queryByRole('button', { name: 'Reconnect Google Drive' });
 
+  it('has a way back to Settings', () => {
+    wrap(fakeSync({ connected: true }).sync, <DataScreen />);
+    expect(screen.getByRole('link', { name: '← Settings' }).getAttribute('href')).toBe(
+      '/app/more/settings',
+    );
+  });
+
   it('offers Reconnect only when the fix is the Connect button', () => {
     const f = fakeSync({
       connected: true,
