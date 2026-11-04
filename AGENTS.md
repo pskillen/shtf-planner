@@ -62,7 +62,8 @@ project of the SHTF game (`shtf-game`). Working title.
 
 ## Build constants and the debug hook
 
-`__BUILD_ENV__` (`local`, `preview`, `dev`, `main`, `staging`, `prod`) and `__BUILD_VERSION__`
+`__BUILD_ENV__` (`'local' | 'preview' | 'dev' | 'next' | 'staging' | 'prod'`; the `main` workflow
+passes `BUILD_ENV=main`, which `src/util/build-env.ts` maps to `next`; `preview` is a PR deploy) and `__BUILD_VERSION__`
 (`local`, a short SHA for continuous builds, a bare SemVer tag for releases) are defined in
 `vite.config.ts` and declared in `src/vite-env.d.ts`. The footer shows both.
 

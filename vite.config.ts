@@ -2,10 +2,11 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import { resolveBuildEnv } from './src/util/build-env';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
-  const buildEnv = env.BUILD_ENV || process.env.BUILD_ENV || 'local';
+  const buildEnv = resolveBuildEnv(env.BUILD_ENV || process.env.BUILD_ENV);
   const buildVersion = (env.BUILD_VERSION || process.env.BUILD_VERSION || 'local').replace(
     /^v/,
     '',

@@ -3,13 +3,16 @@
 SHTF Planner is a static Vite SPA and PWA deployed to **Cloudflare Pages** by GitHub Actions (direct
 upload with Wrangler, not the dashboard's Git integration). Base path `/`.
 
-| Environment | URL (placeholder)                 | Trigger                       | `BUILD_ENV` | `BUILD_VERSION`       | CF branch           |
-| ----------- | --------------------------------- | ----------------------------- | ----------- | --------------------- | ------------------- |
-| **prod**    | `https://prep.mm9pdy.net`         | Full GitHub release published | `prod`      | the tag, `X.Y.Z`      | `main` (production) |
-| **staging** | `https://staging.prep.mm9pdy.net` | Pre-release published         | `staging`   | the tag, `X.Y.Z-rc.N` | `staging`           |
-| **next**    | `https://next.prep.mm9pdy.net`    | Push to `main`                | `main`      | short SHA             | `next`              |
-| **dev**     | `https://dev.prep.mm9pdy.net`     | Push to `dev`                 | `dev`       | short SHA             | `dev`               |
-| **preview** | the `*.pages.dev` branch alias    | Pull request                  | `preview`   | short SHA             | the PR's branch     |
+| Environment | URL (placeholder)                 | Trigger                       | `BUILD_ENV`              | `BUILD_VERSION`       | CF branch           |
+| ----------- | --------------------------------- | ----------------------------- | ------------------------ | --------------------- | ------------------- |
+| **prod**    | `https://prep.mm9pdy.net`         | Full GitHub release published | `prod`                   | the tag, `X.Y.Z`      | `main` (production) |
+| **staging** | `https://staging.prep.mm9pdy.net` | Pre-release published         | `staging`                | the tag, `X.Y.Z-rc.N` | `staging`           |
+| **next**    | `https://next.prep.mm9pdy.net`    | Push to `main`                | `main` (shown as `next`) | short SHA             | `next`              |
+| **dev**     | `https://dev.prep.mm9pdy.net`     | Push to `dev`                 | `dev`                    | short SHA             | `dev`               |
+| **preview** | the `*.pages.dev` branch alias    | Pull request                  | `preview`                | short SHA             | the PR's branch     |
+
+`BUILD_ENV` is one of `local | preview | dev | next | staging | prod`; the `main` workflow passes
+`main`, and `src/util/build-env.ts` maps it to `next`. An unknown value fails the build.
 
 Tags are bare SemVer (no `v`). The footer shows `SHTF Planner · {env} · {version}`; local builds show
 `local`. The hostnames are placeholders for the owner to attach in the Cloudflare dashboard.
