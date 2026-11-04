@@ -7,3 +7,5 @@ dist/
 *.tsbuildinfo
 test-results/
 playwright-report/
+src/generated/
+/.claude/worktrees/

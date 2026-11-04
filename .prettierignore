@@ -1,0 +1,9 @@
+dist/
+node_modules/
+tmp/
+test-results/
+playwright-report/
+package-lock.json
+src/generated/
+test/fixtures/*.json
+.claude/
