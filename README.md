@@ -7,8 +7,6 @@ rotate and maintain them, and keep scenario checklists to hand for the day somet
 Sister project of the SHTF game (`shtf-game`): the game simulates living through a disaster with what you
 prepped; this is the tool for actually prepping.
 
-Status: skeleton. An installable app shell with a landing page; no product behaviour yet.
-
 ## Principles
 
 - Works offline, installable as a PWA. Your data is a file you own (YAML/JSON), synced via Google Drive.

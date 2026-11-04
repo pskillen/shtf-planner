@@ -1,6 +1,9 @@
 # App shell
 
-**Status:** shipped (skeleton). No product behaviour yet: every tab is a placeholder.
+**Status:** Done
+**Tracking:** none (no tickets yet)
+
+No product behaviour yet: every tab is a placeholder.
 
 The frame every later screen lives in: an installable offline PWA, a landing page and a build footer.
 
@@ -24,7 +27,7 @@ The frame every later screen lives in: an installable offline PWA, a landing pag
   at least 44 px, safe-area insets for the bottom nav.
 - Icons are generated from `public/favicon.svg` by `npm run icons` and committed.
 
-## Not done
+## Known gaps
 
-Markdown rendering of release bodies; any caching beyond the app bundle (packs ship inside the bundle
-from a later phase).
+Markdown rendering of release bodies; any caching beyond the app bundle (content packs will ship
+inside the bundle when they land).
