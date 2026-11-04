@@ -42,7 +42,7 @@ export default defineConfig(({ mode }) => {
         },
         workbox: {
           // Precache the built app; the PWA serves index.html for every path (client routing).
-          globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest}'],
+          globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest,woff2}'],
           navigateFallback: '/index.html',
         },
       }),

@@ -6,6 +6,10 @@
   --accent: #2f5d50;
   --accent-text: #ffffff;
   --border: #d8d3c6;
+  --paper: #fbf7ea;
+  --paper-line: #cfd9e6;
+  --paper-margin: #e3a5a0;
+  --ink: #26323f;
   --warn: #8a5a00;
   --bad: #a3321f;
   --tab-h: 56px;
@@ -22,6 +26,10 @@
     --accent: #6fb39f;
     --accent-text: #0e1713;
     --border: #2f413a;
+    --paper: #26302c;
+    --paper-line: #34433d;
+    --paper-margin: #6b4a47;
+    --ink: #e9e6d8;
     --warn: #e0a93b;
     --bad: #ff8a73;
   }
@@ -718,6 +726,15 @@ table.horizon .big td {
   align-items: center;
 }
 
+/* The one nod to the sister game: a handwritten numeral, self-hosted (nothing is fetched). */
+@font-face {
+  font-family: 'Caveat';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/caveat-latin-700-normal.woff2') format('woff2');
+}
+
 /* Stores. */
 .warn {
   color: var(--warn);
@@ -828,4 +845,109 @@ button.tick {
 
 .plain-list li {
   margin: 4px 0;
+}
+
+/* Score. */
+.notebook {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 18px 18px 44px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--ink);
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(
+      to right,
+      transparent 32px,
+      var(--paper-margin) 32px,
+      var(--paper-margin) 34px,
+      transparent 34px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 27px,
+      var(--paper-line) 27px,
+      var(--paper-line) 28px
+    );
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.notebook-number {
+  font-family: 'Caveat', 'Segoe Print', 'Bradley Hand', cursive;
+  font-weight: 700;
+  font-size: 5.5rem;
+  line-height: 1;
+}
+
+.notebook-pct {
+  font-size: 2.5rem;
+  margin-left: 2px;
+}
+
+.notebook-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.notebook-text p {
+  margin: 0 0 4px;
+}
+
+.notebook-gap {
+  font-size: 1.25rem;
+}
+
+.notebook-horizon a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--ink);
+}
+
+.next-horizon {
+  margin: 16px 0;
+}
+
+.next-horizon p {
+  margin: 0 0 6px;
+}
+
+.meter {
+  height: 14px;
+  border-radius: 7px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.meter-fill {
+  height: 100%;
+  background: var(--accent);
+}
+
+.bars {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 14px;
+}
+
+.bar-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+
+.bar-pct.enough {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.bar-why {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
 }

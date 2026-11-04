@@ -37,10 +37,10 @@ describe('the shell', () => {
     expect(screen.getByTestId('footer').textContent).toBe('SHTF Planner · local · local');
   });
 
-  it('renders a placeholder for the tabs built later', async () => {
+  it('renders the Score tab', async () => {
     renderShell('/app/score');
     expect(await screen.findByRole('heading', { name: 'Score' })).toBeTruthy();
-    expect(screen.getByText('Not in this version yet.')).toBeTruthy();
+    expect(await screen.findByTestId('overall')).toBeTruthy();
   });
 });
 

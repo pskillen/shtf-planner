@@ -12,6 +12,7 @@ import { LocationsScreen } from './screens/LocationsScreen';
 import { MoreScreen } from './screens/MoreScreen';
 import { PeopleScreen } from './screens/PeopleScreen';
 import { RisksScreen } from './screens/RisksScreen';
+import { ScoreScreen } from './screens/ScoreScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { GapsScreen } from './screens/GapsScreen';
 import { StoresScreen } from './screens/StoresScreen';
@@ -19,15 +20,6 @@ import type { ReactNode } from 'react';
 
 function Screen({ children }: { children: ReactNode }) {
   return <section className="screen">{children}</section>;
-}
-
-function Placeholder({ title }: { title: string }) {
-  return (
-    <section className="screen">
-      <h1>{title}</h1>
-      <p className="muted">Not in this version yet.</p>
-    </section>
-  );
 }
 
 /**
@@ -119,9 +111,7 @@ export function Shell() {
             />
             <Route path="stores" element={<StoresScreen />} />
             <Route path="gaps" element={<GapsScreen />} />
-            {TABS.filter((t) => !['', 'more', 'stores', 'gaps'].includes(t.path)).map((t) => (
-              <Route key={t.label} path={t.path} element={<Placeholder title={t.label} />} />
-            ))}
+            <Route path="score" element={<ScoreScreen />} />
             <Route path="*" element={<Navigate to="/app" replace />} />
           </Routes>
         </ScreenBoundary>

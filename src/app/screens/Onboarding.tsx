@@ -7,7 +7,7 @@ import { STEP_IDS, STEP_TITLE, stepScreen, type StepId } from './onboardingSteps
 /**
  * First-run setup: People, Home, Risks, Horizon, one screen per step, each the same component as
  * its editing screen. Edits save as you go, so leaving half-way loses nothing. Needs one person
- * before it lets you past the first step; the last step lands on the Home hub.
+ * before it lets you past the first step; the last step lands on the Score tab.
  */
 export function Onboarding() {
   const { step } = useParams();
@@ -46,7 +46,7 @@ export function Onboarding() {
         <button
           type="button"
           disabled={blocked}
-          onClick={() => navigate(last ? '/app' : `/app/setup/${STEP_IDS[index + 1]}`)}
+          onClick={() => navigate(last ? '/app/score' : `/app/setup/${STEP_IDS[index + 1]}`)}
         >
           {last ? 'Finish' : 'Next'}
         </button>

@@ -84,10 +84,13 @@ test('a fresh household completes onboarding by hand and it survives a reload', 
   await expect(page.getByRole('link', { name: /Environment Agency/ }).first()).toBeVisible();
   await page.getByRole('button', { name: 'Next' }).click();
 
-  // Horizon: 14 days; the finish lands on the hub.
+  // Horizon: 14 days; the finish lands on the Score tab, and the Home tab is the hub.
   await expect(page.getByText('Step 4 of 4')).toBeVisible();
   await page.getByRole('radio', { name: '14 days' }).click();
   await page.getByRole('button', { name: 'Finish' }).click();
+  await expect(page.getByRole('heading', { name: 'Score' })).toBeVisible();
+  await expect(page.getByText('at 14 days')).toBeVisible();
+  await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Home' }).click();
   await expect(page.getByRole('heading', { name: 'Your household' })).toBeVisible();
 
   // Three locations from the suggestions.
