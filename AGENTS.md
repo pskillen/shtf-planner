@@ -15,7 +15,7 @@ project of the SHTF game (`shtf-game`). Working title.
   "update available" toast (`src/app/UpdateToast.tsx`). A new version waits until the user taps
   Reload; it never reloads the page by itself, so it cannot replace the app under an edit.
 - Zod validates the document and the content packs. The document lives in a Yjs CRDT persisted by
-  `y-indexeddb`, with a `BroadcastChannel` relay between tabs (`idb` is also installed).
+  `y-indexeddb`, with a `BroadcastChannel` relay between tabs.
 - Vitest (unit, React Testing Library with jsdom where a test says so) and Playwright (`e2e/`).
 - Cloudflare Pages hosting, deployed by GitHub Actions. See `docs/build/README.md`.
 
