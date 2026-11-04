@@ -3,6 +3,7 @@ import { Footer } from './Footer';
 import { StoreBanner } from './StoreBanner';
 import { HomeHub } from './screens/HomeHub';
 import { Onboarding } from './screens/Onboarding';
+import { PeopleScreen } from './screens/PeopleScreen';
 import { useEditable } from './state';
 
 const TABS = [
@@ -37,6 +38,7 @@ export function Shell() {
           <Routes>
             <Route index element={<HomeHub />} />
             <Route path="setup/:step" element={<Onboarding />} />
+            <Route path="people" element={<PeopleScreen />} />
             {TABS.filter((t) => t.path !== '').map((t) => (
               <Route key={t.label} path={t.path} element={<Placeholder title={t.label} />} />
             ))}
