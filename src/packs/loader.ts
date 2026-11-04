@@ -129,6 +129,7 @@ export function loadPacks(raws: ReadonlyArray<{ label: string; raw: unknown }>):
             const at = `${where}.contributes[${j}]`;
             needQuestion(c.when?.question, `${at}.when`);
             needQuestion(c.storesWh?.fromQuestion, `${at}.storesWh`, 'number');
+            needQuestion(c.holds?.fromQuestion, `${at}.holds`, 'number');
             needQuestion(c.converts?.perHourFrom, `${at}.converts`, 'number');
             needQuestion(c.providesPerDayFrom?.question, `${at}.providesPerDayFrom`, 'number');
             if (typeof c.outputPerHour === 'object')

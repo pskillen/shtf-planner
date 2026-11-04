@@ -1,0 +1,74 @@
+{
+  "format": 1,
+  "id": "guidance-us-ready",
+  "kind": "guidance",
+  "version": 1,
+  "name": "US Government: Ready.gov",
+  "region": "US",
+  "sources": [
+    {
+      "url": "https://www.ready.gov/kit",
+      "title": "Ready.gov: Build a kit",
+      "checked": "2026-11-04"
+    },
+    {
+      "url": "https://www.ready.gov/water",
+      "title": "Ready.gov: Water",
+      "checked": "2026-11-04"
+    },
+    {
+      "url": "https://www.ready.gov/food",
+      "title": "Ready.gov: Food",
+      "checked": "2026-11-04"
+    }
+  ],
+  "horizonBands": [14],
+  "rules": [
+    {
+      "id": "guidance-us-ready:water",
+      "capability": "water",
+      "text": "One gallon of water per person per day (3.785 litres), for drinking and sanitation. Needs vary and can double in heat.",
+      "perPersonDay": {
+        "store": "waterL",
+        "amount": 3.785
+      },
+      "multipliers": [
+        {
+          "risk": "heat",
+          "factor": 2
+        }
+      ],
+      "source": "https://www.ready.gov/water"
+    },
+    {
+      "id": "guidance-us-ready:food",
+      "capability": "food",
+      "text": "Non-perishable food, a several-day supply at least. The site gives no calorie figure; 2,000 kcal per person per day is an assumption.",
+      "perPersonDay": {
+        "store": "foodKcal",
+        "amount": 2000
+      },
+      "source": "assumption"
+    },
+    {
+      "id": "guidance-us-ready:first-aid",
+      "capability": "medical",
+      "text": "A first aid kit is part of the basic kit. One kit per household per day of the horizon is an assumption.",
+      "perHouseholdDay": {
+        "store": "firstAid",
+        "amount": 1
+      },
+      "source": "assumption"
+    },
+    {
+      "id": "guidance-us-ready:power",
+      "capability": "power",
+      "text": "A cell phone with chargers and a backup battery. 15 Wh per person per day is an assumption.",
+      "perPersonDay": {
+        "store": "batteryWh",
+        "amount": 15
+      },
+      "source": "assumption"
+    }
+  ]
+}

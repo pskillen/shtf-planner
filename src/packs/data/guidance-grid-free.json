@@ -1,0 +1,189 @@
+{
+  "format": 1,
+  "id": "guidance-grid-free",
+  "kind": "guidance",
+  "version": 1,
+  "name": "Grid-free capability rules (planner assumptions)",
+  "sources": [
+    {
+      "url": "https://beready.campaign.gov.uk/be-ready-for-emergencies/",
+      "title": "Be Ready: be ready for emergencies (UK Government)",
+      "checked": "2026-11-04"
+    }
+  ],
+  "horizonBands": [],
+  "rules": [
+    {
+      "id": "guidance-grid-free:heat",
+      "capability": "heat",
+      "text": "Hours of supplementary heat per day when the usual heating is off, scaled by how well the home holds heat. Eight hours a day for an average home is an assumption.",
+      "hoursPerDay": 8,
+      "multipliers": [
+        {
+          "insulation": "poor",
+          "factor": 1.5
+        },
+        {
+          "insulation": "good",
+          "factor": 0.75
+        },
+        {
+          "insulation": "excellent",
+          "factor": 0.5
+        },
+        {
+          "risk": "snow",
+          "factor": 1.5
+        }
+      ],
+      "source": "assumption"
+    },
+    {
+      "id": "guidance-grid-free:cooking",
+      "capability": "cooking",
+      "text": "Hot meals per person per day. Two a day is an assumption.",
+      "mealsPerPersonDay": 2,
+      "source": "assumption"
+    },
+    {
+      "id": "guidance-grid-free:light",
+      "capability": "light",
+      "text": "Light for the evening: about 200 lumens for 5 hours, 1,000 lumen-hours a day. An assumption; a torch beats a candle.",
+      "perHouseholdDay": {
+        "store": "lumenHours",
+        "amount": 1000
+      },
+      "source": "assumption"
+    },
+    {
+      "id": "guidance-grid-free:phone-power",
+      "capability": "power",
+      "text": "Phone charging: about 15 Wh per person per day, more for anyone on powered equipment. Both figures are assumptions.",
+      "perPersonDay": {
+        "store": "batteryWh",
+        "amount": 15
+      },
+      "multipliers": [
+        {
+          "tag": "powered-equipment",
+          "factor": 8
+        }
+      ],
+      "source": "assumption"
+    },
+    {
+      "id": "guidance-grid-free:sanitation",
+      "capability": "sanitation",
+      "text": "Toilet uses per person per day when the toilet cannot be flushed. Five a day is an assumption.",
+      "perPersonDay": {
+        "store": "sanitationUses",
+        "amount": 5
+      },
+      "source": "assumption"
+    },
+    {
+      "id": "guidance-grid-free:hygiene",
+      "capability": "sanitation",
+      "text": "Hand sanitiser, wet wipes and bathroom products. Three uses per person per day is an assumption.",
+      "perPersonDay": {
+        "store": "hygieneUses",
+        "amount": 3
+      },
+      "source": "assumption"
+    },
+    {
+      "id": "guidance-grid-free:medication",
+      "capability": "medical",
+      "text": "Essential medication on hand for at least the horizon, for everyone who takes it. Request repeat prescriptions up to 5 working days before you run out.",
+      "perPersonDay": {
+        "store": "medicationDays",
+        "amount": 1
+      },
+      "appliesTo": {
+        "tag": "takes-medication"
+      },
+      "source": "https://beready.campaign.gov.uk/be-ready-for-emergencies/"
+    },
+    {
+      "id": "guidance-grid-free:mobility",
+      "capability": "mobility",
+      "text": "Be able to leave: a car with at least 100 km of range, and a grab bag per person (see the plans pack). The range is an assumption.",
+      "rangeKm": 100,
+      "source": "assumption"
+    },
+    {
+      "id": "guidance-grid-free:nappies",
+      "capability": "sanitation",
+      "text": "Nappies and wipes for babies and toddlers. Per day by age: 10 under 6 months, 8 to 12 months, 6 to 36 months. Typical figures, assumptions.",
+      "perPersonDay": {
+        "store": "nappies",
+        "amount": 0,
+        "ageBands": [
+          {
+            "fromMonths": 0,
+            "toMonths": 6,
+            "amount": 10
+          },
+          {
+            "fromMonths": 6,
+            "toMonths": 12,
+            "amount": 8
+          },
+          {
+            "fromMonths": 12,
+            "toMonths": 36,
+            "amount": 6
+          }
+        ]
+      },
+      "source": "assumption"
+    },
+    {
+      "id": "guidance-grid-free:formula",
+      "capability": "food",
+      "text": "Infant formula for babies under 12 months. Ready-to-feed is preferred over powder (the site gives no quantity). About 100 g of powder a day is an assumption.",
+      "perPersonDay": {
+        "store": "formulaG",
+        "amount": 0,
+        "ageBands": [
+          {
+            "fromMonths": 0,
+            "toMonths": 12,
+            "amount": 100
+          }
+        ]
+      },
+      "source": "assumption"
+    },
+    {
+      "id": "guidance-grid-free:pet-food",
+      "capability": "food",
+      "text": "Pet food. The site gives no quantity; per day by size (small, medium, large) 300, 700 and 1,200 kcal are assumptions.",
+      "perPetDay": {
+        "store": "petFoodKcal",
+        "amount": 700,
+        "bySize": {
+          "S": 300,
+          "M": 700,
+          "L": 1200
+        }
+      },
+      "source": "assumption"
+    },
+    {
+      "id": "guidance-grid-free:pet-water",
+      "capability": "water",
+      "text": "Water for pets. The site gives no quantity; per day by size 0.25, 0.75 and 1.5 litres are assumptions.",
+      "perPetDay": {
+        "store": "waterL",
+        "amount": 0.75,
+        "bySize": {
+          "S": 0.25,
+          "M": 0.75,
+          "L": 1.5
+        }
+      },
+      "source": "assumption"
+    }
+  ]
+}

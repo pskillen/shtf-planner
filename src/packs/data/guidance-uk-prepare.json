@@ -1,0 +1,53 @@
+{
+  "format": 1,
+  "id": "guidance-uk-prepare",
+  "kind": "guidance",
+  "version": 1,
+  "name": "UK Government: Be Ready",
+  "region": "UK",
+  "sources": [
+    {
+      "url": "https://beready.campaign.gov.uk/be-ready-for-emergencies/",
+      "title": "Be Ready: be ready for emergencies (UK Government)",
+      "checked": "2026-11-04"
+    },
+    {
+      "url": "https://beready.campaign.gov.uk/",
+      "title": "Be Ready (UK Government): three days of supplies",
+      "checked": "2026-11-04"
+    }
+  ],
+  "horizonBands": [3],
+  "rules": [
+    {
+      "id": "guidance-uk-prepare:water",
+      "capability": "water",
+      "text": "Bottled water for drinking: 3 litres per person per day. Add more for cooking and washing.",
+      "perPersonDay": {
+        "store": "waterL",
+        "amount": 3
+      },
+      "source": "https://beready.campaign.gov.uk/be-ready-for-emergencies/"
+    },
+    {
+      "id": "guidance-uk-prepare:food",
+      "capability": "food",
+      "text": "Non-perishable food that needs no fridge or cooking, such as tinned meat, fish or vegetables, dried fruit and nuts. The site gives no calorie figure; 2,000 kcal per person per day is an assumption.",
+      "perPersonDay": {
+        "store": "foodKcal",
+        "amount": 2000
+      },
+      "source": "assumption"
+    },
+    {
+      "id": "guidance-uk-prepare:first-aid",
+      "capability": "medical",
+      "text": "A first aid kit: plasters, bandages, thermometer, antiseptic, eyewash, sterile dressings, gloves, tape, tweezers. One kit for three days is an assumption.",
+      "perHouseholdDay": {
+        "store": "firstAid",
+        "amount": 1
+      },
+      "source": "assumption"
+    }
+  ]
+}

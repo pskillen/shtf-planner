@@ -181,6 +181,14 @@ export const ContributionSchema = z.strictObject({
       perUnitWh: z.number().positive().optional(),
     })
     .optional(),
+  /** Holds a stock of `store` (a water butt holds raw water): the answer x `factor` (default 1). */
+  holds: z
+    .strictObject({
+      store: StoreIdSchema,
+      fromQuestion: z.string(),
+      factor: z.number().positive().optional(),
+    })
+    .optional(),
   /** Why the numbers are what they are. */
   note: z.string().optional(),
 });
@@ -303,7 +311,11 @@ export const PlanDefSchema = z.strictObject({
   expiresMonths: z.number().int().min(1).optional(),
   /** Shown only when the household has the risk, or owns one of the asset types. */
   requires: z
-    .strictObject({ risk: LocalRiskSchema.optional(), asset: z.array(NamespacedId).optional() })
+    .strictObject({
+      risk: LocalRiskSchema.optional(),
+      asset: z.array(NamespacedId).optional(),
+      pets: z.boolean().optional(),
+    })
     .optional(),
 });
 export type PlanDef = z.infer<typeof PlanDefSchema>;
