@@ -3,7 +3,7 @@
 **Status:** Done
 **Tracking:** none (no tickets yet)
 
-The frame the screens live in. The Home and More tabs hold the setup screens (see [Setup screens](../setup/README.md)); Stores, Gaps and Score are placeholders.
+The frame the screens live in. The Home and More tabs hold the setup screens (see [Setup screens](../setup/README.md)); Stores, Gaps and Score are the [inventory](../inventory/README.md) and [gaps and score](../gaps-and-score/README.md) screens.
 
 The frame every later screen lives in: an installable offline PWA, a landing page and a build footer.
 
@@ -12,7 +12,7 @@ The frame every later screen lives in: an installable offline PWA, a landing pag
 | Piece        | Where                          | Behaviour                                                                                                                                                                           |
 | ------------ | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Landing page | `/` (`src/app/Landing.tsx`)    | Name, a beta note, a Start button to `/app`, an Android install hint and the Changelog. Shows the footer.                                                                           |
-| Shell        | `/app/*` (`src/app/Shell.tsx`) | Top bar (app name), a bottom nav with Home, Stores, Gaps, Score and More (Stores, Gaps and Score say "Not in this version yet."), and the footer.                                   |
+| Shell        | `/app/*` (`src/app/Shell.tsx`) | Top bar (app name), a bottom nav with Home, Stores, Gaps, Score and More, and the footer.                                                                                           |
 | Footer       | `src/app/Footer.tsx`           | `SHTF Planner · {env} · {version}`. `local · local` on a dev machine; a short SHA on continuous builds; the bare tag on releases.                                                   |
 | PWA          | `vite.config.ts`               | Manifest (standalone, 192 and 512 px icons plus a padded maskable one), service worker precaching the built app, `prompt` updates.                                                  |
 | Update toast | `src/app/UpdateToast.tsx`      | "Update available" with Reload / Later when a new service worker is waiting. Reload applies it; the page is never reloaded without the user asking, so an edit in progress is safe. |

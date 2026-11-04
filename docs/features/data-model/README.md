@@ -4,7 +4,7 @@
 **Tracking:** none
 
 The household document, the store that holds it in the browser, its migrations and the test
-household. Nothing here is visible in the app yet: the shell still shows placeholders.
+household. The screens read and write it through the store hooks.
 
 ## Map
 
@@ -125,6 +125,5 @@ With `?debug=1`: `window.__shtf.doc()`, `.change(fn)` and `.loadFixture()` (all 
 
 ## Known gaps
 
-- No screens read or write the document yet.
 - No Drive sync yet: `bytes`, `mergeBytes` and `heads` are the whole contract.
 - No diesel store, so a diesel generator cannot be modelled.
