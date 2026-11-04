@@ -18,3 +18,6 @@ export {
   type Coverage,
   type CoverageSource,
 } from './coverage';
+export { gaps, type Gap, type Suggestion } from './gaps';
+export { score, type CapabilityScore, type Score } from './score';
+export { preview, type PreviewHorizon, type PreviewRow } from './preview';
