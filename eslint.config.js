@@ -9,15 +9,17 @@ import tseslint from 'typescript-eslint';
 const UI = [
   { name: 'react', message: 'this layer must not import React' },
   { name: 'react-dom', message: 'this layer must not import React' },
+  { name: 'react-router', message: 'this layer must not import React' },
   { name: 'react-router-dom', message: 'this layer must not import React' },
 ];
 const UI_SUBPATHS = {
-  group: ['react/*', 'react-dom/*', 'react-router-dom/*'],
+  group: ['react/*', 'react-dom/*', 'react-router/*', 'react-router-dom/*'],
   message: 'this layer must not import React',
 };
-// `from '../app/x'`, `from '../../store/y'` ... any relative hop into a named top-level directory.
+// `from '../app/x'`, `from '../../store/y'` ... any relative hop into a named top-level directory,
+// including a path that climbs out and re-enters (`../../src/app/x`).
 const reach = (dirs, message) => ({
-  regex: `^(\\.\\./)+(${dirs.join('|')})(/|$)`,
+  regex: `^(\\.\\./)+(${dirs.join('|')})(/|$)|(^|/)src/(${dirs.join('|')})(/|$)`,
   message,
 });
 // Absolute-ish aliases are not used; relative paths are the only way into another layer.
@@ -54,7 +56,7 @@ export default tseslint.config(
           patterns: [
             UI_SUBPATHS,
             reach(
-              ['app', 'engine', 'packs', 'store', 'util'],
+              ['app', 'engine', 'packs', 'store', 'util', 'generated', 'vite-env'],
               'src/model imports only zod and src/model',
             ),
             { regex: '^(?!\\.{1,2}/|zod$)[^.]', message: 'src/model imports only zod and itself' },
@@ -82,6 +84,8 @@ export default tseslint.config(
               ['app', 'store', 'packs'],
               'src/engine imports only src/model, src/util and src/engine',
             ),
+            // Nothing from node_modules, not even zod: the engine is plain functions.
+            { regex: '^(?!\\.{1,2}/)[^.]', message: 'src/engine imports no packages' },
             {
               regex: '(^|/)(drive|google|gapi|gsi)([-_./]|$)|googleapis|google-auth',
               message: 'the engine never touches Drive or Google',

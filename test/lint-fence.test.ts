@@ -47,6 +47,53 @@ describe('the lint fence', () => {
     ['the store imports the app', 'src/store/x.ts', "import { App } from '../app/App';\nApp;"],
     ['the store imports React', 'src/store/x.ts', "import { useState } from 'react';\nuseState;"],
     [
+      'the engine imports react-router',
+      'src/engine/x.ts',
+      "import { useParams } from 'react-router';\nuseParams;",
+    ],
+    [
+      'the engine imports a react-router subpath',
+      'src/engine/x.ts',
+      "import { x } from 'react-router/dom';\nx;",
+    ],
+    ['the engine imports a package', 'src/engine/x.ts', "import _ from 'lodash';\n_;"],
+    [
+      'the engine imports a node builtin',
+      'src/engine/x.ts',
+      "import { readFileSync } from 'node:fs';\nreadFileSync;",
+    ],
+    ['the engine imports zod', 'src/engine/x.ts', "import { z } from 'zod';\nz;"],
+    [
+      'the engine climbs out and re-enters the app',
+      'src/engine/sub/x.ts',
+      "import { App } from '../../../src/app/App';\nApp;",
+    ],
+    [
+      'the store climbs out and re-enters the app',
+      'src/store/x.ts',
+      "import { App } from '../../src/app/App';\nApp;",
+    ],
+    [
+      'the model climbs out and re-enters the engine',
+      'src/model/x.ts',
+      "import { f } from '../../src/engine/f';\nf;",
+    ],
+    [
+      'the model imports react-router',
+      'src/model/x.ts',
+      "import { useParams } from 'react-router';\nuseParams;",
+    ],
+    [
+      'the model imports the generated releases',
+      'src/model/x.ts',
+      "import r from '../generated/releases.json';\nr;",
+    ],
+    [
+      'the store imports react-router',
+      'src/store/x.ts',
+      "import { useParams } from 'react-router';\nuseParams;",
+    ],
+    [
       'a .tsx in the engine imports the app',
       'src/engine/x.tsx',
       "import { App } from '../app/App';\nApp;",
