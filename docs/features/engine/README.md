@@ -61,6 +61,13 @@ Plan items are scored together under `plans`, but each `Target` keeps its own `c
 (the EPS plan is `power`), so a screen can show it with its capability without it zeroing that
 capability's score.
 
+## Infants
+
+The food rule asks 2,000 kcal of every person, but an infant under the formula rule's age band
+(under 12 months) is fed by the formula target, so the engine counts **no kcal** for them: formula
+and kcal do not double count. At 12 months they join the kcal target. (Fixture: five people, so
+food is 4 x 2,000 kcal a day while Jo is on formula.)
+
 ## Floors and rotating locations
 
 A `rotating` location (a pantry) counts a type at most at its **floor**: `min(held, floor)`. With
@@ -84,6 +91,11 @@ store divided by the burn rate. Fuel is shared: **cooking** takes what its targe
 **heat**, then **power**, and what is left is available to the next. Where two assets burn the same
 fuel in one capability, the most efficient counts (they are alternatives, not additions). A
 converter that is missing becomes an asset plus its fuel in the suggestions.
+
+The per-capability coverage row of a converter shows its **full hours** from the fuel left when its
+turn comes, so the BBQ's cooking row can read 43.3 h even though heat shares the bottle afterwards.
+What heat gets is its own row, computed from what cooking left. The sharing affects the later
+capabilities' rows and the score, not the earlier row's display.
 
 ## Dependent capabilities
 

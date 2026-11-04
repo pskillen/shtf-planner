@@ -38,6 +38,14 @@ describe('targets', () => {
     expect(byId(toddler, 'sanitation:nappies')!.amount).toBe(6 * 3);
   });
 
+  it('does not count kcal for an infant on formula, so the two do not double count', () => {
+    const doc = biggarDocument(); // five people, Jo is 3 months old
+    expect(byId(targets(doc, packs, NOW, 3), 'food:foodKcal')!.amount).toBe(4 * 2000 * 3);
+    expect(byId(targets(doc, packs, NOW, 14), 'food:foodKcal')!.amount).toBe(4 * 2000 * 14);
+    // at 12 months the formula band has ended and Jo eats like everyone else
+    expect(byId(targets(doc, packs, '2027-08-01', 3), 'food:foodKcal')!.amount).toBe(5 * 2000 * 3);
+  });
+
   it('leaves out a baby who is not born yet', () => {
     const t = targets(biggarDocument(), packs, '2026-06-01', 3);
     expect(byId(t, 'sanitation:nappies')).toBeUndefined();

@@ -133,6 +133,16 @@ export function targets(
       }
       return f;
     };
+    // An infant on formula is fed by the formula target, not also by the kcal one.
+    const formulaFeeds = (p: Person): boolean =>
+      rules.some((r) => {
+        const f = r.perPersonDay;
+        if (f?.store !== 'formulaG') return false;
+        const band = f.ageBands?.find(
+          (b) => p.ageMonths >= b.fromMonths && p.ageMonths < b.toMonths,
+        );
+        return (f.ageBands ? (band?.amount ?? 0) : f.amount) > 0;
+      });
     const base = { ruleId: rule.id, text: rule.text, source: rule.source };
     const storeTarget = (store: StoreId, contribution: number, fixed = false) => {
       if (!(contribution > 0)) return;
@@ -155,6 +165,7 @@ export function targets(
       if (q.store === 'medicationDays') continue; // computed per medication below
       let total = 0;
       for (const p of covered) {
+        if (q.store === 'foodKcal' && formulaFeeds(p)) continue;
         const band = q.ageBands?.find(
           (b) => p.ageMonths >= b.fromMonths && p.ageMonths < b.toMonths,
         );
