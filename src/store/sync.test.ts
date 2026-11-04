@@ -269,6 +269,59 @@ describe('disconnect and reconnect', () => {
   });
 });
 
+describe('two tabs of one browser', () => {
+  /** Tab 1 is `a`; tab 2 is a second engine over the same store, port and saved sync state. */
+  async function tabs() {
+    const cloud = createFakeCloud();
+    const other = await device(cloud);
+    setItem(other, 'theirs', 1);
+    await other.sync.connect();
+    const persistence = createMemoryPersistence();
+    const one = await device(cloud, { persistence });
+    setItem(one, 'mine', 2);
+    const two = createSync({
+      store: one.store,
+      drive: one.port,
+      persistence,
+      env: 'local',
+      host: fakeHost(),
+      debounceMs: DEBOUNCE,
+      retryMs: 10_000_000,
+    });
+    opened.push({ store: one.store, sync: two });
+    await two.start();
+    return { cloud, one, two };
+  }
+
+  it('an answer given in one tab is not asked again in the other', async () => {
+    const { one, two } = await tabs();
+    await one.sync.connect();
+    expect(one.sync.state().firstConnect).toBe(true);
+    await one.sync.resolveFirstConnect('merge');
+    await one.sync.whenIdle();
+    expect(kind(one)).toBe('synced');
+
+    await two.checkDrive();
+    expect(two.state().firstConnect).toBe(false);
+    expect(two.state().status.kind).toBe('synced');
+  });
+
+  it('"Not now" in a tab that was still asking does not disconnect the tab that answered', async () => {
+    const { one, two } = await tabs();
+    await one.sync.connect();
+    await two.checkDrive(); // tab 2 is asking too
+    expect(two.state().firstConnect).toBe(true);
+    await one.sync.resolveFirstConnect('merge');
+    await one.sync.whenIdle();
+
+    await two.resolveFirstConnect('cancel');
+    await two.whenIdle();
+    expect(one.port.isConnected()).toBe(true);
+    expect(two.state().firstConnect).toBe(false);
+    expect(Object.keys(one.store.get().items).sort()).toEqual(['mine', 'theirs']);
+  });
+});
+
 describe('pushing', () => {
   it('two edits within the debounce window make one upload of two files', async () => {
     const cloud = createFakeCloud();

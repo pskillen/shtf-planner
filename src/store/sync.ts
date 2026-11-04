@@ -362,6 +362,27 @@ export function createSync(options: SyncOptions): Sync {
     if (hasUnseenChanges(store.bytes(), base)) await markDirty();
   }
 
+  /**
+   * Another tab of this browser may have synced since we last looked: its sync state is the one
+   * on disk. Takes it, so tabs share the record and the base (a first-connect question answered
+   * there is answered here). Unsent edits seen on either side stay unsent.
+   */
+  async function refresh(): Promise<void> {
+    const loaded = await persistence.load();
+    const mine = rec;
+    rec = {
+      ...loaded.record,
+      dirty: loaded.record.dirty || mine.dirty,
+      dirtySince: mine.dirty ? mine.dirtySince : loaded.record.dirtySince,
+      edits: Math.max(loaded.record.edits, mine.edits),
+    };
+    base = loaded.base ?? base;
+    if (firstConnect && base) {
+      firstConnect = false;
+      firstConnectOk = false;
+    }
+  }
+
   // ---- reading Drive --------------------------------------------------------------------
 
   interface Remote {
@@ -486,6 +507,7 @@ export function createSync(options: SyncOptions): Sync {
 
   /** Pull, then push if there is anything to send. */
   async function syncOnce(): Promise<void> {
+    await refresh();
     if (blocked()) return publish();
     if (!host.isOnline()) {
       fail(new DriveNetworkError());
@@ -508,6 +530,7 @@ export function createSync(options: SyncOptions): Sync {
 
   /** The debounced push: the same, but it first checks nobody else wrote in the meantime. */
   async function pushOnly(): Promise<void> {
+    await refresh();
     if (blocked() || !rec.dirty) return publish();
     if (!host.isOnline()) {
       fail(new DriveNetworkError());
@@ -742,6 +765,12 @@ export function createSync(options: SyncOptions): Sync {
 
     async resolveFirstConnect(choice) {
       if (!firstConnect) return;
+      // Another tab may have answered already: then this question is stale.
+      await enqueue(refresh);
+      if (!firstConnect) {
+        publish();
+        return sync.checkDrive();
+      }
       if (choice === 'cancel') return sync.disconnect();
       firstConnect = false;
       firstConnectOk = true;
