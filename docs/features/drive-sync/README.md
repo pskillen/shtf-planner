@@ -44,7 +44,8 @@ Automatic. The pill says where things stand.
   on `flush()` (which later features call at the end of a review). Both files are uploaded together.
   Just before writing `household.yjs` it reads the file's `modifiedTime` again; if it moved since
   this device last looked, someone wrote in the meantime, so it pulls and merges first and then
-  writes. Which edits are unsent is worked out from the document against the last state both sides
+  writes. After five moves in a row the push stops, the edits stay marked to send, and it retries
+  after the idle delay. Which edits are unsent is worked out from the document against the last state both sides
   had, deletions included, not from a flag alone: a deletion adds no new clock, and a flag can be
   lost with the page, so neither can leave Drive without something we have.
 - **Pull** on open, when the page becomes visible, every 10 minutes while it is visible, when the
@@ -115,11 +116,12 @@ hour) is kept in localStorage; there is no refresh token. Nothing opens a popup 
   failure is remembered: no focus, poll, edit, network-return or Check Drive asks Google again, and
   sync does no Drive work, until the person presses the button and it works. (A page reload starts
   with one new silent attempt.) The Data screen shows the Reconnect button only for this error.
-- **Disconnect** revokes the token and forgets the connection and any pending questions; the
-  household here, the files on Drive, and what sync remembers (the folder and file ids, the last
-  state both sides had) are kept. Connecting again with the same Google account compares against
+- **Disconnect** revokes the token and forgets the connection; the household here, the files on
+  Drive, and what sync remembers (the folder and file ids, the last state both sides had, and any
+  which-copy questions still open) are kept. An open question is still open after Connect, and
+  nothing is pushed until it is answered. Connecting again with the same Google account compares against
   that state, so edits made here and on the other device meanwhile merge without asking the
-  first-connect question again. A different account starts afresh.
+  first-connect question again. A different account, or one whose email cannot be read, starts afresh and asks first.
 - **Forget this device's data** revokes the token (best effort, a few seconds at most) and deletes
   the household and the sync state from this browser too; Drive is untouched, and connecting again
   brings it back.
