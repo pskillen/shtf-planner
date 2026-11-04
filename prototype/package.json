@@ -5,7 +5,12 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
-    "preview": "vite preview --host 127.0.0.1"
+    "preview": "vite preview --host 127.0.0.1",
+    "prebuild": "node date-spike/prep-ocr.mjs",
+    "predev": "node date-spike/prep-ocr.mjs",
+    "test:parse": "node --experimental-strip-types --no-warnings src/spikes/date/parse.test.ts",
+    "bench": "node --experimental-strip-types --no-warnings date-spike/bench.ts",
+    "gen:dates": "python3 date-spike/gen.py"
   },
   "devDependencies": {
     "typescript": "^7.0.2",
@@ -17,8 +22,11 @@
     "@automerge/automerge-repo": "^2.5.6",
     "@automerge/automerge-repo-network-broadcastchannel": "^2.5.6",
     "@automerge/automerge-repo-storage-indexeddb": "^2.5.6",
+    "@tesseract.js-data/eng": "^1.0.0",
     "@zxing/browser": "^0.2.1",
     "@zxing/library": "^0.23.0",
+    "onnxruntime-web": "^1.20.1",
+    "tesseract.js": "^5.1.1",
     "y-indexeddb": "^9.0.12",
     "yjs": "^13.6.33"
   }

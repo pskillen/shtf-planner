@@ -1,0 +1,4 @@
+# copied from node_modules by date-spike/prep-ocr.mjs
+public/ocr/ort/
+public/ocr/tess/worker.min.js
+public/ocr/tess/tesseract-core-*.js
