@@ -109,3 +109,14 @@ describe('the Stores search', () => {
     expect(screen.getByRole('button', { name: 'Edit Mystery-Tin' })).toBeTruthy();
   });
 });
+
+describe('the Stores screen markup', () => {
+  it('logs no React warning for the rotating-place note (no fieldset inside a paragraph)', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const s = liveStore(biggarDocument());
+    render(s.wrap(<StoresScreen />));
+    expect(screen.getByRole('button', { name: 'Set floors' })).toBeTruthy();
+    expect(error.mock.calls.map((c) => String(c[0]))).toEqual([]);
+    error.mockRestore();
+  });
+});

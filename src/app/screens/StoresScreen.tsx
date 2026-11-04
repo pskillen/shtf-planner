@@ -187,14 +187,14 @@ export function StoresScreen() {
             {open ? (
               <>
                 {l.kind === 'rotating' ? (
-                  <p className="note rotating-note">
+                  <div className="note rotating-note">
                     This place rotates: the floor counts, not today’s stock.{' '}
                     <EditArea>
                       <button type="button" className="link" onClick={() => setFlooring(l.id)}>
                         Set floors
                       </button>
                     </EditArea>
-                  </p>
+                  </div>
                 ) : null}
                 {rows.length === 0 ? (
                   <p className="muted">Nothing here yet.</p>
