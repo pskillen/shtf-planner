@@ -12,6 +12,19 @@ import type {
 
 /** Plain-language names for the document's enums. Screens show these, never the raw ids. */
 
+/**
+ * The label for a value read from the document, or `fallback` when it is not one the app knows
+ * (a document edited by hand, or saved by another version). A label map indexed directly would
+ * give `undefined` and a screen calling a string method on it would crash.
+ */
+export function labelOf(
+  labels: Readonly<Record<string, string>>,
+  value: string | undefined,
+  fallback = 'Unknown',
+): string {
+  return value !== undefined && Object.hasOwn(labels, value) ? labels[value]! : fallback;
+}
+
 export const RISK_TAG_LABEL: Record<RiskTag, string> = {
   infant: 'Infant',
   child: 'Child',

@@ -1,6 +1,12 @@
 import type { ReactNode } from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import { LOCAL_RISK_LABEL, HEATING_LABEL, HOME_TYPE_LABEL, INSULATION_LABEL } from '../labels';
+import {
+  LOCAL_RISK_LABEL,
+  HEATING_LABEL,
+  HOME_TYPE_LABEL,
+  INSULATION_LABEL,
+  labelOf,
+} from '../labels';
 import { useDocument } from '../state';
 import { firstStepPath } from './onboardingSteps';
 
@@ -42,10 +48,11 @@ export function HomeHub() {
           <span className="muted"> · {members.map((m) => m.name).join(', ')}</span>
         </Card>
         <Card to="/app/home" title="Home">
-          {HOME_TYPE_LABEL[home.type]}, {HEATING_LABEL[home.heating].toLowerCase()} heating
+          {labelOf(HOME_TYPE_LABEL, home.type)},{' '}
+          {labelOf(HEATING_LABEL, home.heating).toLowerCase()} heating
           <span className="muted">
             {' '}
-            · insulation {INSULATION_LABEL[home.insulation].toLowerCase()}
+            · insulation {labelOf(INSULATION_LABEL, home.insulation).toLowerCase()}
           </span>
         </Card>
         <Card to="/app/locations" title="Locations">
@@ -61,14 +68,14 @@ export function HomeHub() {
             <span className="chips-inline">
               {home.risks.map((r) => (
                 <span className="chip static" key={r}>
-                  {LOCAL_RISK_LABEL[r]}
+                  {labelOf(LOCAL_RISK_LABEL, r)}
                 </span>
               ))}
             </span>
           )}
         </Card>
         <Card to="/app/horizon" title="How long to plan for">
-          {HORIZON_LABEL[settings.horizonDays]}
+          {labelOf(HORIZON_LABEL, String(settings.horizonDays), `${settings.horizonDays} days`)}
         </Card>
       </div>
     </section>

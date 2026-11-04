@@ -2,7 +2,7 @@ import { LOCAL_RISKS } from '../../model';
 import { bundledPacks } from '../../packs';
 import { ChipGroup } from '../components/controls';
 import { ScreenHeader } from '../components/ScreenHeader';
-import { LOCAL_RISK_LABEL } from '../labels';
+import { LOCAL_RISK_LABEL, labelOf } from '../labels';
 import { useChange, useDocument } from '../state';
 import { riskLinksFor } from './region';
 
@@ -38,7 +38,7 @@ export function RisksScreen({ embedded = false }: { embedded?: boolean }) {
             {links.map((l) => (
               <li key={`${l.risk}|${l.url}`}>
                 <a href={l.url} target="_blank" rel="noopener noreferrer">
-                  {LOCAL_RISK_LABEL[l.risk as keyof typeof LOCAL_RISK_LABEL]}: {l.label} ↗
+                  {labelOf(LOCAL_RISK_LABEL, l.risk)}: {l.label} ↗
                 </a>
               </li>
             ))}

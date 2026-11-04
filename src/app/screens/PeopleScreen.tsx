@@ -13,7 +13,7 @@ import {
 import { ScreenHeader } from '../components/ScreenHeader';
 import { Sheet } from '../components/Sheet';
 import { useDeferredDelete } from '../components/useDeferredDelete';
-import { RISK_TAG_LABEL, SIZE_LABEL, SPECIES_LABEL } from '../labels';
+import { RISK_TAG_LABEL, SIZE_LABEL, SPECIES_LABEL, labelOf } from '../labels';
 import { useChange, useDocument } from '../state';
 import {
   finishMember,
@@ -133,7 +133,7 @@ function MemberSheet({
                     setM({ ...m, tags: [...m.tags, t] });
                   }}
                 >
-                  + {RISK_TAG_LABEL[t]}
+                  + {labelOf(RISK_TAG_LABEL, t)}
                 </button>
               ))}
             </>
@@ -358,7 +358,9 @@ export function PeopleScreen({ embedded = false }: { embedded?: boolean }) {
               <strong>{m.name}</strong>
               <span className="muted">
                 {formatAge(m.dob, now)}
-                {m.tags.length > 0 ? ` · ${m.tags.map((t) => RISK_TAG_LABEL[t]).join(', ')}` : ''}
+                {m.tags.length > 0
+                  ? ` · ${m.tags.map((t) => labelOf(RISK_TAG_LABEL, t)).join(', ')}`
+                  : ''}
               </span>
             </button>
           </li>
@@ -373,7 +375,7 @@ export function PeopleScreen({ embedded = false }: { embedded?: boolean }) {
             >
               <strong>{p.name}</strong>
               <span className="muted">
-                {SPECIES_LABEL[p.species]}, {SIZE_LABEL[p.size].toLowerCase()}
+                {labelOf(SPECIES_LABEL, p.species)}, {labelOf(SIZE_LABEL, p.size).toLowerCase()}
               </span>
             </button>
           </li>

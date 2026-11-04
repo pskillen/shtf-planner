@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react';
-import type { Asset, AssetType, Category } from '../../model';
+import type { Asset, AssetType } from '../../model';
 import { bundledPacks } from '../../packs';
 import { formatVolume } from '../../util';
 import { Field } from '../components/controls';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { Sheet } from '../components/Sheet';
 import { useDeferredDelete } from '../components/useDeferredDelete';
-import { CATEGORY_LABEL } from '../labels';
+import { CATEGORY_LABEL, labelOf } from '../labels';
 import { useChange, useDocument } from '../state';
 import { QuestionField } from './assets/QuestionField';
 import { defaultAnswers, describeContributions, setAnswer } from './assets/questionnaire';
@@ -33,7 +33,7 @@ function TypePicker({ types, onPick }: { types: AssetType[]; onPick: (t: AssetTy
           <li className="row-item" key={t.id}>
             <button type="button" className="row-main" onClick={() => onPick(t)}>
               <strong>{t.name}</strong>
-              <span className="muted">{CATEGORY_LABEL[t.category]}</span>
+              <span className="muted">{labelOf(CATEGORY_LABEL, t.category)}</span>
             </button>
           </li>
         ))}
@@ -170,7 +170,7 @@ export function AssetsScreen() {
   const groups = new Map<string, Asset[]>();
   for (const a of assets) {
     const cat = packs.assets[a.typeId]?.category;
-    const key = cat ? CATEGORY_LABEL[cat as Category] : 'Other';
+    const key = cat ? labelOf(CATEGORY_LABEL, cat) : 'Other';
     groups.set(key, [...(groups.get(key) ?? []), a]);
   }
   const sortedGroups = [...groups.entries()].sort(([x], [y]) => x.localeCompare(y));

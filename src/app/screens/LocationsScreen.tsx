@@ -5,7 +5,7 @@ import { ChipGroup, Field, FieldGroup, NumberInput, Segmented } from '../compone
 import { ScreenHeader } from '../components/ScreenHeader';
 import { Sheet } from '../components/Sheet';
 import { useDeferredDelete } from '../components/useDeferredDelete';
-import { CONDITION_LABEL, SIZE_LABEL } from '../labels';
+import { CONDITION_LABEL, SIZE_LABEL, labelOf } from '../labels';
 import { useChange, useDocument } from '../state';
 import { deleteLocation } from './locations';
 
@@ -154,10 +154,10 @@ export function LocationsScreen() {
               </strong>
               <span className="muted">
                 {l.conditions.length > 0
-                  ? l.conditions.map((c) => CONDITION_LABEL[c]).join(', ')
+                  ? l.conditions.map((c) => labelOf(CONDITION_LABEL, c)).join(', ')
                   : 'No conditions'}
                 {' · '}
-                {SIZE_LABEL[l.size].toLowerCase()}
+                {labelOf(SIZE_LABEL, l.size).toLowerCase()}
               </span>
             </button>
           </li>
