@@ -142,15 +142,15 @@ target's `capability`, a lower-case `label` ("water"), a sentence-case `title` f
 instruction, and always an illustration, not advice. `src/engine/examples.ts` builds them, pure
 and over the packs it is given:
 
-- **Stores** use everyday stock only (no equipment, `no-suggest` types or loose cells): the
+- **Stores** use everyday stock only (no equipment, `no-suggest` types, loose cells or empty containers): the
   cheapest size per unit whose count is 12 or fewer, else the biggest pack. So water at 3 days is
   "4 × Bottled water (6 × 2 L)", not "37 × 500 ml cases".
 - **Food** is never one item for all the calories: a fixed split of the kcal across staples,
   `FOOD_MIX` in `examples.ts` (25 % tins, 20 % pasta, 20 % rice, 15 % porridge oats, 20 % peanut
-  butter), each in the smallest pack size that gives a sane count (tins up to 36), shown as "e.g.
+  butter), each in the smallest pack size that gives a sane count (tins up to 70; the weekly tinned pack reads "N weeks of tinned food for one person"), shown as "e.g.
   15 tins, 4 kg of pasta and rice, 1 kg of porridge oats and 3 jars of peanut butter". The shares
   are an assumption chosen for variety, not a diet.
-- **Power for phones** is power banks; when even those would be more than a dozen, a portable
+- **Power for phones** is power banks; when that would be more than eight, a portable
   power station. Never a leisure battery.
 - **Heat and cooking** keep "a heater and its fuel to run it" (or the fuel for the one you own).
 - A radio is "e.g. a wind-up or battery-powered radio"; driving range is "about the same as a

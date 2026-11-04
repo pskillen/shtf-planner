@@ -33,6 +33,7 @@ export function pickSize(
   types: readonly ItemType[],
   store: string,
   amount: number,
+  max: number = EXAMPLE_MAX_UNITS,
 ): Pick | undefined {
   const all: Pick[] = [];
   for (const type of types) {
@@ -45,7 +46,7 @@ export function pickSize(
   const price = (p: Pick) => (p.type.typicalPricePence ?? Infinity) / p.per;
   const byPrice = (a: Pick, b: Pick) =>
     price(a) - price(b) || (a.type.id < b.type.id ? -1 : a.type.id > b.type.id ? 1 : 0);
-  const fits = pool.filter((p) => p.units <= EXAMPLE_MAX_UNITS).sort(byPrice);
+  const fits = pool.filter((p) => p.units <= max).sort(byPrice);
   if (fits[0]) return fits[0];
   return pool.sort((a, b) => a.units - b.units || byPrice(a, b))[0];
 }
@@ -57,6 +58,8 @@ function everyday(ctx: SuggestContext, store: string): ItemType[] {
       !t.id.startsWith('custom:') &&
       t.assetTypeId === undefined &&
       !t.tags.includes(NO_SUGGEST) &&
+      // an empty container is not stored water
+      !t.tags.includes('refillable') &&
       fitsHousehold(t, ctx.people) &&
       !(t.tags.includes('needs-cooking') && !ctx.cookingMet) &&
       t.gives.some((g) => g.store === store),
@@ -71,7 +74,7 @@ const label = (p: Pick): string => `${p.units} × ${p.type.name}`;
  * The split of a food target across everyday staples, as shares of the kcal. It is fixed and
  * only illustrates the variety (tins, grains, a spread), it is not a diet: the shares add to 1.
  * Each part names pack sizes smallest first (local ids in the items pack); the smallest size with
- * at most `EXAMPLE_MAX_UNITS` packs (36 for tins, which come by the dozen) is used. Parts whose types are missing are left out and the
+ * at most `EXAMPLE_MAX_UNITS` packs (70 for tins, which are counted in dozens) is used. Parts whose types are missing are left out and the
  * rest share the kcal.
  */
 export const FOOD_MIX: ReadonlyArray<{
@@ -88,7 +91,7 @@ export const FOOD_MIX: ReadonlyArray<{
     share: 0.25,
     group: 'tins',
     show: 'count',
-    maxUnits: 36,
+    maxUnits: 70,
     sizes: ['tinned-food-tin', 'tinned-food'],
   },
   { share: 0.2, group: 'pasta and rice', show: 'kg', sizes: ['dried-pasta-1kg', 'dried-pasta'] },
@@ -150,6 +153,8 @@ export function foodMixExample(ctx: SuggestContext, kcal: number): string | unde
       .map((p) => {
         // A tin, a jar or a tub reads as "3 jars of peanut butter"; anything else by its name.
         const unit = p.type.unit;
+        if (unit === 'pack' && name === 'tins')
+          return `${p.units} ${plural(p.units, 'week')} of tinned food for one person`;
         if (unit !== 'tin' && unit !== 'jar' && unit !== 'tub') return label(p);
         return `${p.units} ${plural(p.units, unit)}${unit === 'tin' ? '' : ` of ${name}`}`;
       })
@@ -166,10 +171,13 @@ export function foodMixExample(ctx: SuggestContext, kcal: number): string | unde
  * Power for phones: power banks, which people own for this. When even they would be a pile (a
  * month of charging), a portable power station, which is what people buy at that scale.
  */
+/** More power banks than this and a power station is the example (a pile of banks reads oddly). */
+const PHONE_BANKS_MAX = 8;
+
 function phonePower(ctx: SuggestContext, wh: number): string | undefined {
   const banks = everyday(ctx, 'batteryWh').filter((t) => t.tags.includes('phone'));
-  const bank = pickSize(banks, 'batteryWh', wh);
-  if (bank && bank.units <= EXAMPLE_MAX_UNITS) return label(bank);
+  const bank = pickSize(banks, 'batteryWh', wh, PHONE_BANKS_MAX);
+  if (bank && bank.units <= PHONE_BANKS_MAX) return label(bank);
   const stations = Object.values(ctx.packs.items).filter(
     (t) => t.assetTypeId !== undefined && t.tags.includes('portable-power'),
   );

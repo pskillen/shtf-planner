@@ -87,8 +87,8 @@ describe('gaps', () => {
     const water = find(gaps(doc, packs, NOW, 3), 'water:waterL')!;
     expect(water.shortfall).toBeCloseTo(27.25);
     expect(water.suggestions[0]).toMatchObject({
-      itemTypeId: 'items-base:bottled-water-6x2l',
-      qty: 3,
+      itemTypeId: 'items-base:bottled-water-6x5l',
+      qty: 1,
     });
   });
 

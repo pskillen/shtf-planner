@@ -2,7 +2,7 @@
   "format": 1,
   "id": "items-base",
   "kind": "items",
-  "version": 6,
+  "version": 7,
   "name": "Base household items",
   "sources": [
     {
@@ -299,6 +299,24 @@
       "source": "assumption"
     },
     {
+      "id": "items-base:bottled-water-6x5l",
+      "name": "Bottled water (6 × 5 L)",
+      "category": "water",
+      "unit": "case",
+      "unitSize": "6 x 5 L",
+      "gives": [
+        {
+          "store": "waterL",
+          "amount": 30
+        }
+      ],
+      "suitability": ["frost"],
+      "shelfLife": "year",
+      "typicalPricePence": 800,
+      "tags": ["water", "sells-out-first"],
+      "source": "assumption"
+    },
+    {
       "id": "items-base:bottled-water-2l",
       "name": "Bottled water (2 L bottle)",
       "category": "water",
@@ -347,7 +365,7 @@
       "suitability": ["frost"],
       "shelfLife": "months",
       "typicalPricePence": 1500,
-      "tags": ["water"]
+      "tags": ["water", "refillable"]
     },
     {
       "id": "items-base:water-butt",
@@ -1559,6 +1577,24 @@
       "shelfLife": "years",
       "typicalPricePence": 1200,
       "tags": ["sanitation"]
+    },
+    {
+      "id": "items-base:toilet-bags-100",
+      "name": "Toilet waste bags with absorbent (100)",
+      "category": "sanitation",
+      "unit": "pack",
+      "unitSize": "100 bags",
+      "gives": [
+        {
+          "store": "sanitationUses",
+          "amount": 100
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
+      "typicalPricePence": 3000,
+      "tags": ["sanitation"],
+      "source": "assumption"
     },
     {
       "id": "items-base:hand-sanitiser",

@@ -57,8 +57,8 @@ describe('preview examples on the Biggar household', () => {
     );
     for (const { h, r, n } of counted) {
       if (Number.isNaN(n)) continue;
-      // toilet bags at 28 days are the one need with no bigger everyday pack in the packs yet
-      if (r.title === 'Toilet' && h === 28) continue;
+      // a month of drinking water is the one need that stays a pile: cases of 6 x 5 L
+      if (r.title === 'Drinking water' && h === 28) continue;
       expect(n, `${h} days ${r.title}: ${r.example}`).toBeLessThanOrEqual(EXAMPLE_MAX_UNITS);
     }
     expect(at(3, 'water').example).toBe('e.g. 4 × Bottled water (6 × 2 L)');
