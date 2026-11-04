@@ -42,7 +42,11 @@ Automatic. The pill says where things stand.
 
 - **Push** once per burst: 5 seconds after the last edit, immediately when the page is hidden, and
   on `flush()` (which later features call at the end of a review). Both files are uploaded together.
-  Before uploading it looks at Drive; if the other device wrote in the meantime it merges first.
+  Just before writing `household.yjs` it reads the file's `modifiedTime` again; if it moved since
+  this device last looked, someone wrote in the meantime, so it pulls and merges first and then
+  writes. Which edits are unsent is worked out from the document against the last state both sides
+  had, deletions included, not from a flag alone: a deletion adds no new clock, and a flag can be
+  lost with the page, so neither can leave Drive without something we have.
 - **Pull** on open, when the page becomes visible, every 10 minutes while it is visible, when the
   network returns, and on **Check Drive**. It reads Drive's `modifiedTime` for `household.yjs` and
   downloads only if that changed since the last look.
@@ -50,6 +54,9 @@ Automatic. The pill says where things stand.
   record, never conflict. The app keeps the bytes of the document **as of the last successful
   push or pull** and compares base to local and base to remote record by record. A record is an
   item, location, asset, plan item, review, member, pet, the home or the settings.
+  - The last-synced state, the Drive ids and the pending questions are shared by the tabs of one
+    browser: every pass reloads them first, so a question answered in one tab is not asked again
+    in another.
   - Records only the other device changed are applied silently, with a toast ("3 changes from your
     other device").
   - A field both devices set to different values, or a record one deleted while the other edited
@@ -61,6 +68,11 @@ Automatic. The pill says where things stand.
   your household from Google Drive"). A device with data meeting a household on Drive asks first
   ("Merge them" or "Not now"), then merges both and shows what it changed. With nothing on Drive,
   the first push creates the files.
+
+Drive moving things under us is handled quietly: files are listed oldest first, so if two devices
+raced to create `household.yjs` the oldest one is used by everyone; and when the remembered folder
+or a file has been deleted or trashed (a 404, which is not "offline") the ids are forgotten, the
+folder is found by name again (or made), and the pass runs once more.
 
 ## The status
 
@@ -87,6 +99,9 @@ Edits made offline stay marked as unsent across reloads and are sent when the ne
   different build than this one (a `dev` or `next` file opened on `prod`, say) a banner says "This
   household file was last written by {env}; you are on {env}", with **Continue** (merge) and
   **Don't sync** (leave sync off until the page reloads). The same env on both sides is quiet.
+  After Don't sync the banner goes and the pill keeps saying "Sync is off: ..." (Check Drive and
+  the network coming back do not clear it); edits made meanwhile are counted as unsent and go out
+  once sync is on again.
 
 ## Signing in
 
@@ -96,10 +111,18 @@ hour) is kept in localStorage; there is no refresh token. Nothing opens a popup 
 - **Connect** is a button. If the popup is closed (Firefox does this after a few seconds) the app
   goes quietly back to "Connect Google Drive"; no error is shown, and pressing it again works.
 - On expiry or a 401 the app tries **one** silent token request. If Google needs the person, the
-  status becomes `error` "Reconnect Google Drive" with a button, and pending edits are kept.
-- **Disconnect** revokes the token and forgets the folder; the household here and the files on
-  Drive are left alone. **Forget this device's data** deletes the household and the sync state
-  from this browser too; Drive is untouched, and connecting again brings it back.
+  status becomes `error` "Reconnect Google Drive" with a button, and pending edits are kept. The
+  failure is remembered: no focus, poll, edit, network-return or Check Drive asks Google again, and
+  sync does no Drive work, until the person presses the button and it works. (A page reload starts
+  with one new silent attempt.) The Data screen shows the Reconnect button only for this error.
+- **Disconnect** revokes the token and forgets the connection and any pending questions; the
+  household here, the files on Drive, and what sync remembers (the folder and file ids, the last
+  state both sides had) are kept. Connecting again with the same Google account compares against
+  that state, so edits made here and on the other device meanwhile merge without asking the
+  first-connect question again. A different account starts afresh.
+- **Forget this device's data** revokes the token (best effort, a few seconds at most) and deletes
+  the household and the sync state from this browser too; Drive is untouched, and connecting again
+  brings it back.
 
 ## Export and import
 
@@ -137,5 +160,5 @@ sync switched off. For tests and local development, a client id kept in localSto
 - Sharing a household between two Google accounts (the file-by-id path exists in Drive's API; the
   second-account behaviour has not been tested).
 - A refresh token or a server to hold one: the token flow is client-only by design.
-- Per-tab leadership: two tabs of one browser each run their own sync loop; the CRDT makes the
-  duplicate pushes harmless.
+- Per-tab leadership (Web Locks): two tabs of one browser each run their own sync loop, sharing the
+  saved sync state; the CRDT makes the occasional duplicate push harmless.
