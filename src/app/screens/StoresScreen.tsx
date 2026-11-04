@@ -7,6 +7,7 @@ import { useChange, useDocument } from '../state';
 import { usePacks } from '../usePacks';
 import { FloorSheet, type FloorRow } from './stores/FloorSheet';
 import { ItemSheet } from './stores/ItemSheet';
+import { QuickAdd } from './stores/QuickAdd';
 import { formatMonth, matchTypes, monthTone, suitabilityWarning } from './stores/stock';
 
 /** One line of the list: a stock entry, or a floor with nothing on the shelf (`item` unset). */
@@ -27,6 +28,7 @@ export function StoresScreen() {
   const packs = usePacks();
   const [query, setQuery] = useState('');
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
+  const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<ItemInstance | null>(null);
   const [flooring, setFlooring] = useState<string | null>(null);
   const now = today();
@@ -214,6 +216,18 @@ export function StoresScreen() {
         </section>
       ) : null}
 
+      <EditArea>
+        <button
+          type="button"
+          className="fab"
+          aria-label="Add stock"
+          onClick={() => setAdding(true)}
+        >
+          +
+        </button>
+      </EditArea>
+
+      {adding ? <QuickAdd onClose={() => setAdding(false)} /> : null}
       {editing ? (
         <ItemSheet
           key={editing.id}
