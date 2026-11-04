@@ -162,6 +162,27 @@ test('the pill is on every app screen and opens the Data screen', async ({ page 
   await expect(page).toHaveURL(/\/app\/more\/data$/);
 });
 
+test('the sync toast and the undo toast can both be read at 375 px', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 700 });
+  await page.goto('/app/stores');
+  await expect(pill(page)).toBeVisible();
+  // Both toasts as the app renders them (classes only), shown together.
+  await page.evaluate(() => {
+    for (const cls of ['toast', 'toast sync-toast']) {
+      const el = document.createElement('div');
+      el.className = cls;
+      el.dataset.probe = cls;
+      el.innerHTML = '<span>Toast</span><button type="button">OK</button>';
+      document.body.appendChild(el);
+    }
+  });
+  const undo = await page.locator('[data-probe="toast"]').boundingBox();
+  const sync = await page.locator('[data-probe="toast sync-toast"]').boundingBox();
+  expect(undo && sync).toBeTruthy();
+  expect(sync!.y + sync!.height).toBeLessThanOrEqual(undo!.y);
+  expect(sync!.y).toBeGreaterThanOrEqual(0);
+});
+
 test('export downloads JSON and YAML; importing YAML replaces the household and reaches Drive', async ({
   browser,
 }) => {

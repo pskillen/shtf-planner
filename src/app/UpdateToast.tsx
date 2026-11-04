@@ -16,7 +16,7 @@ export function UpdateToast() {
     if (!navigator.serviceWorker?.controller) window.location.reload();
   };
   return (
-    <div className="toast" role="status">
+    <div className="toast toast-update" role="status">
       <span>Update available.</span>
       <button type="button" onClick={reload}>
         Reload
