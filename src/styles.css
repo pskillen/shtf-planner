@@ -6,6 +6,8 @@
   --accent: #2f5d50;
   --accent-text: #ffffff;
   --border: #d8d3c6;
+  --warn: #8a5a00;
+  --bad: #a3321f;
   --tab-h: 56px;
   --bar-h: 48px;
   color-scheme: light dark;
@@ -20,6 +22,8 @@
     --accent: #6fb39f;
     --accent-text: #0e1713;
     --border: #2f413a;
+    --warn: #e0a93b;
+    --bad: #ff8a73;
   }
 }
 
@@ -712,4 +716,89 @@ table.horizon .big td {
   display: inline-flex;
   min-height: 44px;
   align-items: center;
+}
+
+/* Stores. */
+.warn {
+  color: var(--warn);
+  font-size: 0.9rem;
+  margin: 4px 0;
+}
+
+.bb-past {
+  color: var(--bad);
+  font-weight: 700;
+}
+
+.bb-soon {
+  color: var(--warn);
+  font-weight: 700;
+}
+
+.group-toggle {
+  width: 100%;
+  justify-content: flex-start;
+  background: transparent;
+  color: var(--text);
+  padding: 0;
+  font-size: inherit;
+}
+
+.store-group h2 {
+  margin: 1rem 0 0.25rem;
+}
+
+button.link {
+  min-height: 44px;
+  padding: 0 4px;
+  background: transparent;
+  color: var(--accent);
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+.rotating-note {
+  margin: 4px 0;
+}
+
+.fab {
+  position: fixed;
+  right: 16px;
+  bottom: calc(var(--tab-h) + 16px + env(safe-area-inset-bottom));
+  z-index: 2;
+  width: 60px;
+  height: 60px;
+  border-radius: 30px;
+  font-size: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.stores {
+  padding-bottom: 90px;
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stepper button {
+  flex: none;
+  width: 56px;
+  min-height: 52px;
+  font-size: 1.5rem;
+  padding: 0;
+}
+
+.stepper input {
+  text-align: center;
+  min-height: 52px;
+  font-size: 1.25rem;
+  min-width: 0;
+}
+
+.floor-row {
+  flex-direction: column;
+  align-items: stretch;
 }

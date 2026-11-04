@@ -13,6 +13,7 @@ import { MoreScreen } from './screens/MoreScreen';
 import { PeopleScreen } from './screens/PeopleScreen';
 import { RisksScreen } from './screens/RisksScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
+import { StoresScreen } from './screens/StoresScreen';
 import type { ReactNode } from 'react';
 
 function Screen({ children }: { children: ReactNode }) {
@@ -115,7 +116,8 @@ export function Shell() {
                 </Screen>
               }
             />
-            {TABS.filter((t) => !['', 'more'].includes(t.path)).map((t) => (
+            <Route path="stores" element={<StoresScreen />} />
+            {TABS.filter((t) => !['', 'more', 'stores'].includes(t.path)).map((t) => (
               <Route key={t.label} path={t.path} element={<Placeholder title={t.label} />} />
             ))}
             <Route path="*" element={<Navigate to="/app" replace />} />
