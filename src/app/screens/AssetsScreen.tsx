@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { Asset, AssetType } from '../../model';
-import { bundledPacks } from '../../packs';
-import { formatVolume } from '../../util';
+import { coverage } from '../../engine';
+import { formatVolume, today } from '../../util';
 import { Field } from '../components/controls';
 import { EditArea } from '../components/EditArea';
 import { ScreenHeader } from '../components/ScreenHeader';
@@ -10,6 +10,7 @@ import { Sheet } from '../components/Sheet';
 import { useDeferredDelete } from '../components/useDeferredDelete';
 import { CATEGORY_LABEL, labelOf } from '../labels';
 import { useChange, useDocument } from '../state';
+import { usePacks } from '../usePacks';
 import { QuestionField } from './assets/QuestionField';
 import { defaultAnswers, describeContributions, setAnswer } from './assets/questionnaire';
 
@@ -156,7 +157,19 @@ export function AssetsScreen() {
   const doc = useDocument();
   const change = useChange();
   const [editing, setEditing] = useState<Editing>(null);
-  const packs = bundledPacks();
+  const packs = usePacks();
+
+  // Assets that give the plan nothing, and why, from the engine (never worked out here).
+  const blocked = useMemo(() => {
+    const out = new Map<string, string[]>();
+    for (const c of coverage(doc, packs, today())) {
+      for (const b of c.blockedAssets ?? []) {
+        const list = out.get(b.assetId) ?? [];
+        if (!list.includes(b.reason)) out.set(b.assetId, [...list, b.reason]);
+      }
+    }
+    return out;
+  }, [doc, packs]);
 
   const available = useMemo(() => {
     const enabled = new Set(packs.enabledPacks(doc.settings).map((p) => p.id));
@@ -193,6 +206,7 @@ export function AssetsScreen() {
             {list.map((a) => {
               const type = packs.assets[a.typeId];
               const where = a.locationId ? doc.locations[a.locationId]?.name : undefined;
+              const why = blocked.get(a.id);
               return (
                 <li className="row-item" key={a.id}>
                   <button
@@ -204,11 +218,15 @@ export function AssetsScreen() {
                       type && setEditing({ step: 'form', type, asset: a, isNew: false })
                     }
                   >
-                    <strong>{a.name || type?.name || a.typeId}</strong>
+                    <strong>
+                      {a.name || type?.name || a.typeId}{' '}
+                      {why ? <span className="badge badge-warn">Blocked</span> : null}
+                    </strong>
                     <span className="muted">
                       {a.name && type ? `${type.name} · ` : ''}
                       {type ? (where ?? 'No place set') : 'Its content pack is not loaded'}
                     </span>
+                    {why ? <span className="warn">{why.join(' ')}</span> : null}
                   </button>
                 </li>
               );

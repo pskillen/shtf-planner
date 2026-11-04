@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { bundledPacks } from '../../packs';
 import { formatVolume, today } from '../../util';
 import { FieldGroup, Segmented } from '../components/controls';
 import { EditArea } from '../components/EditArea';
@@ -7,12 +6,13 @@ import { ScreenHeader } from '../components/ScreenHeader';
 import { useSavedChange } from '../components/SavedNote';
 import { HORIZONS, HORIZON_SENTENCE } from '../labels';
 import { useDocument } from '../state';
-import { biggestAsks, PREVIEW_IS_STUB, previewFor, type PreviewRow } from './horizon/previewSource';
+import { usePacks } from '../usePacks';
+import { biggestAsks, previewFor, rowKey, type PreviewRow } from './horizon/previewSource';
 
 function amountText(row: PreviewRow | undefined, region: 'UK' | 'US'): string {
-  if (!row || row.amount === null) return '—';
+  if (!row) return '—';
   if (row.unit === 'L') return formatVolume(row.amount, region);
-  return `${row.amount} ${row.unit}`.trim();
+  return `${Math.round(row.amount * 10) / 10} ${row.unit}`.trim();
 }
 
 /** `picked` marks the chosen horizon; `shown` is the one column kept on a narrow screen. */
@@ -26,12 +26,16 @@ export function HorizonScreen({ embedded = false }: { embedded?: boolean }) {
   const { change, note } = useSavedChange();
   const chosen = doc.settings.horizonDays;
   const region = doc.settings.region;
-  const preview = useMemo(() => previewFor(doc, bundledPacks(), today()), [doc]);
+  const packs = usePacks();
+  const preview = useMemo(() => previewFor(doc, packs, today()), [doc, packs]);
   // On a phone only one horizon's column fits: the picked one, unless the reader looks at another.
   const [looking, setLooking] = useState<number | null>(null);
   const shown = looking ?? chosen;
-  const big = new Set(biggestAsks(preview));
-  const labels = [...new Set(preview.flatMap((p) => p.rows.map((r) => r.label)))];
+  const big = useMemo(() => biggestAsks(doc, packs, today()), [doc, packs]);
+  // One table row per need; the four horizons share its key, and it is shown by its title.
+  const needs = [
+    ...new Map(preview.flatMap((p) => p.rows).map((r) => [rowKey(r), r] as const)).values(),
+  ];
 
   return (
     <div>
@@ -61,12 +65,6 @@ export function HorizonScreen({ embedded = false }: { embedded?: boolean }) {
       <p>{HORIZON_SENTENCE[chosen]}</p>
 
       <h2>What that means for your household</h2>
-      {PREVIEW_IS_STUB ? (
-        <p className="note">
-          The amounts are worked out by the planning engine, which is not in this version yet. The
-          table shows what it will cover.
-        </p>
-      ) : null}
       <div className="narrow-only">
         <FieldGroup label="Show amounts for">
           <Segmented
@@ -94,11 +92,11 @@ export function HorizonScreen({ embedded = false }: { embedded?: boolean }) {
             </tr>
           </thead>
           <tbody>
-            {labels.map((label) => (
-              <tr key={label} className={big.has(label) ? 'big' : undefined}>
-                <th scope="row">{label}</th>
+            {needs.map((need) => (
+              <tr key={rowKey(need)} className={big.has(need.capability) ? 'big' : undefined}>
+                <th scope="row">{need.title}</th>
                 {preview.map((p) => {
-                  const row = p.rows.find((r) => r.label === label);
+                  const row = p.rows.find((r) => rowKey(r) === rowKey(need));
                   return (
                     <td key={p.horizonDays} className={colClass(p.horizonDays, chosen, shown)}>
                       {amountText(row, region)}

@@ -802,3 +802,8 @@ button.link {
   flex-direction: column;
   align-items: stretch;
 }
+
+.badge-warn {
+  background: var(--warn);
+  color: var(--bg);
+}

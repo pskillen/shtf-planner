@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { score } from '../src/engine';
+import { biggarDocument } from '../src/fixtures/household-biggar';
 import { emptyDocument, type AssetType } from '../src/model';
 import { bundledPacks } from '../src/packs';
 import {
@@ -6,11 +8,7 @@ import {
   describeContributions,
   setAnswer,
 } from '../src/app/screens/assets/questionnaire';
-import {
-  biggestAsks,
-  previewFor,
-  type HorizonPreview,
-} from '../src/app/screens/horizon/previewSource';
+import { biggestAsks, previewFor, rowKey } from '../src/app/screens/horizon/previewSource';
 import { applyRegion, isAllElectric, riskLinksFor } from '../src/app/screens/region';
 import {
   ageInMonths,
@@ -198,36 +196,41 @@ describe('regions', () => {
 });
 
 describe('the horizon preview', () => {
-  const row = (label: string, amount: number | null, unit: string) => ({
-    capability: 'water' as const,
-    label,
-    amount,
-    unit,
-    example: '',
-  });
-  const preview = (rows: ReturnType<typeof row>[]): HorizonPreview[] => [
-    { horizonDays: 3, rows: rows.map((r) => ({ ...r, amount: r.amount && r.amount / 9 })) },
-    { horizonDays: 28, rows },
-  ];
+  const packs = bundledPacks();
+  const asOf = '2026-11-15';
 
-  it('stubs four horizons with no amounts', () => {
-    const p = previewFor(emptyDocument('local'), bundledPacks(), '2026-11-04');
+  it('is the engine: four horizons of rows with a sentence-case title', () => {
+    const doc = biggarDocument();
+    const p = previewFor(doc, packs, asOf);
     expect(p.map((x) => x.horizonDays)).toEqual([3, 7, 14, 28]);
-    expect(p[0]!.rows.every((r) => r.amount === null)).toBe(true);
-    expect(biggestAsks(p)).toEqual([]);
+    const water = p[0]!.rows.find((r) => r.capability === 'water')!;
+    expect(water.title).toBe('Drinking water');
+    expect(water.amount).toBeGreaterThan(0);
+    // the same needs, in the same order, at every horizon, so a table row lines up
+    const keys = (h: (typeof p)[number]) => h.rows.map(rowKey);
+    for (const h of p) expect(keys(h)).toEqual(keys(p[0]!));
   });
 
-  it('picks the three biggest storage amounts at the longest horizon, skipping energy', () => {
-    const asks = biggestAsks(
-      preview([
-        row('Water', 280, 'L'),
-        row('Fuel', 40, 'L'),
-        row('Food', 60000, 'kcal'),
-        row('Power', 9000, 'Wh'),
-        row('Tins', 120, 'tins'),
-        row('Gas', 6, 'canisters'),
-      ]),
-    );
-    expect(asks).toEqual(['Water', 'Tins', 'Fuel']);
+  it('picks the three capabilities furthest short of their target at 28 days', () => {
+    const doc = biggarDocument();
+    const asks = biggestAsks(doc, packs, asOf);
+    expect(asks.size).toBe(3);
+    // the engine's own score at the longest horizon says which are shortest
+    const s = score(doc, packs, asOf, 28);
+    const shortest = s.capabilities
+      .filter((c) => c.targetCount > 0 && c.capability !== 'plans')
+      .sort((a, b) => a.percent - b.percent || a.meanPercent - b.meanPercent)
+      .slice(0, 3)
+      .map((c) => c.capability);
+    expect([...asks].sort()).toEqual([...shortest].sort());
+    expect(asks.has('plans')).toBe(false);
+  });
+
+  it('judges by share of the target, not by the size of the number', () => {
+    const asks = biggestAsks(biggarDocument(), packs, asOf);
+    // water is the biggest amount (441 L at 28 days) but is partly stocked; heat has nothing
+    expect(previewFor(biggarDocument(), packs, asOf)[3]!.rows[0]!.amount).toBe(441);
+    expect(asks.has('water')).toBe(false);
+    expect(asks.has('heat')).toBe(true);
   });
 });
