@@ -109,6 +109,21 @@ describe('coverage: stores from items', () => {
     expect(cov(doc, 'comms:radio')).toMatchObject({ amount: 1, from: [{ kind: 'asset' }] });
   });
 
+  it('counts a handheld or mobile radio once: an asset plus a stock row is one radio', () => {
+    for (const [type, assetType] of [
+      ['dual-band-handheld', 'handheld-radio'],
+      ['cb-rig', 'handheld-radio'],
+      ['mobile-rig', 'radio-station'],
+      ['hf-station', 'radio-station'],
+    ] as const) {
+      const doc = biggarDocument();
+      doc.items['item-r'] = item('item-r', type, 1, L.hall);
+      expect(cov(doc, 'comms:radio').amount, `${type} as stock`).toBe(0);
+      doc.assets['asset-r'] = asset('asset-r', assetType);
+      expect(cov(doc, 'comms:radio').amount, `${type} with its asset`).toBe(1);
+    }
+  });
+
   it('does not count a leisure battery twice, as stock and as equipment', () => {
     const doc = biggarDocument();
     const before = cov(doc, 'power:batteryWh').amount;

@@ -345,11 +345,11 @@
     ],
     "env": "local",
     "packVersions": {
-      "assets-base": 2,
+      "assets-base": 3,
       "guidance-grid-free": 2,
       "guidance-uk-prepare": 2,
       "guidance-us-ready": 3,
-      "items-base": 5,
+      "items-base": 6,
       "plans-base": 1,
       "regions": 3
     },

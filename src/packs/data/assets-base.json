@@ -2,7 +2,7 @@
   "format": 1,
   "id": "assets-base",
   "kind": "assets",
-  "version": 2,
+  "version": 3,
   "name": "Base household assets",
   "sources": [
     {
@@ -585,6 +585,32 @@
           "id": "charge",
           "text": "Charge the radio and check it works",
           "everyMonths": 3
+        }
+      ]
+    },
+    {
+      "id": "assets-base:radio-station",
+      "name": "Mobile or base radio station",
+      "category": "comms",
+      "questions": [
+        {
+          "id": "kind",
+          "text": "What kind?",
+          "kind": "choice",
+          "choices": ["cb-mobile", "amateur-mobile", "amateur-hf"]
+        }
+      ],
+      "contributes": [
+        {
+          "capability": "comms",
+          "note": "Two-way and can receive; needs a 12 V supply, an aerial and another station in range."
+        }
+      ],
+      "maintenance": [
+        {
+          "id": "check",
+          "text": "Check the aerial, cables and power supply, and make a test call",
+          "everyMonths": 6
         }
       ]
     }
