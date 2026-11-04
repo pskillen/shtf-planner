@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import type { Conflict } from '../../store';
 import { useSync, useSyncState } from '../state';
+import { Toast } from '../components/Toast';
 import './sync.css';
 
 function show(value: unknown): string {
@@ -191,12 +192,12 @@ function SyncToast() {
   }, [id, sync]);
   if (!sync || !notice) return null;
   return (
-    <div className="toast sync-toast" role="status" data-testid="sync-toast">
+    <Toast className="sync-toast" testId="sync-toast">
       <span>{notice.text}</span>
       <button type="button" className="quiet" onClick={() => sync.dismissNotice()}>
         OK
       </button>
-    </div>
+    </Toast>
   );
 }
 

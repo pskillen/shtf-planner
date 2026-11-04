@@ -162,25 +162,48 @@ test('the pill is on every app screen and opens the Data screen', async ({ page 
   await expect(page).toHaveURL(/\/app\/more\/data$/);
 });
 
-test('the sync toast and the undo toast can both be read at 375 px', async ({ page }) => {
+test('the sync, update and undo toasts stack in one region without overlap at 375 px', async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 375, height: 700 });
   await page.goto('/app/stores');
   await expect(pill(page)).toBeVisible();
-  // Both toasts as the app renders them (classes only), shown together.
+  // Toasts as the app renders them: into the shared region, which stacks them.
   await page.evaluate(() => {
-    for (const cls of ['toast', 'toast sync-toast']) {
+    let region = document.querySelector('.toast-region');
+    if (!region) {
+      region = document.createElement('div');
+      region.className = 'toast-region';
+      document.body.appendChild(region);
+    }
+    for (const cls of ['toast sync-toast', 'toast toast-update', 'toast']) {
       const el = document.createElement('div');
       el.className = cls;
       el.dataset.probe = cls;
       el.innerHTML = '<span>Toast</span><button type="button">OK</button>';
-      document.body.appendChild(el);
+      region.appendChild(el);
     }
   });
-  const undo = await page.locator('[data-probe="toast"]').boundingBox();
-  const sync = await page.locator('[data-probe="toast sync-toast"]').boundingBox();
-  expect(undo && sync).toBeTruthy();
-  expect(sync!.y + sync!.height).toBeLessThanOrEqual(undo!.y);
-  expect(sync!.y).toBeGreaterThanOrEqual(0);
+  const boxes = [];
+  for (const cls of ['toast sync-toast', 'toast toast-update', 'toast']) {
+    const box = await page.locator(`[data-probe="${cls}"]`).boundingBox();
+    expect(box).toBeTruthy();
+    boxes.push(box!);
+  }
+  // each sits above the next, with a gap and no overlap, and none is off the top of the screen
+  expect(boxes[0]!.y).toBeGreaterThanOrEqual(0);
+  for (let i = 0; i < boxes.length - 1; i++)
+    expect(boxes[i]!.y + boxes[i]!.height).toBeLessThanOrEqual(boxes[i + 1]!.y);
+  // the last one is at the base spot, above the tab bar
+  const tabs = await page.getByRole('navigation', { name: 'Main' }).boundingBox();
+  expect(boxes[2]!.y + boxes[2]!.height).toBeLessThanOrEqual(tabs!.y);
+  // with only one showing there is no gap left where the others were
+  await page.evaluate(() => {
+    document.querySelector('[data-probe="toast sync-toast"]')?.remove();
+    document.querySelector('[data-probe="toast toast-update"]')?.remove();
+  });
+  const alone = await page.locator('[data-probe="toast"]').boundingBox();
+  expect(alone!.y + alone!.height).toBeCloseTo(boxes[2]!.y + boxes[2]!.height, 0);
 });
 
 test('export downloads JSON and YAML; importing YAML replaces the household and reaches Drive', async ({

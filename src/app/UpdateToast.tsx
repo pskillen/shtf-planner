@@ -1,4 +1,5 @@
 import { useRegisterSW } from 'virtual:pwa-register/react';
+import { Toast } from './components/Toast';
 
 /** "Update available, reload": shown when a new service worker has installed and is waiting. */
 export function UpdateToast() {
@@ -16,7 +17,7 @@ export function UpdateToast() {
     if (!navigator.serviceWorker?.controller) window.location.reload();
   };
   return (
-    <div className="toast toast-update" role="status">
+    <Toast className="toast-update">
       <span>Update available.</span>
       <button type="button" onClick={reload}>
         Reload
@@ -24,6 +25,6 @@ export function UpdateToast() {
       <button type="button" className="quiet" onClick={() => setNeedRefresh(false)}>
         Later
       </button>
-    </div>
+    </Toast>
   );
 }

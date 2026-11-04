@@ -206,7 +206,7 @@ button.quiet {
   margin: 0.4rem 0 0;
 }
 
-.toast {
+.toast-region {
   position: fixed;
   left: 16px;
   right: 16px;
@@ -215,21 +215,21 @@ button.quiet {
   max-width: 36rem;
   margin: 0 auto;
   display: flex;
+  flex-direction: column;
+  gap: 8px;
+  /* the region itself takes no taps: only the toasts in it do */
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
   align-items: center;
   gap: 8px;
   padding: 8px 8px 8px 16px;
   border-radius: 8px;
   background: var(--text);
   color: var(--bg);
-}
-
-.toast.sync-toast {
-  /* above the undo toast, which sits at the base spot */
-  bottom: calc(var(--tab-h) + 12px + 72px + env(safe-area-inset-bottom));
-}
-
-.toast.toast-update {
-  bottom: calc(var(--tab-h) + 12px + 144px + env(safe-area-inset-bottom));
 }
 
 .toast span {
