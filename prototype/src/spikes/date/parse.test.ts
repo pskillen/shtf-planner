@@ -76,4 +76,4 @@ for (const [text, want] of CASES) {
 }
 console.log(`parser: ${ok}/${CASES.length} (${((100 * ok) / CASES.length).toFixed(1)}%)`);
 for (const f of fails) console.log(f);
-if (fails.length) process.exitCode = 1;
+if (fails.length) throw new Error("parser cases failed");

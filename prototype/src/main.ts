@@ -5,6 +5,8 @@ const routes: Record<string, () => Promise<{ mount: (root: HTMLElement) => void 
   '/crdt': () => import('./spikes/crdt'),
   '/drive': () => import('./spikes/drive'),
   '/env': () => import('./spikes/env'),
+  '/date': () => import('./spikes/date'),
+  '/stocktake': () => import('./spikes/stocktake'),
 };
 
 async function render() {
