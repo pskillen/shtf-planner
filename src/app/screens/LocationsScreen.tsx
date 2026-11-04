@@ -7,6 +7,7 @@ import { Sheet } from '../components/Sheet';
 import { useDeferredDelete } from '../components/useDeferredDelete';
 import { CONDITION_LABEL, SIZE_LABEL } from '../labels';
 import { useChange, useDocument } from '../state';
+import { deleteLocation } from './locations';
 
 const newId = () => crypto.randomUUID();
 
@@ -125,13 +126,7 @@ export function LocationsScreen() {
   const change = useChange();
   const [editing, setEditing] = useState<{ location: Location; isNew: boolean } | null>(null);
 
-  const remove = useDeferredDelete((id) =>
-    change('delete location', (d) => {
-      delete d.locations[id];
-      for (const a of Object.values(d.assets)) if (a.locationId === id) delete a.locationId;
-      for (const key of Object.keys(d.floors)) if (key.startsWith(`${id}|`)) delete d.floors[key];
-    }),
-  );
+  const remove = useDeferredDelete((id) => change('delete location', (d) => deleteLocation(d, id)));
 
   const all = Object.values(doc.locations).filter((l) => !remove.pending.has(l.id));
   const names = new Set(all.map((l) => l.name.toLowerCase()));
