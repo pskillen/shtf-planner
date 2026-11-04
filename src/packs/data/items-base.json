@@ -1395,6 +1395,23 @@
       "tags": ["hygiene"]
     },
     {
+      "id": "items-base:uht-milk",
+      "name": "UHT milk (1 L)",
+      "category": "food",
+      "unit": "carton",
+      "unitSize": "1 L",
+      "gives": [
+        {
+          "store": "foodKcal",
+          "amount": 640
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "months",
+      "typicalPricePence": 110,
+      "tags": ["food", "no-cook"]
+    },
+    {
       "id": "items-base:lpg-bottle-13kg",
       "name": "LPG bottle (13 kg propane)",
       "category": "fuel",

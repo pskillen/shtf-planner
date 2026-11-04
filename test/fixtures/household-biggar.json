@@ -1,0 +1,380 @@
+{
+  "assets": {
+    "asset-battery": {
+      "answers": {
+        "hasEps": false,
+        "kwh": 10
+      },
+      "id": "asset-battery",
+      "maintenance": {},
+      "name": "Home battery",
+      "purchased": "2023-01-20",
+      "typeId": "assets-base:home-battery"
+    },
+    "asset-bbq": {
+      "answers": {
+        "bottleKg": 13
+      },
+      "id": "asset-bbq",
+      "locationId": "loc-shed",
+      "maintenance": {
+        "fuel-rotate": "2025-09-01"
+      },
+      "name": "Gas BBQ",
+      "typeId": "assets-base:gas-bbq"
+    },
+    "asset-co": {
+      "answers": {},
+      "id": "asset-co",
+      "maintenance": {
+        "test": "2026-01-05"
+      },
+      "name": "Kitchen CO alarm",
+      "purchased": "2020-03-01",
+      "typeId": "assets-base:co-alarm"
+    },
+    "asset-ev-1": {
+      "answers": {
+        "kwh": 60,
+        "v2l": true
+      },
+      "id": "asset-ev-1",
+      "maintenance": {},
+      "name": "Family EV",
+      "typeId": "assets-base:ev"
+    },
+    "asset-ev-2": {
+      "answers": {
+        "kwh": 77,
+        "v2l": true
+      },
+      "id": "asset-ev-2",
+      "maintenance": {},
+      "name": "Second EV",
+      "typeId": "assets-base:ev"
+    },
+    "asset-smoke": {
+      "answers": {},
+      "id": "asset-smoke",
+      "maintenance": {
+        "test": "2026-01-05"
+      },
+      "name": "Hall smoke alarm",
+      "purchased": "2020-03-01",
+      "typeId": "assets-base:smoke-alarm"
+    },
+    "asset-solar": {
+      "answers": {
+        "hasEps": false,
+        "kwp": 4
+      },
+      "id": "asset-solar",
+      "maintenance": {},
+      "name": "Roof solar",
+      "purchased": "2022-05-10",
+      "typeId": "assets-base:solar-pv"
+    }
+  },
+  "floors": {
+    "loc-pantry|items-base:dried-pasta": 1,
+    "loc-pantry|items-base:rice-sack": 1,
+    "loc-pantry|items-base:tinned-food": 2,
+    "loc-pantry|items-base:uht-milk": 3
+  },
+  "home": {
+    "area": "ML12",
+    "cooking": "induction",
+    "evCharger": true,
+    "floors": 2,
+    "growing": "small",
+    "heating": "heat-pump",
+    "homeBattery": true,
+    "insulation": "excellent",
+    "mainsGas": false,
+    "region": "UK",
+    "risks": [
+      "storm",
+      "snow",
+      "grid"
+    ],
+    "solar": true,
+    "type": "detached"
+  },
+  "household": {
+    "members": [
+      {
+        "dob": "1984-03-12",
+        "id": "member-alex",
+        "medication": [],
+        "name": "Alex",
+        "tags": []
+      },
+      {
+        "dob": "1986-09-30",
+        "id": "member-sam",
+        "medication": [],
+        "name": "Sam",
+        "tags": []
+      },
+      {
+        "dob": "2019-05-20",
+        "id": "member-robin",
+        "medication": [],
+        "name": "Robin",
+        "tags": [
+          "child"
+        ]
+      },
+      {
+        "dob": "2026-08-01",
+        "id": "member-jo",
+        "medication": [],
+        "name": "Jo",
+        "tags": [
+          "infant"
+        ]
+      },
+      {
+        "dob": "1950-11-02",
+        "id": "member-pat",
+        "medication": [
+          {
+            "critical": true,
+            "cycleDays": 28,
+            "dosePerDay": 1,
+            "id": "med-ramipril",
+            "name": "Ramipril",
+            "unitsOnHand": 21
+          }
+        ],
+        "name": "Pat",
+        "tags": [
+          "elderly",
+          "takes-medication"
+        ]
+      }
+    ],
+    "pets": [
+      {
+        "id": "pet-bramble",
+        "name": "Bramble",
+        "size": "M",
+        "species": "dog"
+      }
+    ]
+  },
+  "items": {
+    "item-aa": {
+      "added": "2026-02-01",
+      "bestBefore": "2031-01",
+      "id": "item-aa",
+      "locationId": "loc-hall",
+      "qty": 1,
+      "source": "manual",
+      "typeId": "items-base:aa-cells-8"
+    },
+    "item-first-aid": {
+      "added": "2026-02-01",
+      "bestBefore": "2028-01",
+      "id": "item-first-aid",
+      "locationId": "loc-hall",
+      "qty": 1,
+      "source": "manual",
+      "typeId": "items-base:first-aid-kit"
+    },
+    "item-lpg": {
+      "added": "2026-02-01",
+      "id": "item-lpg",
+      "locationId": "loc-shed",
+      "qty": 1,
+      "source": "manual",
+      "typeId": "items-base:lpg-bottle-13kg"
+    },
+    "item-nappies": {
+      "added": "2026-02-01",
+      "id": "item-nappies",
+      "locationId": "loc-hall",
+      "qty": 1,
+      "source": "manual",
+      "typeId": "items-base:nappies-size-2"
+    },
+    "item-oats": {
+      "added": "2026-02-01",
+      "bestBefore": "2026-12",
+      "id": "item-oats",
+      "locationId": "loc-pantry",
+      "qty": 1,
+      "source": "manual",
+      "typeId": "items-base:porridge-oats"
+    },
+    "item-pasta": {
+      "added": "2026-02-01",
+      "bestBefore": "2027-09",
+      "id": "item-pasta",
+      "locationId": "loc-pantry",
+      "qty": 2,
+      "source": "manual",
+      "typeId": "items-base:dried-pasta"
+    },
+    "item-rice": {
+      "added": "2026-02-01",
+      "bestBefore": "2027-12",
+      "id": "item-rice",
+      "locationId": "loc-pantry",
+      "qty": 1,
+      "source": "manual",
+      "typeId": "items-base:rice-sack"
+    },
+    "item-tea": {
+      "added": "2026-02-01",
+      "bestBefore": "2027-03",
+      "id": "item-tea",
+      "locationId": "loc-pantry",
+      "qty": 1,
+      "source": "manual",
+      "typeId": "items-base:tea-and-sugar"
+    },
+    "item-tinned": {
+      "added": "2026-02-01",
+      "bestBefore": "2028-06",
+      "id": "item-tinned",
+      "locationId": "loc-pantry",
+      "qty": 3,
+      "source": "manual",
+      "typeId": "items-base:tinned-food"
+    },
+    "item-torch-1": {
+      "added": "2026-02-01",
+      "id": "item-torch-1",
+      "locationId": "loc-hall",
+      "qty": 1,
+      "source": "manual",
+      "typeId": "items-base:torch-led-200lm"
+    },
+    "item-torch-2": {
+      "added": "2026-02-01",
+      "id": "item-torch-2",
+      "locationId": "loc-pantry",
+      "qty": 1,
+      "source": "manual",
+      "typeId": "items-base:torch-led-200lm"
+    },
+    "item-torch-3": {
+      "added": "2026-02-01",
+      "id": "item-torch-3",
+      "locationId": "loc-garage",
+      "qty": 1,
+      "source": "manual",
+      "typeId": "items-base:torch-led-200lm"
+    },
+    "item-uht": {
+      "added": "2026-02-01",
+      "bestBefore": "2026-10",
+      "id": "item-uht",
+      "locationId": "loc-pantry",
+      "qty": 6,
+      "source": "manual",
+      "typeId": "items-base:uht-milk"
+    },
+    "item-water": {
+      "added": "2026-02-01",
+      "id": "item-water",
+      "locationId": "loc-garage",
+      "qty": 2,
+      "source": "manual",
+      "typeId": "items-base:water-can"
+    }
+  },
+  "locations": {
+    "loc-attic": {
+      "conditions": [
+        "frost",
+        "heat"
+      ],
+      "id": "loc-attic",
+      "kind": "stored",
+      "name": "Attic",
+      "size": "M"
+    },
+    "loc-garage": {
+      "conditions": [
+        "frost",
+        "damp"
+      ],
+      "id": "loc-garage",
+      "kind": "stored",
+      "name": "Garage",
+      "size": "L"
+    },
+    "loc-hall": {
+      "conditions": [
+        "indoor-stable"
+      ],
+      "id": "loc-hall",
+      "kind": "stored",
+      "name": "Hall cupboard",
+      "size": "S"
+    },
+    "loc-pantry": {
+      "conditions": [
+        "indoor-stable"
+      ],
+      "id": "loc-pantry",
+      "kind": "rotating",
+      "name": "Pantry",
+      "size": "S"
+    },
+    "loc-shed": {
+      "conditions": [
+        "frost",
+        "damp",
+        "heat"
+      ],
+      "id": "loc-shed",
+      "kind": "stored",
+      "name": "Shed",
+      "size": "M"
+    }
+  },
+  "meta": {
+    "createdAt": "2026-01-15T09:00:00.000Z",
+    "devices": [
+      "device-fixture"
+    ],
+    "env": "local",
+    "packVersions": {
+      "assets-base": 1,
+      "guidance-grid-free": 1,
+      "guidance-uk-prepare": 1,
+      "guidance-us-ready": 1,
+      "items-base": 1,
+      "plans-base": 1,
+      "regions": 1
+    },
+    "schemaVersion": 1
+  },
+  "plans": {
+    "plans-base:documents": {
+      "note": "Passports scanned, not printed yet"
+    },
+    "plans-base:meeting-point": {
+      "doneAt": "2026-01-20"
+    }
+  },
+  "reviews": {},
+  "settings": {
+    "anonymise": false,
+    "horizonDays": 3,
+    "packs": [
+      "items-base",
+      "assets-base",
+      "guidance-grid-free",
+      "guidance-uk-prepare",
+      "guidance-us-ready",
+      "plans-base",
+      "regions"
+    ],
+    "region": "UK",
+    "reviewCadenceMonths": 6
+  }
+}
