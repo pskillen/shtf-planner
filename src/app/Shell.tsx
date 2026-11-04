@@ -1,7 +1,8 @@
-import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { Footer } from './Footer';
 import { ScreenBoundary } from './ScreenBoundary';
 import { StoreBanner } from './StoreBanner';
+import { TABS, activeTab, showsTabs } from './tabs';
 import { HomeHub } from './screens/HomeHub';
 import { Onboarding } from './screens/Onboarding';
 import { AssetsScreen } from './screens/AssetsScreen';
@@ -18,14 +19,6 @@ function Screen({ children }: { children: ReactNode }) {
   return <section className="screen">{children}</section>;
 }
 
-const TABS = [
-  { path: '', label: 'Home', icon: '⌂' },
-  { path: 'stores', label: 'Stores', icon: '▤' },
-  { path: 'gaps', label: 'Gaps', icon: '△' },
-  { path: 'score', label: 'Score', icon: '★' },
-  { path: 'more', label: 'More', icon: '≡' },
-] as const;
-
 function Placeholder({ title }: { title: string }) {
   return (
     <section className="screen">
@@ -38,8 +31,10 @@ function Placeholder({ title }: { title: string }) {
 /** The app proper: top bar, one screen per tab, bottom nav, footer. */
 export function Shell() {
   const { pathname } = useLocation();
+  const tabs = showsTabs(pathname);
+  const current = activeTab(pathname);
   return (
-    <div className="shell">
+    <div className={tabs ? 'shell' : 'shell no-tabs'}>
       <header className="topbar">
         <span className="topbar-name">SHTF Planner</span>
       </header>
@@ -121,21 +116,23 @@ export function Shell() {
         </ScreenBoundary>
       </main>
       <Footer />
-      <nav className="tabbar" aria-label="Main">
-        {TABS.map((t) => (
-          <NavLink
-            key={t.label}
-            to={t.path ? `/app/${t.path}` : '/app'}
-            end={t.path === ''}
-            className={({ isActive }) => (isActive ? 'tab active' : 'tab')}
-          >
-            <span className="tab-icon" aria-hidden="true">
-              {t.icon}
-            </span>
-            <span>{t.label}</span>
-          </NavLink>
-        ))}
-      </nav>
+      {tabs ? (
+        <nav className="tabbar" aria-label="Main">
+          {TABS.map((t) => (
+            <Link
+              key={t.label}
+              to={t.path ? `/app/${t.path}` : '/app'}
+              className={t.path === current ? 'tab active' : 'tab'}
+              aria-current={t.path === current ? 'page' : undefined}
+            >
+              <span className="tab-icon" aria-hidden="true">
+                {t.icon}
+              </span>
+              <span>{t.label}</span>
+            </Link>
+          ))}
+        </nav>
+      ) : null}
     </div>
   );
 }
