@@ -63,10 +63,12 @@ jobs:
         run: npm ci
 
       - name: Set BUILD_VERSION and BUILD_SHA
+        env:
+          BUILD_VERSION_INPUT: ${{ inputs.build_version }}
         run: |
           echo "BUILD_SHA=$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
-          if [ -n "${{ inputs.build_version }}" ]; then
-            echo "BUILD_VERSION=${{ inputs.build_version }}" >> "$GITHUB_ENV"
+          if [ -n "$BUILD_VERSION_INPUT" ]; then
+            echo "BUILD_VERSION=$BUILD_VERSION_INPUT" >> "$GITHUB_ENV"
           else
             # Continuous builds show the bare SHA as their version.
             echo "BUILD_VERSION=$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
