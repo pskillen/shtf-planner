@@ -3,6 +3,7 @@ import type { Asset, AssetType } from '../../model';
 import { bundledPacks } from '../../packs';
 import { formatVolume } from '../../util';
 import { Field } from '../components/controls';
+import { EditArea } from '../components/EditArea';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { Sheet } from '../components/Sheet';
 import { useDeferredDelete } from '../components/useDeferredDelete';
@@ -213,11 +214,13 @@ export function AssetsScreen() {
           </ul>
         </section>
       ))}
-      <div className="add-bar">
-        <button type="button" onClick={() => setEditing({ step: 'pick' })}>
-          Add equipment
-        </button>
-      </div>
+      <EditArea>
+        <div className="add-bar">
+          <button type="button" onClick={() => setEditing({ step: 'pick' })}>
+            Add equipment
+          </button>
+        </div>
+      </EditArea>
 
       {editing?.step === 'pick' ? (
         <Sheet title="What are you adding?" onClose={() => setEditing(null)}>

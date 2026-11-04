@@ -1,6 +1,7 @@
 import { LOCAL_RISKS } from '../../model';
 import { bundledPacks } from '../../packs';
 import { ChipGroup } from '../components/controls';
+import { EditArea } from '../components/EditArea';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { LOCAL_RISK_LABEL, labelOf } from '../labels';
 import { useChange, useDocument } from '../state';
@@ -21,16 +22,18 @@ export function RisksScreen({ embedded = false }: { embedded?: boolean }) {
       <p className="muted">
         Pick everything that applies. Each one changes how much the plan asks you to keep.
       </p>
-      <ChipGroup
-        label="Local risks"
-        options={LOCAL_RISKS.map((r) => ({ value: r, label: LOCAL_RISK_LABEL[r] }))}
-        value={home.risks}
-        onChange={(risks) =>
-          change('risks', (d) => {
-            d.home.risks = LOCAL_RISKS.filter((r) => risks.includes(r));
-          })
-        }
-      />
+      <EditArea>
+        <ChipGroup
+          label="Local risks"
+          options={LOCAL_RISKS.map((r) => ({ value: r, label: LOCAL_RISK_LABEL[r] }))}
+          value={home.risks}
+          onChange={(risks) =>
+            change('risks', (d) => {
+              d.home.risks = LOCAL_RISKS.filter((r) => risks.includes(r));
+            })
+          }
+        />
+      </EditArea>
       {links.length > 0 ? (
         <>
           <h2>Check your area</h2>

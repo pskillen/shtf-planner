@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { EditArea } from './EditArea';
 
 /**
  * A bottom sheet for adding or editing one thing. Closes on Escape or a tap on the backdrop; the
@@ -48,8 +49,14 @@ export function Sheet({
             ✕
           </button>
         </div>
-        <div className="sheet-body">{children}</div>
-        {actions ? <div className="sheet-actions">{actions}</div> : null}
+        <div className="sheet-body">
+          <EditArea>{children}</EditArea>
+        </div>
+        {actions ? (
+          <div className="sheet-actions">
+            <EditArea>{actions}</EditArea>
+          </div>
+        ) : null}
       </div>
     </div>
   );

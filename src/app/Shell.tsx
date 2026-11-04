@@ -12,7 +12,6 @@ import { MoreScreen } from './screens/MoreScreen';
 import { PeopleScreen } from './screens/PeopleScreen';
 import { RisksScreen } from './screens/RisksScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
-import { useEditable } from './state';
 import type { ReactNode } from 'react';
 
 function Screen({ children }: { children: ReactNode }) {
@@ -38,8 +37,6 @@ function Placeholder({ title }: { title: string }) {
 
 /** The app proper: top bar, one screen per tab, bottom nav, footer. */
 export function Shell() {
-  // A read-only document (saved by a newer version, or invalid) disables every control in a screen.
-  const editable = useEditable();
   const { pathname } = useLocation();
   return (
     <div className="shell">
@@ -48,82 +45,80 @@ export function Shell() {
       </header>
       <StoreBanner />
       <main className="main">
-        <fieldset className="plain" disabled={!editable}>
-          <ScreenBoundary key={pathname}>
-            <Routes>
-              <Route index element={<HomeHub />} />
-              <Route path="setup/:step" element={<Onboarding />} />
-              <Route
-                path="people"
-                element={
-                  <Screen>
-                    <PeopleScreen />
-                  </Screen>
-                }
-              />
-              <Route
-                path="home"
-                element={
-                  <Screen>
-                    <HomeScreen />
-                  </Screen>
-                }
-              />
-              <Route
-                path="locations"
-                element={
-                  <Screen>
-                    <LocationsScreen />
-                  </Screen>
-                }
-              />
-              <Route
-                path="assets"
-                element={
-                  <Screen>
-                    <AssetsScreen />
-                  </Screen>
-                }
-              />
-              <Route
-                path="risks"
-                element={
-                  <Screen>
-                    <RisksScreen />
-                  </Screen>
-                }
-              />
-              <Route
-                path="horizon"
-                element={
-                  <Screen>
-                    <HorizonScreen />
-                  </Screen>
-                }
-              />
-              <Route
-                path="more"
-                element={
-                  <Screen>
-                    <MoreScreen />
-                  </Screen>
-                }
-              />
-              <Route
-                path="more/settings"
-                element={
-                  <Screen>
-                    <SettingsScreen />
-                  </Screen>
-                }
-              />
-              {TABS.filter((t) => !['', 'more'].includes(t.path)).map((t) => (
-                <Route key={t.label} path={t.path} element={<Placeholder title={t.label} />} />
-              ))}
-              <Route path="*" element={<Navigate to="/app" replace />} />
-            </Routes>
-          </ScreenBoundary>
-        </fieldset>
+        <ScreenBoundary key={pathname}>
+          <Routes>
+            <Route index element={<HomeHub />} />
+            <Route path="setup/:step" element={<Onboarding />} />
+            <Route
+              path="people"
+              element={
+                <Screen>
+                  <PeopleScreen />
+                </Screen>
+              }
+            />
+            <Route
+              path="home"
+              element={
+                <Screen>
+                  <HomeScreen />
+                </Screen>
+              }
+            />
+            <Route
+              path="locations"
+              element={
+                <Screen>
+                  <LocationsScreen />
+                </Screen>
+              }
+            />
+            <Route
+              path="assets"
+              element={
+                <Screen>
+                  <AssetsScreen />
+                </Screen>
+              }
+            />
+            <Route
+              path="risks"
+              element={
+                <Screen>
+                  <RisksScreen />
+                </Screen>
+              }
+            />
+            <Route
+              path="horizon"
+              element={
+                <Screen>
+                  <HorizonScreen />
+                </Screen>
+              }
+            />
+            <Route
+              path="more"
+              element={
+                <Screen>
+                  <MoreScreen />
+                </Screen>
+              }
+            />
+            <Route
+              path="more/settings"
+              element={
+                <Screen>
+                  <SettingsScreen />
+                </Screen>
+              }
+            />
+            {TABS.filter((t) => !['', 'more'].includes(t.path)).map((t) => (
+              <Route key={t.label} path={t.path} element={<Placeholder title={t.label} />} />
+            ))}
+            <Route path="*" element={<Navigate to="/app" replace />} />
+          </Routes>
+        </ScreenBoundary>
       </main>
       <Footer />
       <nav className="tabbar" aria-label="Main">

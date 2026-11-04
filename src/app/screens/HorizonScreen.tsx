@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { bundledPacks } from '../../packs';
 import { formatVolume, today } from '../../util';
 import { FieldGroup, Segmented } from '../components/controls';
+import { EditArea } from '../components/EditArea';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { HORIZONS, HORIZON_SENTENCE } from '../labels';
 import { useChange, useDocument } from '../state';
@@ -42,17 +43,19 @@ export function HorizonScreen({ embedded = false }: { embedded?: boolean }) {
         Pick how many days you want to be able to manage with no mains, shops or water. You can
         change it any time from the Home tab.
       </p>
-      <FieldGroup label="Plan for">
-        <Segmented
-          label="Days to plan for"
-          value={chosen}
-          options={HORIZONS.map((h) => ({ value: h, label: `${h} days` }))}
-          onChange={(horizonDays) => {
-            setLooking(null);
-            change('horizon', (d) => void (d.settings.horizonDays = horizonDays));
-          }}
-        />
-      </FieldGroup>
+      <EditArea>
+        <FieldGroup label="Plan for">
+          <Segmented
+            label="Days to plan for"
+            value={chosen}
+            options={HORIZONS.map((h) => ({ value: h, label: `${h} days` }))}
+            onChange={(horizonDays) => {
+              setLooking(null);
+              change('horizon', (d) => void (d.settings.horizonDays = horizonDays));
+            }}
+          />
+        </FieldGroup>
+      </EditArea>
       <p>{HORIZON_SENTENCE[chosen]}</p>
 
       <h2>What that means for your household</h2>

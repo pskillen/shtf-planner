@@ -10,6 +10,7 @@ import {
   Segmented,
   Switch,
 } from '../components/controls';
+import { EditArea } from '../components/EditArea';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { Sheet } from '../components/Sheet';
 import { useDeferredDelete } from '../components/useDeferredDelete';
@@ -381,27 +382,29 @@ export function PeopleScreen({ embedded = false }: { embedded?: boolean }) {
           </li>
         ))}
       </ul>
-      <div className="add-bar">
-        <button
-          type="button"
-          onClick={() => setEditing({ kind: 'member', member: blankMember(), isNew: true })}
-        >
-          Add a person
-        </button>
-        <button
-          type="button"
-          className="secondary"
-          onClick={() =>
-            setEditing({
-              kind: 'pet',
-              pet: { id: newId(), name: '', species: 'dog', size: 'M' },
-              isNew: true,
-            })
-          }
-        >
-          Add a pet
-        </button>
-      </div>
+      <EditArea>
+        <div className="add-bar">
+          <button
+            type="button"
+            onClick={() => setEditing({ kind: 'member', member: blankMember(), isNew: true })}
+          >
+            Add a person
+          </button>
+          <button
+            type="button"
+            className="secondary"
+            onClick={() =>
+              setEditing({
+                kind: 'pet',
+                pet: { id: newId(), name: '', species: 'dog', size: 'M' },
+                isNew: true,
+              })
+            }
+          >
+            Add a pet
+          </button>
+        </div>
+      </EditArea>
 
       {editing?.kind === 'member' ? (
         <MemberSheet

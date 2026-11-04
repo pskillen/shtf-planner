@@ -229,8 +229,18 @@ fieldset.plain {
   min-width: 0;
 }
 
-fieldset.plain:disabled {
-  opacity: 0.6;
+/* Read-only: the controls that write are off, but nothing is dimmed so it can all be read. */
+fieldset.plain:disabled input,
+fieldset.plain:disabled select,
+fieldset.plain:disabled textarea {
+  color: var(--text);
+  opacity: 1;
+}
+
+fieldset.plain:disabled .chip,
+fieldset.plain:disabled .segment,
+fieldset.plain:disabled .switch-row {
+  opacity: 0.85;
 }
 
 .banner {

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { CONDITIONS, type Condition, type Location } from '../../model';
 import { formatVolume } from '../../util';
 import { ChipGroup, Field, FieldGroup, NumberInput, Segmented } from '../components/controls';
+import { EditArea } from '../components/EditArea';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { Sheet } from '../components/Sheet';
 import { useDeferredDelete } from '../components/useDeferredDelete';
@@ -163,36 +164,38 @@ export function LocationsScreen() {
           </li>
         ))}
       </ul>
-      <div className="add-bar">
-        <button
-          type="button"
-          onClick={() =>
-            setEditing({
-              location: { id: newId(), name: '', kind: 'stored', conditions: [], size: 'M' },
-              isNew: true,
-            })
-          }
-        >
-          Add a place
-        </button>
-      </div>
-      {suggestions.length > 0 ? (
-        <>
-          <h2>Suggestions</h2>
-          <div className="chips">
-            {suggestions.map((s) => (
-              <button
-                key={s.name}
-                type="button"
-                className="chip suggest"
-                onClick={() => setEditing({ location: { ...s, id: newId() }, isNew: true })}
-              >
-                + {s.name}
-              </button>
-            ))}
-          </div>
-        </>
-      ) : null}
+      <EditArea>
+        <div className="add-bar">
+          <button
+            type="button"
+            onClick={() =>
+              setEditing({
+                location: { id: newId(), name: '', kind: 'stored', conditions: [], size: 'M' },
+                isNew: true,
+              })
+            }
+          >
+            Add a place
+          </button>
+        </div>
+        {suggestions.length > 0 ? (
+          <>
+            <h2>Suggestions</h2>
+            <div className="chips">
+              {suggestions.map((s) => (
+                <button
+                  key={s.name}
+                  type="button"
+                  className="chip suggest"
+                  onClick={() => setEditing({ location: { ...s, id: newId() }, isNew: true })}
+                >
+                  + {s.name}
+                </button>
+              ))}
+            </div>
+          </>
+        ) : null}
+      </EditArea>
 
       {editing ? (
         <LocationSheet
