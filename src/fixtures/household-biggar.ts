@@ -29,7 +29,7 @@ const PACK_VERSIONS: Record<string, number> = {
   'guidance-grid-free': 2,
   'guidance-uk-prepare': 2,
   'guidance-us-ready': 3,
-  regions: 2,
+  regions: 3,
 };
 
 const loc = (id: string, name: string, o: Omit<Location, 'id' | 'name'>): Location => ({

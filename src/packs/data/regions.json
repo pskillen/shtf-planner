@@ -2,7 +2,7 @@
   "format": 1,
   "id": "regions",
   "kind": "regions",
-  "version": 2,
+  "version": 3,
   "name": "Regions",
   "sources": [
     {
@@ -36,16 +36,6 @@
       "currency": "GBP",
       "riskLinks": [
         {
-          "risk": "flood",
-          "label": "Environment Agency: check your long term flood risk (England)",
-          "url": "https://check-long-term-flood-risk.service.gov.uk/"
-        },
-        {
-          "risk": "coastal",
-          "label": "Environment Agency: check your long term flood risk (England)",
-          "url": "https://check-long-term-flood-risk.service.gov.uk/"
-        },
-        {
           "risk": "storm",
           "label": "Met Office weather warnings",
           "url": "https://www.metoffice.gov.uk/weather/warnings-and-advice/uk-warnings"
@@ -72,7 +62,22 @@
         }
       ],
       "subregions": [
-        { "id": "england", "name": "England", "riskLinks": [] },
+        {
+          "id": "england",
+          "name": "England",
+          "riskLinks": [
+            {
+              "risk": "flood",
+              "label": "Environment Agency: check your long term flood risk",
+              "url": "https://check-long-term-flood-risk.service.gov.uk/"
+            },
+            {
+              "risk": "coastal",
+              "label": "Environment Agency: check your long term flood risk",
+              "url": "https://check-long-term-flood-risk.service.gov.uk/"
+            }
+          ]
+        },
         { "id": "wales", "name": "Wales", "riskLinks": [] },
         { "id": "northern-ireland", "name": "Northern Ireland", "riskLinks": [] },
         {
