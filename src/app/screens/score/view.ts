@@ -1,4 +1,4 @@
-import type { CapabilityScore, Coverage, Score } from '../../../engine';
+import type { CapabilityScore, Coverage, Score, Target } from '../../../engine';
 import { CAPABILITY_LABEL } from '../../labels';
 import { formatAmount } from '../gaps/view';
 
@@ -25,6 +25,19 @@ export interface ScoreView {
 /** A percentage for a person: a whole number, never 100 until it truly is. */
 export const wholePercent = (n: number): number =>
   n >= 100 ? 100 : Math.min(99, Math.max(0, Math.round(n)));
+
+/**
+ * The words for a target: the rule that asks for most of it (for water, the drinking rule for
+ * people, not the pets add-on), else its label.
+ */
+function reasonOf(t: Target | undefined): string {
+  if (!t) return '';
+  const main = t.rules.reduce<Target['rules'][number] | undefined>(
+    (best, r) => (best === undefined || r.contribution > best.contribution ? r : best),
+    undefined,
+  );
+  return main?.text ?? t.label;
+}
 
 /**
  * What the Score tab shows, taken straight from `score()`. The scoring rule lives in the engine:
@@ -61,7 +74,7 @@ export function scoreView(
       percent: wholePercent(c.percent),
       enough: c.percent >= 100,
       shortfall: shortfallOf(c),
-      reason: c.weakestTarget?.rules[0]?.text ?? c.weakestTarget?.label ?? '',
+      reason: reasonOf(c.weakestTarget),
     }));
   return {
     overall: wholePercent(score.overall),

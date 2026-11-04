@@ -62,6 +62,14 @@ describe('scoreView', () => {
     expect(v.bars.every((b) => b.reason !== '')).toBe(true);
   });
 
+  it('describes the target by the rule that asks for most of it, not a pets add-on', () => {
+    const water = s.capabilities.find((c) => c.capability === 'water')!.weakestTarget!;
+    expect(water.rules.length).toBeGreaterThan(1);
+    const top = [...water.rules].sort((a, b) => b.contribution - a.contribution)[0]!;
+    expect(v.bars.find((b) => b.capability === 'water')!.reason).toBe(top.text);
+    expect(top.text).not.toMatch(/\bpets?\b|\bdog|\bcat\b/i);
+  });
+
   it('marks a capability at target as enough and previews the next horizon', () => {
     expect(v.bars.find((b) => b.capability === 'cooking')).toMatchObject({
       enough: true,
