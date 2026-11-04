@@ -5,9 +5,12 @@ import { HomeHub } from './screens/HomeHub';
 import { Onboarding } from './screens/Onboarding';
 import { AssetsScreen } from './screens/AssetsScreen';
 import { HomeScreen } from './screens/HomeScreen';
+import { HorizonScreen } from './screens/HorizonScreen';
 import { LocationsScreen } from './screens/LocationsScreen';
+import { MoreScreen } from './screens/MoreScreen';
 import { PeopleScreen } from './screens/PeopleScreen';
 import { RisksScreen } from './screens/RisksScreen';
+import { SettingsScreen } from './screens/SettingsScreen';
 import { useEditable } from './state';
 import type { ReactNode } from 'react';
 
@@ -87,7 +90,31 @@ export function Shell() {
                 </Screen>
               }
             />
-            {TABS.filter((t) => t.path !== '').map((t) => (
+            <Route
+              path="horizon"
+              element={
+                <Screen>
+                  <HorizonScreen />
+                </Screen>
+              }
+            />
+            <Route
+              path="more"
+              element={
+                <Screen>
+                  <MoreScreen />
+                </Screen>
+              }
+            />
+            <Route
+              path="more/settings"
+              element={
+                <Screen>
+                  <SettingsScreen />
+                </Screen>
+              }
+            />
+            {TABS.filter((t) => !['', 'more'].includes(t.path)).map((t) => (
               <Route key={t.label} path={t.path} element={<Placeholder title={t.label} />} />
             ))}
             <Route path="*" element={<Navigate to="/app" replace />} />

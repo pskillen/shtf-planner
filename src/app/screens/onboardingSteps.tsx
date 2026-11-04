@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { HomeScreen } from './HomeScreen';
+import { HorizonScreen } from './HorizonScreen';
 import { PeopleScreen } from './PeopleScreen';
 import { RisksScreen } from './RisksScreen';
 
@@ -24,7 +25,7 @@ export function stepScreen(step: StepId): ReactNode {
       return <HomeScreen embedded />;
     case 'risks':
       return <RisksScreen embedded />;
-    default:
-      return <p className="muted">{STEP_TITLE[step]}</p>;
+    case 'horizon':
+      return <HorizonScreen embedded />;
   }
 }
