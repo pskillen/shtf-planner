@@ -13,14 +13,14 @@ if (process.argv.includes('--if-missing') && existsSync(out)) process.exit(0);
 
 let releases = [];
 try {
-  const raw = execFileSync('gh', ['api', `repos/${REPO}/releases`, '--paginate'], {
+  const raw = execFileSync('gh', ['api', `repos/${REPO}/releases`, '--paginate', '--slurp'], {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
     timeout: 30_000,
   });
-  // --paginate concatenates JSON arrays ("][" between pages).
-  const pages = JSON.parse(`[${raw.trim().replace(/\]\s*\[/g, '],[')}]`).flat();
-  releases = pages
+  // --slurp wraps the pages of --paginate in one array of arrays.
+  releases = JSON.parse(raw)
+    .flat()
     .filter((r) => !r.draft)
     .map((r) => ({
       tag: r.tag_name,
