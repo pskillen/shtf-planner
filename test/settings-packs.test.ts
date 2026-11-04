@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { packSwitch, setPack } from '../src/app/screens/settings/packs';
+import { packLabel, packSwitch, setPack } from '../src/app/screens/settings/packs';
 import { emptyDocument } from '../src/model';
 import { bundledPacks } from '../src/packs';
 
@@ -38,6 +38,12 @@ describe('the content pack switches', () => {
     setPack(doc, US, false);
     setPack(doc, US, true);
     expect(doc.settings.packs).toEqual(before);
+  });
+
+  it('labels a pack without doubling brackets', () => {
+    expect(
+      packLabel({ name: 'Grid-free capability rules (planner assumptions)', version: 1 }),
+    ).toBe('Grid-free capability rules (planner assumptions), version 1');
   });
 
   it('knows the regions of the bundled packs', () => {

@@ -7,7 +7,7 @@ import { useSavedChange } from '../components/SavedNote';
 import { useDocument } from '../state';
 import { applyRegion } from './region';
 import { DataSection } from './settings/DataSection';
-import { packSwitch, setPack } from './settings/packs';
+import { packLabel, packSwitch, setPack } from './settings/packs';
 
 /** Region, content packs, review cadence, anonymising and (later) the data section. */
 export function SettingsScreen() {
@@ -47,7 +47,7 @@ export function SettingsScreen() {
             return (
               <li key={p.id} className="row-item">
                 <Switch
-                  label={`${p.name} (version ${p.version})`}
+                  label={packLabel(p)}
                   hint={wrongRegion ? `${p.region} only` : undefined}
                   checked={on}
                   disabled={wrongRegion}

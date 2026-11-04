@@ -1,5 +1,12 @@
 import type { Document, Region } from '../../../model';
 
+/**
+ * A pack's name and version for its switch. A comma, not brackets: some names already end in a
+ * bracketed note ("... (planner assumptions)").
+ */
+export const packLabel = (pack: { name: string; version: number }): string =>
+  `${pack.name}, version ${pack.version}`;
+
 /** What the Settings screen needs to draw one content pack's switch. */
 export interface PackSwitch {
   /** On means it is in the household's list and is for this region (or for every region). */
