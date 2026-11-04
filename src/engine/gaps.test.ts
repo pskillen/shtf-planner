@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { biggarDocument } from '../fixtures/household-biggar';
 import type { Asset, Document } from '../model';
 import { bundledPacks } from '../packs/bundled';
+import { withCustomTypes } from '../packs/custom';
 import { gaps, type Gap } from './gaps';
 
 const NOW = '2026-11-15';
@@ -185,5 +186,26 @@ describe('gaps', () => {
     const before = structuredClone(doc);
     gaps(doc, packs, NOW, 14);
     expect(doc).toEqual(before);
+  });
+});
+
+describe('suggestions and a household’s own item types', () => {
+  it('never suggests buying a custom type, however cheap it is', () => {
+    const doc = empty();
+    doc.customTypes['custom:cheap-water'] = {
+      id: 'custom:cheap-water',
+      name: 'Cheap water',
+      category: 'water',
+      unit: 'bottle',
+      gives: [{ store: 'waterL', amount: 20 }],
+      suitability: ['frost', 'heat', 'damp'],
+      shelfLife: 'none',
+      typicalPricePence: 1,
+      tags: ['custom'],
+    };
+    const merged = withCustomTypes(packs, doc.customTypes);
+    const water = find(gaps(doc, merged, NOW, 3), 'water:waterL', 'acquire')!;
+    expect(water.suggestions.length).toBeGreaterThan(0);
+    expect(water.suggestions.some((s) => s.itemTypeId?.startsWith('custom:'))).toBe(false);
   });
 });

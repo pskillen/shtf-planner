@@ -46,6 +46,8 @@ export function closeStore(
   type Candidate = { type: ItemType; per: number; units: number; total: number; price?: number };
   const all: Candidate[] = [];
   for (const type of Object.values(ctx.packs.items)) {
+    // The household's own types are what it has, not something to suggest buying.
+    if (type.id.startsWith('custom:')) continue;
     const give = type.gives.find((g) => g.store === store);
     if (!give || !(give.amount > 0)) continue;
     if (!fitsHousehold(type, ctx.people)) continue;
