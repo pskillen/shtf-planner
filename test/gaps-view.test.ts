@@ -39,9 +39,11 @@ describe('the gaps view on the fixture household', () => {
   it('words a restock from its floor, with no days, and marks a buy row as beyond restocking', () => {
     const rows = view(14).shopping;
     const milk = rows.find((r) => r.kind === 'replenish' && /UHT milk/.test(r.label))!;
-    expect(milk.closes).toMatch(/^Pantry: UHT milk[^:]* is \d+ below its floor of \d+$/);
+    expect(milk.closes).toMatch(
+      /^Pantry: UHT milk[^:]* (is \d+ below its floor of \d+|has none in date \(floor \d+\))$/,
+    );
     expect(milk.closes).not.toMatch(/short of/);
-    const buys = rows.filter((r) => r.kind === 'acquire' && r.capability === milk.capability);
+    const buys = rows.filter((r) => r.kind === 'acquire' && r.targetId === milk.targetId);
     expect(buys.length).toBeGreaterThan(0);
     for (const b of buys) expect(b.closes).toMatch(/short of 14 days, beyond restocking$/);
     // a need with nothing to restock says nothing of the kind
@@ -72,6 +74,33 @@ describe('the gaps view on the fixture household', () => {
     )!;
     expect(row.closes).toContain(`${Math.round(buy.shortfall * 10) / 10} kcal short`);
     expect(row.closes).toMatch(/, beyond restocking$/);
+  });
+
+  it('marks only the buy row of the restocked target as beyond restocking', () => {
+    const rows = view(14).shopping;
+    const kcal = rows.find((r) => r.kind === 'acquire' && r.targetId === 'food:foodKcal')!;
+    expect(kcal.closes).toMatch(/, beyond restocking$/);
+    const formula = rows.find((r) => r.kind === 'acquire' && r.targetId === 'food:formulaG')!;
+    expect(formula.capability).toBe(kcal.capability);
+    expect(formula.closes).not.toMatch(/restocking/);
+    const pets = rows.filter((r) => r.kind === 'acquire' && r.targetId === 'food:petFoodKcal');
+    for (const r of pets) expect(r.closes).not.toMatch(/restocking/);
+  });
+
+  it('words a restock with nothing in date as having none, not as 3 below 3', () => {
+    const doc = biggarDocument();
+    delete doc.items['item-pasta'];
+    delete doc.items['item-uht'];
+    const rows = view(14, 'capability', doc).shopping.filter((r) => r.kind === 'replenish');
+    const milk = rows.find((r) => /UHT milk/.test(r.label))!;
+    expect(milk.closes).toMatch(/^Pantry: UHT milk[^:]* has none in date \(floor 3\)$/);
+    expect(milk.closes).not.toMatch(/below/);
+    // some in date: the amount below the floor
+    const fresh = biggarDocument();
+    delete fresh.items['item-uht']!.bestBefore;
+    fresh.items['item-uht']!.qty = 1;
+    const partly = view(14, 'capability', fresh).shopping.find((r) => /UHT milk/.test(r.label));
+    expect(partly?.closes).toMatch(/ is 2 below its floor of 3$/);
   });
 
   it('shows no buy row when restocking alone closes the gap', () => {
