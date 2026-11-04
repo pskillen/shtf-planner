@@ -1,6 +1,7 @@
 import 'fake-indexeddb/auto';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { openStore } from './documentStore';
+import { memoryStorage } from './drive/testStorage';
 import { forgetDeviceData } from './forget';
 import {
   createIdbPersistence,
@@ -46,6 +47,20 @@ describe.each([
 });
 
 describe('forgetDeviceData', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('also forgets the choices remembered per device', async () => {
+    const storage = memoryStorage();
+    storage.setItem('shtf.lastLocationId', 'loc-1');
+    storage.setItem('shtf.recentItemTypes', '["a"]');
+    storage.setItem('unrelated', 'kept');
+    vi.stubGlobal('localStorage', storage);
+    await forgetDeviceData();
+    expect(storage.getItem('shtf.lastLocationId')).toBeNull();
+    expect(storage.getItem('shtf.recentItemTypes')).toBeNull();
+    expect(storage.getItem('unrelated')).toBe('kept');
+  });
+
   it('deletes the household and the sync state', async () => {
     const store = await openStore({ env: 'local', deviceId: 'd', channel: false });
     store.change('x', (d) => {
