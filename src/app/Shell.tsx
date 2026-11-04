@@ -3,8 +3,17 @@ import { Footer } from './Footer';
 import { StoreBanner } from './StoreBanner';
 import { HomeHub } from './screens/HomeHub';
 import { Onboarding } from './screens/Onboarding';
+import { AssetsScreen } from './screens/AssetsScreen';
+import { HomeScreen } from './screens/HomeScreen';
+import { LocationsScreen } from './screens/LocationsScreen';
 import { PeopleScreen } from './screens/PeopleScreen';
+import { RisksScreen } from './screens/RisksScreen';
 import { useEditable } from './state';
+import type { ReactNode } from 'react';
+
+function Screen({ children }: { children: ReactNode }) {
+  return <section className="screen">{children}</section>;
+}
 
 const TABS = [
   { path: '', label: 'Home', icon: '⌂' },
@@ -38,7 +47,46 @@ export function Shell() {
           <Routes>
             <Route index element={<HomeHub />} />
             <Route path="setup/:step" element={<Onboarding />} />
-            <Route path="people" element={<PeopleScreen />} />
+            <Route
+              path="people"
+              element={
+                <Screen>
+                  <PeopleScreen />
+                </Screen>
+              }
+            />
+            <Route
+              path="home"
+              element={
+                <Screen>
+                  <HomeScreen />
+                </Screen>
+              }
+            />
+            <Route
+              path="locations"
+              element={
+                <Screen>
+                  <LocationsScreen />
+                </Screen>
+              }
+            />
+            <Route
+              path="assets"
+              element={
+                <Screen>
+                  <AssetsScreen />
+                </Screen>
+              }
+            />
+            <Route
+              path="risks"
+              element={
+                <Screen>
+                  <RisksScreen />
+                </Screen>
+              }
+            />
             {TABS.filter((t) => t.path !== '').map((t) => (
               <Route key={t.label} path={t.path} element={<Placeholder title={t.label} />} />
             ))}
