@@ -17,6 +17,10 @@ const sha = (bytes: Uint8Array): string => createHash('sha256').update(bytes).di
 // write rival copies of the same containers when they merge, and one device's records would be
 // lost. Do not just update the hashes. Leave the first-run content alone, and add the new field or
 // container in a migration step (src/model/migrate.ts). See docs/features/data-model/.
+//
+// A Yjs upgrade that changes the update encoding also fails this test, with the same message even
+// though nothing in our content changed. Check the Yjs changelog before re-pinning the hash, so
+// nobody re-pins blindly over a real content change.
 const GOLDEN_CLIENT_ID = 1367784727;
 const GOLDEN_SHA256 = '408408d842d5fe8eeaed0eff48603c9290ec45c348c38337415372e689b10cc4';
 
