@@ -17,7 +17,7 @@ The frame every later screen lives in: an installable offline PWA, a landing pag
 | PWA          | `vite.config.ts`               | Manifest (standalone, 192 and 512 px icons plus a padded maskable one), service worker precaching the built app, `prompt` updates.                                                  |
 | Update toast | `src/app/UpdateToast.tsx`      | "Update available" with Reload / Later when a new service worker is waiting. Reload applies it; the page is never reloaded without the user asking, so an edit in progress is safe. |
 | Changelog    | `scripts/releases.mjs`         | GitHub Releases baked into `src/generated/releases.json` at build time; bodies shown as plain paragraphs; "No releases yet." if none.                                               |
-| Debug hook   | `src/app/debug.ts`             | `?debug=1` installs an empty `window.__shtf` for tests.                                                                                                                             |
+| Debug hook   | `src/app/debug.ts`             | `?debug=1` installs `window.__shtf` for tests (see the data model doc).                                                                                                             |
 
 ## Notes
 
