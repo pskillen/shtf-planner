@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { COOKINGS, HEATINGS, HOME_TYPES, INSULATIONS, REGIONS, type Document } from '../../model';
 import { bundledPacks } from '../../packs';
 import { Field, FieldGroup, NumberInput, Segmented, Switch } from '../components/controls';
 import { EditArea } from '../components/EditArea';
 import { ScreenHeader } from '../components/ScreenHeader';
+import { useSavedChange } from '../components/SavedNote';
 import {
   COOKING_LABEL,
   GROWING_LABEL,
@@ -11,8 +12,10 @@ import {
   HOME_TYPE_LABEL,
   INSULATION_LABEL,
 } from '../labels';
-import { useChange, useDocument } from '../state';
+import { useDocument } from '../state';
 import { applyRegion, isAllElectric } from './region';
+
+const AREA_DEBOUNCE_MS = 600;
 
 const opts = <T extends string>(values: readonly T[], labels: Record<T, string>) =>
   values.map((v) => ({ value: v, label: labels[v] }));
@@ -20,15 +23,35 @@ const opts = <T extends string>(values: readonly T[], labels: Record<T, string>)
 /** The home profile: one form, saved as you go. Used in onboarding and as a screen. */
 export function HomeScreen({ embedded = false }: { embedded?: boolean }) {
   const { home } = useDocument();
-  const change = useChange();
+  const { change, note } = useSavedChange();
   const set = (label: string, fn: (home: Document['home'], draft: Document) => void) =>
     change(label, (d) => fn(d.home, d));
   const [area, setArea] = useState(home.area ?? '');
+  const areaText = useRef(area);
+  const savedArea = useRef(home.area ?? '');
+  const areaTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => {
+    savedArea.current = home.area ?? '';
+  });
+  // The postcode saves a moment after typing stops, on blur, and when the screen is left.
+  const commitArea = useCallback(() => {
+    clearTimeout(areaTimer.current);
+    const next = areaText.current.trim();
+    if (next === savedArea.current) return;
+    try {
+      change('area', (d) => void (d.home.area = next === '' ? undefined : next));
+      savedArea.current = next;
+    } catch {
+      // read-only meanwhile: nothing to save
+    }
+  }, [change]);
+  useEffect(() => commitArea, [commitArea]);
   const subregions = bundledPacks().regions.UK?.subregions ?? [];
 
   return (
     <div>
       {embedded ? <h1>Tell us about your home</h1> : <ScreenHeader title="Home" />}
+      {note}
       <EditArea>
         <Field label="What kind of home is it?">
           <select
@@ -132,12 +155,13 @@ export function HomeScreen({ embedded = false }: { embedded?: boolean }) {
             type="text"
             autoComplete="off"
             value={area}
-            onChange={(e) => setArea(e.target.value)}
-            onBlur={() => {
-              const next = area.trim();
-              if (next !== (home.area ?? ''))
-                set('area', (h) => void (h.area = next === '' ? undefined : next));
+            onChange={(e) => {
+              setArea(e.target.value);
+              areaText.current = e.target.value;
+              clearTimeout(areaTimer.current);
+              areaTimer.current = setTimeout(commitArea, AREA_DEBOUNCE_MS);
             }}
+            onBlur={commitArea}
           />
         </Field>
         <FieldGroup label="Where are you?">

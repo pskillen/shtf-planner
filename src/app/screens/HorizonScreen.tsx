@@ -4,8 +4,9 @@ import { formatVolume, today } from '../../util';
 import { FieldGroup, Segmented } from '../components/controls';
 import { EditArea } from '../components/EditArea';
 import { ScreenHeader } from '../components/ScreenHeader';
+import { useSavedChange } from '../components/SavedNote';
 import { HORIZONS, HORIZON_SENTENCE } from '../labels';
-import { useChange, useDocument } from '../state';
+import { useDocument } from '../state';
 import { biggestAsks, PREVIEW_IS_STUB, previewFor, type PreviewRow } from './horizon/previewSource';
 
 function amountText(row: PreviewRow | undefined, region: 'UK' | 'US'): string {
@@ -22,7 +23,7 @@ const colClass = (days: number, chosen: number, shown: number): string | undefin
 /** How long to plan for: the amounts at 3, 7, 14 and 28 days for this household, and the pick. */
 export function HorizonScreen({ embedded = false }: { embedded?: boolean }) {
   const doc = useDocument();
-  const change = useChange();
+  const { change, note } = useSavedChange();
   const chosen = doc.settings.horizonDays;
   const region = doc.settings.region;
   const preview = useMemo(() => previewFor(doc, bundledPacks(), today()), [doc]);
@@ -39,6 +40,7 @@ export function HorizonScreen({ embedded = false }: { embedded?: boolean }) {
       ) : (
         <ScreenHeader title="How long to plan for" />
       )}
+      {note}
       <p className="muted">
         Pick how many days you want to be able to manage with no mains, shops or water. You can
         change it any time from the Home tab.

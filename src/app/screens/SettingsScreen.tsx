@@ -3,19 +3,21 @@ import { bundledPacks } from '../../packs';
 import { FieldGroup, Segmented, Switch } from '../components/controls';
 import { EditArea } from '../components/EditArea';
 import { ScreenHeader } from '../components/ScreenHeader';
-import { useChange, useDocument } from '../state';
+import { useSavedChange } from '../components/SavedNote';
+import { useDocument } from '../state';
 import { applyRegion } from './region';
 import { DataSection } from './settings/DataSection';
 
 /** Region, content packs, review cadence, anonymising and (later) the data section. */
 export function SettingsScreen() {
   const { settings } = useDocument();
-  const change = useChange();
+  const { change, note } = useSavedChange();
   const packs = bundledPacks();
 
   return (
     <div>
       <ScreenHeader title="Settings" back="/app/more" backLabel="More" />
+      {note}
 
       <EditArea>
         <FieldGroup

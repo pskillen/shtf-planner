@@ -229,6 +229,13 @@ fieldset.plain {
   min-width: 0;
 }
 
+.saved-note {
+  min-height: 1.4em;
+  margin: 0;
+  text-align: right;
+  font-size: 0.85rem;
+}
+
 /* Read-only: the controls that write are off, but nothing is dimmed so it can all be read. */
 fieldset.plain:disabled input,
 fieldset.plain:disabled select,

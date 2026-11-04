@@ -3,14 +3,15 @@ import { bundledPacks } from '../../packs';
 import { ChipGroup } from '../components/controls';
 import { EditArea } from '../components/EditArea';
 import { ScreenHeader } from '../components/ScreenHeader';
+import { useSavedChange } from '../components/SavedNote';
 import { LOCAL_RISK_LABEL, labelOf } from '../labels';
-import { useChange, useDocument } from '../state';
+import { useDocument } from '../state';
 import { riskLinksFor } from './region';
 
 /** What could go wrong where you live, with a link to check each one for your region. */
 export function RisksScreen({ embedded = false }: { embedded?: boolean }) {
   const { home } = useDocument();
-  const change = useChange();
+  const { change, note } = useSavedChange();
   const def = bundledPacks().regions[home.region];
   const links = riskLinksFor(def, home.subregion).filter((l) =>
     (home.risks as readonly string[]).includes(l.risk),
@@ -19,6 +20,7 @@ export function RisksScreen({ embedded = false }: { embedded?: boolean }) {
   return (
     <div>
       {embedded ? <h1>What could affect you?</h1> : <ScreenHeader title="Risks" />}
+      {note}
       <p className="muted">
         Pick everything that applies. Each one changes how much the plan asks you to keep.
       </p>
