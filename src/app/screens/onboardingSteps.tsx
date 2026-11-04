@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { HomeScreen } from './HomeScreen';
+import type { HomeAnswers } from './homeQuestions';
 import { HorizonScreen } from './HorizonScreen';
 import { PeopleScreen } from './PeopleScreen';
 import { RisksScreen } from './RisksScreen';
@@ -17,12 +18,12 @@ export const STEP_TITLE: Record<StepId, string> = {
 };
 
 /** The screen for a step: the same component as the editing screen, in embedded mode. */
-export function stepScreen(step: StepId): ReactNode {
+export function stepScreen(step: StepId, home: HomeAnswers): ReactNode {
   switch (step) {
     case 'people':
       return <PeopleScreen embedded />;
     case 'home':
-      return <HomeScreen embedded />;
+      return <HomeScreen embedded answers={home} />;
     case 'risks':
       return <RisksScreen embedded />;
     case 'horizon':

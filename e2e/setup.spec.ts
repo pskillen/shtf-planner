@@ -50,10 +50,19 @@ test('a fresh household completes onboarding by hand and it survives a reload', 
 
   // Home.
   await expect(page.getByText('Step 2 of 4: Home')).toBeVisible();
+  // Nothing is answered for you: the questions start on Choose, and Next waits for all four.
+  await expect(page.getByLabel('How is the house heated?')).toHaveValue('');
+  await expect(page.getByRole('button', { name: 'Next' })).toBeDisabled();
+  await page.getByLabel('What kind of home is it?').selectOption('semi');
   await page.getByLabel('How is the house heated?').selectOption('electric');
   await page.getByLabel('How do you cook?').selectOption('induction');
   await page.getByLabel('Which part of the UK?').selectOption('england');
-  await page.getByRole('switch', { name: 'Is there a mains gas supply?' }).uncheck();
+  await expect(page.getByRole('button', { name: 'Next' })).toBeDisabled();
+  await expect(page.getByRole('radio', { name: 'Yes', exact: true })).toHaveAttribute(
+    'aria-checked',
+    'false',
+  );
+  await page.getByRole('radio', { name: 'No', exact: true }).click();
   await expect(page.getByText('this home has no heat or cooking', { exact: false })).toBeVisible();
   await page.getByRole('button', { name: 'Next' }).click();
 
