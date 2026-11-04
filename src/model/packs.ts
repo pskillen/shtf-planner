@@ -280,6 +280,13 @@ export const RuleSchema = z
       })
       .optional(),
     perHouseholdDay: z.strictObject({ store: StoreIdSchema, amount: z.number().min(0) }).optional(),
+    /**
+     * A fixed amount of `store` for the household, whatever the horizon: a one-off item (a first
+     * aid kit) rather than a daily need. Not multiplied by days.
+     */
+    perHousehold: z
+      .strictObject({ store: StoreIdSchema, amount: z.number().positive() })
+      .optional(),
     /** Hours of the capability per day for the household (heat), met by assets' `converts`. */
     hoursPerDay: z.number().positive().optional(),
     /** Hot meals per person per day (cooking), met by assets' `converts`. */
@@ -325,13 +332,14 @@ export const RuleSchema = z
         r.perPersonDay,
         r.perPetDay,
         r.perHouseholdDay,
+        r.perHousehold,
         r.hoursPerDay,
         r.mealsPerPersonDay,
         r.rangeKm,
       ].some((x) => x !== undefined),
     {
       message:
-        'a rule needs a quantity (perPersonDay, perPetDay, perHouseholdDay, hoursPerDay, mealsPerPersonDay or rangeKm)',
+        'a rule needs a quantity (perPersonDay, perPetDay, perHouseholdDay, perHousehold, hoursPerDay, mealsPerPersonDay or rangeKm)',
     },
   );
 export type Rule = z.infer<typeof RuleSchema>;
