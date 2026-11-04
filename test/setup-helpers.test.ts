@@ -147,7 +147,21 @@ describe('regions', () => {
     expect(england.map((l) => l.url)).toEqual([
       'https://check-long-term-flood-risk.service.gov.uk/',
     ]);
-    expect(riskLinksFor(uk, undefined)).toEqual(riskLinksFor(uk, 'england'));
+  });
+
+  it('shows the Environment Agency links in England only', () => {
+    const water = (sub?: string) =>
+      riskLinksFor(uk, sub).filter((l) => l.risk === 'flood' || l.risk === 'coastal');
+    expect(water('england').map((l) => [l.risk, l.url])).toEqual([
+      ['flood', 'https://check-long-term-flood-risk.service.gov.uk/'],
+      ['coastal', 'https://check-long-term-flood-risk.service.gov.uk/'],
+    ]);
+    expect(water('wales')).toEqual([]);
+    expect(water('northern-ireland')).toEqual([]);
+    expect(water(undefined)).toEqual([]);
+    // the rest of the UK links stay for every part
+    expect(riskLinksFor(uk, 'wales').some((l) => l.risk === 'storm')).toBe(true);
+    expect(riskLinksFor(uk, undefined).some((l) => l.risk === 'grid')).toBe(true);
   });
 
   it('keeps the region links a subregion does not replace', () => {

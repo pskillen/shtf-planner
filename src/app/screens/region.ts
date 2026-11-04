@@ -9,8 +9,9 @@ export interface RiskLink {
 /**
  * The links to check a risk, for a region and (for the UK) a subregion. A subregion's own links
  * replace the region's for the same risk (Scotland's flood link is SEPA's, not the Environment
- * Agency's); every other region link stays. A subregion without links of its own (England, Wales,
- * Northern Ireland, for now) adds nothing: no link is invented.
+ * Agency's); every other region link stays. The Environment Agency flood and coastal links are
+ * England's own, so Wales, Northern Ireland and an unset part of the UK get no flood or coastal
+ * link: no link is invented.
  */
 export function riskLinksFor(
   def: RegionDef | undefined,

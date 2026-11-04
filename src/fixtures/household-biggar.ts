@@ -26,7 +26,7 @@ const TODAY = '2026-09-01';
 const PACK_VERSIONS: Record<string, number> = {
   'assets-base': 2,
   'guidance-us-ready': 2,
-  regions: 2,
+  regions: 3,
 };
 
 const loc = (id: string, name: string, o: Omit<Location, 'id' | 'name'>): Location => ({

@@ -49,9 +49,9 @@ leaving half-way.
   ..."). A solar array without an emergency power supply gives nothing in a power cut.
 - **Risk links.** The region's links are shown for the chosen risks. A UK part with links of its own
   replaces the region's for the same risk (Scotland: SEPA flood maps instead of the Environment
-  Agency's). England, Wales and Northern Ireland have none of their own yet, and none is invented.
-  The Environment Agency link says "(England)" in its label and is also what Wales and Northern
-  Ireland see for flooding until they get their own.
+  Agency's). The Environment Agency flood and coastal links belong to England only; Wales, Northern
+  Ireland and "Not set" show no flood or coastal link until they have their own, and none is
+  invented.
 - **Region lives in two places** (`home.region`, `settings.region`). The Home and Settings screens
   both set the two together; leaving the UK drops the part-of-the-UK choice.
 - **Delete with undo.** Deleting a person, pet, place or piece of equipment hides it at once and
