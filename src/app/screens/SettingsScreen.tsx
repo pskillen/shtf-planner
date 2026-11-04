@@ -7,6 +7,7 @@ import { useSavedChange } from '../components/SavedNote';
 import { useDocument } from '../state';
 import { applyRegion } from './region';
 import { DataSection } from './settings/DataSection';
+import { packSwitch, setPack } from './settings/packs';
 
 /** Region, content packs, review cadence, anonymising and (later) the data section. */
 export function SettingsScreen() {
@@ -42,20 +43,15 @@ export function SettingsScreen() {
         </p>
         <ul className="row-list">
           {packs.all.map((p) => {
-            const wrongRegion = p.region !== undefined && p.region !== settings.region;
-            const on = settings.packs.includes(p.id) && !wrongRegion;
+            const { on, wrongRegion } = packSwitch(p, settings);
             return (
               <li key={p.id} className="row-item">
                 <Switch
                   label={`${p.name} (version ${p.version})`}
                   hint={wrongRegion ? `${p.region} only` : undefined}
                   checked={on}
-                  onChange={(checked) =>
-                    change('packs', (d) => {
-                      const rest = d.settings.packs.filter((id) => id !== p.id);
-                      d.settings.packs = checked ? [...rest, p.id] : rest;
-                    })
-                  }
+                  disabled={wrongRegion}
+                  onChange={(checked) => change('packs', (d) => setPack(d, p, checked))}
                 />
               </li>
             );

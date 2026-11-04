@@ -109,11 +109,13 @@ export function Switch({
   checked,
   onChange,
   hint,
+  disabled,
 }: {
   label: string;
   checked: boolean;
   onChange: (next: boolean) => void;
   hint?: ReactNode;
+  disabled?: boolean;
 }) {
   return (
     <label className="switch-row">
@@ -126,6 +128,7 @@ export function Switch({
         role="switch"
         className="switch"
         checked={checked}
+        disabled={disabled}
         onChange={(e) => onChange(e.target.checked)}
       />
     </label>
