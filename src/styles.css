@@ -223,6 +223,15 @@ button.quiet {
   color: var(--bg);
 }
 
+.toast.sync-toast {
+  /* above the undo toast, which sits at the base spot */
+  bottom: calc(var(--tab-h) + 12px + 72px + env(safe-area-inset-bottom));
+}
+
+.toast.toast-update {
+  bottom: calc(var(--tab-h) + 12px + 144px + env(safe-area-inset-bottom));
+}
+
 .toast span {
   flex: 1;
 }

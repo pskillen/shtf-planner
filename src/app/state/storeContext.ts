@@ -26,3 +26,20 @@ export function useStoreStatus(): StoreStatus {
 export function useChange(): DocumentStore['change'] {
   return useStore().change;
 }
+
+/** Whole-document export and restore, for the Data screen. */
+export function useStoreFiles(): Pick<DocumentStore, 'export' | 'importJson'> {
+  const store = useStore();
+  return { export: store.export, importJson: store.importJson };
+}
+
+const STATUS_OK: StoreStatus = { kind: 'ok' };
+
+/** Like `useStoreStatus`, but `ok` instead of throwing where no document is open (chrome). */
+export function useStoreStatusIfOpen(): StoreStatus {
+  const store = useContext(StoreContext);
+  return useSyncExternalStore(
+    (onChange) => (store ? store.subscribe(() => onChange()) : () => {}),
+    () => (store ? store.status() : STATUS_OK),
+  );
+}

@@ -17,6 +17,28 @@ upload with Wrangler, not the dashboard's Git integration). Base path `/`.
 Tags are bare SemVer (no `v`). The footer shows `SHTF Planner · {env} · {version}`; local builds show
 `local`. The hostnames are placeholders for the owner to attach in the Cloudflare dashboard.
 
+## Google Drive sync
+
+Sync needs a Google OAuth web client; `scripts/setup-google-drive.sh` walks through creating it.
+Its **JavaScript origins** are the hosts the app runs on (no paths, no trailing slash, no redirect
+URIs):
+
+| Origin                            | For                                |
+| --------------------------------- | ---------------------------------- |
+| `http://localhost:5173`           | `npm run dev`                      |
+| `http://localhost:4173`           | `npm run preview`                  |
+| `https://prep.mm9pdy.net`         | prod                               |
+| `https://staging.prep.mm9pdy.net` | staging                            |
+| `https://next.prep.mm9pdy.net`    | next                               |
+| `https://dev.prep.mm9pdy.net`     | dev                                |
+| `https://shtf-planner.pages.dev`  | optional: lets the Pages host sync |
+
+The client id is read at build time from `VITE_GOOGLE_CLIENT_ID`: locally from `.env.local`
+(gitignored; `.env.example` lists the name), in CI from the repository **variable** of the same name
+(`gh variable set VITE_GOOGLE_CLIENT_ID`), which `cloudflare-pages.yaml` passes to the build. It is
+not a secret and is never committed. A build without one has Drive sync switched off. See
+[Drive sync](../features/drive-sync/README.md).
+
 ## Local development
 
 ```bash

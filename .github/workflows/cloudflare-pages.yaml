@@ -82,6 +82,8 @@ jobs:
       - name: Build SPA
         env:
           BUILD_ENV: ${{ inputs.build_env }}
+          # Not a secret: set by scripts/setup-google-drive.sh. Empty means Drive sync is off.
+          VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
         run: npm run build
 
       - name: Create the Pages project if it doesn't exist

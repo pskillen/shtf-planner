@@ -125,5 +125,4 @@ With `?debug=1`: `window.__shtf.doc()`, `.change(fn)` and `.loadFixture()` (all 
 
 ## Known gaps
 
-- No Drive sync yet: `bytes`, `mergeBytes` and `heads` are the whole contract.
 - No diesel store, so a diesel generator cannot be modelled.

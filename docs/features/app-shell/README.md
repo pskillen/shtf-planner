@@ -12,12 +12,12 @@ The frame every later screen lives in: an installable offline PWA, a landing pag
 | Piece        | Where                          | Behaviour                                                                                                                                                                           |
 | ------------ | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Landing page | `/` (`src/app/Landing.tsx`)    | Name, a beta note, a Start button to `/app`, an Android install hint and the Changelog. Shows the footer.                                                                           |
-| Shell        | `/app/*` (`src/app/Shell.tsx`) | Top bar (app name), a bottom nav with Home, Stores, Gaps, Score and More, and the footer.                                                                                           |
+| Shell        | `/app/*` (`src/app/Shell.tsx`) | Top bar (app name and the [sync status pill](../drive-sync/README.md)), a bottom nav with Home, Stores, Gaps, Score and More, and the footer.                                       |
 | Footer       | `src/app/Footer.tsx`           | `SHTF Planner · {env} · {version}`. `local · local` on a dev machine; a short SHA on continuous builds; the bare tag on releases.                                                   |
 | PWA          | `vite.config.ts`               | Manifest (standalone, 192 and 512 px icons plus a padded maskable one), service worker precaching the built app, `prompt` updates.                                                  |
 | Update toast | `src/app/UpdateToast.tsx`      | "Update available" with Reload / Later when a new service worker is waiting. Reload applies it; the page is never reloaded without the user asking, so an edit in progress is safe. |
 | Changelog    | `scripts/releases.mjs`         | GitHub Releases baked into `src/generated/releases.json` at build time; bodies shown as plain paragraphs; "No releases yet." if none.                                               |
-| Debug hook   | `src/app/debug.ts`             | `?debug=1` installs an empty `window.__shtf` for tests.                                                                                                                             |
+| Debug hook   | `src/app/debug.ts`             | `?debug=1` installs `window.__shtf` for tests (see the data model doc).                                                                                                             |
 
 ## Notes
 
