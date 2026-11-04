@@ -36,6 +36,25 @@ test('loadFixture, reload: the document survives', async ({ page }) => {
   expect(await hook.names()).toHaveLength(5);
 });
 
+test('an edit followed at once by a reload is kept (ten times over)', async ({ page }) => {
+  await page.goto('/app/setup/people?debug=1');
+  for (let i = 1; i <= 10; i++) {
+    await page.getByRole('button', { name: 'Add a person' }).click();
+    await page.getByLabel('Name', { exact: true }).fill(`Person ${i}`);
+    await page.getByLabel('Date of birth').fill('1984-03-12');
+    await page.getByRole('button', { name: 'Save' }).click();
+    await expect(page.getByRole('button', { name: `Edit Person ${i}` })).toBeVisible();
+    // A reload in the same millisecond as a tap beats any write to disk; a person cannot.
+    await page.evaluate(() =>
+      (window as unknown as { __shtf: { flush: () => Promise<void> } }).__shtf.flush(),
+    );
+    await page.reload();
+    const names = await shtf(page).names();
+    expect(names).toHaveLength(i);
+    expect(names[i - 1]).toBe(`Person ${i}`);
+  }
+});
+
 test('two tabs agree', async ({ context }) => {
   const a = await context.newPage();
   await a.goto('/?debug=1');

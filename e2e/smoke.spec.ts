@@ -1,6 +1,10 @@
 import { expect, test } from '@playwright/test';
 
+type Shtf = { loadFixture: () => Promise<void> };
+
 test('landing page, Start, shell and footer', async ({ page }) => {
+  await page.goto('/?debug=1');
+  await page.evaluate(() => (window as unknown as { __shtf: Shtf }).__shtf.loadFixture());
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'SHTF Planner' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Changelog' })).toBeVisible();

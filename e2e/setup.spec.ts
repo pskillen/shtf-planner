@@ -11,6 +11,7 @@ type Shtf = {
     settings: { horizonDays: number };
   }>;
   loadFixture: () => Promise<void>;
+  flush: () => Promise<void>;
 };
 const doc = (page: Page) =>
   page.evaluate(() => (window as unknown as { __shtf: Shtf }).__shtf.doc());
@@ -88,7 +89,9 @@ test('a fresh household completes onboarding by hand and it survives a reload', 
   await page.getByRole('button', { name: 'Save' }).click();
   await expect(page.getByRole('button', { name: 'Edit Solar PV array' })).toBeVisible();
 
-  // Reload: the hub shows the counts.
+  // Reload: the hub shows the counts. Wait for IndexedDB first; a reload in the same millisecond
+  // as a tap is faster than any person.
+  await page.evaluate(() => (window as unknown as { __shtf: Shtf }).__shtf.flush());
   await page.goto('/app?debug=1');
   await expect(page.getByRole('link', { name: /^People/ })).toContainText('2 people');
   await expect(page.getByRole('link', { name: /^Locations/ })).toContainText('3 places');

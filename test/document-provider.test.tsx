@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 import 'fake-indexeddb/auto';
 import { act, cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DocumentProvider, useChange, useDocument } from '../src/app/state';
+import { getStore } from '../src/app/state/sharedStore';
 
 function Probe() {
   const doc = useDocument();
@@ -45,6 +46,27 @@ describe('DocumentProvider', () => {
       screen.getByRole('button', { name: 'add' }).click();
     });
     expect(screen.getByTestId('count').textContent).toBe('1');
+  });
+
+  it('flushes to IndexedDB when the page is hidden or goes away', async () => {
+    render(
+      <DocumentProvider>
+        <Probe />
+      </DocumentProvider>,
+    );
+    await screen.findByTestId('count');
+    const flush = vi.spyOn(await getStore(), 'flush');
+
+    window.dispatchEvent(new Event('pagehide'));
+    expect(flush).toHaveBeenCalledTimes(1);
+
+    // visible: nothing to do; hidden: flush
+    document.dispatchEvent(new Event('visibilitychange'));
+    expect(flush).toHaveBeenCalledTimes(1);
+    const state = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+    document.dispatchEvent(new Event('visibilitychange'));
+    expect(flush).toHaveBeenCalledTimes(2);
+    state.mockRestore();
   });
 
   it('useDocument outside the provider says so', () => {
