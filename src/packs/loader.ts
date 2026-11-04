@@ -4,6 +4,7 @@ import {
   type ItemType,
   type Meta,
   type Pack,
+  type Packs,
   type PlanDef,
   type Region,
   type RegionDef,
@@ -21,21 +22,8 @@ export class PackError extends Error {
   }
 }
 
-/** The loaded packs, indexed for lookup. Things from every loaded pack, enabled or not. */
-export interface Packs {
-  all: readonly Pack[];
-  byId: Readonly<Record<string, Pack>>;
-  items: Readonly<Record<string, ItemType>>;
-  assets: Readonly<Record<string, AssetType>>;
-  rules: Readonly<Record<string, Rule>>;
-  plans: Readonly<Record<string, PlanDef>>;
-  regions: Readonly<Partial<Record<Region, RegionDef>>>;
-  /**
-   * The packs a household uses: those in `settings.packs` (in that order), minus any whose
-   * `region` is not `settings.region`. Unknown ids are skipped.
-   */
-  enabledPacks(settings: Pick<Settings, 'packs' | 'region'>): Pack[];
-}
+/** The type is defined in the model so the engine can use it; this is where it is built. */
+export type { Packs };
 
 function path(p: ReadonlyArray<PropertyKey>): string {
   return p.reduce<string>(

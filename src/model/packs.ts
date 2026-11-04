@@ -6,6 +6,8 @@ import {
   LocalRiskSchema,
   RegionSchema,
   RiskTagSchema,
+  type Region,
+  type Settings,
 } from './document';
 
 /**
@@ -361,3 +363,23 @@ export type AssetsPack = z.infer<typeof AssetsPackSchema>;
 export type GuidancePack = z.infer<typeof GuidancePackSchema>;
 export type PlansPack = z.infer<typeof PlansPackSchema>;
 export type RegionsPack = z.infer<typeof RegionsPackSchema>;
+
+/**
+ * The loaded packs, indexed for lookup: things from every loaded pack, enabled or not. The type
+ * lives here, in the model, so the engine can name it; `src/packs/loader.ts` builds one
+ * (`loadPacks`) and re-exports the type.
+ */
+export interface Packs {
+  all: readonly Pack[];
+  byId: Readonly<Record<string, Pack>>;
+  items: Readonly<Record<string, ItemType>>;
+  assets: Readonly<Record<string, AssetType>>;
+  rules: Readonly<Record<string, Rule>>;
+  plans: Readonly<Record<string, PlanDef>>;
+  regions: Readonly<Partial<Record<Region, RegionDef>>>;
+  /**
+   * The packs a household uses: those in `settings.packs` (in that order), minus any whose
+   * `region` is not `settings.region`. Unknown ids are skipped.
+   */
+  enabledPacks(settings: Pick<Settings, 'packs' | 'region'>): Pack[];
+}
