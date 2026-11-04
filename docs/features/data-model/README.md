@@ -20,7 +20,7 @@ household. Nothing here is visible in the app yet: the shell still shows placeho
 ## The document
 
 One `Document` per browser profile: `meta`, `household` (members and pets), `home`, and the keyed
-records `locations`, `assets`, `items`, `floors`, `plans`, `reviews`, then `settings`. Ids are
+records `locations`, `assets`, `items`, `customTypes`, `floors`, `plans`, `reviews`, then `settings`. Ids are
 strings (`crypto.randomUUID()` for things the user makes, `"<packId>:<localId>"` for things a pack
 defines). Dates are `YYYY-MM-DD`, best-before dates `YYYY-MM`, timestamps ISO.
 
@@ -28,6 +28,11 @@ Records that devices add at the same time are **keyed objects**, not arrays, so 
 over an index. `household.members`, `household.pets` and a member's `medication` are small arrays
 of records with ids. `meta.packVersions` records the version of each pack when the document first
 used it; a later mismatch is reported (`packVersionReport`), not fatal.
+
+`customTypes` (schema 2) holds the item types the household made itself, keyed `custom:<uuid>`, in
+the same shape as a pack's item type. `withCustomTypes` / `packsFor` (`src/packs/custom.ts`) merge
+them into the packs as a pseudo-pack `custom`, so the engine and the screens find them like any
+other item type. The pseudo-pack is not in `packs.all` and not a Settings toggle.
 
 `Env` has six values (`local`, `preview`, `dev`, `next`, `staging`, `prod`) and lives in
 `src/model/document.ts`; `src/util/build-env.ts` re-exports the type, so there is one source.
@@ -53,7 +58,8 @@ one member never clobbers another.
 
 ## Migrations and old clients
 
-`SCHEMA_VERSION` is 1. A change to the document's shape adds a `v(n)` to `v(n+1)` step to
+`SCHEMA_VERSION` is 2 (schema 2 added `customTypes`: the step `custom item types` creates the empty
+container). A change to the document's shape adds a `v(n)` to `v(n+1)` step to
 `MIGRATIONS` and bumps `SCHEMA_VERSION`. Rules:
 
 - **Steps are idempotent per record**: running one on a record already in the new shape changes
@@ -84,8 +90,11 @@ one member never clobbers another.
   client id, a hash of that content. They merge as one, and a real edit on either device descends
   from those shared items, so it always wins over a default. Only what legitimately differs per
   device (`meta.createdAt`, `meta.env`, `meta.devices`) is written under the device's own id.
-  Editing `emptyDocument`, or a list it uses such as `DEFAULT_PACKS`, changes the hash: a golden
-  test fails and says so. Later schemas add containers in their migration step instead.
+  The content is a literal in `initContent()` (the schema-1 shape; it no longer follows
+  `emptyDocument`, which is the current schema's). Editing it, or the pack list it names, changes
+  the hash: a golden test fails and says so. Schemas after 1 add containers in their migration
+  step instead, so a fresh schema-2 device writes the schema-1 content, then runs the step that
+  adds `customTypes` and shares that container with every other device.
 - A first-run device opens and writes its defaults before Drive's copy arrives. That is safe
   because of the rule above: when the copy is merged in, edits made on either side win over
   defaults, and two devices' records and list entries union.

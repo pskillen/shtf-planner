@@ -193,6 +193,7 @@ export function biggarDocument(): Document {
     locations: Object.fromEntries(locations.map((l) => [l.id, l])),
     assets: Object.fromEntries(assets.map((a) => [a.id, a])),
     items: Object.fromEntries(items.map((i) => [i.id, i])),
+    customTypes: {},
     floors: {
       [floorKey(L.pantry, `${ITEMS}:tinned-food`)]: 2,
       [floorKey(L.pantry, `${ITEMS}:dried-pasta`)]: 1,

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { Settings } from './document';
 import {
   ConditionSchema,
   InsulationSchema,
@@ -7,8 +8,7 @@ import {
   RegionSchema,
   RiskTagSchema,
   type Region,
-  type Settings,
-} from './document';
+} from './primitives';
 
 /**
  * Content packs: versioned JSON that ships in the bundle (so it works offline) and is validated

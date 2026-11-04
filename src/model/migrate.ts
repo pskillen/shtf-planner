@@ -31,8 +31,21 @@ export interface MigrationStep {
   up: (doc: Raw) => Raw;
 }
 
-/** Ordered `v(n)` to `v(n+1)` steps. Schema 1 is the first shape, so there are none yet. */
-export const MIGRATIONS: readonly MigrationStep[] = [];
+/**
+ * Schema 2 adds `customTypes`, the household's own item types. The step only creates the empty
+ * container (it is per record and idempotent: one that exists is kept). The store writes the
+ * container under a fixed client id (`src/store/stepContainers.ts`) so two devices that migrate
+ * before they sync still share one.
+ */
+const addCustomTypes: MigrationStep = {
+  from: 1,
+  to: 2,
+  name: 'custom item types',
+  up: (raw) => ({ ...raw, customTypes: (raw.customTypes as Raw | undefined) ?? {} }),
+};
+
+/** Ordered `v(n)` to `v(n+1)` steps. */
+export const MIGRATIONS: readonly MigrationStep[] = [addCustomTypes];
 
 function versionOf(raw: unknown): number {
   const meta = (raw as { meta?: { schemaVersion?: unknown } } | null)?.meta;

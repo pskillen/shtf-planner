@@ -1,5 +1,4 @@
 import * as Y from 'yjs';
-import { emptyDocument } from '../model';
 import { sortKeys, syncMap } from './yconvert';
 
 /**
@@ -19,16 +18,14 @@ import { sortKeys, syncMap } from './yconvert';
  * (which would corrupt the structure when they merge). The schema version is deliberately not in
  * the hash: a newer build starts from the same containers and adds its own in a migration step,
  * so its fresh devices still share these; `meta.schemaVersion` has its own id (below). The
- * consequence is that this content is frozen: editing `emptyDocument` or the lists it uses
+ * consequence is that this content is frozen: editing the content below or the lists it uses
  * changes the id, and a golden test (`init.test.ts`) fails to say so. A schema change adds
- * containers in its migration step instead (see `docs/features/data-model/`); the first such
- * change freezes the schema-1 content here as a literal.
+ * containers in its migration step instead (see `docs/features/data-model/`); schema 2 was the
+ * first such change, so the schema-1 content below is a literal and no longer follows
+ * `emptyDocument`.
  */
 
 const SCHEMA_CLIENT_BASE = 0x53480000;
-
-/** A fixed timestamp for the content that is hashed; `meta.createdAt` is not part of it. */
-const HASH_NOW = '2000-01-01T00:00:00.000Z';
 
 /** FNV-1a over UTF-16 code units, 32 bits, never zero. */
 export function hash32(text: string): number {
@@ -40,12 +37,53 @@ export function hash32(text: string): number {
   return h === 0 ? 1 : h;
 }
 
-/** The values and containers of a new document that are the same on every device. */
+/**
+ * The values and containers of a new document that are the same on every device: the schema-1
+ * content, frozen as a literal. It is deliberately not `emptyDocument()`: that follows the current
+ * schema (schema 2 adds `customTypes`), and a fresh device must keep writing exactly these
+ * operations so it shares its containers with devices that started on schema 1. The containers a
+ * later schema adds are created by the migration step that adds them.
+ */
 export function initContent(): Record<string, unknown> {
-  const fresh = emptyDocument('local', HASH_NOW);
-  const { devices, packVersions } = fresh.meta;
-  // createdAt, env and the schema version are written separately (see `applyInit`).
-  return { ...fresh, meta: { devices, packVersions } };
+  return {
+    meta: { devices: [], packVersions: {} },
+    household: { members: [], pets: [] },
+    home: {
+      type: 'other',
+      floors: 1,
+      insulation: 'average',
+      heating: 'other',
+      cooking: 'other',
+      mainsGas: true,
+      solar: false,
+      homeBattery: false,
+      evCharger: false,
+      growing: 'none',
+      risks: [],
+      region: 'UK',
+    },
+    locations: {},
+    assets: {},
+    items: {},
+    floors: {},
+    plans: {},
+    reviews: {},
+    settings: {
+      horizonDays: 3,
+      region: 'UK',
+      packs: [
+        'items-base',
+        'assets-base',
+        'guidance-grid-free',
+        'guidance-uk-prepare',
+        'guidance-us-ready',
+        'plans-base',
+        'regions',
+      ],
+      reviewCadenceMonths: 6,
+      anonymise: false,
+    },
+  };
 }
 
 /** The client id the shared content is written under: a hash of that content. */
