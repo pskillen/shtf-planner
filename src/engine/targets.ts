@@ -60,6 +60,15 @@ export function planDone(doc: Document, packs: Packs, planItemId: string, asOf: 
   return expires === undefined || expires > asOf;
 }
 
+/**
+ * Plan items an owned asset can already answer: the item is not a to-do once every owned asset it
+ * `requires` has this question answered `true` (the EPS plan, once solar and the home battery are
+ * fitted with one).
+ */
+const ANSWERED_BY_ASSET: Readonly<Record<string, string>> = {
+  'plans-base:eps': 'hasEps',
+};
+
 /** The plan items that apply to this household. */
 export function applicablePlanItems(doc: Document, packs: Packs): string[] {
   const owned = new Set(Object.values(doc.assets).map((a) => a.typeId));
@@ -70,6 +79,15 @@ export function applicablePlanItems(doc: Document, packs: Packs): string[] {
       const r = item.requires;
       if (r?.risk && !doc.home.risks.includes(r.risk)) continue;
       if (r?.asset && !r.asset.some((a) => owned.has(a))) continue;
+      const question = ANSWERED_BY_ASSET[item.id];
+      if (
+        question &&
+        r?.asset &&
+        Object.values(doc.assets)
+          .filter((a) => r.asset!.includes(a.typeId))
+          .every((a) => a.answers[question] === true)
+      )
+        continue;
       if (r?.pets && doc.household.pets.length === 0) continue;
       out.push(item.id);
     }

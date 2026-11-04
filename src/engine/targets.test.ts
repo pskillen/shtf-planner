@@ -115,6 +115,17 @@ describe('targets', () => {
     expect(targets(doc, packs, NOW, 3).some((x) => x.planItemId === 'plans-base:pets')).toBe(false);
   });
 
+  it('drops the EPS plan item once every asset it is about has an EPS', () => {
+    const doc = biggarDocument();
+    const eps = (d: typeof doc) =>
+      targets(d, packs, NOW, 3).some((x) => x.planItemId === 'plans-base:eps');
+    expect(eps(doc)).toBe(true);
+    doc.assets['asset-solar']!.answers.hasEps = true;
+    expect(eps(doc)).toBe(true); // the battery still lacks one
+    doc.assets['asset-battery']!.answers.hasEps = true;
+    expect(eps(doc)).toBe(false);
+  });
+
   it('skips a rule below its minimum horizon', () => {
     const files = structuredClone(BUNDLED_PACK_FILES) as { label: string; raw: unknown }[];
     const grid = files.find((f) => f.label === 'guidance-grid-free.json')!.raw as {

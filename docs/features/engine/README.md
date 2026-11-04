@@ -59,7 +59,8 @@ including things listed but not counted (expired, below the floor, gated) with a
 
 Plan items are scored together under `plans`, but each `Target` keeps its own `capability`
 (the EPS plan is `power`), so a screen can show it with its capability without it zeroing that
-capability's score.
+capability's score. A plan item an owned asset already answers is left out: the EPS plan item
+disappears once every solar array and home battery in the household has `hasEps` answered yes.
 
 ## Infants
 
