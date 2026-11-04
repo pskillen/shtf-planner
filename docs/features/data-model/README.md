@@ -60,6 +60,18 @@ one member never clobbers another.
   nothing. A device on an older build can keep editing offline after another device migrated the
   document, and its old-shaped records then merge in. After every merge and every tab update the
   store re-runs the steps (`reconcile`) and writes the brought-forward records back.
+- **Every step must tolerate every later shape.** `reconcile` replays _all_ steps from the oldest
+  on every merge and tab update, not just the ones a document is missing, so step 2 runs on a
+  document that is already at schema 5. Write each step to test for the old shape and leave
+  anything already in a newer shape alone (a field that was renamed, a record that was split).
+- **A step that creates a container gets it written under a fixed client id.** Two replicas that
+  both run a step adding `contacts: {}` and then each add a record would otherwise create rival
+  `contacts` maps, and after the merge only one map, and one record, would survive. The store finds
+  the containers a step creates (the paths in its output that its input lacked) and writes those
+  empty containers under a client id hashed from the step's name, versions and the containers it
+  makes (`src/store/stepContainers.ts`); the records inside are written normally. So a step names
+  and versions itself once and never changes afterwards, and it creates containers empty: put
+  default records in under a key the user can edit, not as the container's content.
 - **A newer schema makes the store read-only**: if a merge brings `meta.schemaVersion` above this
   build's, `change` throws `SchemaTooNewError` and subscribers get the `too-new` status, so the app
   can say "update this device". Nothing is written until the app is updated.

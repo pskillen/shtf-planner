@@ -98,6 +98,39 @@ export function reconcileWith(
   return DocumentSchema.parse({ ...all, meta: { ...(all.meta as Raw), schemaVersion: target } });
 }
 
+/** What one step did to a document: the raw document before it and after it. */
+export interface StepTrace {
+  step: MigrationStep;
+  input: Raw;
+  output: Raw;
+}
+
+/**
+ * The steps `reconcileWith` would run on `raw`, each with its input and output, in order. The
+ * store uses it to find the containers a step creates (see `src/store/stepContainers.ts`).
+ */
+export function traceSteps(
+  raw: unknown,
+  steps: readonly MigrationStep[],
+  target: number,
+): StepTrace[] {
+  const found = versionOf(raw);
+  if (found > target) throw new SchemaTooNewError(found, target);
+  const first = steps.length > 0 ? Math.min(...steps.map((s) => s.from)) : target;
+  let doc = structuredClone(raw) as Raw;
+  let v = Math.min(found, first);
+  const out: StepTrace[] = [];
+  while (v < target) {
+    const step = steps.find((s) => s.from === v);
+    if (!step) throw new Error(`No migration from schema version ${v} to ${v + 1}.`);
+    const output = step.up(structuredClone(doc));
+    out.push({ step, input: doc, output });
+    v = step.to;
+    doc = { ...output, meta: { ...(output.meta as Raw), schemaVersion: v } };
+  }
+  return out;
+}
+
 export function reconcile(raw: unknown): Document {
   return reconcileWith(raw, MIGRATIONS, SCHEMA_VERSION);
 }

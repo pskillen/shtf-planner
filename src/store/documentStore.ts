@@ -11,6 +11,7 @@ import {
 } from '../model';
 import { bringForward, getDeviceId, stampOpen, type Loaded } from './migrateOnOpen';
 import { applyInit } from './init';
+import { ensureStepContainers } from './stepContainers';
 import { deepEqual, deepFreeze, sortKeys, syncMap, toPlain } from './yconvert';
 
 /** The one document's id in IndexedDB. One document per browser profile. */
@@ -143,7 +144,8 @@ export async function openStore(options: OpenOptions = {}): Promise<DocumentStor
     if (result.kind === 'ok') {
       invalid = undefined;
       if (!deepEqual(result.doc, plain)) {
-        snapshot = deepFreeze(plain as unknown as Document);
+        ensureStepContainers(ydoc, root, plain, steps, target);
+        snapshot = deepFreeze(toPlain(root) as unknown as Document);
         write(result.doc, 'reconcile');
       }
     } else if (result.kind === 'invalid') invalid = result.error;
