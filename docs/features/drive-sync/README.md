@@ -9,18 +9,18 @@ accounts is not built.
 
 ## Map
 
-| Piece               | Where                                                    | What                                                                                              |
-| ------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| The engine          | `src/store/sync.ts`                                      | `createSync()`: push, pull, the status, the questions. The contract is `SyncStatus` and the files |
-| Which copy?         | `src/store/syncRecords.ts`                               | Compares base, local and remote per record; applies a choice                                      |
-| What sync remembers | `src/store/syncPersistence.ts`                           | IndexedDB `shtf-planner-sync`: Drive ids, dirty flag, pending questions, the last-synced bytes    |
-| Drive and Google    | `src/store/drive/`                                       | API client, token flow, prefs, and `DrivePort` (what the engine uses)                             |
-| Forget this device  | `src/store/forget.ts`                                    | Deletes the household and the sync state locally                                                  |
-| Test support        | `src/store/fakeDrive.ts`, `e2e/fakeGoogle.ts`            | An in-memory Drive for unit tests; a faked Google at the network layer for e2e                    |
-| Status pill         | `src/app/sync/SyncPill.tsx`                              | In the top bar on every app screen; tapping it opens Data                                         |
-| Banners and dialogs | `src/app/sync/SyncChrome.tsx`                            | Newer-version banner, other-build dialog, which-copy dialog, first-connect dialog, toast          |
-| Data screen         | `/app/more/data` (`src/app/screens/data/DataScreen.tsx`) | Connect, Check Drive, Push now, Disconnect; export; import; forget this device                    |
-| Owner setup         | `scripts/setup-google-drive.sh`                          | The Google Cloud project, consent screen and OAuth client                                         |
+| Piece               | Where                                                                                             | What                                                                                              |
+| ------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| The engine          | `src/store/sync.ts`                                                                               | `createSync()`: push, pull, the status, the questions. The contract is `SyncStatus` and the files |
+| Which copy?         | `src/store/syncRecords.ts`                                                                        | Compares base, local and remote per record; applies a choice                                      |
+| What sync remembers | `src/store/syncPersistence.ts`                                                                    | IndexedDB `shtf-planner-sync`: Drive ids, dirty flag, pending questions, the last-synced bytes    |
+| Drive and Google    | `src/store/drive/`                                                                                | API client, token flow, prefs, and `DrivePort` (what the engine uses)                             |
+| Forget this device  | `src/store/forget.ts`                                                                             | Deletes the household and the sync state locally                                                  |
+| Test support        | `src/store/fakeDrive.ts`, `e2e/fakeGoogle.ts`                                                     | An in-memory Drive for unit tests; a faked Google at the network layer for e2e                    |
+| Status pill         | `src/app/sync/SyncPill.tsx`                                                                       | In the top bar on every app screen; tapping it opens Data                                         |
+| Banners and dialogs | `src/app/sync/SyncChrome.tsx`                                                                     | Newer-version banner, other-build dialog, which-copy dialog, first-connect dialog, toast          |
+| Data screen         | `/app/more/data` (`src/app/screens/data/DataScreen.tsx`; linked from More > Settings > Your data) | Connect, Check Drive, Push now, Disconnect; export; import; forget this device                    |
+| Owner setup         | `scripts/setup-google-drive.sh`                                                                   | The Google Cloud project, consent screen and OAuth client                                         |
 
 ## What is on Drive
 
@@ -54,7 +54,7 @@ Automatic. The pill says where things stand.
 - **Merge** is the CRDT's: concurrent edits to different records, or different fields of one
   record, never conflict. The app keeps the bytes of the document **as of the last successful
   push or pull** and compares base to local and base to remote record by record. A record is an
-  item, location, asset, plan item, review, member, pet, the home or the settings.
+  item, custom item type, location, asset, plan item, review, member, pet, the home or the settings.
   - The last-synced state, the Drive ids and the pending questions are shared by the tabs of one
     browser: every pass reloads them first, so a question answered in one tab is not asked again
     in another.

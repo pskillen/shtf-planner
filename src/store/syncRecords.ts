@@ -66,12 +66,21 @@ export function isBlank(doc: Document): boolean {
     Object.keys(doc.floors).length === 0 &&
     Object.keys(doc.plans).length === 0 &&
     Object.keys(doc.reviews).length === 0 &&
+    Object.keys(doc.customTypes).length === 0 &&
     doc.household.members.length === 0 &&
     doc.household.pets.length === 0
   );
 }
 
-const COLLECTIONS = ['locations', 'assets', 'items', 'floors', 'plans', 'reviews'] as const;
+const COLLECTIONS = [
+  'locations',
+  'assets',
+  'items',
+  'floors',
+  'plans',
+  'reviews',
+  'customTypes',
+] as const;
 const LISTS = ['members', 'pets'] as const;
 
 /** Every record of a plain document, keyed `collection/id` (or `home`, `settings`). */
@@ -134,6 +143,7 @@ const NOUNS: Record<string, string> = {
   floors: 'Minimum level',
   plans: 'Plan item',
   reviews: 'Review',
+  customTypes: 'Custom item',
   'household.members': 'Member',
   'household.pets': 'Pet',
   home: 'Home',

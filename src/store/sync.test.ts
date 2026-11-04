@@ -210,6 +210,100 @@ async function pairWithConflict() {
   return { cloud, a, b };
 }
 
+const soup = (id: string, name = `Soup ${id}`) => ({
+  id: `custom:${id}`,
+  name,
+  category: 'food' as const,
+  unit: 'tin',
+  gives: [{ store: 'foodKcal' as const, amount: 300 }],
+  suitability: ['frost' as const],
+  shelfLife: 'none' as const,
+  tags: [],
+});
+const setType = (d: Device, id: string, name?: string) =>
+  d.store.change(`type ${id}`, (doc) => {
+    doc.customTypes[`custom:${id}`] = soup(id, name);
+  });
+
+describe('custom item types (schema 2)', () => {
+  it('a custom type goes through push and pull, and into the readable sidecar', async () => {
+    const cloud = createFakeCloud();
+    const a = await device(cloud);
+    const b = await device(cloud);
+    setType(a, 'one');
+    await a.sync.connect();
+    expect(Object.keys(JSON.parse(cloud.text(JSON_FILE_NAME)!).customTypes)).toEqual([
+      'custom:one',
+    ]);
+    await b.sync.connect();
+    expect(b.store.get().customTypes['custom:one']).toMatchObject({ name: 'Soup one' });
+
+    setType(b, 'two');
+    await b.sync.flush();
+    await a.sync.checkDrive();
+    expect(Object.keys(a.store.get().customTypes).sort()).toEqual(['custom:one', 'custom:two']);
+    expect(a.sync.state().conflicts).toEqual([]);
+  });
+
+  it('two devices adding different custom types merge without a question', async () => {
+    const cloud = createFakeCloud();
+    const a = await device(cloud);
+    const b = await device(cloud);
+    await a.sync.connect();
+    await b.sync.connect();
+    a.port.offline = true;
+    setType(a, 'a');
+    await settle(a);
+    setType(b, 'b');
+    await b.sync.flush();
+    a.port.offline = false;
+    await a.sync.checkDrive();
+    await b.sync.checkDrive();
+    for (const d of [a, b]) {
+      expect(Object.keys(d.store.get().customTypes).sort()).toEqual(['custom:a', 'custom:b']);
+      expect(d.sync.state().conflicts).toEqual([]);
+    }
+  });
+
+  it('the same custom type renamed two ways asks which copy, like any other record', async () => {
+    const cloud = createFakeCloud();
+    const a = await device(cloud);
+    const b = await device(cloud);
+    setType(a, 'x', 'Soup');
+    await a.sync.connect();
+    await b.sync.connect();
+    a.port.offline = true;
+    setType(a, 'x', 'Tomato soup');
+    await settle(a);
+    setType(b, 'x', 'Lentil soup');
+    await b.sync.flush();
+    a.port.offline = false;
+    await a.sync.checkDrive();
+    const [c] = a.sync.state().conflicts;
+    expect(c).toMatchObject({ key: 'customTypes/custom:x', noun: 'Custom item' });
+    await a.sync.resolveAll('theirs');
+    await a.sync.whenIdle();
+    await b.sync.checkDrive();
+    expect(a.store.get().customTypes['custom:x']?.name).toBe('Lentil soup');
+    expect(b.store.get().customTypes['custom:x']?.name).toBe('Lentil soup');
+  });
+
+  it('a sidecar from schema 3 is refused without merging', async () => {
+    const cloud = createFakeCloud();
+    const a = await device(cloud);
+    setType(a, 'one');
+    await a.sync.connect();
+    const sidecar = JSON.parse(cloud.text(JSON_FILE_NAME)!);
+    sidecar.meta.schemaVersion = 3;
+    cloud.put(JSON_FILE_NAME, JSON.stringify(sidecar));
+    cloud.put(YJS_FILE_NAME, a.store.bytes());
+    const b = await device(cloud);
+    await b.sync.connect();
+    expect(b.sync.state().status).toEqual({ kind: 'error', message: NEWER_VERSION_MESSAGE });
+    expect(b.store.get().customTypes).toEqual({});
+  });
+});
+
 describe('disconnect and reconnect', () => {
   async function pair() {
     const cloud = createFakeCloud();

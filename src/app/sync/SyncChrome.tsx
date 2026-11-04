@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import type { Conflict } from '../../store';
-import { useStoreStatusIfOpen, useSync, useSyncState } from '../state';
+import { useSync, useSyncState } from '../state';
 import './sync.css';
 
 function show(value: unknown): string {
@@ -168,19 +168,13 @@ export function EnvDialog() {
   );
 }
 
-/** The household on this device (or on Drive) is from a newer version of the app. */
+/** The household on Drive is from a newer version of the app (the store's own banner covers this device). */
 function NewerVersionBanner() {
-  const store = useStoreStatusIfOpen();
   const { status } = useSyncState();
-  const remoteNewer = status.kind === 'error' && /newer version/.test(status.message);
-  if (store.kind !== 'too-new' && !remoteNewer) return null;
+  if (!(status.kind === 'error' && /newer version/.test(status.message))) return null;
   return (
     <div className="sync-banner" role="alert" data-testid="newer-banner">
-      <p>
-        {store.kind === 'too-new'
-          ? 'This household was saved by a newer version of the app. Update this device to edit it.'
-          : 'Your other device runs a newer version; update this one. Nothing was merged.'}
-      </p>
+      <p>Your other device runs a newer version; update this one. Nothing was merged.</p>
     </div>
   );
 }

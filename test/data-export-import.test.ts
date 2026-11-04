@@ -27,8 +27,50 @@ describe('export', () => {
   it('writes the same document as YAML', () => {
     const file = yamlExport(json());
     expect(file.mime).toBe('application/yaml');
-    expect(file.text).toContain('schemaVersion: 1');
+    expect(file.text).toContain('schemaVersion: 2');
     expect(file.text).toContain('Alex');
+  });
+});
+
+describe('custom types in export and import', () => {
+  const withType = () => {
+    const doc = biggarDocument();
+    doc.customTypes['custom:soup'] = {
+      id: 'custom:soup',
+      name: 'Soup',
+      category: 'food',
+      unit: 'tin',
+      gives: [{ store: 'foodKcal', amount: 300 }],
+      suitability: ['frost'],
+      shelfLife: 'none',
+      tags: [],
+    };
+    return doc;
+  };
+
+  it('round-trips through the JSON and the YAML export', () => {
+    const doc = withType();
+    const text = JSON.stringify(doc, null, 2);
+    for (const source of [text, yamlExport(text).text]) {
+      const p = previewImport(source);
+      if (!p.ok) throw new Error(p.error);
+      expect(JSON.parse(p.json).customTypes).toEqual(doc.customTypes);
+    }
+  });
+
+  it('a schema-1 export imports with no custom types', () => {
+    const v1: Record<string, unknown> = JSON.parse(json());
+    delete v1.customTypes;
+    (v1.meta as Record<string, unknown>).schemaVersion = 1;
+    const p = previewImport(JSON.stringify(v1));
+    if (!p.ok) throw new Error(p.error);
+    expect(JSON.parse(p.json).customTypes).toEqual({});
+  });
+
+  it('refuses a schema-3 export', () => {
+    const v3: Record<string, unknown> = JSON.parse(json());
+    (v3.meta as Record<string, unknown>).schemaVersion = 3;
+    expect(previewImport(JSON.stringify(v3))).toMatchObject({ ok: false });
   });
 });
 

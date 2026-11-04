@@ -155,9 +155,11 @@ test('the pill is on every app screen and opens the Data screen', async ({ page 
   await pill(page).click();
   await expect(page).toHaveURL(/\/app\/more\/data$/);
   await expect(page.getByRole('heading', { name: 'Data', exact: true })).toBeVisible();
-  // More lists Data
+  // Settings (under More) leads to Data
   await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'More' }).click();
-  await expect(page.getByRole('link', { name: /^Data/ })).toBeVisible();
+  await page.getByRole('link', { name: /^Settings/ }).click();
+  await page.getByRole('link', { name: /^Data and Google Drive/ }).click();
+  await expect(page).toHaveURL(/\/app\/more\/data$/);
 });
 
 test('export downloads JSON and YAML; importing YAML replaces the household and reaches Drive', async ({
@@ -188,7 +190,7 @@ test('export downloads JSON and YAML; importing YAML replaces the household and 
   ]);
   expect(yamlDownload.suggestedFilename()).toMatch(/^household-local-\d{4}-\d{2}-\d{2}\.yaml$/);
   const yaml = readFileSync(await yamlDownload.path(), 'utf8');
-  expect(yaml).toContain('schemaVersion: 1');
+  expect(yaml).toContain('schemaVersion: 2');
   expect(yaml).toContain('name: Alex');
 
   // Import: a smaller household, from the YAML export edited, replaces the loaded one.
