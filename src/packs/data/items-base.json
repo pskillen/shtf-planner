@@ -2,12 +2,17 @@
   "format": 1,
   "id": "items-base",
   "kind": "items",
-  "version": 4,
+  "version": 5,
   "name": "Base household items",
   "sources": [
     {
       "url": "https://beready.campaign.gov.uk/be-ready-for-emergencies/",
       "title": "Be Ready: be ready for emergencies (UK Government)",
+      "checked": "2026-11-04"
+    },
+    {
+      "url": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid",
+      "title": "Composition of Foods Integrated Dataset (CoFID), UK Government",
       "checked": "2026-11-04"
     }
   ],
@@ -258,6 +263,60 @@
       "tags": ["water", "sells-out-first"]
     },
     {
+      "id": "items-base:bottled-water-6x2l",
+      "name": "Bottled water (6 × 2 L)",
+      "category": "water",
+      "unit": "pack",
+      "unitSize": "6 x 2 L",
+      "gives": [
+        {
+          "store": "waterL",
+          "amount": 12
+        }
+      ],
+      "suitability": ["frost"],
+      "shelfLife": "year",
+      "typicalPricePence": 300,
+      "tags": ["water", "sells-out-first"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:bottled-water-5l",
+      "name": "Bottled water (5 L bottle)",
+      "category": "water",
+      "unit": "bottle",
+      "unitSize": "5 L",
+      "gives": [
+        {
+          "store": "waterL",
+          "amount": 5
+        }
+      ],
+      "suitability": ["frost"],
+      "shelfLife": "year",
+      "typicalPricePence": 140,
+      "tags": ["water", "sells-out-first"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:bottled-water-2l",
+      "name": "Bottled water (2 L bottle)",
+      "category": "water",
+      "unit": "bottle",
+      "unitSize": "2 L",
+      "gives": [
+        {
+          "store": "waterL",
+          "amount": 2
+        }
+      ],
+      "suitability": ["frost"],
+      "shelfLife": "year",
+      "typicalPricePence": 70,
+      "tags": ["water", "sells-out-first"],
+      "source": "assumption"
+    },
+    {
       "id": "items-base:bath-bladder",
       "name": "Bath water bladder (150 L)",
       "category": "water",
@@ -356,6 +415,78 @@
       "tags": ["food", "no-cook"]
     },
     {
+      "id": "items-base:tinned-food-tin",
+      "name": "Tinned food (400 g tin)",
+      "category": "food",
+      "unit": "tin",
+      "unitSize": "400 g",
+      "gives": [
+        {
+          "store": "foodKcal",
+          "amount": 400
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
+      "typicalPricePence": 80,
+      "tags": ["food", "no-cook"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:dried-pasta-500g",
+      "name": "Dried pasta (500 g)",
+      "category": "food",
+      "unit": "bag",
+      "unitSize": "500 g",
+      "gives": [
+        {
+          "store": "foodKcal",
+          "amount": 1750
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
+      "typicalPricePence": 70,
+      "tags": ["food", "needs-cooking"],
+      "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
+    },
+    {
+      "id": "items-base:dried-pasta-1kg",
+      "name": "Dried pasta (1 kg)",
+      "category": "food",
+      "unit": "bag",
+      "unitSize": "1 kg",
+      "gives": [
+        {
+          "store": "foodKcal",
+          "amount": 3500
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
+      "typicalPricePence": 130,
+      "tags": ["food", "needs-cooking"],
+      "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
+    },
+    {
+      "id": "items-base:rice-1kg",
+      "name": "Rice (1 kg bag)",
+      "category": "food",
+      "unit": "bag",
+      "unitSize": "1 kg",
+      "gives": [
+        {
+          "store": "foodKcal",
+          "amount": 3600
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
+      "typicalPricePence": 180,
+      "tags": ["food", "needs-cooking"],
+      "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
+    },
+    {
       "id": "items-base:rice-sack",
       "name": "Rice (10 kg sack)",
       "category": "food",
@@ -407,6 +538,24 @@
       "tags": ["food"]
     },
     {
+      "id": "items-base:porridge-oats-1kg",
+      "name": "Porridge oats (1 kg)",
+      "category": "food",
+      "unit": "bag",
+      "unitSize": "1 kg",
+      "gives": [
+        {
+          "store": "foodKcal",
+          "amount": 3800
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "year",
+      "typicalPricePence": 150,
+      "tags": ["food"],
+      "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
+    },
+    {
       "id": "items-base:freeze-dried-meals",
       "name": "Freeze-dried meals (12)",
       "category": "food",
@@ -438,6 +587,24 @@
       "shelfLife": "year",
       "typicalPricePence": 800,
       "tags": ["food", "no-cook"]
+    },
+    {
+      "id": "items-base:peanut-butter-340g",
+      "name": "Peanut butter (340 g jar)",
+      "category": "food",
+      "unit": "jar",
+      "unitSize": "340 g",
+      "gives": [
+        {
+          "store": "foodKcal",
+          "amount": 2040
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "year",
+      "typicalPricePence": 150,
+      "tags": ["food", "no-cook"],
+      "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
     },
     {
       "id": "items-base:energy-bars",

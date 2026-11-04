@@ -44,9 +44,9 @@ describe('gaps', () => {
     const water = find(gaps(doc, packs, NOW, 3), 'water:waterL')!;
     expect(water.shortfall).toBe(9);
     const [first] = water.suggestions;
-    expect(first).toMatchObject({ itemTypeId: 'items-base:bottled-water', qty: 1 });
-    expect(first!.label).toBe('1 × Bottled water (24 × 500 ml)');
-    expect(first!.pricePence).toBe(400);
+    expect(first).toMatchObject({ itemTypeId: 'items-base:bottled-water-6x2l', qty: 1 });
+    expect(first!.label).toBe('1 × Bottled water (6 × 2 L)');
+    expect(first!.pricePence).toBe(300);
     for (const s of water.suggestions) {
       // every suggestion on its own closes the shortfall, in whole units
       expect(Number.isInteger(s.qty)).toBe(true);
@@ -86,7 +86,10 @@ describe('gaps', () => {
     const doc = biggarDocument(); // 47.25 L wanted, 20 L held: 27.25 L short
     const water = find(gaps(doc, packs, NOW, 3), 'water:waterL')!;
     expect(water.shortfall).toBeCloseTo(27.25);
-    expect(water.suggestions[0]).toMatchObject({ itemTypeId: 'items-base:bottled-water', qty: 3 });
+    expect(water.suggestions[0]).toMatchObject({
+      itemTypeId: 'items-base:bottled-water-6x2l',
+      qty: 3,
+    });
   });
 
   it('does not suggest food that needs cooking when cooking is not covered', () => {

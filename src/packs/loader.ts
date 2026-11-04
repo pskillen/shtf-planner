@@ -87,6 +87,14 @@ export function loadPacks(raws: ReadonlyArray<{ label: string; raw: unknown }>):
         pack.items.forEach((item, i) => {
           const where = `items[${i}]`;
           claim(pack, items, item.id, item, issues, where);
+          if (
+            item.source !== undefined &&
+            item.source !== 'assumption' &&
+            !sourceDates.has(item.source)
+          )
+            issues.push(
+              `${where}: source ${item.source} is not listed in the pack's sources (with the date checked)`,
+            );
           item.gives.forEach((g, j) => {
             if (g.store === 'medicationDays')
               issues.push(
@@ -175,6 +183,12 @@ export function loadPacks(raws: ReadonlyArray<{ label: string; raw: unknown }>):
   // References across packs, once everything is indexed.
   for (const pack of all) {
     const issues: string[] = [];
+    if (pack.kind === 'items') {
+      pack.items.forEach((item, i) => {
+        if (item.assetTypeId !== undefined && !assets[item.assetTypeId])
+          issues.push(`items[${i}].assetTypeId: asset type "${item.assetTypeId}" does not exist`);
+      });
+    }
     if (pack.kind === 'plans') {
       pack.items.forEach((item, i) =>
         item.requires?.asset?.forEach((a) => {

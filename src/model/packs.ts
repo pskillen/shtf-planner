@@ -145,6 +145,17 @@ export const ItemTypeSchema = z.strictObject({
   typicalPricePence: z.number().int().min(0).optional(),
   tags: z.array(z.string()),
   barcodes: z.array(z.string()).optional(),
+  /**
+   * Set on a buy-only entry for a piece of equipment: the asset type it is. Equipment is kept
+   * under Home, Equipment, never as stock, so the entry is for suggestions ("buy a stove") and
+   * its add action opens the equipment form for this type. Stock of such a type counts nothing.
+   */
+  assetTypeId: NamespacedId.optional(),
+  /**
+   * Where a number on this type comes from (its `gives`): an https URL listed in the pack's
+   * `sources`, or `"assumption"`. Optional on older types; new ones carry it.
+   */
+  source: z.union([Url, z.literal('assumption')]).optional(),
 });
 export type ItemType = z.infer<typeof ItemTypeSchema>;
 
