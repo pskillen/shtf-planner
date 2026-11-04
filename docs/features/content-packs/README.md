@@ -54,12 +54,11 @@ shelfLife, ageBand?, typicalPricePence?, tags, barcodes?, assetTypeId?, source? 
   extinguisher. Power banks,
   fuels, gas bottles, cells, candles, food, water and hygiene are stock. `source` is where the
   numbers on a type come from: an `https` URL listed in the pack's `sources`, or `"assumption"`.
-  The sizes added for everyday shopping (water 2 L, 6 x 2 L and 5 L; pasta 500 g and 1 kg; rice
-  and oats 1 kg; a 340 g peanut butter jar; a 400 g tin) carry one. The staples use the same kcal
-  per 100 g as the bulk entries (pasta 350, rice 360, oats 380, peanut butter 600) and name the
-  UK Government's Composition of Foods Integrated Dataset (CoFID) as the reference to check them
-  against, not as a lookup of those exact figures; a tin's 400 kcal and the water prices are
-  assumptions (`"assumption"`).
+  The sizes added for everyday shopping (bottled water, pasta, rice, oats, peanut butter, tins, toilet
+  bags) are all marked `"assumption"`: the staples reuse the kcal per 100 g of the bulk entries
+  (pasta 350, rice 360, oats 380, peanut butter 600), the tin's 400 kcal and every price are
+  estimates. They have not been checked against the UK Government's Composition of Foods
+  Integrated Dataset (CoFID); doing so, and citing it, is open.
 - **`assets`**: `AssetType { id, name, category, questions, contributes, maintenance }`. A
   `Contribution` says what the asset adds to a capability, optionally only `when` a question has an
   answer: `converts` (burns a store per running hour), `outputPerHour`, `providesPerDay` or
