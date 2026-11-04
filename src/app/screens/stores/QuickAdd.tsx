@@ -18,6 +18,7 @@ import {
 import { MonthField } from './MonthField';
 import {
   addStock,
+  defaultLocationId,
   matchTypes,
   pushRecent,
   readLastLocation,
@@ -66,10 +67,9 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
   const [query, setQuery] = useState('');
   const [type, setType] = useState<ItemType | undefined>(start);
   const [qty, setQty] = useState(Math.max(1, prefill?.qty ?? 1));
-  const [locationId, setLocationId] = useState(() => {
-    const last = readLastLocation();
-    return last && doc.locations[last] ? last : (locations[0]?.id ?? '');
-  });
+  const [locationId, setLocationId] = useState(() =>
+    defaultLocationId(doc, start?.id ?? '', readLastLocation()),
+  );
   const [bestBefore, setBestBefore] = useState<string | undefined>(undefined);
   const [added, setAdded] = useState(0);
   const [last, setLast] = useState<string | null>(null);
@@ -142,6 +142,7 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
 
   function pick(t: ItemType): void {
     setType(t);
+    setLocationId(defaultLocationId(doc, t.id, readLastLocation()));
     setQty(1);
     setBestBefore(undefined);
     setLast(null);

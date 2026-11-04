@@ -160,6 +160,40 @@ export function pushRecent(typeId: string): void {
   );
 }
 
+/**
+ * Where a new item most likely goes: the place that already holds the most of its type, else the
+ * place last used, else the fullest place (the most stock records; a tie goes to the first by
+ * name). Empty when there are no places.
+ */
+export function defaultLocationId(
+  doc: Pick<Document, 'items' | 'locations'>,
+  typeId: string,
+  lastUsed: string | null,
+): string {
+  const places = Object.values(doc.locations).sort((a, b) => a.name.localeCompare(b.name));
+  const best = (score: (id: string) => number): string | undefined => {
+    let top: string | undefined;
+    let most = 0;
+    for (const l of places) {
+      const n = score(l.id);
+      if (n > most) [top, most] = [l.id, n];
+    }
+    return top;
+  };
+  const items = Object.values(doc.items);
+  return (
+    best((id) =>
+      items
+        .filter((i) => i.typeId === typeId && i.locationId === id)
+        .reduce((n, i) => n + i.qty, 0),
+    ) ??
+    (lastUsed && doc.locations[lastUsed] ? lastUsed : undefined) ??
+    best((id) => items.filter((i) => i.locationId === id).length) ??
+    places[0]?.id ??
+    ''
+  );
+}
+
 // ---- searching and adding -------------------------------------------------------------------
 
 /**

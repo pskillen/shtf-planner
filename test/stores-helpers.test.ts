@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   addMonthsYM,
   addStock,
+  defaultLocationId,
   formatMonth,
   matchTypes,
   monthChips,
@@ -148,5 +149,30 @@ describe('addStock', () => {
     // a different best-before is a separate row
     addStock(doc, { ...stock, bestBefore: '2028-01' }, '2026-11-04', () => 'other');
     expect(doc.items['other']).toBeDefined();
+  });
+});
+
+describe('defaultLocationId', () => {
+  const doc = biggarDocument();
+  const count = (id: string) => Object.values(doc.items).filter((i) => i.locationId === id).length;
+  const fullest = Object.values(doc.locations)
+    .map((l) => l.id)
+    .sort((a, b) => count(b) - count(a))[0]!;
+
+  it('is where the type already lives', () => {
+    expect(defaultLocationId(doc, 'items-base:uht-milk', 'loc-shed')).toBe('loc-pantry');
+  });
+
+  it('else the last place used', () => {
+    expect(defaultLocationId(doc, 'items-base:candles', 'loc-shed')).toBe('loc-shed');
+  });
+
+  it('else the fullest place, ignoring a last place that no longer exists', () => {
+    expect(defaultLocationId(doc, 'items-base:candles', null)).toBe(fullest);
+    expect(defaultLocationId(doc, 'items-base:candles', 'loc-gone')).toBe(fullest);
+  });
+
+  it('is empty with no places', () => {
+    expect(defaultLocationId({ items: {}, locations: {} }, 'items-base:candles', null)).toBe('');
   });
 });

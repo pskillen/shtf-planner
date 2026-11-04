@@ -66,4 +66,14 @@ describe('Quick add: the search step', () => {
     const recent = screen.getByRole('region', { name: 'Recent' });
     expect(within(recent).getByRole('button', { name: /Water can/i })).toBeTruthy();
   });
+
+  it('puts an item where its type already lives, not in the first place by name', () => {
+    open();
+    fireEvent.change(screen.getByLabelText('What are you adding?'), { target: { value: 'UHT' } });
+    fireEvent.click(screen.getByRole('button', { name: /UHT milk/ }));
+    expect((screen.getByLabelText('Where does it go?') as HTMLSelectElement).value).toBe(
+      'loc-pantry',
+    );
+    expect(screen.queryByText(/may freeze/)).toBeNull();
+  });
 });
