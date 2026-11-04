@@ -10,7 +10,10 @@ import {
 
 describe('getGoogleClientId', () => {
   beforeEach(() => localStorage.clear());
-  afterEach(() => vi.unstubAllEnvs());
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+  });
 
   it('is empty when the build has none and nothing is kept in the browser', () => {
     vi.stubEnv('VITE_GOOGLE_CLIENT_ID', '');
@@ -21,6 +24,15 @@ describe('getGoogleClientId', () => {
     vi.stubEnv('VITE_GOOGLE_CLIENT_ID', '');
     localStorage.setItem(CLIENT_ID_OVERRIDE_KEY, '  mine.apps.googleusercontent.com ');
     expect(getGoogleClientId()).toBe('mine.apps.googleusercontent.com');
+  });
+
+  it('ignores a client id kept in the browser on a production build', () => {
+    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', '');
+    vi.stubGlobal('__BUILD_ENV__', 'prod');
+    localStorage.setItem(CLIENT_ID_OVERRIDE_KEY, 'mine.apps.googleusercontent.com');
+    expect(getGoogleClientId()).toBe('');
+    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'built.apps.googleusercontent.com');
+    expect(getGoogleClientId()).toBe('built.apps.googleusercontent.com');
   });
 
   it('prefers the built-in id', () => {

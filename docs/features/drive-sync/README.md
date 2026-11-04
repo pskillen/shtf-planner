@@ -116,8 +116,8 @@ mode expires tokens after 7 days), and an OAuth web client whose JavaScript orig
 and deployed hostnames (see [Build and deploy](../../build/README.md)). The client id goes in
 `.env.local` as `VITE_GOOGLE_CLIENT_ID` and in the repository variable of the same name for CI
 builds. A client id is not a secret but is never committed. A build without one runs with Drive
-sync switched off. For trying your own Google project, a client id kept in localStorage under
-`shtf-planner:drive:clientId` is used when the build has none.
+sync switched off. For tests and local development, a client id kept in localStorage under
+`shtf-planner:drive:clientId` is used when the build has none; a `prod` build ignores it.
 
 ## Manual checklist (two Android phones, once a real client id exists)
 

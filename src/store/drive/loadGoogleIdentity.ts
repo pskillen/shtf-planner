@@ -74,15 +74,18 @@ export function loadGoogleIdentity(): Promise<GoogleIdentityClient> {
 }
 
 /**
- * A client id kept in this browser instead of built in: for trying the app against your own
- * Google project, and for the e2e suite (which fakes Google). Used only when the build has none.
+ * A client id kept in this browser instead of built in: for tests and local development (the
+ * e2e suite fakes Google with it). Used only when the build has none, and never in a production
+ * build, where a stray value in storage must not redirect sign-in to another client.
  */
 export const CLIENT_ID_OVERRIDE_KEY = 'shtf-planner:drive:clientId';
+
+const isProductionBuild = () => typeof __BUILD_ENV__ !== 'undefined' && __BUILD_ENV__ === 'prod';
 
 /** The OAuth web client id this build was made with; empty means Drive sync is off. */
 export function getGoogleClientId(): string {
   const built = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim() ?? '';
-  if (built) return built;
+  if (built || isProductionBuild()) return built;
   try {
     return globalThis.localStorage?.getItem(CLIENT_ID_OVERRIDE_KEY)?.trim() ?? '';
   } catch {
