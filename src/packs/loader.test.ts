@@ -245,6 +245,20 @@ describe('loadPacks', () => {
     ];
     expect(() => loadPacks([file(multi)])).toThrow(/exactly one of tag, risk, insulation/);
   });
+
+  it('accepts a perHousehold quantity (a one-off, independent of the horizon) as a rule quantity', () => {
+    const oneOff = structuredClone(guidance) as typeof guidance;
+    delete (oneOff.rules[0] as { perPersonDay?: unknown }).perPersonDay;
+    (oneOff.rules[0] as Record<string, unknown>).perHousehold = { store: 'firstAid', amount: 3 };
+    const packs = loadPacks([file(oneOff)]);
+    expect(packs.rules[oneOff.rules[0]!.id]!.perHousehold).toEqual({
+      store: 'firstAid',
+      amount: 3,
+    });
+
+    (oneOff.rules[0] as Record<string, unknown>).perHousehold = { store: 'firstAid', amount: 0 };
+    expect(() => loadPacks([file(oneOff)])).toThrow();
+  });
 });
 
 describe('enabledPacks', () => {

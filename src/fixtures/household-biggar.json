@@ -345,9 +345,9 @@
     "env": "local",
     "packVersions": {
       "assets-base": 2,
-      "guidance-grid-free": 1,
-      "guidance-uk-prepare": 1,
-      "guidance-us-ready": 2,
+      "guidance-grid-free": 2,
+      "guidance-uk-prepare": 2,
+      "guidance-us-ready": 3,
       "items-base": 1,
       "plans-base": 1,
       "regions": 2

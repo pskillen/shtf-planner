@@ -45,7 +45,7 @@ shelfLife, ageBand?, typicalPricePence?, tags, barcodes? }`. `gives` may not nam
   EV only when `v2l`. A contribution with a number carries a `source` (an `https` URL listed in
   the pack's `sources`, or `"assumption"`), as a rule does; the loader requires it.
 - **`guidance`**: `horizonBands` and `rules`. A `Rule` states a quantity (`perPersonDay`,
-  `perPetDay`, `perHouseholdDay`, `hoursPerDay`, `mealsPerPersonDay` or `rangeKm`), optional
+  `perPetDay`, `perHouseholdDay`, `perHousehold`, `hoursPerDay`, `mealsPerPersonDay` or `rangeKm`), optional
   `appliesTo`, `requires`, `multipliers`, `minHorizonDays`, and a `source`. With `ageBands`, a
   person in no band needs none.
 - **`plans`**: `items: PlanDef[]`; `requires` may name a risk, asset types (any of) or `pets`.
@@ -72,6 +72,8 @@ The numbers mean exactly this; the schema comments in `src/model/packs.ts` say t
   person with that tag, a `risk` one a household with that risk.
 - **`minHorizonDays` is a floor on the chosen horizon.** A rule with it applies only when the
   household's horizon is at least that many days (`>=`).
+- **`perHousehold` is a fixed amount**, the same at every horizon (one first aid kit, 3 uses). The
+  `perXDay` quantities are multiplied by the horizon in days.
 - **One rule owns each need.** Phone power is `guidance-grid-free:phone-power` for every region;
   a regional pack must not add a second rule for the same quantity, or an enabled pair counts it
   twice. A test enforces this for phone power.
@@ -109,6 +111,7 @@ no number of days. The 14-day US band is therefore this planner's choice, not Re
 ## Known gaps
 
 - No screens read the packs yet.
-- A rule cannot express a one-off item (one torch, one radio, one first aid kit): those are
-  approximated per day or left to the plans pack.
+- `perHousehold` expresses a one-off amount of a store (the first aid kit). A one-off that has no
+  store (a radio, a torch as a thing rather than as light) cannot be a rule: the radio is the
+  engine's own comms target, and torches count as light.
 - No diesel store: diesel generators and oil heating are not modelled.

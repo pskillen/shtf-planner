@@ -2,7 +2,7 @@
   "format": 1,
   "id": "guidance-uk-prepare",
   "kind": "guidance",
-  "version": 1,
+  "version": 2,
   "name": "UK Government: Be Ready",
   "region": "UK",
   "sources": [
@@ -36,16 +36,6 @@
       "perPersonDay": {
         "store": "foodKcal",
         "amount": 2000
-      },
-      "source": "assumption"
-    },
-    {
-      "id": "guidance-uk-prepare:first-aid",
-      "capability": "medical",
-      "text": "A first aid kit: plasters, bandages, thermometer, antiseptic, eyewash, sterile dressings, gloves, tape, tweezers. One kit for three days is an assumption.",
-      "perHouseholdDay": {
-        "store": "firstAid",
-        "amount": 1
       },
       "source": "assumption"
     }

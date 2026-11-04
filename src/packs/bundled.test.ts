@@ -49,6 +49,15 @@ describe('the bundled packs', () => {
     }
   });
 
+  it('states first aid once, as a one-off per household, not per day or per region', () => {
+    const owners = Object.values(packs.rules).filter((r) => r.perHousehold?.store === 'firstAid');
+    expect(owners.map((r) => r.id)).toEqual(['guidance-grid-free:first-aid']);
+    const perDay = Object.values(packs.rules).filter(
+      (r) => r.perHouseholdDay?.store === 'firstAid',
+    );
+    expect(perDay).toEqual([]);
+  });
+
   it('carries the game items plus the planner additions', () => {
     const items = Object.values(packs.items);
     expect(items.length).toBeGreaterThanOrEqual(82);

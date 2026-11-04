@@ -25,7 +25,9 @@ const TODAY = '2026-09-01';
 /** The pack versions the fixture was written against (a test checks they are current). */
 const PACK_VERSIONS: Record<string, number> = {
   'assets-base': 2,
-  'guidance-us-ready': 2,
+  'guidance-grid-free': 2,
+  'guidance-uk-prepare': 2,
+  'guidance-us-ready': 3,
   regions: 2,
 };
 

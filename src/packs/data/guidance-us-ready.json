@@ -2,7 +2,7 @@
   "format": 1,
   "id": "guidance-us-ready",
   "kind": "guidance",
-  "version": 2,
+  "version": 3,
   "name": "US Government: Ready.gov",
   "region": "US",
   "sources": [
@@ -47,16 +47,6 @@
       "perPersonDay": {
         "store": "foodKcal",
         "amount": 2000
-      },
-      "source": "assumption"
-    },
-    {
-      "id": "guidance-us-ready:first-aid",
-      "capability": "medical",
-      "text": "A first aid kit is part of the basic kit. One kit per household per day of the horizon is an assumption.",
-      "perHouseholdDay": {
-        "store": "firstAid",
-        "amount": 1
       },
       "source": "assumption"
     }

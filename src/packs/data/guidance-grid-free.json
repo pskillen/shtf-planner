@@ -2,7 +2,7 @@
   "format": 1,
   "id": "guidance-grid-free",
   "kind": "guidance",
-  "version": 1,
+  "version": 2,
   "name": "Grid-free capability rules (planner assumptions)",
   "sources": [
     {
@@ -182,6 +182,16 @@
           "M": 0.75,
           "L": 1.5
         }
+      },
+      "source": "assumption"
+    },
+    {
+      "id": "guidance-grid-free:first-aid",
+      "capability": "medical",
+      "text": "One first aid kit per household, whatever the horizon: plasters, bandages, thermometer, antiseptic, eyewash, sterile dressings, gloves, tape, tweezers. A standard kit counts as 3 uses, so one kit meets it. Both the need and the 3 uses are assumptions.",
+      "perHousehold": {
+        "store": "firstAid",
+        "amount": 3
       },
       "source": "assumption"
     }
