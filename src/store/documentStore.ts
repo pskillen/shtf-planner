@@ -227,10 +227,18 @@ export async function openStore(options: OpenOptions = {}): Promise<DocumentStor
     export: () => JSON.stringify(sortKeys(snapshot), null, 2) + '\n',
     importJson(json, mode) {
       if (mode !== 'replace') throw new Error(`Unknown import mode "${String(mode)}".`);
+      // A document from a newer build is never overwritten by an import: update this device
+      // first. An `invalid` store is the recovery case, so it may be replaced.
+      if (status.kind === 'too-new') throw status.error;
       const result = bringForward(JSON.parse(json), steps, target);
       if (result.kind === 'too-new') throw result.error;
       if (result.kind === 'invalid') throw result.error;
       const next = result.doc;
+      // The live document's identity survives a restore: its creation time, and the devices that
+      // have written to it (the import's own devices are added, not substituted).
+      const live = snapshot.meta as Partial<Document['meta']> | undefined;
+      if (live?.createdAt) next.meta.createdAt = live.createdAt;
+      next.meta.devices = Array.from(new Set([...(live?.devices ?? []), ...next.meta.devices]));
       stampOpen(next, env, device);
       invalid = undefined;
       write(next, 'import');

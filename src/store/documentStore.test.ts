@@ -178,10 +178,30 @@ describe('export and import', () => {
     b.importJson(json, 'replace');
     expect(b.get().household.members.map((m) => m.id)).toEqual(['m1']);
     expect(Object.keys(b.get().locations)).toEqual(['l']);
-    // devices gained this one; everything else matches
-    expect(JSON.parse(b.export())).toEqual(JSON.parse(json));
+    // the live createdAt and devices are kept; everything else matches the import
+    const live = JSON.parse(b.export());
+    const imported = JSON.parse(json);
+    expect(live.meta.createdAt).not.toBe(undefined);
+    expect({ ...live, meta: { ...live.meta, createdAt: 0, devices: 0 } }).toEqual({
+      ...imported,
+      meta: { ...imported.meta, createdAt: 0, devices: 0 },
+    });
     await a.close();
     await b.close();
+  });
+
+  it('importJson keeps the live createdAt and unions the devices with the import', async () => {
+    const live = await open({ deviceId: 'phone' });
+    const createdAt = live.get().meta.createdAt;
+    const other = emptyDocument('local', '2020-01-01T00:00:00.000Z');
+    other.meta.devices = ['laptop', 'phone'];
+    live.importJson(JSON.stringify(other), 'replace');
+    expect(live.get().meta.createdAt).toBe(createdAt);
+    expect([...live.get().meta.devices].sort()).toEqual(['laptop', 'phone']);
+    // a device the live document knew but the import did not stays listed
+    live.importJson(JSON.stringify(emptyDocument('local')), 'replace');
+    expect([...live.get().meta.devices].sort()).toEqual(['laptop', 'phone']);
+    await live.close();
   });
 
   it('importJson refuses garbage and a newer schema', async () => {
@@ -191,6 +211,41 @@ describe('export and import', () => {
     newer.meta.schemaVersion = 9;
     expect(() => a.importJson(JSON.stringify(newer), 'replace')).toThrow(SchemaTooNewError);
     await a.close();
+  });
+
+  it('importJson on a store holding a newer document throws and writes nothing', async () => {
+    const newer = await open({ schemaVersion: 2, steps: [addSize] });
+    const old = await open({ schemaVersion: 1, steps: [], validate: false });
+    old.mergeBytes(newer.bytes());
+    const status = old.status();
+    expect(status.kind).toBe('too-new');
+    const before = old.heads();
+    const valid = JSON.stringify(emptyDocument('local'));
+    expect(() => old.importJson(valid, 'replace')).toThrow(SchemaTooNewError);
+    expect(old.heads()).toBe(before);
+    expect(old.status().kind).toBe('too-new');
+    expect(old.get().meta.schemaVersion).toBe(2);
+  });
+
+  it('importJson still recovers a store whose document is invalid', async () => {
+    const name = dbName();
+    const broken = await openStore({
+      name,
+      env: 'local',
+      deviceId: 'd',
+      channel: false,
+      validate: false,
+    });
+    broken.change('corrupt', (d) => {
+      (d.settings as { horizonDays: number }).horizonDays = 5;
+    });
+    await broken.close();
+    const store = await openStore({ name, env: 'local', deviceId: 'd', channel: false });
+    expect(store.status().kind).toBe('invalid');
+    store.importJson(JSON.stringify(emptyDocument('local')), 'replace');
+    expect(store.status()).toEqual({ kind: 'ok' });
+    expect(store.get().settings.horizonDays).toBe(3);
+    await store.close();
   });
 });
 
