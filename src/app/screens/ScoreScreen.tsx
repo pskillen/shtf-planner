@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { score } from '../../engine';
+import { coverage, score } from '../../engine';
 import { today } from '../../util';
 import { useDocument } from '../state';
 import { usePacks } from '../usePacks';
@@ -28,7 +28,11 @@ export function ScoreScreen() {
   const packs = usePacks();
   const horizonDays = doc.settings.horizonDays;
   const view = useMemo(
-    () => scoreView(score(doc, packs, today(), horizonDays)),
+    () =>
+      scoreView(score(doc, packs, today(), horizonDays), {
+        coverage: coverage(doc, packs, today(), horizonDays),
+        region: doc.settings.region,
+      }),
     [doc, packs, horizonDays],
   );
 
@@ -71,7 +75,13 @@ export function ScoreScreen() {
               </span>
             </div>
             <Bar name={b.name} percent={b.percent} />
-            {b.reason ? <p className="muted bar-why">{b.reason}</p> : null}
+            {b.shortfall || b.reason ? (
+              <p className="bar-why">
+                {b.shortfall ? <span>{b.shortfall}</span> : null}
+                {b.shortfall && b.reason ? ' ' : null}
+                {b.reason ? <span className="muted">{b.reason}</span> : null}
+              </p>
+            ) : null}
           </li>
         ))}
       </ul>

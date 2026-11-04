@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { ScoreScreen } from '../src/app/screens/ScoreScreen';
 import { scoreView, wholePercent } from '../src/app/screens/score/view';
 import { StoreContext } from '../src/app/state/storeContext';
-import { score } from '../src/engine';
+import { coverage, score } from '../src/engine';
 import { biggarDocument } from '../src/fixtures/household-biggar';
 import { bundledPacks } from '../src/packs';
 import type { DocumentStore } from '../src/store';
@@ -32,7 +32,10 @@ const show = (doc: ReturnType<typeof biggarDocument>) => {
 describe('scoreView', () => {
   const doc = biggarDocument();
   const s = score(doc, bundledPacks(), '2026-11-15', 3);
-  const v = scoreView(s);
+  const v = scoreView(s, {
+    coverage: coverage(doc, bundledPacks(), '2026-11-15', 3),
+    region: 'UK',
+  });
 
   it('shows what the engine returned, weakest bar first', () => {
     expect(v.overall).toBe(wholePercent(s.overall));
@@ -40,6 +43,15 @@ describe('scoreView', () => {
     expect(v.bars[0]!.capability).toBe(s.weakest);
     const percents = v.bars.map((b) => b.percent);
     expect(percents).toEqual([...percents].sort((a, b) => a - b));
+  });
+
+  it('leads with the shortfall in numbers, then the rule’s words', () => {
+    const bar = (cap: string) => v.bars.find((b) => b.capability === cap)!;
+    expect(bar('heat').shortfall).toBe('Heat: 0 of 18 hours');
+    expect(bar('plans').shortfall).toBe('Plans: 1 of 9 done');
+    expect(bar('comms').shortfall).toBe('Communications: 0 of 1 radio');
+    expect(bar('water').shortfall).toMatch(/^Water: [\d.]+ of [\d.]+ L$/);
+    expect(v.bars.every((b) => b.shortfall !== '')).toBe(true);
   });
 
   it('gives each bar the weakest target’s own words as the reason', () => {
@@ -80,6 +92,9 @@ describe('the Score screen', () => {
     const water = screen.getByRole('meter', { name: 'Water' });
     expect(Number(water.getAttribute('aria-valuenow'))).toBeGreaterThan(0);
     expect(screen.getByRole('meter', { name: 'Overall at 7 days' })).toBeTruthy();
+    // the shortfall leads each bar's note; the rule's words follow in muted type
+    const heat = screen.getByText('Heat: 0 of 18 hours');
+    expect(heat.nextElementSibling?.className).toContain('muted');
   });
 
   it('follows the document: more water, a higher water bar', () => {

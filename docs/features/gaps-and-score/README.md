@@ -40,8 +40,9 @@ The Gaps and Score tabs. Both only show what the engine returns for the chosen h
 - The overall percent, "{weakest} is your gap", and "at 14 days" linking to the horizon screen. The
   numeral is in Caveat, an open-licence handwritten font **self-hosted** in `public/fonts/` (licence
   beside it) and precached by the service worker; nothing is requested from another host.
-- A bar per need, weakest first, with the percent, "Enough" once at target, and the weakest
-  target's own wording as the reason. Below the headline, "At 28 days you'd be at 41 %".
+- A bar per need, weakest first, with the percent and "Enough" once at target. Under it the
+  shortfall leads ("Heat: 0 of 18 hours", "Plans: 1 of 9 done"), then the weakest target's own rule
+  in muted type. Below the headline, "At 28 days you'd be at 41 %".
 - How a percent is worked out (the product of a need's cover ratios, plans as (done / total) to the
   power 1.5, the overall as their mean) is the engine's rule: see [Engine](../engine/README.md#score)
   for the rules and the worked examples. If it changes, only the engine does.
@@ -50,9 +51,9 @@ The Gaps and Score tabs. Both only show what the engine returns for the chosen h
 
 Equipment that gives the plan nothing (solar with no EPS, an EV with no vehicle-to-load) carries a
 Blocked badge and a plain reason from its type ("No EPS fitted", "No vehicle-to-load"); the engine's
-full reason, with the question and the answer, is under "Why?" and only shows when opened. The horizon table shows the engine's preview with sentence-case
-titles; rows are matched across horizons by need, and the three needs furthest short of their target
-at 28 days are in bold.
+full reason, with the question and the answer, is under "Why?" and only shows when opened. The
+horizon table shows the engine's preview with sentence-case titles; rows are matched across horizons
+by need, and the three needs furthest short of their target at 28 days are in bold.
 
 ## Tests
 

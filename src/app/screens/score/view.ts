@@ -1,5 +1,6 @@
-import type { CapabilityScore, Score } from '../../../engine';
+import type { CapabilityScore, Coverage, Score } from '../../../engine';
 import { CAPABILITY_LABEL } from '../../labels';
+import { formatAmount } from '../gaps/view';
 
 export interface ScoreBar {
   capability: CapabilityScore['capability'];
@@ -8,7 +9,9 @@ export interface ScoreBar {
   percent: number;
   /** At or over target. */
   enough: boolean;
-  /** The weakest target's own words: why this is the capability's score. */
+  /** What holds it back, in numbers: "Heat: 0 of 18 hours". Empty when there is no coverage to say. */
+  shortfall: string;
+  /** The rule's own words for the weakest target, shown after the shortfall in muted type. */
   reason: string;
 }
 
@@ -28,7 +31,27 @@ export const wholePercent = (n: number): number =>
  * this orders the bars (weakest first, the way the engine breaks a tie), rounds, and picks the
  * words. A capability with no targets takes no part in the score and has no bar.
  */
-export function scoreView(score: Score): ScoreView {
+export function scoreView(
+  score: Score,
+  from: { coverage?: readonly Coverage[]; region?: 'UK' | 'US' } = {},
+): ScoreView {
+  const cover = new Map((from.coverage ?? []).map((c) => [c.targetId, c.amount]));
+  const planCover = (from.coverage ?? []).filter((c) => c.targetId.startsWith('plan:'));
+  const shortfallOf = (c: CapabilityScore): string => {
+    const t = c.weakestTarget;
+    const name = CAPABILITY_LABEL[c.capability];
+    if (!t || cover.size === 0) return '';
+    if (c.capability === 'plans') {
+      return `${name}: ${planCover.filter((p) => p.amount >= 1).length} of ${c.targetCount} done`;
+    }
+    const unit = t.unit === 'h' ? 'hours' : t.unit;
+    const region = from.region ?? 'UK';
+    const have = formatAmount(Math.min(cover.get(t.id) ?? 0, t.amount), unit, region);
+    const need = formatAmount(t.amount, unit, region);
+    // "0 of 18 hours": the unit once, after the second number
+    const tail = need.slice(need.indexOf(' '));
+    return `${name}: ${have.endsWith(tail) ? have.slice(0, -tail.length) : have} of ${need}`;
+  };
   const bars = score.capabilities
     .filter((c) => c.targetCount > 0)
     .sort((a, b) => a.percent - b.percent || a.meanPercent - b.meanPercent)
@@ -37,6 +60,7 @@ export function scoreView(score: Score): ScoreView {
       name: CAPABILITY_LABEL[c.capability],
       percent: wholePercent(c.percent),
       enough: c.percent >= 100,
+      shortfall: shortfallOf(c),
       reason: c.weakestTarget?.rules[0]?.text ?? c.weakestTarget?.label ?? '',
     }));
   return {
