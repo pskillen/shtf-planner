@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { addMonths, coverage, gaps, score } from '../../engine';
+import { addMonths, applicablePlanItems, coverage, gaps, planDone, score } from '../../engine';
 import { today } from '../../util';
 import { EditArea } from '../components/EditArea';
+import { useDeferredDelete } from '../components/useDeferredDelete';
 import { Segmented } from '../components/controls';
 import { CAPABILITY_LABEL } from '../labels';
 import { useChange, useDocument } from '../state';
@@ -36,7 +37,8 @@ export function GapsScreen() {
     [doc, packs, now, horizonDays, sort],
   );
 
-  function markDone(planItemId: string): void {
+  // Done waits five seconds with an Undo before it is written, like a delete.
+  const done = useDeferredDelete((planItemId) => {
     const months = packs.plans[planItemId]?.expiresMonths;
     change('plan done', (d) => {
       d.plans[planItemId] = {
@@ -45,7 +47,21 @@ export function GapsScreen() {
         ...(months ? { expires: addMonths(now, months) } : {}),
       };
     });
+  }, 'marked done');
+
+  function undoDone(planItemId: string): void {
+    change('plan undone', (d) => {
+      const entry = d.plans[planItemId];
+      if (!entry) return;
+      delete entry.doneAt;
+      delete entry.expires;
+    });
   }
+
+  const todo = view.todo.filter((r) => !r.planItemId || !done.pending.has(r.planItemId));
+  const doneItems = applicablePlanItems(doc, packs).filter(
+    (id) => planDone(doc, packs, id, now) && !done.pending.has(id),
+  );
 
   const tick = (r: ShoppingRow) => (
     <button
@@ -117,12 +133,12 @@ export function GapsScreen() {
       )}
 
       <h2>To do</h2>
-      {view.todo.length === 0 ? (
+      {todo.length === 0 ? (
         <p className="muted">Nothing to do.</p>
       ) : (
         <EditArea>
           <ul className="row-list">
-            {view.todo.map((r) => (
+            {todo.map((r) => (
               <li className="row-item" key={r.key}>
                 <div className="row-main">
                   <strong>{r.label}</strong>
@@ -137,7 +153,7 @@ export function GapsScreen() {
                     type="button"
                     className="secondary"
                     aria-label={`Done: ${r.label}`}
-                    onClick={() => markDone(r.planItemId!)}
+                    onClick={() => done.request(r.planItemId!, r.label)}
                   >
                     Done
                   </button>
@@ -147,6 +163,32 @@ export function GapsScreen() {
           </ul>
         </EditArea>
       )}
+      {doneItems.length > 0 ? (
+        <>
+          <h3>Done</h3>
+          <EditArea>
+            <ul className="row-list">
+              {doneItems.map((id) => (
+                <li className="row-item" key={id}>
+                  <div className="row-main">
+                    <span>{packs.plans[id]?.text ?? id}</span>
+                    <span className="muted">Done {doc.plans[id]?.doneAt}</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="secondary"
+                    aria-label={`Undo done: ${packs.plans[id]?.text ?? id}`}
+                    onClick={() => undoDone(id)}
+                  >
+                    Undo
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </EditArea>
+        </>
+      ) : null}
+      {done.toast}
 
       <h2>Enough</h2>
       {view.enough.length === 0 ? (
