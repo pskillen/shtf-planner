@@ -138,7 +138,26 @@ order alone. `nextHorizonPreview` is the overall score at the next horizon (3, 7
 `(typeof HORIZONS)[number]`, so it drops into code keyed by the horizons). Each `PreviewRow` has the
 target's `capability`, a lower-case `label` ("water"), a sentence-case `title` for screens
 ("Drinking water", "Power for phones", "Radio"; a medication shows its own name), the `amount` and
-`unit`, and an `example` from the item catalogue.
+`unit`, and an `example`: worded as an example ("e.g. 4 × Bottled water (6 × 2 L)"), never an
+instruction, and always an illustration, not advice. `src/engine/examples.ts` builds them, pure
+and over the packs it is given:
+
+- **Stores** use everyday stock only (no equipment, `no-suggest` types or loose cells): the
+  cheapest size per unit whose count is 12 or fewer, else the biggest pack. So water at 3 days is
+  "4 × Bottled water (6 × 2 L)", not "37 × 500 ml cases".
+- **Food** is never one item for all the calories: a fixed split of the kcal across staples,
+  `FOOD_MIX` in `examples.ts` (25 % tins, 20 % pasta, 20 % rice, 15 % porridge oats, 20 % peanut
+  butter), each in the smallest pack size that gives a sane count (tins up to 36), shown as "e.g.
+  15 tins, 4 kg of pasta and rice, 1 kg of porridge oats and 3 jars of peanut butter". The shares
+  are an assumption chosen for variety, not a diet.
+- **Power for phones** is power banks; when even those would be more than a dozen, a portable
+  power station. Never a leisure battery.
+- **Heat and cooking** keep "a heater and its fuel to run it" (or the fuel for the one you own).
+- A radio is "e.g. a wind-up or battery-powered radio"; driving range is "about the same as a
+  vehicle charged or fuelled to drive N km".
+
+The horizon table's exact examples for the invented Biggar household are tested in
+`src/engine/preview.test.ts`.
 
 ## Where the numbers come from
 

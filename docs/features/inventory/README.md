@@ -20,6 +20,10 @@ The Stores tab: what the household has, by where it is kept, and the quick way t
 
 - **Rows.** Name, quantity and unit, the best-before as "Mar 2027" (red once its month has gone,
   amber within three months), a "floor 6" badge in a rotating place. Tapping a row edits it.
+- **Equipment in a place.** Under a place's stock, the equipment kept there (its "Where is it
+  kept?" answer) is listed read-only with an Equipment badge, its name, type and key answer
+  ("110 Ah"); tapping it opens its edit form on the Equipment screen. Equipment with no place is
+  not listed in Stores. Search matches equipment names too.
 - **Rotating places.** "The floor counts, not today's stock": the engine counts the lower of what is
   on the shelf and the floor. "Set floors" lists the types in that place with a stepper each; 0
   removes the floor. A floor with nothing on the shelf is still listed, at 0.
@@ -28,7 +32,11 @@ The Stores tab: what the household has, by where it is kept, and the quick way t
   the Shed", on the row and in Quick add. Quick add still allows it.
 - **Quick add** remembers the last place and recent items in `localStorage` (per device, never in the
   document); the recent list is read again after each add. With nothing typed it shows up to eight
-  recent types, then the other types under collapsed categories; a search lists matches flat.
+  recent types (on a fresh device, sixteen common ones instead), then "Browse everything by
+  category", closed and not built until opened; a search lists matches flat. Equipment is never
+  stock: a search that matches a stove, generator or battery lists it under "Equipment: add to
+  your home", which opens the equipment form with that type chosen, and with nothing typed there is
+  one such route to the equipment screen.
   "Add as a custom item" sits beside the search box. The place starts as where that type already
   lives, else the last place used, else the fullest place. Stock of the same type, place and best-before is added to rather than listed twice. The
   best-before is optional; the chips follow how long the type keeps (+1 y, +2 y, +5 y for things that

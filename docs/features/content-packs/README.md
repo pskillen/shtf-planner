@@ -35,12 +35,29 @@ Questions and maintenance items have ids local to their asset type (`answers` an
 the document are keyed by them).
 
 - **`items`**: `ItemType { id, name, category, unit, gives: [{ store, amount }], suitability,
-shelfLife, ageBand?, typicalPricePence?, tags, barcodes? }`. `gives` may not name
+shelfLife, ageBand?, typicalPricePence?, tags, barcodes?, assetTypeId?, source? }`. `gives` may not name
   `medicationDays` (computed from the document). Tags the engine reads: `needs-cooking` (counts
   only while cooking is covered), `radio-rx` (receives broadcasts: meets the comms radio and is suggested for it; PMR446
   walkie-talkies are `radio-tx` only),
   `treatment` (makes raw water safe) and `no-suggest` (never a first suggestion: the engine offers
-  it only when nothing else gives the store).
+  it only when nothing else gives the store). `phone` marks the power banks the horizon preview
+  names for phone power, and `portable-power` the power station it falls back to for a month.
+  **One home per thing.** An item type that is really equipment has `assetTypeId` (an asset type
+  of the assets pack; the loader checks it exists). It is a buy-only entry: it keeps its price and
+  what one unit gives so the shopping list can suggest it, but it is never stock. Quick add does
+  not offer it (it offers the equipment form for that asset type instead), the shopping list's
+  tick opens the equipment form, and a stock row of such a type (a document made before the split)
+  counts nothing, with a note saying so. The linked entries are the camping, rocket, paraffin,
+  catalytic and cabinet gas stoves and heaters, the power station, leisure battery, generators,
+  solar panel and kit, wind-up radios, water butt, CO alarm and fire extinguisher. Power banks,
+  fuels, gas bottles, cells, candles, food, water and hygiene are stock. `source` is where the
+  numbers on a type come from: an `https` URL listed in the pack's `sources`, or `"assumption"`.
+  The sizes added for everyday shopping (water 2 L, 6 x 2 L and 5 L; pasta 500 g and 1 kg; rice
+  and oats 1 kg; a 340 g peanut butter jar; a 400 g tin) carry one. The staples use the same kcal
+  per 100 g as the bulk entries (pasta 350, rice 360, oats 380, peanut butter 600) and name the
+  UK Government's Composition of Foods Integrated Dataset (CoFID) as the reference to check them
+  against, not as a lookup of those exact figures; a tin's 400 kcal and the water prices are
+  assumptions (`"assumption"`).
 - **`assets`**: `AssetType { id, name, category, questions, contributes, maintenance }`. A
   `Contribution` says what the asset adds to a capability, optionally only `when` a question has an
   answer: `converts` (burns a store per running hour), `outputPerHour`, `providesPerDay` or
