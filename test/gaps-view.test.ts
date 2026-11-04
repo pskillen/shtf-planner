@@ -36,6 +36,19 @@ describe('the gaps view on the fixture household', () => {
     expect(rows.some((r) => r.kind === 'replenish' && /UHT milk/.test(r.label))).toBe(true);
   });
 
+  it('words a restock from its floor, with no days, and marks a buy row as beyond restocking', () => {
+    const rows = view(14).shopping;
+    const milk = rows.find((r) => r.kind === 'replenish' && /UHT milk/.test(r.label))!;
+    expect(milk.closes).toMatch(/^Pantry: UHT milk[^:]* is \d+ below its floor of \d+$/);
+    expect(milk.closes).not.toMatch(/short of/);
+    const buys = rows.filter((r) => r.kind === 'acquire' && r.capability === milk.capability);
+    expect(buys.length).toBeGreaterThan(0);
+    for (const b of buys) expect(b.closes).toMatch(/short of 14 days, beyond restocking$/);
+    // a need with nothing to restock says nothing of the kind
+    const water = rows.find((r) => r.capability === 'water')!;
+    expect(water.closes).not.toMatch(/restocking/);
+  });
+
   it('says what each row closes, with a price when the pack has one', () => {
     const water = view(14).shopping.find((r) => r.capability === 'water')!;
     expect(water.label).toMatch(/^\d+ × /);

@@ -24,6 +24,8 @@ export interface Gap {
   kind: 'acquire' | 'replenish' | 'task' | 'plan';
   /** A critical medication. */
   critical?: boolean;
+  /** For `replenish`: which floor, so a screen can say "3 below its floor of 6". */
+  restock?: { place: string; typeName: string; floor: number; actual: number };
 }
 
 const KIND_ORDER: Gap['kind'][] = ['acquire', 'replenish', 'task', 'plan'];
@@ -127,6 +129,7 @@ export function gapsFrom(doc: Document, packs: Packs, a: Analysis): Gap[] {
       shortfall: qty * give.amount,
       unit: t.unit,
       kind: 'replenish',
+      restock: { place: where, typeName: type.name, floor: b.floor, actual: b.actual },
       suggestions: [
         {
           itemTypeId: type.id,

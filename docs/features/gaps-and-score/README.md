@@ -20,8 +20,10 @@ The Gaps and Score tabs. Both only show what the engine returns for the chosen h
 ## Gaps
 
 - **Shopping.** One line per suggestion: "2 × Water can (10 L)", what it closes ("water: 20 L short of
-  14 days"), a rough price when the pack has one. Restocking a rotating place comes first, then
-  buying. A store or radio shortfall lists the best choice with "or" alternatives; a shortfall of
+  14 days"), a rough price when the pack has one. Restocking a rotating place comes first,
+  under "Back to your floors" and worded from the floor ("Pantry: UHT milk is 3 below its floor of
+  6", no "short of N days"), then buying; a buy row for the same need says "beyond restocking".
+  Nothing sums the two. A store or radio shortfall lists the best choice with "or" alternatives; a shortfall of
   heat or cooking hours lists a heater and its fuel as separate lines. Sort by weakest need first
   or by cheapest cover (the row's own price, unpriced last). The tick opens Quick add with that
   item and quantity.

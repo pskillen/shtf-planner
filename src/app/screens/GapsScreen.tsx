@@ -59,6 +59,28 @@ export function GapsScreen() {
     </button>
   );
 
+  const restock = view.shopping.filter((r) => r.kind === 'replenish');
+  const buy = view.shopping.filter((r) => r.kind === 'acquire');
+  const shoppingList = (rows: ShoppingRow[]) => (
+    <ul className="row-list">
+      {rows.map((r) => (
+        <li className="row-item" key={r.key}>
+          <div className="row-main">
+            <strong>{r.label}</strong>
+            <span className="muted">
+              {r.closes}
+              {r.pricePence !== undefined ? ` · about ${formatPrice(r.pricePence)}` : ''}
+            </span>
+            {r.alternatives.length > 0 ? (
+              <span className="muted">or {r.alternatives.join(', ')}</span>
+            ) : null}
+          </div>
+          {tick(r)}
+        </li>
+      ))}
+    </ul>
+  );
+
   return (
     <section className="screen gaps">
       <h1>Gaps</h1>
@@ -82,26 +104,14 @@ export function GapsScreen() {
             onChange={setSort}
           />
           <EditArea>
-            <ul className="row-list">
-              {view.shopping.map((r) => (
-                <li className="row-item" key={r.key}>
-                  <div className="row-main">
-                    <strong>
-                      {r.label}
-                      {r.kind === 'replenish' ? <span className="badge">restock</span> : null}
-                    </strong>
-                    <span className="muted">
-                      {r.closes}
-                      {r.pricePence !== undefined ? ` · about ${formatPrice(r.pricePence)}` : ''}
-                    </span>
-                    {r.alternatives.length > 0 ? (
-                      <span className="muted">or {r.alternatives.join(', ')}</span>
-                    ) : null}
-                  </div>
-                  {tick(r)}
-                </li>
-              ))}
-            </ul>
+            {restock.length > 0 ? (
+              <>
+                <h3>Back to your floors</h3>
+                {shoppingList(restock)}
+              </>
+            ) : null}
+            {restock.length > 0 && buy.length > 0 ? <h3>To buy</h3> : null}
+            {buy.length > 0 ? shoppingList(buy) : null}
           </EditArea>
         </>
       )}

@@ -955,3 +955,9 @@ button.tick {
 div.row-main {
   display: flex;
 }
+
+.gaps h3 {
+  margin: 1rem 0 0.25rem;
+  font-size: 0.95rem;
+  color: var(--muted);
+}

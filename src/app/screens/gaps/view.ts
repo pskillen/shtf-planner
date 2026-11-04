@@ -11,7 +11,10 @@ export interface ShoppingRow {
   capability: CapabilityId;
   kind: 'acquire' | 'replenish';
   label: string;
-  /** "water: 20 L short of 14 days" */
+  /**
+   * What it closes: "water: 20 L short of 14 days"; for a restock, worded from the floor ("Pantry:
+   * UHT milk is 3 below its floor of 6"), with no days.
+   */
   closes: string;
   pricePence?: number;
   /** What Quick add opens with when the row is ticked; absent for advice with nothing to add. */
@@ -76,7 +79,10 @@ const ALTERNATIVES = new Set<Gap['target']['kind']>(['store', 'device']);
 
 function shoppingRowsFor(gap: Gap, horizonDays: number, region: 'UK' | 'US', at: number) {
   if (gap.kind !== 'acquire' && gap.kind !== 'replenish') return [];
-  const closes = closesText(gap, horizonDays, region);
+  const closes =
+    gap.kind === 'replenish' && gap.restock
+      ? `${gap.restock.place}: ${gap.restock.typeName} is ${round1(gap.restock.floor - gap.restock.actual)} below its floor of ${round1(gap.restock.floor)}`
+      : closesText(gap, horizonDays, region);
   const base = { capability: gap.capability, kind: gap.kind, closes, critical: gap.critical };
   const row = (s: Suggestion, i: number, alternatives: string[]): ShoppingRow => ({
     ...base,
@@ -126,6 +132,13 @@ export function buildGapsView(input: {
   const weakest = weakestFirst(score);
 
   const shopping = gaps.flatMap((g, at) => shoppingRowsFor(g, horizonDays, region, at));
+  // Restocking a floor and buying more are not summed: where both exist for a need, the buy row
+  // says it is beyond restocking.
+  const restocked = new Set(
+    shopping.filter((r) => r.kind === 'replenish').map((r) => r.capability),
+  );
+  for (const r of shopping)
+    if (r.kind === 'acquire' && restocked.has(r.capability)) r.closes += ', beyond restocking';
   const kindOrder = (r: ShoppingRow) => (r.kind === 'replenish' ? 0 : 1);
   const capOrder = (r: ShoppingRow) => weakest.indexOf(r.capability);
   shopping.sort((a, b) => {
