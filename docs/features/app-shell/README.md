@@ -1,0 +1,33 @@
+# App shell
+
+**Status:** Done
+**Tracking:** none (no tickets yet)
+
+No product behaviour yet: every tab is a placeholder.
+
+The frame every later screen lives in: an installable offline PWA, a landing page and a build footer.
+
+## Map
+
+| Piece        | Where                          | Behaviour                                                                                                                                                                           |
+| ------------ | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Landing page | `/` (`src/app/Landing.tsx`)    | Name, a beta note, a Start button to `/app`, an Android install hint and the Changelog. Shows the footer.                                                                           |
+| Shell        | `/app/*` (`src/app/Shell.tsx`) | Top bar (app name), a bottom nav with Home, Stores, Gaps, Score and More (each says "Coming in a later phase."), and the footer.                                                    |
+| Footer       | `src/app/Footer.tsx`           | `SHTF Planner · {env} · {version}`. `local · local` on a dev machine; a short SHA on continuous builds; the bare tag on releases.                                                   |
+| PWA          | `vite.config.ts`               | Manifest (standalone, 192 and 512 px icons plus a padded maskable one), service worker precaching the built app, `prompt` updates.                                                  |
+| Update toast | `src/app/UpdateToast.tsx`      | "Update available" with Reload / Later when a new service worker is waiting. Reload applies it; the page is never reloaded without the user asking, so an edit in progress is safe. |
+| Changelog    | `scripts/releases.mjs`         | GitHub Releases baked into `src/generated/releases.json` at build time; bodies shown as plain paragraphs; "No releases yet." if none.                                               |
+| Debug hook   | `src/app/debug.ts`             | `?debug=1` installs an empty `window.__shtf` for tests.                                                                                                                             |
+
+## Notes
+
+- Routing is client-side (`BrowserRouter`); the service worker falls back to `index.html`, so deep
+  links like `/app/stores` work offline.
+- Styling is `src/styles.css`: theme variables, dark mode by `prefers-color-scheme`, tap targets of
+  at least 44 px, safe-area insets for the bottom nav.
+- Icons are generated from `public/favicon.svg` by `npm run icons` and committed.
+
+## Known gaps
+
+Markdown rendering of release bodies; any caching beyond the app bundle (content packs will ship
+inside the bundle when they land).

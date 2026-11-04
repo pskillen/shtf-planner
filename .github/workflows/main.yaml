@@ -1,0 +1,17 @@
+name: Deploy next
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/cloudflare-pages.yaml
+    secrets: inherit
+    with:
+      build_env: main
+      cloudflare_branch: next
