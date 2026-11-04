@@ -14,8 +14,8 @@ export function StoreBanner() {
   if (status.kind === 'invalid') {
     return (
       <div className="banner" role="alert">
-        This household could not be read, so it is read-only. Go to{' '}
-        <Link to="/app/more/settings">More → Settings → data</Link> to import a copy.
+        This household could not be read, so it is read-only.
+        <Link to="/app/more/settings">Go to More → Settings → data to import a copy.</Link>
       </div>
     );
   }

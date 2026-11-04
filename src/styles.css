@@ -258,6 +258,9 @@ fieldset.plain:disabled .switch-row {
 }
 
 .banner a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
   color: inherit;
 }
 
@@ -483,6 +486,8 @@ a:focus-visible {
 
 .row-main {
   flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
   min-height: 44px;
   justify-content: flex-start;
   flex-direction: column;
