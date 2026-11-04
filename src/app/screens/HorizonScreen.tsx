@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { bundledPacks } from '../../packs';
 import { formatVolume, today } from '../../util';
 import { FieldGroup, Segmented } from '../components/controls';
@@ -13,6 +13,11 @@ function amountText(row: PreviewRow | undefined, region: 'UK' | 'US'): string {
   return `${row.amount} ${row.unit}`.trim();
 }
 
+/** `picked` marks the chosen horizon; `shown` is the one column kept on a narrow screen. */
+const colClass = (days: number, chosen: number, shown: number): string | undefined =>
+  [days === chosen ? 'picked' : '', days === shown ? 'shown' : ''].filter(Boolean).join(' ') ||
+  undefined;
+
 /** How long to plan for: the amounts at 3, 7, 14 and 28 days for this household, and the pick. */
 export function HorizonScreen({ embedded = false }: { embedded?: boolean }) {
   const doc = useDocument();
@@ -20,6 +25,9 @@ export function HorizonScreen({ embedded = false }: { embedded?: boolean }) {
   const chosen = doc.settings.horizonDays;
   const region = doc.settings.region;
   const preview = useMemo(() => previewFor(doc, bundledPacks(), today()), [doc]);
+  // On a phone only one horizon's column fits: the picked one, unless the reader looks at another.
+  const [looking, setLooking] = useState<number | null>(null);
+  const shown = looking ?? chosen;
   const big = new Set(biggestAsks(preview));
   const labels = [...new Set(preview.flatMap((p) => p.rows.map((r) => r.label)))];
 
@@ -39,9 +47,10 @@ export function HorizonScreen({ embedded = false }: { embedded?: boolean }) {
           label="Days to plan for"
           value={chosen}
           options={HORIZONS.map((h) => ({ value: h, label: `${h} days` }))}
-          onChange={(horizonDays) =>
-            change('horizon', (d) => void (d.settings.horizonDays = horizonDays))
-          }
+          onChange={(horizonDays) => {
+            setLooking(null);
+            change('horizon', (d) => void (d.settings.horizonDays = horizonDays));
+          }}
         />
       </FieldGroup>
       <p>{HORIZON_SENTENCE[chosen]}</p>
@@ -53,6 +62,16 @@ export function HorizonScreen({ embedded = false }: { embedded?: boolean }) {
           table shows what it will cover.
         </p>
       ) : null}
+      <div className="narrow-only">
+        <FieldGroup label="Show amounts for">
+          <Segmented
+            label="Days to show amounts for"
+            value={shown}
+            options={HORIZONS.map((h) => ({ value: h, label: `${h} days` }))}
+            onChange={setLooking}
+          />
+        </FieldGroup>
+      </div>
       <div className="table-wrap">
         <table className="horizon">
           <thead>
@@ -62,7 +81,7 @@ export function HorizonScreen({ embedded = false }: { embedded?: boolean }) {
                 <th
                   scope="col"
                   key={p.horizonDays}
-                  className={p.horizonDays === chosen ? 'picked' : undefined}
+                  className={colClass(p.horizonDays, chosen, shown)}
                 >
                   {p.horizonDays} days
                 </th>
@@ -76,10 +95,7 @@ export function HorizonScreen({ embedded = false }: { embedded?: boolean }) {
                 {preview.map((p) => {
                   const row = p.rows.find((r) => r.label === label);
                   return (
-                    <td
-                      key={p.horizonDays}
-                      className={p.horizonDays === chosen ? 'picked' : undefined}
-                    >
+                    <td key={p.horizonDays} className={colClass(p.horizonDays, chosen, shown)}>
                       {amountText(row, region)}
                       {row?.example ? <div className="muted">{row.example}</div> : null}
                     </td>

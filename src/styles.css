@@ -609,6 +609,26 @@ table.horizon td {
   vertical-align: top;
 }
 
+/* A phone: the Need column and one horizon (the picked one, or the one chosen above the table). */
+.narrow-only {
+  display: none;
+}
+
+@media (max-width: 40rem) {
+  .narrow-only {
+    display: block;
+  }
+
+  table.horizon {
+    min-width: 0;
+  }
+
+  table.horizon thead th:not(:first-child):not(.shown),
+  table.horizon tbody td:not(.shown) {
+    display: none;
+  }
+}
+
 table.horizon .picked {
   background: color-mix(in srgb, var(--accent) 15%, transparent);
 }
