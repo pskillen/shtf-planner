@@ -58,6 +58,9 @@ days is in bold.
 
 ## Tests
 
-`test/gaps-view.test.ts`, `test/score-screen.test.tsx`, `test/equipment-blocked.test.tsx`,
-`test/stores-helpers.test.ts`, `test/custom-item.test.ts`, `test/self-hosted-font.test.ts`, and
-Playwright `e2e/inventory.spec.ts` (ten items through Quick add, floors, plan items, a phone width).
+`test/gaps-view.test.ts`, `test/gaps-screen.test.tsx` (Done and its undo),
+`test/score-screen.test.tsx`, `test/equipment-blocked.test.tsx`, `test/stores-helpers.test.ts`,
+`test/stores-screen.test.tsx` (edit sheet, floors, search), `test/quick-add.test.tsx`,
+`test/custom-item.test.ts`, `test/self-hosted-font.test.ts`, `src/engine/score.test.ts` (both scoring
+rules), and Playwright `e2e/inventory.spec.ts` (ten items through Quick add, floors, plan items, a
+phone width).

@@ -48,7 +48,9 @@ project of the SHTF game (`shtf-game`). Working title.
 - **Screens never compute targets.** How much a household needs is the engine's job; screens
   collect facts (`useChange`) and show what the engine returns. Screens live in
   `src/app/screens/`, sheets and form controls in `src/app/components/`.
-- **Packs for screens.** Screens call the engine and look up item types through `usePacks()` (`src/app/usePacks.ts`): the bundled packs with the household's own `customTypes` merged in (`withCustomTypes`, `src/packs/custom.ts`).
+- **Packs for screens.** Screens call the engine and look up item types through `usePacks()`
+  (`src/app/usePacks.ts`): the bundled packs with the household's own `customTypes` merged in
+  (`withCustomTypes`, `src/packs/custom.ts`).
 - **Packs.** Content (items, assets, guidance, plans, regions) is JSON in `src/packs/data/`,
   validated by `src/packs/loader.ts`. Every guidance rule has a `source` URL (listed in the pack's
   `sources` with the date checked) or `"assumption"`; never invent an official number. Bump a
