@@ -9,3 +9,12 @@ export {
   type TargetKind,
   type TargetRule,
 } from './targets';
+export {
+  coverage,
+  analyse,
+  type Analysis,
+  type BelowFloor,
+  type BlockedAsset,
+  type Coverage,
+  type CoverageSource,
+} from './coverage';
