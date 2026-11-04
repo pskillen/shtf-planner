@@ -137,7 +137,9 @@ export function Switch({
 
 /**
  * A number box that lets you type "1." or clear it while typing. It reports a number when the text
- * parses, `undefined` when it is empty, and ignores text that is not a number.
+ * parses, `undefined` when it is empty, and ignores text that is not a number. Inside a `Field` it
+ * is named by the visible label; `ariaLabel` is only for when several share one label, and must
+ * start with the visible text (so voice control and screen readers agree on the name).
  */
 export function NumberInput({
   value,

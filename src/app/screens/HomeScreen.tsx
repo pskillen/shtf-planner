@@ -72,7 +72,6 @@ export function HomeScreen({ embedded = false }: { embedded?: boolean }) {
             value={home.floors}
             min={1}
             step={1}
-            ariaLabel="Floors"
             onChange={(n) =>
               n && set('floors', (h) => void (h.floors = Math.max(1, Math.round(n))))
             }

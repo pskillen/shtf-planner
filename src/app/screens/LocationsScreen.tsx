@@ -112,11 +112,7 @@ function LocationSheet({
             : 'Optional: roughly how much it holds.'
         }
       >
-        <NumberInput
-          value={l.litres}
-          ariaLabel="Volume in litres"
-          onChange={(litres) => setL({ ...l, litres })}
-        />
+        <NumberInput value={l.litres} onChange={(litres) => setL({ ...l, litres })} />
       </Field>
       {blockedDelete ? <p className="note">{blockedDelete}</p> : null}
     </Sheet>

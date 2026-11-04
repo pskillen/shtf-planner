@@ -35,11 +35,7 @@ export function QuestionField({
   const unit = question.unit ? ` (${question.unit})` : '';
   return (
     <Field label={`${question.text}${unit}`} hint={hint}>
-      <NumberInput
-        value={typeof value === 'number' ? value : undefined}
-        ariaLabel={question.text}
-        onChange={onAnswer}
-      />
+      <NumberInput value={typeof value === 'number' ? value : undefined} onChange={onAnswer} />
     </Field>
   );
 }

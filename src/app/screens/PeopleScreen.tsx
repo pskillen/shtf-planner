@@ -185,7 +185,7 @@ function MemberSheet({
               <NumberInput
                 value={med.dosePerDay}
                 onChange={(n) => setMed(med.id, { dosePerDay: n ?? 0 })}
-                ariaLabel={`Units per day for ${med.name || 'medicine'}`}
+                ariaLabel={`Units taken per day for ${med.name || 'medicine'}`}
               />
             </Field>
             <Field label="Units on hand">
@@ -201,7 +201,7 @@ function MemberSheet({
                 min={1}
                 step={1}
                 onChange={(n) => setMed(med.id, { cycleDays: n ? Math.round(n) : undefined })}
-                ariaLabel={`Cycle days for ${med.name || 'medicine'}`}
+                ariaLabel={`Repeat cycle in days for ${med.name || 'medicine'}`}
               />
             </Field>
             <Switch
