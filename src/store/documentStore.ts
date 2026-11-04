@@ -1,4 +1,5 @@
 import * as Y from 'yjs';
+import { z } from 'zod';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import {
   DocumentSchema,
@@ -76,6 +77,9 @@ export interface OpenOptions {
   /** Validate every `change` against the schema. Default: dev builds only. */
   validate?: boolean;
 }
+
+/** The shape `meta.createdAt` must have (same rule as the document schema). */
+const CreatedAt = z.iso.datetime({ offset: true });
 
 const REMOTE = Symbol('tab-relay');
 const ROOT = 'doc';
@@ -237,11 +241,20 @@ export async function openStore(options: OpenOptions = {}): Promise<DocumentStor
       if (result.kind === 'invalid') throw result.error;
       const next = result.doc;
       // The live document's identity survives a restore: its creation time, and the devices that
-      // have written to it (the import's own devices are added, not substituted).
+      // have written to it (the import's own devices are added, not substituted). A live value
+      // that is itself malformed (the case an `invalid` store is being recovered from) is
+      // ignored in favour of the import's.
       const live = snapshot.meta as Partial<Document['meta']> | undefined;
-      if (live?.createdAt) next.meta.createdAt = live.createdAt;
-      next.meta.devices = Array.from(new Set([...(live?.devices ?? []), ...next.meta.devices]));
+      if (typeof live?.createdAt === 'string' && CreatedAt.safeParse(live.createdAt).success) {
+        next.meta.createdAt = live.createdAt;
+      }
+      const liveDevices =
+        Array.isArray(live?.devices) && live.devices.every((d) => typeof d === 'string')
+          ? live.devices
+          : [];
+      next.meta.devices = Array.from(new Set([...liveDevices, ...next.meta.devices]));
       stampOpen(next, env, device);
+      DocumentSchema.parse(next);
       invalid = undefined;
       write(next, 'import');
       refresh();

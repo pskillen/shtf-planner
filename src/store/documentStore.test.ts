@@ -204,6 +204,53 @@ describe('export and import', () => {
     await live.close();
   });
 
+  describe('importJson recovers a store whose live meta is malformed', () => {
+    const corrupt = async (name: string, breakMeta: (meta: Record<string, unknown>) => void) => {
+      const broken = await openStore({
+        name,
+        env: 'local',
+        deviceId: 'd',
+        channel: false,
+        validate: false,
+      });
+      broken.change('corrupt', (d) => breakMeta(d.meta as unknown as Record<string, unknown>));
+      await broken.close();
+    };
+    const cases: [string, (meta: Record<string, unknown>) => void][] = [
+      ['createdAt is not a timestamp', (m) => (m.createdAt = 'yesterday')],
+      ['devices is not a list', (m) => (m.devices = 5)],
+    ];
+    for (const [label, breakMeta] of cases) {
+      it(`when ${label}: ok now, and after a reopen and a merge`, async () => {
+        const name = dbName();
+        await corrupt(name, breakMeta);
+        const opts = { name, env: 'local' as const, deviceId: 'd', channel: false as const };
+        const store = await openStore(opts);
+        const createdBefore = (store.get().meta as { createdAt: string }).createdAt;
+        expect(store.status().kind).toBe('invalid');
+        store.importJson(
+          JSON.stringify(emptyDocument('local', '2021-02-03T00:00:00.000Z')),
+          'replace',
+        );
+        expect(store.status()).toEqual({ kind: 'ok' });
+        expect(store.get().meta.createdAt).toBe(
+          label.startsWith('createdAt') ? '2021-02-03T00:00:00.000Z' : createdBefore,
+        );
+        expect(store.get().meta.devices).toContain('d');
+        const other = await open({ deviceId: 'other' });
+        store.mergeBytes(other.bytes());
+        expect(store.status()).toEqual({ kind: 'ok' });
+        await store.close();
+        await other.close();
+        const again = await openStore(opts);
+        expect(again.status()).toEqual({ kind: 'ok' });
+        again.mergeBytes(again.bytes());
+        expect(again.status()).toEqual({ kind: 'ok' });
+        await again.close();
+      });
+    }
+  });
+
   it('importJson refuses garbage and a newer schema', async () => {
     const a = await open();
     expect(() => a.importJson('{"nope":1}', 'replace')).toThrow();
