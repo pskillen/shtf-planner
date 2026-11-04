@@ -8,10 +8,17 @@ export function UpdateToast() {
   } = useRegisterSW();
 
   if (!needRefresh) return null;
+
+  const reload = () => {
+    void updateServiceWorker(true);
+    // The worker does not claim clients, so on a first-ever visit this page is uncontrolled and
+    // the library's own reload (on controllerchange) never fires: reload it ourselves.
+    if (!navigator.serviceWorker?.controller) window.location.reload();
+  };
   return (
     <div className="toast" role="status">
       <span>Update available.</span>
-      <button type="button" onClick={() => void updateServiceWorker(true)}>
+      <button type="button" onClick={reload}>
         Reload
       </button>
       <button type="button" className="quiet" onClick={() => setNeedRefresh(false)}>
