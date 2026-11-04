@@ -38,8 +38,8 @@ describe('the shell', () => {
   });
 
   it('renders a placeholder for the tabs built later', async () => {
-    renderShell('/app/gaps');
-    expect(await screen.findByRole('heading', { name: 'Gaps' })).toBeTruthy();
+    renderShell('/app/score');
+    expect(await screen.findByRole('heading', { name: 'Score' })).toBeTruthy();
     expect(screen.getByText('Not in this version yet.')).toBeTruthy();
   });
 });

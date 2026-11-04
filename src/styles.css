@@ -807,3 +807,25 @@ button.link {
   background: var(--warn);
   color: var(--bg);
 }
+
+/* Gaps. */
+button.tick {
+  flex: none;
+  width: 48px;
+  min-height: 48px;
+  padding: 0;
+  border-radius: 24px;
+  background: transparent;
+  color: var(--accent);
+  border: 2px solid var(--accent);
+  font-size: 1.3rem;
+}
+
+.plain-list {
+  margin: 8px 0;
+  padding-left: 1.2rem;
+}
+
+.plain-list li {
+  margin: 4px 0;
+}
