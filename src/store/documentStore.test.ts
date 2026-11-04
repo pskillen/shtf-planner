@@ -422,6 +422,46 @@ const addSize: MigrationStep = {
 };
 
 describe('schema drift between devices', () => {
+  it('a fresh device on a bumped build starts at the target shape', async () => {
+    const horizon: MigrationStep = {
+      from: 1,
+      to: 2,
+      name: 'default horizon 3 to 7',
+      up(raw) {
+        const settings = raw.settings as Record<string, unknown>;
+        return {
+          ...raw,
+          settings: settings.horizonDays === 3 ? { ...settings, horizonDays: 7 } : settings,
+        };
+      },
+    };
+    const seen: number[] = [];
+    const name = dbName();
+    const fresh = await openStore({
+      name,
+      env: 'local',
+      deviceId: 'new',
+      channel: false,
+      schemaVersion: 2,
+      steps: [horizon],
+    });
+    seen.push(fresh.get().settings.horizonDays);
+    expect(fresh.get().meta.schemaVersion).toBe(2);
+    expect(fresh.status()).toEqual({ kind: 'ok' });
+    await fresh.close();
+    const again = await openStore({
+      name,
+      env: 'local',
+      deviceId: 'new',
+      channel: false,
+      schemaVersion: 2,
+      steps: [horizon],
+    });
+    seen.push(again.get().settings.horizonDays);
+    expect(seen).toEqual([7, 7]);
+    await again.close();
+  });
+
   it('goes read-only when a merge brings a newer schema, and subscribers hear it', async () => {
     const newer = await open({ schemaVersion: 2, steps: [addSize] });
     const old = await open({ schemaVersion: 1, steps: [], validate: false });

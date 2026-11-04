@@ -201,11 +201,10 @@ export async function openStore(options: OpenOptions = {}): Promise<DocumentStor
   }
 
   // First run: an empty document. Otherwise bring what is stored forward.
-  if (root.size === 0) {
-    initialise();
-  } else {
-    afterRemote();
-  }
+  // A fresh device on a bumped build writes schema-1 content (frozen), then is brought forward
+  // like any other document, so its first snapshot is already at the target shape.
+  if (root.size === 0) initialise();
+  afterRemote();
 
   function readOnlyError(): Error {
     if (status.kind === 'too-new') return status.error;
