@@ -28,17 +28,17 @@ Open the URL Vite prints (typically `http://localhost:5173/`). `?debug=1` instal
 
 ## Scripts
 
-| Script                            | Purpose                                                      |
-| --------------------------------- | ------------------------------------------------------------ |
-| `npm run dev`                     | Vite dev server                                              |
-| `npm run build`                   | Typecheck + production bundle (and the service worker)       |
-| `npm run preview`                 | Serve `dist/`                                                |
-| `npm run test` / `test:e2e`       | Vitest / Playwright (build first; `E2E_PORT` overrides 4173) |
-| `npm run lint` / `typecheck`      | ESLint (including the import fence) / `tsc -b`               |
-| `npm run format` / `format:check` | Prettier                                                     |
-| `npm run check`                   | format:check, lint, typecheck, test, build                   |
-| `npm run releases`                | Bake GitHub Releases into `src/generated/releases.json`      |
-| `npm run icons`                   | Regenerate the PWA icons from `public/favicon.svg`           |
+| Script                            | Purpose                                                                            |
+| --------------------------------- | ---------------------------------------------------------------------------------- |
+| `npm run dev`                     | Vite dev server                                                                    |
+| `npm run build`                   | Typecheck + production bundle (and the service worker)                             |
+| `npm run preview`                 | Serve `dist/`                                                                      |
+| `npm run test` / `test:e2e`       | Vitest / Playwright (build first; `E2E_PORT` overrides 4173)                       |
+| `npm run lint` / `typecheck`      | ESLint (including the import fence) / `tsc -b`                                     |
+| `npm run format` / `format:check` | Prettier                                                                           |
+| `npm run check`                   | format:check, lint, typecheck, test, build                                         |
+| `npm run releases`                | Bake GitHub Releases into `src/generated/releases.json`                            |
+| `npm run icons`                   | Regenerate the PWA icons (incl. the padded maskable one) from `public/favicon.svg` |
 
 ## The changelog
 
