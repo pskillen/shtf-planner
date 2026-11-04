@@ -79,9 +79,6 @@ jobs:
         run: node scripts/releases.mjs
 
       - name: Build SPA
-        env:
-          # A fake id: the e2e tests replace Google Identity Services and the Drive API.
-          VITE_GOOGLE_CLIENT_ID: e2e-fake-client.apps.googleusercontent.com
         run: npm run build
 
       - name: Install Playwright browsers

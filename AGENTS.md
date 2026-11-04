@@ -27,7 +27,7 @@ project of the SHTF game (`shtf-game`). Working title.
 | `src/engine/`    | Pure functions over the document and packs (targets, coverage, gaps, score)         |
 | `src/model/`     | TypeScript types and Zod schemas of the document and the packs                      |
 | `src/packs/`     | JSON content packs and their loader                                                 |
-| `src/store/`     | The document store (CRDT + IndexedDB) and later Drive sync                          |
+| `src/store/`     | The document store (CRDT + IndexedDB) and Drive sync (`sync.ts`, `drive/`)          |
 | `src/util/`      | Small pure helpers                                                                  |
 | `src/generated/` | Build output of `scripts/releases.mjs` (gitignored)                                 |
 | `test/`          | Unit tests that aren't next to their source, fixtures, helpers                      |
@@ -59,8 +59,13 @@ project of the SHTF game (`shtf-game`). Working title.
   migration step in `src/model/migrate.ts`; the container layout of a new document is frozen per
   schema. See `docs/features/data-model/`.
 - **Privacy.** Nothing leaves the browser except the user's own document to the user's own Google
-  Drive. No analytics, no server, no third-party calls at runtime. The changelog is baked at build
-  time from GitHub Releases, never fetched at runtime.
+  Drive: only Drive, only the user's own, never anything else. The only scope is `drive.file` (files
+  the app created). The only third-party script is Google Identity Services, loaded when the user
+  connects Drive. No analytics, no server, no other third-party calls at runtime. The changelog is
+  baked at build time from GitHub Releases, never fetched at runtime.
+- **Google client id.** `VITE_GOOGLE_CLIENT_ID` (`.env.local`, the Actions variable) is never
+  committed; `.env.example` names it. Tests fake Drive (`src/store/fakeDrive.ts`, `e2e/fakeGoogle.ts`)
+  and never call Google.
 - **Never commit the owner's household data.** Fixtures and examples use an invented family in
   Biggar.
 - **No status, progress or changelog files in the repo.** Release notes live in GitHub Releases;

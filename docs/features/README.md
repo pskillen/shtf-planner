@@ -11,3 +11,4 @@ One hub per feature, with a status line and a map. Docs ship in the same PR as t
 | [Setup screens](setup/README.md)           | Onboarding, the home hub, people, home, locations, equipment, risks, horizon, settings |
 | [Inventory](inventory/README.md)           | Stores tab, Quick add, floors, suitability warnings, custom items                      |
 | [Gaps and score](gaps-and-score/README.md) | Shopping and to-do lists, the preparedness score                                       |
+| [Drive sync](drive-sync/README.md)         | Household kept in step across devices through Google Drive                             |

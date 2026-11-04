@@ -1,0 +1,141 @@
+# Drive sync
+
+**Status:** Done
+**Tracking:** none
+
+The household document, kept in step across devices through the user's own Google Drive. No server:
+the browser talks to Google directly. One Google account in v1; sharing a household between
+accounts is not built.
+
+## Map
+
+| Piece               | Where                                                    | What                                                                                              |
+| ------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| The engine          | `src/store/sync.ts`                                      | `createSync()`: push, pull, the status, the questions. The contract is `SyncStatus` and the files |
+| Which copy?         | `src/store/syncRecords.ts`                               | Compares base, local and remote per record; applies a choice                                      |
+| What sync remembers | `src/store/syncPersistence.ts`                           | IndexedDB `shtf-planner-sync`: Drive ids, dirty flag, pending questions, the last-synced bytes    |
+| Drive and Google    | `src/store/drive/`                                       | API client, token flow, prefs, and `DrivePort` (what the engine uses)                             |
+| Forget this device  | `src/store/forget.ts`                                    | Deletes the household and the sync state locally                                                  |
+| Test support        | `src/store/fakeDrive.ts`, `e2e/fakeGoogle.ts`            | An in-memory Drive for unit tests; a faked Google at the network layer for e2e                    |
+| Status pill         | `src/app/sync/SyncPill.tsx`                              | In the top bar on every app screen; tapping it opens Data                                         |
+| Banners and dialogs | `src/app/sync/SyncChrome.tsx`                            | Env banner, newer-version banner, which-copy dialog, first-connect dialog, toast                  |
+| Data screen         | `/app/more/data` (`src/app/screens/data/DataScreen.tsx`) | Connect, Check Drive, Push now, Disconnect; export; import; forget this device                    |
+| Owner setup         | `scripts/setup-google-drive.sh`                          | The Google Cloud project, consent screen and OAuth client                                         |
+
+## What is on Drive
+
+An app-owned folder **SHTF Planner** in My Drive, with two files:
+
+| File             | Content                                                            | Written                     |
+| ---------------- | ------------------------------------------------------------------ | --------------------------- |
+| `household.yjs`  | The CRDT's full binary state (about 220 kB for 1,000 items)        | Every push, in place        |
+| `household.json` | `store.export()`: the readable document, with `meta.schemaVersion` | Every push, after the above |
+
+The app asks for the `drive.file` scope only: it can see files and folders **it created**, and
+nothing else in the Drive. That grant belongs to the Google account and the OAuth client, not to one
+browser, so a second device finds the same folder by name (checked on real Google with two
+browsers). If two devices race to create it, the oldest folder wins.
+
+## How it syncs
+
+Automatic. The pill says where things stand.
+
+- **Push** once per burst: 5 seconds after the last edit, immediately when the page is hidden, and
+  on `flush()` (which later features call at the end of a review). Both files are uploaded together.
+  Before uploading it looks at Drive; if the other device wrote in the meantime it merges first.
+- **Pull** on open, when the page becomes visible, every 10 minutes while it is visible, when the
+  network returns, and on **Check Drive**. It reads Drive's `modifiedTime` for `household.yjs` and
+  downloads only if that changed since the last look.
+- **Merge** is the CRDT's: concurrent edits to different records, or different fields of one
+  record, never conflict. The app keeps the bytes of the document **as of the last successful
+  push or pull** and compares base to local and base to remote record by record. A record is an
+  item, location, asset, plan item, review, member, pet, the home or the settings.
+  - Records only the other device changed are applied silently, with a toast ("3 changes from your
+    other device").
+  - A field both devices set to different values, or a record one deleted while the other edited
+    it, opens the **which-copy dialog**: a card per record with both values side by side, "Keep
+    mine" or "Take theirs", and "Keep all mine" / "Take all theirs". The choice is written as a
+    new change on top of the merge, so history stays consistent, then pushed. Nothing is pushed
+    while questions are waiting, and they survive a reload.
+- **First connect**: a device with no answers yet takes Drive's household without asking ("Loaded
+  your household from Google Drive"). A device with data meeting a household on Drive asks first
+  ("Merge them" or "Not now"), then merges both and shows what it changed. With nothing on Drive,
+  the first push creates the files.
+
+## The status
+
+`SyncStatus` is the contract (the acceptance checklist and later features rely on it):
+
+| Status               | Meaning                                                                        |
+| -------------------- | ------------------------------------------------------------------------------ |
+| `disconnected`       | Not connected to Drive on this device                                          |
+| `synced`             | Up to date as of `at`                                                          |
+| `pending`            | `edits` edits not sent yet, since `since`                                      |
+| `pushing`, `pulling` | A transfer is in progress                                                      |
+| `remoteNewer`        | Drive has changes waiting on an answer (which-copy, env banner, first connect) |
+| `offline`            | The network is down; `edits` waiting, since `since`                            |
+| `error`              | `message` says what; `reconnect` means the fix is the Connect button           |
+
+Edits made offline stay marked as unsent across reloads and are sent when the network returns.
+
+## Guards
+
+- **Newer schema.** If `meta.schemaVersion` on Drive (read from the small `household.json` first,
+  then from the CRDT itself) is newer than this build, nothing is merged and the status is `error`:
+  "Your other device runs a newer version; update this one".
+- **Another build's file.** Each push stamps `meta.env`. If the file on Drive was last written by a
+  different build than this one (a `dev` or `next` file opened on `prod`, say) a banner says "This
+  household file was last written by {env}; you are on {env}", with **Continue** (merge) and
+  **Don't sync** (leave sync off until the page reloads). The same env on both sides is quiet.
+
+## Signing in
+
+Google Identity Services' token flow, loaded only when the person connects. The access token (an
+hour) is kept in localStorage; there is no refresh token. Nothing opens a popup unprompted:
+
+- **Connect** is a button. If the popup is closed (Firefox does this after a few seconds) the app
+  goes quietly back to "Connect Google Drive"; no error is shown, and pressing it again works.
+- On expiry or a 401 the app tries **one** silent token request. If Google needs the person, the
+  status becomes `error` "Reconnect Google Drive" with a button, and pending edits are kept.
+- **Disconnect** revokes the token and forgets the folder; the household here and the files on
+  Drive are left alone. **Forget this device's data** deletes the household and the sync state
+  from this browser too; Drive is untouched, and connecting again brings it back.
+
+## Export and import
+
+The Data screen downloads `household-YYYY-MM-DD.json` (the same text as `household.json`) or `.yaml`.
+Import takes either, shows counts, and on confirmation replaces the household
+(`importJson(..., 'replace')`, which migrates and validates) and pushes. A file from a newer
+version is refused.
+
+## Owner setup
+
+Run `scripts/setup-google-drive.sh`. It walks through a Google Cloud project "SHTF Planner", the
+Drive API, the consent screen (external, `drive.file` only, **published to production**: testing
+mode expires tokens after 7 days), and an OAuth web client whose JavaScript origins are the local
+and deployed hostnames (see [Build and deploy](../../build/README.md)). The client id goes in
+`.env.local` as `VITE_GOOGLE_CLIENT_ID` and in the repository variable of the same name for CI
+builds. A client id is not a secret but is never committed. A build without one runs with Drive
+sync switched off. For trying your own Google project, a client id kept in localStorage under
+`shtf-planner:drive:clientId` is used when the build has none.
+
+## Manual checklist (two Android phones, once a real client id exists)
+
+1. Connect on both phones with the same Google account. The pill reads "Synced" on each.
+2. Add an item on one; bring the other to the foreground. The item appears and a toast says so.
+3. Airplane mode on one phone, edit, back online: the pill shows "Offline" with the edit count,
+   then "Synced", and the other phone gets the edit.
+4. Edit the same record on both while one is offline, then reconnect it: the which-copy dialog
+   lists both values; either choice ends up on both phones.
+5. Open a household file written by a `dev` build on a `next` build: the env banner appears and
+   nothing merges until you choose.
+6. Leave a phone for over an hour, open the app: it either syncs quietly or asks you to reconnect;
+   no popup appears by itself.
+
+## Not done / rejected
+
+- Sharing a household between two Google accounts (the file-by-id path exists in Drive's API; the
+  second-account behaviour has not been tested).
+- A refresh token or a server to hold one: the token flow is client-only by design.
+- Per-tab leadership: two tabs of one browser each run their own sync loop; the CRDT makes the
+  duplicate pushes harmless.
