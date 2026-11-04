@@ -28,7 +28,9 @@ The Gaps and Score tabs. Both only show what the engine returns for the chosen h
   or by cheapest cover (the row's own price, unpriced last). The tick opens Quick add with that
   item and quantity.
 - **To do.** Plan items with Done, which writes `plans[id].doneAt` and `expires` (from the plan's
-  `expiresMonths`). Tasks, such as "Fit an EPS to the solar PV", link to Equipment.
+  `expiresMonths`). Tasks, such as "Fit an EPS so Roof solar keeps working", link to Equipment and say what
+  the asset gives ("Roof solar gives nothing in a power cut until an EPS is fitted"), never a
+  shortfall. A plan item a task already covers (the EPS plan, while EPS tasks show) is left out.
 - **Enough.** Needs at or over target, neutrally: "Water: enough for 14 days; 6 L more than needed".
 
 ## Score

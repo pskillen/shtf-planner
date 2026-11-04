@@ -5,6 +5,7 @@ export {
   targets,
   planDone,
   applicablePlanItems,
+  ANSWERED_BY_ASSET,
   type Target,
   type TargetKind,
   type TargetRule,

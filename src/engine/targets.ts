@@ -65,7 +65,7 @@ export function planDone(doc: Document, packs: Packs, planItemId: string, asOf: 
  * `requires` has this question answered `true` (the EPS plan, once solar and the home battery are
  * fitted with one).
  */
-const ANSWERED_BY_ASSET: Readonly<Record<string, string>> = {
+export const ANSWERED_BY_ASSET: Readonly<Record<string, string>> = {
   'plans-base:eps': 'hasEps',
 };
 

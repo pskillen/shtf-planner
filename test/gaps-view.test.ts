@@ -105,6 +105,19 @@ describe('the gaps view on the fixture household', () => {
     expect(todo.some((r) => r.planItemId === 'plans-base:meeting-point')).toBe(false);
   });
 
+  it('words a task without a shortfall and hides the EPS plan item while EPS tasks show', () => {
+    const todo = view(3).todo;
+    const solar = todo.find((r) => r.kind === 'task' && /Roof solar/.test(r.label))!;
+    expect(solar.closes).toBe('Roof solar gives nothing in a power cut until an EPS is fitted');
+    expect(todo.filter((r) => r.kind === 'task').every((r) => !/short/.test(r.closes))).toBe(true);
+    expect(todo.filter((r) => /EPS/i.test(r.label))).toHaveLength(2);
+    expect(todo.some((r) => r.planItemId === 'plans-base:eps')).toBe(false);
+    // with the EPS fitted there are no tasks and the plan item is not offered either (engine rule)
+    const doc = structuredClone(biggarDocument());
+    for (const a of Object.values(doc.assets)) if ('hasEps' in a.answers) a.answers.hasEps = true;
+    expect(view(3, 'capability', doc).todo.some((r) => /EPS/.test(r.label))).toBe(false);
+  });
+
   it('lists what is enough, neutrally, with any surplus', () => {
     const enough = view(3).enough;
     const names = enough.map((e) => e.text);

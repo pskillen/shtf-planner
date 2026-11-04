@@ -1,6 +1,8 @@
-import type { Coverage, Gap, Score, Suggestion } from '../../../engine';
+import { ANSWERED_BY_ASSET } from '../../../engine';
+import type { BlockedAsset, Coverage, Gap, Score, Suggestion } from '../../../engine';
 import type { CapabilityId } from '../../../model';
 import { formatVolume } from '../../../util';
+import { blockedLine } from '../../blocked';
 import { CAPABILITY_LABEL } from '../../labels';
 
 export type ShoppingSort = 'capability' | 'cost';
@@ -33,7 +35,7 @@ export interface TodoRow {
   planItemId?: string;
   /** For a task from a blocked asset: the asset type (the row links to Equipment). */
   assetTypeId?: string;
-  /** Why, for a task. */
+  /** Why, for a task, in words with no shortfall ("Roof solar gives nothing in a power cut ..."). */
   closes: string;
 }
 
@@ -153,18 +155,37 @@ export function buildGapsView(input: {
     return capOrder(a) - capOrder(b);
   });
 
+  // A task from a blocked asset says what that asset gives, not how much is short.
+  const blockedByTask = new Map<string, BlockedAsset>(
+    coverage.flatMap((c) => c.blockedAssets ?? []).map((b) => [b.task, b]),
+  );
+  const taskQuestions = new Set(
+    gaps
+      .filter((g) => g.kind === 'task')
+      .flatMap((g) => g.suggestions.map((s) => blockedByTask.get(s.label)?.question))
+      .filter((q): q is string => q !== undefined),
+  );
   const todo: TodoRow[] = gaps
     .flatMap((g, at): TodoRow[] =>
       g.kind === 'plan' || g.kind === 'task'
-        ? g.suggestions.map((s, i) => ({
-            key: `${g.target.id}|${g.kind}|${at}|${i}`,
-            capability: g.capability,
-            kind: g.kind as 'task' | 'plan',
-            label: s.label,
-            closes: g.kind === 'plan' ? '' : closesText(g, horizonDays, region),
-            ...(s.planItemId ? { planItemId: s.planItemId } : {}),
-            ...(s.assetTypeId ? { assetTypeId: s.assetTypeId } : {}),
-          }))
+        ? g.suggestions
+            // A plan item a task already covers (the EPS plan, while EPS tasks show) is left out.
+            .filter((s) => {
+              const q = s.planItemId ? ANSWERED_BY_ASSET[s.planItemId] : undefined;
+              return !(q && taskQuestions.has(q));
+            })
+            .map((s, i) => {
+              const blocked = g.kind === 'task' ? blockedByTask.get(s.label) : undefined;
+              return {
+                key: `${g.target.id}|${g.kind}|${at}|${i}`,
+                capability: g.capability,
+                kind: g.kind as 'task' | 'plan',
+                label: s.label,
+                closes: blocked ? blockedLine(blocked) : '',
+                ...(s.planItemId ? { planItemId: s.planItemId } : {}),
+                ...(s.assetTypeId ? { assetTypeId: s.assetTypeId } : {}),
+              };
+            })
         : [],
     )
     .sort((a, b) => weakest.indexOf(a.capability) - weakest.indexOf(b.capability));
