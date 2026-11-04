@@ -1,3 +1,12 @@
 export { DocumentProvider } from './DocumentProvider';
-export { useChange, useDocument, useStoreStatus } from './storeContext';
+export {
+  useChange,
+  useDocument,
+  useStoreFiles,
+  useStoreStatus,
+  useStoreStatusIfOpen,
+} from './storeContext';
 export { useEditable } from './useEditable';
+export { SyncProvider } from './SyncProvider';
+export { forgetThisDevice } from './sharedSync';
+export { useSync, useSyncState } from './syncContext';

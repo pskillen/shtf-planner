@@ -1,5 +1,8 @@
 import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { Footer } from './Footer';
+import { DataScreen } from './screens/data/DataScreen';
+import { SyncChrome } from './sync/SyncChrome';
+import { SyncPill } from './sync/SyncPill';
 import { ScreenBoundary } from './ScreenBoundary';
 import { StoreBanner } from './StoreBanner';
 import { TABS, activeTab, showsTabs } from './tabs';
@@ -38,8 +41,10 @@ export function Shell() {
     <div className={tabs ? 'shell' : 'shell no-tabs'}>
       <header className="topbar">
         <span className="topbar-name">SHTF Planner</span>
+        <SyncPill />
       </header>
       <StoreBanner />
+      <SyncChrome />
       <main className="main">
         <ScreenBoundary key={screenKey(pathname)}>
           <Routes>
@@ -101,6 +106,7 @@ export function Shell() {
                 </Screen>
               }
             />
+            <Route path="more/data" element={<DataScreen />} />
             <Route
               path="more/settings"
               element={

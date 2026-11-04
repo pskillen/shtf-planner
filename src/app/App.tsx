@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { Landing } from './Landing';
-import { DocumentProvider } from './state';
+import { DocumentProvider, SyncProvider } from './state';
 import { Shell } from './Shell';
 import { UpdateToast } from './UpdateToast';
 
@@ -13,7 +13,9 @@ export function App() {
           path="/app/*"
           element={
             <DocumentProvider>
-              <Shell />
+              <SyncProvider>
+                <Shell />
+              </SyncProvider>
             </DocumentProvider>
           }
         />
