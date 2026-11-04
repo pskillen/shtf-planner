@@ -25,6 +25,9 @@ export interface SuggestContext {
 
 const EPS = 1e-9;
 
+/** Unit prices this close (a fraction) count as equal when ranking suggestions. */
+const NEAR_PRICE = 0.2;
+
 /** The item tag that keeps a type out of the suggestions unless nothing else would do. */
 export const NO_SUGGEST = 'no-suggest';
 
@@ -71,11 +74,22 @@ export function closeStore(
     const pb = b.price !== undefined;
     if (pa !== pb) return pa ? -1 : 1;
     if (!pa) return b.per - a.per;
-    return (
-      perUnitPrice(a) - perUnitPrice(b) || a.price! - b.price! || compareText(a.type.id, b.type.id)
-    );
+    // Prices per unit within about 20% are a tie, and the bigger pack (fewer units to carry and
+    // count) wins it: not "52 x Porridge oats (1 kg)" for a few pence a kcal.
+    const [pa1, pb1] = [perUnitPrice(a), perUnitPrice(b)];
+    if (Math.abs(pa1 - pb1) > NEAR_PRICE * Math.min(pa1, pb1) || pa1 === 0)
+      return pa1 - pb1 || a.price! - b.price! || compareText(a.type.id, b.type.id);
+    return a.units - b.units || a.price! - b.price! || compareText(a.type.id, b.type.id);
   });
-  return pool.slice(0, limit).map((c) => ({
+  // One size of a product: "Porridge oats (10 kg)" does not also come as (3 kg) and (1 kg).
+  const seen = new Set<string>();
+  const distinct = pool.filter((c) => {
+    const family = c.type.name.replace(/\s*\(.*$/, '');
+    if (seen.has(family)) return false;
+    seen.add(family);
+    return true;
+  });
+  return distinct.slice(0, limit).map((c) => ({
     itemTypeId: c.type.id,
     // Equipment is bought, then added under Home, Equipment: say which type it is.
     ...(c.type.assetTypeId ? { assetTypeId: c.type.assetTypeId } : {}),

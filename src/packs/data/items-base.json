@@ -447,7 +447,7 @@
       ],
       "suitability": [],
       "shelfLife": "years",
-      "typicalPricePence": 70,
+      "typicalPricePence": 85,
       "tags": ["food", "needs-cooking"],
       "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
     },
@@ -465,7 +465,7 @@
       ],
       "suitability": [],
       "shelfLife": "years",
-      "typicalPricePence": 130,
+      "typicalPricePence": 150,
       "tags": ["food", "needs-cooking"],
       "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
     },
@@ -552,9 +552,27 @@
       ],
       "suitability": [],
       "shelfLife": "year",
-      "typicalPricePence": 150,
+      "typicalPricePence": 160,
       "tags": ["food"],
       "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
+    },
+    {
+      "id": "items-base:porridge-oats-10kg",
+      "name": "Porridge oats (10 kg sack)",
+      "category": "food",
+      "unit": "sack",
+      "unitSize": "10 kg",
+      "gives": [
+        {
+          "store": "foodKcal",
+          "amount": 38000
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "year",
+      "typicalPricePence": 1300,
+      "tags": ["food"],
+      "source": "assumption"
     },
     {
       "id": "items-base:freeze-dried-meals",

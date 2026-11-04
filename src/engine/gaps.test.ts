@@ -92,6 +92,22 @@ describe('gaps', () => {
     });
   });
 
+  it('leads food with a pack count a shopper can carry, at every horizon', () => {
+    for (const days of [3, 7, 14, 28]) {
+      const food = find(gaps(biggarDocument(), packs, NOW, days), 'food:foodKcal')!;
+      const first = food.suggestions[0]!;
+      expect(first.qty, `${days} days: ${first.label}`).toBeLessThanOrEqual(12);
+      // alternatives are other ways to close the same shortfall, never two sizes of one thing
+      expect(first.label).not.toMatch(/\(1 kg\)|\(500 g\)/);
+      const families = food.suggestions.map((x) =>
+        packs.items[x.itemTypeId!]!.name.replace(/\s*\(.*$/, ''),
+      );
+      expect(new Set(families).size, `${days} days: ${food.suggestions.map((x) => x.label)}`).toBe(
+        families.length,
+      );
+    }
+  });
+
   it('does not suggest food that needs cooking when cooking is not covered', () => {
     const doc = empty();
     const food = find(gaps(doc, packs, NOW, 3), 'food:foodKcal')!;
