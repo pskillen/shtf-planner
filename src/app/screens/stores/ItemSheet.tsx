@@ -49,6 +49,7 @@ export function ItemSheet({
         <Stepper
           label={`How many ${type?.unit ?? 'items'}`}
           value={item.qty}
+          min={1}
           onChange={(qty) => setItem({ ...item, qty })}
         />
       </Field>
