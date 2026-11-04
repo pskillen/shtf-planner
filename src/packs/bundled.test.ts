@@ -25,6 +25,30 @@ describe('the bundled packs', () => {
     expect(sourced.length).toBeGreaterThan(0);
   });
 
+  it('every asset contribution with a number says where it comes from', () => {
+    const numbered = Object.values(packs.assets).flatMap((a) =>
+      a.contributes.filter((c) =>
+        Object.keys(c).some((k) => !['capability', 'when', 'note', 'source'].includes(k)),
+      ),
+    );
+    expect(numbered.length).toBeGreaterThan(10);
+    for (const c of numbered) expect(c.source, JSON.stringify(c)).toBeDefined();
+  });
+
+  it('one rule owns phone power for every region, so it is not counted twice', () => {
+    for (const region of ['UK', 'US'] as const) {
+      const settings = { ...emptyDocument('local').settings, region };
+      const owners = packs
+        .enabledPacks(settings)
+        .flatMap((p) => (p.kind === 'guidance' ? p.rules : []))
+        .filter((r) => r.capability === 'power' && r.perPersonDay?.store === 'batteryWh');
+      expect(
+        owners.map((r) => r.id),
+        region,
+      ).toEqual(['guidance-grid-free:phone-power']);
+    }
+  });
+
   it('carries the game items plus the planner additions', () => {
     const items = Object.values(packs.items);
     expect(items.length).toBeGreaterThanOrEqual(82);

@@ -2,7 +2,7 @@
   "format": 1,
   "id": "assets-base",
   "kind": "assets",
-  "version": 1,
+  "version": 2,
   "name": "Base household assets",
   "sources": [
     {
@@ -35,6 +35,7 @@
             "store": "lpgKg",
             "perHour": 0.095
           },
+          "source": "assumption",
           "note": "Butane is about 12.9 kWh/kg, so 1.3 kW is roughly 0.1 kg/h; 95 g/h as the figure to plan on."
         },
         {
@@ -47,6 +48,7 @@
             "store": "lpgKg",
             "perHour": 0.3
           },
+          "source": "assumption",
           "note": "About 300 g/h at 4.2 kW (4.2 / 12.9 is 0.33 kg/h before efficiency). Verify against the manual."
         }
       ],
@@ -75,6 +77,7 @@
             "store": "lpgKg",
             "perHour": 0.1
           },
+          "source": "assumption",
           "note": "1.3 kW of butane or propane, about 0.1 kg/h."
         }
       ],
@@ -98,6 +101,7 @@
             "store": "woodKg",
             "perHour": 1.5
           },
+          "source": "assumption",
           "note": "Assumption: about 1.5 kg of seasoned logs an hour for a few kW."
         }
       ],
@@ -121,6 +125,7 @@
             "store": "paraffinL",
             "perHour": 0.25
           },
+          "source": "assumption",
           "note": "Paraffin is about 10 kWh/L, so 2.5 kW is about 0.25 L/h."
         }
       ],
@@ -149,6 +154,7 @@
             "store": "gasCanister",
             "perHour": 0.4
           },
+          "source": "assumption",
           "note": "From the game: about 90 g of butane an hour on a small burner."
         }
       ],
@@ -179,6 +185,7 @@
             "store": "lpgKg",
             "perHour": 0.3
           },
+          "source": "assumption",
           "note": "Assumption: a 3-4 kW burner, about 0.3 kg/h. Outdoors only."
         }
       ],
@@ -202,6 +209,7 @@
             "store": "woodKg",
             "perHour": 1
           },
+          "source": "assumption",
           "note": "Assumption: about 1 kg of dry sticks an hour. Outdoors only."
         }
       ],
@@ -224,8 +232,10 @@
           "capability": "power",
           "storesWh": {
             "fromQuestion": "wh",
-            "usableFraction": 0.85
+            "usableFraction": 0.85,
+            "perUnitWh": 1
           },
+          "source": "assumption",
           "note": "Assumption: about 85% is usable after inverter losses."
         }
       ],
@@ -257,6 +267,7 @@
             "usableFraction": 0.5,
             "perUnitWh": 12
           },
+          "source": "assumption",
           "note": "Assumption: 12 V nominal, and only half is usable from a lead-acid battery."
         }
       ],
@@ -305,7 +316,8 @@
           },
           "outputPerHour": {
             "fromQuestion": "watts"
-          }
+          },
+          "source": "assumption"
         },
         {
           "capability": "power",
@@ -319,7 +331,8 @@
           },
           "outputPerHour": {
             "fromQuestion": "watts"
-          }
+          },
+          "source": "assumption"
         }
       ],
       "maintenance": [
@@ -363,6 +376,7 @@
             "question": "kwp",
             "factor": 800
           },
+          "source": "assumption",
           "note": "Assumption: about 800 Wh per kWp on a winter day in the UK. Without an EPS a grid-tied array stops with the grid, so it contributes nothing."
         }
       ],
@@ -403,6 +417,7 @@
             "usableFraction": 0.9,
             "perUnitWh": 1000
           },
+          "source": "assumption",
           "note": "Assumption: about 90% usable. Without an EPS the battery cannot supply the house in an outage."
         }
       ],
@@ -437,6 +452,7 @@
             "usableFraction": 0.5,
             "perUnitWh": 1000
           },
+          "source": "assumption",
           "note": "Half the battery is counted as usable, so there is charge left to drive."
         }
       ],
@@ -469,6 +485,7 @@
             "store": "waterRaw",
             "fromQuestion": "litres"
           },
+          "source": "assumption",
           "note": "Untreated: it must be filtered or boiled before drinking."
         }
       ],

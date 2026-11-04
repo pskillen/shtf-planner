@@ -122,6 +122,21 @@ export function loadPacks(raws: ReadonlyArray<{ label: string; raw: unknown }>):
             needQuestion(c.providesPerDayFrom?.question, `${at}.providesPerDayFrom`, 'number');
             if (typeof c.outputPerHour === 'object')
               needQuestion(c.outputPerHour.fromQuestion, `${at}.outputPerHour`, 'number');
+            const hasNumber =
+              c.converts !== undefined ||
+              c.outputPerHour !== undefined ||
+              c.providesPerDay !== undefined ||
+              c.providesPerDayFrom !== undefined ||
+              c.storesWh !== undefined ||
+              c.holds !== undefined;
+            if (hasNumber && c.source === undefined)
+              issues.push(
+                `${at}: a contribution with a number needs a source (a URL or "assumption")`,
+              );
+            if (c.source !== undefined && c.source !== 'assumption' && !sourceDates.has(c.source))
+              issues.push(
+                `${at}: source ${c.source} is not listed in the pack's sources (with the date checked)`,
+              );
             if (
               c.converts &&
               (c.converts.perHour === undefined) === (c.converts.perHourFrom === undefined)

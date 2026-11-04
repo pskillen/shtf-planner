@@ -2,7 +2,7 @@
   "format": 1,
   "id": "guidance-us-ready",
   "kind": "guidance",
-  "version": 1,
+  "version": 2,
   "name": "US Government: Ready.gov",
   "region": "US",
   "sources": [
@@ -57,16 +57,6 @@
       "perHouseholdDay": {
         "store": "firstAid",
         "amount": 1
-      },
-      "source": "assumption"
-    },
-    {
-      "id": "guidance-us-ready:power",
-      "capability": "power",
-      "text": "A cell phone with chargers and a backup battery. 15 Wh per person per day is an assumption.",
-      "perPersonDay": {
-        "store": "batteryWh",
-        "amount": 15
       },
       "source": "assumption"
     }

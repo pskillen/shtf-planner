@@ -86,7 +86,21 @@ export type Category = z.infer<typeof CategorySchema>;
 const Text = z.string().min(1);
 const Url = z.string().regex(/^https:\/\/\S+$/, 'expected an https URL');
 const Months = z.number().int().min(0);
-const AgeBand = z.strictObject({ fromMonths: Months, toMonths: Months });
+
+/**
+ * An age range in months, **half-open**: `[fromMonths, toMonths)`. A child of exactly `toMonths`
+ * is *not* in the band; they are in the band that starts there. So `0-6, 6-12, 12-36` is a
+ * partition, and a person is in at most one of a rule's bands. (An item's `ageBand` says what ages
+ * it suits and may overlap its neighbours', because sizes overlap: nappy size 2 and 3 both fit a
+ * five-month-old.)
+ */
+const bandShape = { fromMonths: Months, toMonths: Months };
+const nonEmptyBand = (b: { fromMonths: number; toMonths: number }) => b.fromMonths < b.toMonths;
+const NON_EMPTY = { message: 'fromMonths must be below toMonths (the band is [from, to))' };
+const AgeBand = z.strictObject(bandShape).refine(nonEmptyBand, NON_EMPTY);
+const AmountBand = z
+  .strictObject({ ...bandShape, amount: z.number().min(0) })
+  .refine(nonEmptyBand, NON_EMPTY);
 
 /** A pack-namespaced id: `"<packId>:<localId>"`. */
 export const NamespacedId = z.string().regex(/^[a-z0-9][a-z0-9-]*:[a-z0-9][a-z0-9-]*$/, {
@@ -175,12 +189,16 @@ export const ContributionSchema = z.strictObject({
   providesPerDayFrom: z
     .strictObject({ question: z.string(), factor: z.number().positive() })
     .optional(),
-  /** Holds charge: the answer x `perUnitWh` (default 1) x `usableFraction`, in Wh. */
+  /**
+   * Holds charge: the answer x `perUnitWh` x `usableFraction`, in Wh. `perUnitWh` is how many Wh
+   * one unit of the answer is (1 for an answer in Wh, 1000 for kWh, 12 for Ah at 12 V). It has no
+   * default: say it, so a kWh answer is never read as Wh.
+   */
   storesWh: z
     .strictObject({
       fromQuestion: z.string(),
       usableFraction: z.number().gt(0).max(1),
-      perUnitWh: z.number().positive().optional(),
+      perUnitWh: z.number().positive(),
     })
     .optional(),
   /** Holds a stock of `store` (a water butt holds raw water): the answer x `factor` (default 1). */
@@ -191,6 +209,11 @@ export const ContributionSchema = z.strictObject({
       factor: z.number().positive().optional(),
     })
     .optional(),
+  /**
+   * Where the numbers come from: an https URL (listed in the pack's `sources` with the date
+   * checked) or `"assumption"`. Required when the contribution carries a number, as for rules.
+   */
+  source: z.union([Url, z.literal('assumption')]).optional(),
   /** Why the numbers are what they are. */
   note: z.string().optional(),
 });
@@ -229,13 +252,24 @@ export const RuleSchema = z
     text: Text,
     /**
      * Per person per day. With `ageBands` the amount is that of the band the person's age falls in
-     * and a person in no band needs none.
+     * (half-open: see `AgeBand`) and a person in no band needs none; the bands must not overlap.
      */
     perPersonDay: z
       .strictObject({
         store: StoreIdSchema,
         amount: z.number().min(0),
-        ageBands: z.array(AgeBand.extend({ amount: z.number().min(0) })).optional(),
+        ageBands: z
+          .array(AmountBand)
+          .refine(
+            (bands) =>
+              bands.every((a, i) =>
+                bands.every(
+                  (b, j) => i === j || a.toMonths <= b.fromMonths || b.toMonths <= a.fromMonths,
+                ),
+              ),
+            { message: 'age bands must not overlap' },
+          )
+          .optional(),
       })
       .optional(),
     perPetDay: z
@@ -258,6 +292,11 @@ export const RuleSchema = z
       .optional(),
     /** e.g. food needs cooking unless it is cold-eatable. */
     requires: z.strictObject({ capability: CapabilityIdSchema }).optional(),
+    /**
+     * Every multiplier that matches the household multiplies the amount: poor insulation (x1.5)
+     * and a snow risk (x1.5) together make x2.25. A `tag` multiplier matches a person with that
+     * tag, a `risk` one a household with that risk, an `insulation` one that insulation level.
+     */
     multipliers: z
       .array(
         z
@@ -275,6 +314,7 @@ export const RuleSchema = z
           ),
       )
       .optional(),
+    /** The rule applies only when the chosen horizon is at least this many days (>=). */
     minHorizonDays: z.number().int().min(1).optional(),
     /** A URL (also listed in the pack's `sources`, with the date checked) or `"assumption"`. */
     source: z.union([Url, z.literal('assumption')]),

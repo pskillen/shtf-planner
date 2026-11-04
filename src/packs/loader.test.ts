@@ -40,6 +40,7 @@ const assets = {
           capability: 'power',
           when: { question: 'hasEps', equals: true },
           providesPerDayFrom: { question: 'kwp', factor: 800 },
+          source: 'assumption',
         },
       ],
       maintenance: [],
@@ -163,6 +164,66 @@ describe('loadPacks', () => {
     const noSource = structuredClone(guidance) as typeof guidance;
     (noSource.rules[0] as { source?: string }).source = 'trust me';
     expect(() => loadPacks([file(noSource)])).toThrow(PackError);
+  });
+
+  it('requires a source on a contribution that carries a number, listed if it is a URL', () => {
+    const none = structuredClone(assets) as typeof assets;
+    delete (none.assets[0]!.contributes[0] as { source?: string }).source;
+    expect(() => loadPacks([file(none)])).toThrow(/needs a source/);
+
+    const unlisted = structuredClone(assets) as typeof assets;
+    unlisted.assets[0]!.contributes[0]!.source = 'https://example.org/x';
+    expect(() => loadPacks([file(unlisted)])).toThrow(/not listed in the pack's sources/);
+
+    const listed = structuredClone(assets) as typeof assets & { sources?: unknown };
+    listed.assets[0]!.contributes[0]!.source = 'https://example.org/x';
+    listed.sources = [{ url: 'https://example.org/x', title: 'X', checked: '2026-01-01' }];
+    expect(() => loadPacks([file(listed)])).not.toThrow();
+
+    // a contribution with no number needs none
+    const radio = structuredClone(assets) as typeof assets;
+    radio.assets[0]!.contributes = [{ capability: 'comms' }] as never;
+    expect(() => loadPacks([file(radio)])).not.toThrow();
+  });
+
+  it('has no default for perUnitWh: storesWh must say what one unit is worth', () => {
+    const stores = structuredClone(assets) as typeof assets;
+    const c = stores.assets[0]!.contributes[0] as Record<string, unknown>;
+    delete c.providesPerDayFrom;
+    c.storesWh = { fromQuestion: 'kwp', usableFraction: 0.9 };
+    expect(() => loadPacks([file(stores)])).toThrow(/perUnitWh/);
+    c.storesWh = { fromQuestion: 'kwp', usableFraction: 0.9, perUnitWh: 1000 };
+    expect(() => loadPacks([file(stores)])).not.toThrow();
+  });
+
+  it('reads age bands as half-open and refuses empty or overlapping ones', () => {
+    const bands = (list: unknown) => {
+      const g = structuredClone(guidance) as typeof guidance;
+      (g.rules[0] as Record<string, unknown>).perPersonDay = {
+        store: 'nappies',
+        amount: 0,
+        ageBands: list,
+      };
+      return g;
+    };
+    const ok = [
+      { fromMonths: 0, toMonths: 6, amount: 10 },
+      { fromMonths: 6, toMonths: 12, amount: 8 },
+    ];
+    expect(() => loadPacks([file(bands(ok))])).not.toThrow();
+    expect(() => loadPacks([file(bands([{ fromMonths: 6, toMonths: 6, amount: 1 }]))])).toThrow(
+      /fromMonths must be below toMonths/,
+    );
+    expect(() =>
+      loadPacks([
+        file(
+          bands([
+            { fromMonths: 0, toMonths: 7, amount: 10 },
+            { fromMonths: 6, toMonths: 12, amount: 8 },
+          ]),
+        ),
+      ]),
+    ).toThrow(/must not overlap/);
   });
 
   it('checks plan items name real asset types and regions name real packs', () => {

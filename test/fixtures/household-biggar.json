@@ -343,10 +343,10 @@
     ],
     "env": "local",
     "packVersions": {
-      "assets-base": 1,
+      "assets-base": 2,
       "guidance-grid-free": 1,
       "guidance-uk-prepare": 1,
-      "guidance-us-ready": 1,
+      "guidance-us-ready": 2,
       "items-base": 1,
       "plans-base": 1,
       "regions": 1

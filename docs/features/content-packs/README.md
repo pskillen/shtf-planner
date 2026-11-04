@@ -1,18 +1,18 @@
 # Content packs
 
-**Status:** Done (schemas, loader and the first seven packs; nothing reads them yet)
-**Tracking:** none (no tickets yet)
+**Status:** Done
+**Tracking:** none
 
 What to have, and how much, ships as versioned JSON packs validated with Zod. They are bundled
 (imported as JSON modules), so they work offline.
 
 ## Map
 
-| Piece   | Where                                     | What                                                                  |
-| ------- | ----------------------------------------- | --------------------------------------------------------------------- |
-| Schemas | `src/model/packs.ts`                      | `Pack`, `ItemType`, `AssetType`, `Rule`, `PlanDef`, `RegionDef`, ids. |
-| Loader  | `src/packs/loader.ts`                     | `loadPacks`, `parsePack`, `Packs`, `enabledPacks`, `PackError`.       |
-| Bundled | `src/packs/bundled.ts`, `src/packs/data/` | `bundledPacks()` loads the shipped packs once.                        |
+| Piece   | Where                                     | What                                                              |
+| ------- | ----------------------------------------- | ----------------------------------------------------------------- |
+| Schemas | `src/model/packs.ts`                      | `Pack`, `Packs`, `ItemType`, `AssetType`, `Rule`, `PlanDef`, ids. |
+| Loader  | `src/packs/loader.ts`                     | `loadPacks`, `parsePack`, `enabledPacks`, `PackError`.            |
+| Bundled | `src/packs/bundled.ts`, `src/packs/data/` | `bundledPacks()` loads the shipped packs once.                    |
 
 ## The packs
 
@@ -42,7 +42,8 @@ shelfLife, ageBand?, typicalPricePence?, tags, barcodes? }`. `gives` may not nam
   answer: `converts` (burns a store per running hour), `outputPerHour`, `providesPerDay` or
   `providesPerDayFrom` (fuel-free supply, e.g. solar), `storesWh` (a battery), `holds` (a stock,
   e.g. a water butt). Solar and a home battery contribute power **only** when `hasEps` is true; an
-  EV only when `v2l`.
+  EV only when `v2l`. A contribution with a number carries a `source` (an `https` URL listed in
+  the pack's `sources`, or `"assumption"`), as a rule does; the loader requires it.
 - **`guidance`**: `horizonBands` and `rules`. A `Rule` states a quantity (`perPersonDay`,
   `perPetDay`, `perHouseholdDay`, `hoursPerDay`, `mealsPerPersonDay` or `rangeKm`), optional
   `appliesTo`, `requires`, `multipliers`, `minHorizonDays`, and a `source`. With `ageBands`, a
@@ -53,6 +54,27 @@ shelfLife, ageBand?, typicalPricePence?, tags, barcodes? }`. `gives` may not nam
 `CapabilityId`: `water food heat cooking light power comms sanitation medical mobility plans`.
 `StoreId`: the game's thirteen stores plus `nappies formulaG petFoodKcal sanitationUses hygieneUses
 medicationDays lumenHours` (`STORE_INFO` has names and units).
+
+## How the engine reads these
+
+The numbers mean exactly this; the schema comments in `src/model/packs.ts` say the same.
+
+- **Age bands are half-open: `[fromMonths, toMonths)`.** A child of exactly `toMonths` is in the
+  next band. A rule's `ageBands` are a partition (the schema refuses empty or overlapping bands):
+  `0-6, 6-12, 12-36` puts a 6-month-old in the second band, and an age in no band needs none. An
+  item's `ageBand` says which ages it suits and may overlap its neighbours', because sizes overlap
+  (nappy sizes 2 and 3 both fit a five-month-old).
+- **`storesWh.perUnitWh` has no default.** It is what one unit of the answer is worth in Wh:
+  `1` for an answer in Wh (power station), `12` for Ah at 12 V (leisure battery), `1000` for kWh
+  (home battery, EV). Stored Wh = answer x `perUnitWh` x `usableFraction`.
+- **Multipliers multiply.** Every multiplier that matches the household applies, so poor
+  insulation (x1.5) and a snow risk (x1.5) make a heat rule x2.25. A `tag` multiplier matches a
+  person with that tag, a `risk` one a household with that risk.
+- **`minHorizonDays` is a floor on the chosen horizon.** A rule with it applies only when the
+  household's horizon is at least that many days (`>=`).
+- **One rule owns each need.** Phone power is `guidance-grid-free:phone-power` for every region;
+  a regional pack must not add a second rule for the same quantity, or an enabled pair counts it
+  twice. A test enforces this for phone power.
 
 ## The loader
 
@@ -73,8 +95,9 @@ It throws `PackError` whose message names the pack and the field of each problem
 
 ## The "no invented official numbers" rule
 
-Every `guidance` rule carries `source`: an `https` URL that is also listed in the pack's `sources`
-with the date it was checked, **or** the word `"assumption"`. Never present a number as official
+Every `guidance` rule, and every asset contribution that carries a number, has `source`: an `https`
+URL that is also listed in the pack's `sources` with the date it was checked, **or** the word
+`"assumption"`. Never present a number as official
 when the source does not give it. Where guidance is silent (heat hours, lumen-hours, Wh per day,
 calories, pet quantities) write a stated, reasonable assumption and mark it `"assumption"`, so the
 owner can sanity-check every one with `grep '"assumption"'`.
@@ -85,6 +108,7 @@ no number of days. The 14-day US band is therefore this planner's choice, not Re
 
 ## Known gaps
 
+- No screens read the packs yet.
 - A rule cannot express a one-off item (one torch, one radio, one first aid kit): those are
   approximated per day or left to the plans pack.
 - No diesel store: diesel generators and oil heating are not modelled.

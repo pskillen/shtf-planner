@@ -132,7 +132,9 @@ export function biggarDocument(): Document {
       env: 'local',
       devices: ['device-fixture'],
       createdAt: '2026-01-15T09:00:00.000Z',
-      packVersions: Object.fromEntries(DEFAULT_PACKS.map((id) => [id, 1])),
+      packVersions: Object.fromEntries(
+        DEFAULT_PACKS.map((id) => [id, id === 'assets-base' || id === 'guidance-us-ready' ? 2 : 1]),
+      ),
     },
     household: {
       members: [
