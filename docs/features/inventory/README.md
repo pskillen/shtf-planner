@@ -50,5 +50,5 @@ The Stores tab: what the household has, grouped by **item** (the generic from th
 
 ## Tests
 
-`test/stores-screen.test.tsx`, `test/stores-helpers.test.tsx`, `test/quick-add.test.tsx`, `test/products-screen.test.tsx`,
+`test/stores-screen.test.tsx`, `test/stores-helpers.test.ts`, `test/stores-grouping.test.ts`, `test/quick-add.test.tsx`, `test/products-screen.test.tsx`,
 `test/size-step.test.tsx`, `test/item-picker.test.tsx`, Playwright `e2e/inventory.spec.ts`, `e2e/products.spec.ts`.
