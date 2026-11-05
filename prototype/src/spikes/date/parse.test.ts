@@ -87,6 +87,9 @@ export const CASES: [string, string | null, boolean?][] = [
   ['BN EV.', null],
   ['2', null],
   ['FEED', null],
+  ['SEP27L4 6272 19:10', '09/2027'], // L4 is a code glued to the month, not part of the year
+  ['BEST BEFORE 060227 C 61455 07:2', '02/2027'], // OCR dropped the spaces
+  ['060227', null], // ...but only after a label
   // ---- round 2: the new rules
   ['06 10 2028', '10/2028'], // space-separated, 4-digit year
   ['06 10 28', null], // 2-digit year with spaces needs a label

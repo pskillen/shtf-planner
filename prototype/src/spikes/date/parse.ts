@@ -23,7 +23,12 @@ const sep = '[\\/.\\-]';
 export function normalise(raw: string): string {
   let t = raw.toUpperCase().replace(/[\r\n\t|_]+/g, ' ').replace(/[,;]/g, '.').replace(/\s+/g, ' ');
   // O->0, I/L->1 when inside a run that already has a digit: "O6/2O27"
-  t = t.replace(/[0-9OIL][0-9OIL\/.\-]*[0-9OIL]/g, (run) => (/[0-9]/.test(run) ? run.replace(/O/g, '0').replace(/[IL]/g, '1') : run));
+  // (a run glued to a month name keeps its I/L: "SEP27L4" is a date then a code, not "SEP2714")
+  t = t.replace(/[0-9OIL][0-9OIL\/.\-]*[0-9OIL]/g, (run, off: number) => {
+    if (!/[0-9]/.test(run)) return run;
+    const glued = /(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)$/.test(t.slice(Math.max(0, off - 3), off));
+    return glued ? run.replace(/O/g, '0') : run.replace(/O/g, '0').replace(/[IL]/g, '1');
+  });
   // times: 14:32 (colon only; dots are ambiguous with dates)
   t = t.replace(/\b\d{1,2}\s*:\s*\d{2}(?:\s*:\s*\d{2})?\b/g, ' ');
   return t.replace(/\s+/g, ' ').trim();
@@ -87,6 +92,9 @@ export function parseDates(raw: string, now: Date = new Date()): ParseResult {
   for (const l of labels) {
     const m = t.slice(l.end).match(/^\W{0,3}(0[1-9]|1[0-2])(20\d{2})(?![0-9])/);
     if (m) extra.push({ start: l.end, end: l.end + m[0].length, month: +m[1], year: +m[2], kind: 'MMYYYY' });
+    // DDMMYY glued after a label, where OCR dropped the spaces ("BEST BEFORE 060227")
+    const g = t.slice(l.end).match(/^\W{0,3}(0[1-9]|[12]\d|3[01])(0[1-9]|1[0-2])(\d{2})(?![0-9])/);
+    if (g && !m) extra.push({ start: l.end, end: l.end + g[0].length, month: +g[2], year: yr(g[3]), day: +g[1], kind: 'DDMMYY' });
   }
   const lo = now.getFullYear() * 12 + now.getMonth();
   const hi = lo + 120;
