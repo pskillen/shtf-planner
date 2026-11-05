@@ -61,7 +61,7 @@ project of the SHTF game (`shtf-game`). Working title.
 - **Privacy.** Nothing leaves the browser except the user's own document to the user's own Google
   Drive: only Drive, only the user's own, never anything else. The only scope is `drive.file` (files
   the app created). The only third-party script is Google Identity Services, loaded when the user
-  connects Drive. No analytics, no server, no other third-party calls at runtime. The changelog is
+  connects Drive (and at start-up once connected). No analytics, no server, no other third-party calls at runtime. The changelog is
   baked at build time from GitHub Releases, never fetched at runtime.
 - **Google client id.** `VITE_GOOGLE_CLIENT_ID` (`.env.local`, the Actions variable) is never
   committed; `.env.example` names it. Tests fake Drive (`src/store/fakeDrive.ts`, `e2e/fakeGoogle.ts`)

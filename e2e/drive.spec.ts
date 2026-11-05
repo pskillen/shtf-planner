@@ -149,6 +149,37 @@ test('closing the Google popup is quiet and the retry works', async ({ browser }
   await a.context.close();
 });
 
+test('an expired token with no tap goes to Reconnect without opening Google, and the pill reconnects in one tap', async ({
+  browser,
+}) => {
+  const backend = createBackend();
+  const a = await device(browser, backend);
+  await a.page.getByRole('button', { name: 'Connect Google Drive' }).click();
+  await expect(pill(a.page)).toHaveAttribute('data-status', 'synced');
+  const requests = () =>
+    a.page.evaluate(() => (window as unknown as { __gis: { requests: number } }).__gis.requests);
+  expect(await requests()).toBe(1);
+
+  // The test control forgets the token. Then the page comes back with no tap behind it.
+  await a.page.getByRole('button', { name: 'Drop the Drive token (test)' }).click();
+  await a.page.evaluate(() => {
+    Object.defineProperty(navigator, 'userActivation', {
+      value: { isActive: false },
+      configurable: true,
+    });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await expect(pill(a.page)).toHaveAttribute('data-status', 'error');
+  await expect(pill(a.page)).toContainText('Reconnect Drive');
+  expect(await requests()).toBe(1); // Google was not asked
+
+  // One tap on the pill: exactly one Google request, and the sync carries on.
+  await pill(a.page).click();
+  await expect(pill(a.page)).toHaveAttribute('data-status', 'synced');
+  expect(await requests()).toBe(2);
+  await a.context.close();
+});
+
 test('the pill is on every app screen and opens the Data screen', async ({ page }) => {
   await page.goto('/app/stores');
   await expect(pill(page)).toBeVisible();
