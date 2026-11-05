@@ -21,7 +21,7 @@ import { formatPackTotal, sumProductPacks } from './storesGrouping';
 type Mode = 'main' | 'countsAs' | 'size' | 'merge' | 'mergeConfirm';
 
 function mergePreview(
-  doc: Pick<import('../../../model').Document, 'stock' | 'barcodes'>,
+  doc: Pick<import('../../../model').Document, 'stock' | 'barcodes' | 'products'>,
   dropId: string,
   unit: string,
 ) {
@@ -189,8 +189,8 @@ export function ProductSheet({
       <Sheet title="Merge into…" onClose={() => setMode('merge')}>
         <div className="sheet-confirm" role="alert">
           <p>
-            Move {formatPackTotal(packs, mergeUnit)} and {bc} {bcWord} to {keep.name}, and delete this
-            product?
+            Move {formatPackTotal(packs, mergeUnit)} and {bc} {bcWord} to {keep.name}, and delete
+            this product?
           </p>
           <button type="button" className="secondary" onClick={() => setMode('merge')}>
             Cancel

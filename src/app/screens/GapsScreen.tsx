@@ -8,7 +8,13 @@ import { Segmented } from '../components/controls';
 import { CAPABILITY_LABEL } from '../labels';
 import { useChange, useDocument } from '../state';
 import { usePacks } from '../usePacks';
-import { buildGapsView, formatPrice, groupShoppingByAisle, type ShoppingRow, type ShoppingSort } from './gaps/view';
+import {
+  buildGapsView,
+  formatPrice,
+  groupShoppingByAisle,
+  type ShoppingRow,
+  type ShoppingSort,
+} from './gaps/view';
 import { equipmentAddPath } from './assets/route';
 import { QuickAdd, type QuickAddPrefill } from './stores/QuickAdd';
 

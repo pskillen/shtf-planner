@@ -86,7 +86,10 @@ export function aisleHeading(packs: Packs, itemId: string | undefined): string {
 export type ShoppingAisleGroup = { heading: string; rows: ShoppingRow[] };
 
 /** Consecutive rows with the same aisle heading (rows must already be in aisle order). */
-export function groupShoppingByAisle(rows: readonly ShoppingRow[], packs: Packs): ShoppingAisleGroup[] {
+export function groupShoppingByAisle(
+  rows: readonly ShoppingRow[],
+  packs: Packs,
+): ShoppingAisleGroup[] {
   const out: ShoppingAisleGroup[] = [];
   for (const row of rows) {
     const heading = aisleHeading(packs, row.itemId);
