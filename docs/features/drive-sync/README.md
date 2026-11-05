@@ -90,6 +90,8 @@ folder is found by name again (or made), and the pass runs once more.
 | `error`              | `message` says what; `reconnect` means the fix is the Connect button                   |
 
 Edits made offline stay marked as unsent across reloads and are sent when the network returns.
+A Drive network failure, a 5xx included, reads as `offline`, not `error`, and is retried after 30
+seconds, doubling each time up to 5 minutes; success resets the delay.
 
 ## Guards
 
@@ -139,6 +141,11 @@ only opens a popup for a tap, so **nothing asks Google unless a tap is behind it
   flashes open and shut on its own (renewal is never fully invisible), but there is nothing to
   choose or type. If the browser blocks the window anyway, a toast and the Data screen say "Your
   browser blocked Google's window. Tap Reconnect.".
+- **Why there is no silent renewal on a timer.** Google Identity Services' token model has no
+  refresh token, and Google says to ask for a new token from a user-driven event; a browser blocks
+  its window without a tap anyway. Measured on real Google two hours after a grant, a renewal with
+  no input did work (3.7 s), but Google's window still flashed open and shut. Only the code model
+  with a backend could renew invisibly, and there is no backend.
 - **Renewing early.** Inside a tap, a token with under 15 minutes left is renewed before it runs
   out; the sync does not wait for Google's window and carries on with the token that still works. If the window cannot open or is closed, the token that still works is kept and the next
   tap does not try again for it.
@@ -195,3 +202,31 @@ sync switched off. For tests and local development, a client id kept in localSto
 - A refresh token or a server to hold one: the token flow is client-only by design.
 - Per-tab leadership (Web Locks): two tabs of one browser each run their own sync loop, sharing the
   saved sync state; the CRDT makes the occasional duplicate push harmless.
+
+## Not built yet
+
+- Sharing, sync and multi-device ([#68](https://github.com/pskillen/shtf-planner/issues/68)): one
+  household shared between two Google accounts, one sync loop across several open tabs, and keeping
+  a late early-renewal token instead of ending in Reconnect.
+- Several households in one Drive ([#85](https://github.com/pskillen/shtf-planner/issues/85)),
+  which also replaces the "Replace it?" overwrite of an older household with a non-destructive
+  choice.
+
+## Background
+
+- **Why automatic sync.** The owner runs `dev`, `next`, `staging` and `prod` across browsers and
+  devices; testing without Drive would be a nightmare, so sync was in the first release. Why a CRDT
+  and why Yjs: see [Data model](../data-model/README.md#background-why-a-crdt-and-why-yjs).
+- **Lifted from Codeplug Studio**, a sister project that already syncs through Drive: the
+  `drive.file` scope (the full `drive` scope is restricted and needs a yearly security assessment),
+  an app-owned folder found again by name on other devices, the token flow with the token in
+  localStorage, and the which-copy dialog (cards, both values, an explicit choice). Studio's code
+  was copied, not shared as a package. Studio syncs by buttons and per-project YAML files; this app
+  has one document, so it syncs by itself and asks only when the same field changed on both sides.
+- **One file across environments.** Rather than a file per environment, there is one household
+  file, a schema version the app refuses to go backwards on, and the environment of the last
+  writer recorded in the file and shown whenever files move in or out.
+- **Measured on real Google** (desktop, two browsers, one account): a second browser found the
+  same folder with no duplicate and each read the other's writes; a 220 kB write took about 1.7 s
+  and a read about 0.85 s. Firefox closed Google's first window after five seconds
+  (`popup_closed`); a second tap worked, hence the quiet retry on Connect.

@@ -3,9 +3,10 @@
 **Status:** Done
 **Tracking:** none (no tickets yet)
 
-The frame the screens live in. The Home and More tabs hold the setup screens (see [Setup screens](../setup/README.md)); Stores, Gaps and Score are the [inventory](../inventory/README.md) and [gaps and score](../gaps-and-score/README.md) screens.
-
-The frame every later screen lives in: an installable offline PWA, a landing page and a build footer.
+The frame every screen lives in: an installable offline PWA, a landing page and a build footer. The
+Home and More tabs hold the setup screens (see [Setup screens](../setup/README.md)); Stores, Gaps
+and Score are the [inventory](../inventory/README.md) and [gaps and score](../gaps-and-score/README.md)
+screens.
 
 ## Map
 
@@ -27,8 +28,21 @@ The frame every later screen lives in: an installable offline PWA, a landing pag
 - Styling is `src/styles.css`: theme variables, dark mode by `prefers-color-scheme`, tap targets of
   at least 44 px, safe-area insets for the bottom nav.
 - Icons are generated from `public/favicon.svg` by `npm run icons` and committed.
+- **Android first.** Phone-first layouts that widen for a laptop; install as a PWA on Android; e2e
+  runs Chromium. iOS is not tested (nobody here can), so it is not a target.
+- **Plain on purpose.** Big targets, high contrast, dark mode, no illustration. The Score page's
+  notebook is the one nod to the SHTF game.
+- **Open URL, no sign-in to the app.** No access control, no invite codes: the landing page says it
+  is a beta and shows the changelog. The only sign-in is Google's, for Drive.
+- **No changelog file.** The landing page's changelog is GitHub Releases, baked in at build time
+  so it works offline and makes no request at run time.
 
 ## Known gaps
 
-Markdown rendering of release bodies; any caching beyond the app bundle (content packs will ship
-inside the bundle when they land).
+Markdown rendering of release bodies.
+
+## Not built yet
+
+Platform and quality ([#72](https://github.com/pskillen/shtf-planner/issues/72)): code-splitting
+the bundle (one chunk of about 700 kB), checking iOS and PWA support, an accessibility pass, an e2e
+that raises the real toasts, and a real name before anything goes public.

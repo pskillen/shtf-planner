@@ -228,3 +228,24 @@ budgeting, no minimum suggestions from recounts.
 - Candles (`candleHours`) and cells in torches are not counted towards light; only `lumenHours`.
 - Driving range knows electric cars and petrol on hand, not a petrol or diesel car as an asset.
 - Radios cannot be a pack rule (no resource), so the comms target is the engine's own.
+
+## Not built yet
+
+- The review queue the loop was designed with (expiry, maintenance due, age rollovers, places not
+  recounted, plans to re-confirm), and maintenance schedules on equipment:
+  [#20](https://github.com/pskillen/shtf-planner/issues/20).
+- Equipment linked to its exact fuel, with what is left per piece of equipment ("BBQ: 3 days of
+  cooking on 1 x 13 kg propane"): [#28](https://github.com/pskillen/shtf-planner/issues/28).
+- Diesel, vehicles as assets, candles and torch cells as light, no impractical suggestions on big
+  shortfalls, the preview's food-mix overshoot:
+  [#49](https://github.com/pskillen/shtf-planner/issues/49).
+
+## Background
+
+The engine is the original design's one loop: household, home, risks and horizon give **targets**;
+stock and equipment give **coverage**; targets minus coverage are the **gaps** (the shopping and
+to-do lists); coverage over targets is the **score**. Targets are **capabilities without the grid**
+(heat a room, cook, light, charge a phone, safe water…) rather than categories of stuff, so an
+all-electric home starts from "no heat or cooking at all" and the score says so. Everything is
+computed for a date so that "preview in six months" (a baby's nappy size, a child turning 18) is
+the same call with a later `asOf`.

@@ -46,6 +46,21 @@ size, kcal, categories…). A scan counts towards nothing until it is sorted int
 `settings.expirySoonMonths` (0 to 3) and `settings.expiryCheckMonths` (1 to 12) are optional: absent
 means 1 and 3, so no step writes them.
 
+Rules the screens rely on:
+
+- **One stock row per batch.** Stock of the same product in the same place with the same
+  best-before month is one row; adding more adds to its `qty` (`addStockWithUndo` in
+  `src/app/screens/stores/stock.ts`).
+- **A product's size** is an amount and a unit (g, kg, ml, L or pieces), with a count for a
+  multipack ("24 × 500 ml"), whose total is what counts.
+- **Lists of plain values** (`home.risks`, a member's `tags`, `settings.packs`, `meta.devices`)
+  merge as sets: concurrent adds union, duplicates drop, and the order after a merge is not the
+  order chosen, so sort them where order matters on screen.
+- **`meta.env`** is the environment of the last build that wrote the document, stamped when the
+  store opens; Drive sync shows it when files come in or go out.
+- **Per-device choices** (last place used, recent items, the date reader's switches, dismissed
+  hints) live in localStorage, never in the document, so they do not sync.
+
 `Env` has six values (`local`, `preview`, `dev`, `next`, `staging`, `prod`) and lives in
 `src/model/document.ts`; `src/util/build-env.ts` re-exports the type, so there is one source.
 
@@ -130,3 +145,36 @@ With `?debug=1`: `window.__shtf.doc()`, `.change(fn)` and `.loadFixture()` (all 
 ## Known gaps
 
 - No diesel resource, so a diesel generator cannot be modelled.
+
+## Not built yet
+
+- Several households in one Google Drive, each chosen or created on connect, and a non-destructive
+  answer when Drive holds an older household:
+  [#85](https://github.com/pskillen/shtf-planner/issues/85). Today there is one document per
+  browser profile and per Drive.
+
+## Background: why a CRDT, and why Yjs
+
+The household is one document that two or three devices edit, rarely at the same moment, with no
+server: Drive is a file store, not a sync service. Writes come in bursts (a stocktake, a review),
+so they land locally at once and go to Drive once per burst. Server-backed sync engines
+(RxDB replication, PowerSync, ElectricSQL, Replicache, Dexie Cloud and similar) were out because they
+need a server or a paid relay; a hand-rolled last-write-wins per record would have meant owning every
+merge bug; a per-device operation log on Drive was the most machinery. A document CRDT merges the
+whole document by design; nothing off the shelf pushes to Google Drive, so the Drive adapter is
+ours either way.
+
+Yjs was measured against Automerge 3 on a 1,000-record household in desktop Chrome:
+
+|                                  | Automerge 3                      | Yjs                     |
+| -------------------------------- | -------------------------------- | ----------------------- |
+| Added to the bundle, gzipped     | about 1,215 kB (nearly all WASM) | about 29 kB             |
+| Document bytes after 2,000 edits | about 115 kB                     | about 236 kB (64 kB gz) |
+| Merging two devices' edits       | 106 to 138 ms                    | 21 to 35 ms             |
+| Cold load from IndexedDB         | 270 to 380 ms plus WASM start-up | 53 to 89 ms             |
+| 1,000 edits on one device        | 640 to 680 ms                    | 11 to 26 ms             |
+
+Automerge was 2.4 times over the 500 kB bundle rule and its built-in diff saved no code: the
+which-copy comparison took about 30 lines in either. Yjs costs a document about twice the size and a
+last-synced copy of the state kept per device (which Drive sync keeps anyway). The 1 s phone load
+rule was never measured on a phone; the desktop's under 0.1 s leaves ten times the headroom.
