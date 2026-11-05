@@ -1,5 +1,11 @@
 import { isValidGtin, normaliseGtin } from '../util/gtin';
-import { BARCODE_BOX, ZXING_INTERVAL_MS, ZXING_ROTATE, type Box } from './tunables';
+import {
+  BARCODE_BOX,
+  BARCODE_BOX_SIDEWAYS,
+  ZXING_INTERVAL_MS,
+  ZXING_ROTATE,
+  type Box,
+} from './tunables';
 
 /**
  * The barcode loop: look at the barcode box on the live camera every moment until a valid
@@ -88,7 +94,7 @@ export async function loadZxing(): Promise<ZxingReader> {
   };
 }
 
-type Decode = (frame: ImageData, attempt: number) => Promise<string | undefined>;
+type Decode = (cam: FrameSource, attempt: number) => Promise<string | undefined>;
 
 async function chooseDecoder(
   opts: LoopOptions,
@@ -103,7 +109,8 @@ async function chooseDecoder(
         const detector = new Ctor({ formats: FORMATS });
         return {
           name: 'detector',
-          decode: async (frame) => (await detector.detect(frame))[0]?.rawValue,
+          decode: async (cam) =>
+            (await detector.detect(cam.captureBox(BARCODE_BOX, 1080)))[0]?.rawValue,
         };
       }
     } catch {
@@ -114,12 +121,15 @@ async function chooseDecoder(
   const rotate = opts.rotate ?? ZXING_ROTATE;
   return {
     name: 'zxing',
-    decode: async (frame, attempt) => {
-      const grey = luminanceOf(frame);
+    decode: async (cam, attempt) => {
       if (rotate && attempt % 2 === 1) {
+        // A code held sideways: a tall box, turned to read upright.
+        const frame = cam.captureBox(BARCODE_BOX_SIDEWAYS, 1080);
+        const grey = luminanceOf(frame);
         return zxing.decode(rotate90(grey, frame.width, frame.height), frame.height, frame.width);
       }
-      return zxing.decode(grey, frame.width, frame.height);
+      const frame = cam.captureBox(BARCODE_BOX, 1080);
+      return zxing.decode(luminanceOf(frame), frame.width, frame.height);
     },
   };
 }
@@ -152,7 +162,7 @@ export function startBarcodeLoop(
       if (stopped) return;
       let text: string | undefined;
       try {
-        text = await decoder.decode(cam.captureBox(BARCODE_BOX, 1080), attempt++);
+        text = await decoder.decode(cam, attempt++);
       } catch {
         text = undefined; // camera not ready yet, or a frame the decoder could not take
       }
