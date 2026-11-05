@@ -80,26 +80,59 @@ describe('Quick add: the search step', () => {
     open();
     pickFromSearch('water container', /Water containers/i);
     fireEvent.click(screen.getByRole('button', { name: 'Add' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Next item' }));
+    expect(screen.getByLabelText('What are you adding?')).toBeTruthy();
+    expect(screen.getByTestId('last-add-status').textContent).toMatch(/Added .* to /);
     const recent = screen.getByRole('region', { name: 'Recent products' });
     expect(within(recent).getByRole('button', { name: /Water can 10 L/i })).toBeTruthy();
     expect(localStorage.getItem('shtf.recentProducts')).toContain('prod-can');
   });
 
-  it('after an add, Next item is the primary button on the right and Add another keeps the form editable', () => {
+  it('after Add from search returns to search with Added status and Edit, not Add another', () => {
     open();
     pickFromSearch('water container', /Water containers/i);
     fireEvent.click(screen.getByRole('button', { name: 'Add' }));
-    const another = screen.getByRole('button', { name: 'Add another' });
-    const next = screen.getByRole('button', { name: 'Next item' });
-    expect(another.className).toBe('secondary');
-    expect(next.className).toBe('');
-    expect(another.nextElementSibling).toBe(next);
-    fireEvent.click(screen.getByRole('button', { name: /^One more/ }));
-    expect(screen.getByRole('button', { name: 'Add another' })).toBeTruthy();
-    expect(screen.getByTestId('added-count').textContent).toBe('Added this session: 1');
-    fireEvent.click(screen.getByRole('button', { name: 'Add another' }));
-    expect(screen.getByTestId('added-count').textContent).toBe('Added this session: 3');
+    expect(screen.getByLabelText('What are you adding?')).toBeTruthy();
+    expect(screen.queryByLabelText(/^How many/)).toBeNull();
+    expect(screen.getByTestId('last-add-status').textContent).toMatch(/Added 1 × .* to /);
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Add another' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Next item' })).toBeNull();
+  });
+
+  it('Edit opens the stock row; saving there changes it', () => {
+    const s = open();
+    pickFromSearch('water container', /Water containers/i);
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    expect(screen.getByRole('heading', { name: /Edit / })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /^One more: / }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    expect(screen.getByLabelText('What are you adding?')).toBeTruthy();
+    expect(screen.getByTestId('last-add-status').textContent).toMatch(/Added 1 × .* to /);
+    const rows = Object.values(s.doc().stock).filter((r) => r.productId === 'prod-can');
+    expect(rows.reduce((n, r) => n + r.qty, 0)).toBe(4);
+  });
+
+  it('the form is empty when the next item is picked after an add', () => {
+    open();
+    pickFromSearch('water container', /Water containers/i);
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+    pickFromSearch('UHT', /UHT milk/);
+    expect(screen.getByLabelText('Where does it go?')).toBeTruthy();
+    expect(screen.queryByRole('status', { name: /Added .*Water can/i })).toBeNull();
+    const qtyButtons = screen.getAllByRole('button', { name: /^One more: / });
+    expect(qtyButtons.length).toBeGreaterThan(0);
+  });
+
+  it('shows ½ in the Added notification when quantity is 0.5', () => {
+    open(biggarDocument(), {
+      itemId: 'items-base:tinned-soup',
+      productId: 'prod-soup',
+    });
+    fireEvent.click(screen.getByRole('radio', { name: '½' }));
+    fireEvent.click(screen.getByRole('button', { name: /^One fewer: / }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+    expect(screen.getByTestId('last-add-status').textContent).toContain('Added ½ ×');
   });
 
   it('puts an item where it already lives, not in the first place by name', () => {
@@ -152,7 +185,8 @@ describe('Quick add: the search step', () => {
     const before = Object.values(s.doc().stock).filter((r) => r.productId === 'prod-can');
     const countBefore = before.length;
     const qtyBefore = before.reduce((n, r) => n + r.qty, 0);
-    fireEvent.click(screen.getByRole('button', { name: 'Add another' }));
+    pickFromSearch('water container', /Water containers/i);
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
     const after = Object.values(s.doc().stock).filter((r) => r.productId === 'prod-can');
     expect(after.length).toBe(countBefore);
     expect(after.reduce((n, r) => n + r.qty, 0)).toBe(qtyBefore + 1);

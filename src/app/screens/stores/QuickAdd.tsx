@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { Item, OffFacts, Product } from '../../../model';
-import { today } from '../../../util';
+import { formatQty, today } from '../../../util';
 import { Field } from '../../components/controls';
 import { ExpiryBadge } from '../../components/ExpiryBadge';
 import { QtyField } from '../../components/QtyField';
@@ -13,9 +13,10 @@ import { MonthField } from './MonthField';
 import { ReadDateSheet } from './ReadDateSheet';
 import { ScanSheet } from './ScanSheet';
 import { SizeStep, type SizeStepDone } from './SizeStep';
+import { StockSheet } from './StockSheet';
 import { hasCamera } from './dateSettings';
 import {
-  addStock,
+  addStockWithUndo,
   defaultLocationId,
   ensureProduct,
   pushRecent,
@@ -33,6 +34,32 @@ export interface QuickAddPrefill {
 }
 
 type Step = 'search' | 'size' | 'form' | 'scan' | 'repick' | 'readdate';
+
+function AddedStatus({
+  message,
+  stockId,
+  onEdit,
+}: {
+  message: string;
+  stockId: string | undefined;
+  onEdit: () => void;
+}) {
+  const doc = useDocument();
+  const row = stockId ? doc.stock[stockId] : undefined;
+  return (
+    <p className="note" role="status" data-testid="last-add-status">
+      {message}
+      {row ? (
+        <>
+          {' '}
+          <button type="button" className="link" onClick={onEdit}>
+            Edit
+          </button>
+        </>
+      ) : null}
+    </p>
+  );
+}
 
 /**
  * Quick add: pick an item and size (or a recent product), then Add. The place is the last one
@@ -62,7 +89,8 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
   const [bestBefore, setBestBefore] = useState<string | undefined>(undefined);
   const [added, setAdded] = useState(0);
   const [last, setLast] = useState<string | null>(null);
-  const [putOnce, setPutOnce] = useState(false);
+  const [lastStockId, setLastStockId] = useState<string | undefined>(undefined);
+  const [editStockId, setEditStockId] = useState<string | undefined>(undefined);
   const [viaScan, setViaScan] = useState(false);
   const [scannedCode, setScannedCode] = useState<string | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -88,13 +116,26 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
     <T,>(set: (v: T) => void) =>
     (v: T) => {
       setLast(null);
+      setLastStockId(undefined);
       set(v);
     };
 
+  function resetEntry(): void {
+    setItem(undefined);
+    setProductId(undefined);
+    setPendingNew(undefined);
+    setQty(1);
+    setBestBefore(undefined);
+    setScannedCode(null);
+    setViaScan(false);
+  }
+
   function put(): void {
     if (!location || qty <= 0) return;
+    const returnStep: Step = viaScan ? 'scan' : 'search';
     let ensured: string | undefined;
     let savedId: string | undefined;
+    let stockRowId: string | undefined;
     change('add stock', (d) => {
       let pid = productId;
       if (!pid && pendingNew) {
@@ -103,7 +144,7 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
       }
       if (!pid) return;
       savedId = pid;
-      addStock(
+      stockRowId = addStockWithUndo(
         d,
         {
           productId: pid,
@@ -113,7 +154,7 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
           ...(viaScan ? { source: 'barcode' as const } : {}),
         },
         today(),
-      );
+      ).id;
     });
     if (ensured) setProductId(ensured);
     if (savedId) pushRecentProduct(savedId);
@@ -123,8 +164,10 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
     }
     const label = product?.name ?? doc.products[savedId ?? '']?.name ?? activeItem?.name ?? 'item';
     setAdded((n) => n + qty);
-    setLast(`Added ${qty} × ${label} to ${location.name}`);
-    setPutOnce(true);
+    setLast(`Added ${formatQty(qty)} × ${label} to ${location.name}`);
+    setLastStockId(stockRowId);
+    resetEntry();
+    setStep(returnStep);
   }
 
   function pickItem(t: Item): void {
@@ -136,7 +179,7 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
     setQty(1);
     setBestBefore(undefined);
     setLast(null);
-    setPutOnce(false);
+    setLastStockId(undefined);
     setStep('size');
   }
 
@@ -152,7 +195,7 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
     setQty(1);
     setBestBefore(undefined);
     setLast(null);
-    setPutOnce(false);
+    setLastStockId(undefined);
     setStep('form');
   }
 
@@ -166,7 +209,7 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
     setQty(1);
     setBestBefore(undefined);
     setLast(null);
-    setPutOnce(false);
+    setLastStockId(undefined);
     setScannedCode(code);
     setStep('form');
   }
@@ -176,21 +219,16 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
   }
 
   function backToSearch(): void {
-    setItem(undefined);
-    setProductId(undefined);
-    setPendingNew(undefined);
+    resetEntry();
     setLast(null);
-    setPutOnce(false);
+    setLastStockId(undefined);
     setStep('search');
   }
 
-  function next(): void {
-    setItem(undefined);
-    setProductId(undefined);
-    setPendingNew(undefined);
-    setLast(null);
-    setPutOnce(false);
-    setStep(viaScan ? 'scan' : 'search');
+  function backFromForm(): void {
+    const back: Step = viaScan ? 'scan' : 'search';
+    resetEntry();
+    setStep(back);
   }
 
   function sortLater(code: string, off: OffFacts | undefined): void {
@@ -218,22 +256,67 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
       </p>
     ) : null;
 
+  const editSheet = (() => {
+    if (!editStockId) return null;
+    const row = doc.stock[editStockId];
+    if (!row) return null;
+    const prod = doc.products[row.productId];
+    const it = prod?.itemId ? packs.items[prod.itemId] : undefined;
+    return (
+      <StockSheet
+        key={editStockId}
+        initial={row}
+        product={prod}
+        item={it}
+        onSave={(saved) => {
+          change('edit stock', (d) => {
+            d.stock[saved.id] = saved;
+          });
+          setEditStockId(undefined);
+        }}
+        onDelete={() => {
+          change('delete stock', (d) => {
+            delete d.stock[editStockId];
+          });
+          setEditStockId(undefined);
+        }}
+        onClose={() => setEditStockId(undefined)}
+      />
+    );
+  })();
+
+  const openLastEdit = (): void => {
+    if (lastStockId && doc.stock[lastStockId]) setEditStockId(lastStockId);
+  };
+
   if (step === 'scan') {
     return (
-      <ScanSheet
-        onClose={onClose}
-        onBack={() => {
-          setViaScan(false);
-          setStep('search');
-        }}
-        onProduct={(pid, code) => pickProduct(pid, code)}
-        onSortLater={sortLater}
-        sortLaterBlocked={
-          locations.length > 0
-            ? undefined
-            : 'Add a place first, then there is somewhere to keep it.'
-        }
-      />
+      <>
+        {editSheet}
+        <ScanSheet
+          onClose={onClose}
+          onBack={() => {
+            setViaScan(false);
+            setStep('search');
+          }}
+          onProduct={(pid, code) => pickProduct(pid, code)}
+          onSortLater={sortLater}
+          sortLaterBlocked={
+            locations.length > 0
+              ? undefined
+              : 'Add a place first, then there is somewhere to keep it.'
+          }
+          addedStatus={
+            last
+              ? {
+                  message: last,
+                  stockId: lastStockId && doc.stock[lastStockId] ? lastStockId : undefined,
+                  onEdit: openLastEdit,
+                }
+              : undefined
+          }
+        />
+      </>
     );
   }
 
@@ -270,109 +353,99 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
         : `Add ${formTitle}`;
 
   return (
-    <Sheet
-      title={sheetTitle}
-      onClose={onClose}
-      actions={
-        step === 'size' ? (
-          <button type="button" className="secondary" onClick={backToSearch}>
-            Back
-          </button>
-        ) : step === 'form' ? (
-          putOnce ? (
+    <>
+      {editSheet}
+      <Sheet
+        title={sheetTitle}
+        onClose={onClose}
+        actions={
+          step === 'size' ? (
+            <button type="button" className="secondary" onClick={backToSearch}>
+              Back
+            </button>
+          ) : step === 'form' ? (
             <>
-              <button type="button" className="secondary" disabled={!canAdd} onClick={put}>
-                Add another
-              </button>
-              <button type="button" onClick={next}>
-                Next item
-              </button>
-            </>
-          ) : (
-            <>
-              <button type="button" className="secondary" onClick={next}>
+              <button type="button" className="secondary" onClick={backFromForm}>
                 Back
               </button>
               <button type="button" disabled={!canAdd} onClick={put}>
                 Add
               </button>
             </>
-          )
-        ) : undefined
-      }
-    >
-      {step === 'search' ? (
-        <>
-          {counter}
-          <div className="search-row" ref={searchRef}>
-            <button type="button" className="secondary" onClick={() => setStep('scan')}>
-              Scan a barcode
-            </button>
-            <Link className="button secondary" to="/app/stores/stocktake" onClick={onClose}>
-              Stocktake a pile
-            </Link>
-            <ItemPicker
-              searchLabel="What are you adding?"
-              onItem={pickItem}
-              onProduct={pickRecentProduct}
-            />
-          </div>
-        </>
-      ) : null}
-      {step === 'size' && item ? <SizeStep item={item} onDone={onSizeDone} /> : null}
-      {step === 'form' && (activeItem || product) ? (
-        <>
-          {last ? (
-            <p className="note" role="status">
-              {last}
-            </p>
-          ) : null}
-          {counter}
-          <Field label={`How many (${unit})?`}>
-            <QtyField value={qty} onChange={edit(setQty)} label={`How many ${unit}`} />
-          </Field>
-          {locations.length === 0 ? (
-            <p className="note">
-              You have no places yet. <Link to="/app/locations">Add a place</Link> first, then come
-              back.
-            </p>
-          ) : (
-            <Field label="Where does it go?">
-              <select value={locationId} onChange={(e) => edit(setLocationId)(e.target.value)}>
-                {locations.map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {l.name}
-                  </option>
-                ))}
-              </select>
+          ) : undefined
+        }
+      >
+        {step === 'search' ? (
+          <>
+            {last ? (
+              <AddedStatus message={last} stockId={lastStockId} onEdit={openLastEdit} />
+            ) : null}
+            {counter}
+            <div className="search-row" ref={searchRef}>
+              <button type="button" className="secondary" onClick={() => setStep('scan')}>
+                Scan a barcode
+              </button>
+              <Link className="button secondary" to="/app/stores/stocktake" onClick={onClose}>
+                Stocktake a pile
+              </Link>
+              <ItemPicker
+                searchLabel="What are you adding?"
+                onItem={pickItem}
+                onProduct={pickRecentProduct}
+              />
+            </div>
+          </>
+        ) : null}
+        {step === 'size' && item ? <SizeStep item={item} onDone={onSizeDone} /> : null}
+        {step === 'form' && (activeItem || product) ? (
+          <>
+            {counter}
+            <Field label={`How many (${unit})?`}>
+              <QtyField value={qty} onChange={edit(setQty)} label={`How many ${unit}`} />
             </Field>
-          )}
-          {warning ? (
-            <p className="warn" role="status">
-              ⚠ {warning}. You can still add it.
-            </p>
-          ) : null}
-          {viaScan && scannedCode ? (
-            <button type="button" className="link" onClick={() => setStep('repick')}>
-              Not this item?
-            </button>
-          ) : null}
-          {activeItem ? (
-            <MonthField
-              value={bestBefore}
-              onChange={edit(setBestBefore)}
-              shelfLife={activeItem.shelfLife}
-              today={today()}
-            />
-          ) : null}
-          {bestBefore ? <ExpiryBadge bestBefore={bestBefore} /> : null}
-          {hasCamera() ? (
-            <button type="button" className="secondary" onClick={() => setStep('readdate')}>
-              Read the date
-            </button>
-          ) : null}
-        </>
-      ) : null}
-    </Sheet>
+            {locations.length === 0 ? (
+              <p className="note">
+                You have no places yet. <Link to="/app/locations">Add a place</Link> first, then
+                come back.
+              </p>
+            ) : (
+              <Field label="Where does it go?">
+                <select value={locationId} onChange={(e) => edit(setLocationId)(e.target.value)}>
+                  {locations.map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {l.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            )}
+            {warning ? (
+              <p className="warn" role="status">
+                ⚠ {warning}. You can still add it.
+              </p>
+            ) : null}
+            {viaScan && scannedCode ? (
+              <button type="button" className="link" onClick={() => setStep('repick')}>
+                Not this item?
+              </button>
+            ) : null}
+            {activeItem ? (
+              <MonthField
+                value={bestBefore}
+                onChange={edit(setBestBefore)}
+                shelfLife={activeItem.shelfLife}
+                today={today()}
+              />
+            ) : null}
+            {bestBefore ? <ExpiryBadge bestBefore={bestBefore} /> : null}
+            {hasCamera() ? (
+              <button type="button" className="secondary" onClick={() => setStep('readdate')}>
+                Read the date
+              </button>
+            ) : null}
+          </>
+        ) : null}
+      </Sheet>
+    </>
   );
 }

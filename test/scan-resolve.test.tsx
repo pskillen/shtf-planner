@@ -91,8 +91,9 @@ describe('Quick add: Scan a barcode', () => {
     expect(s.doc().barcodes[UNKNOWN]?.productId).toBeDefined();
     expect(await screen.findByText(/Add /)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Add' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Next item' }));
     expect(screen.getByText('Scan a barcode', { selector: 'h2' })).toBeTruthy();
+    expect(screen.getByTestId('last-add-status').textContent).toMatch(/Added 1 × .* to /);
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeTruthy();
   });
 
   it('offline: not known yet, with search, counts towards nothing and sort later', async () => {
