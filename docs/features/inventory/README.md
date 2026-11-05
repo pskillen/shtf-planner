@@ -13,13 +13,21 @@ The Stores tab: what the household has, by where it is kept, and the quick way t
 | Quick add       | `screens/stores/QuickAdd.tsx`                        | Search, pick, Add; then Same again or Next item. Also opened from the Gaps tab.                     |
 | Edit and floors | `screens/stores/ItemSheet.tsx`, `FloorSheet.tsx`     | Quantity stepper, place, best-before, delete with undo; the floor of each type in a rotating place. |
 | Month field     | `screens/stores/MonthField.tsx`                      | A month box and one-tap chips for the best-before.                                                  |
-| Pure helpers    | `screens/stores/stock.ts`, `customType.ts`           | Suitability warning, month parsing and colouring, search, adding stock, custom item types.          |
+| Pure helpers    | `screens/stores/stock.ts`, `customType.ts`           | Suitability warning, month parsing, search, adding stock, custom item types.                        |
 | Custom types    | `customTypes` in the document, `src/packs/custom.ts` | `withCustomTypes` merges them into the packs as a pseudo-pack `custom`; `usePacks()` in screens.    |
 
 ## Behaviour worth knowing
 
-- **Rows.** Name, quantity and unit, the best-before as "Mar 2027" (red once its month has gone,
-  amber within three months), a "floor 6" badge in a rotating place. Tapping a row edits it.
+- **Rows.** Name, quantity and unit, the best-before as "Mar 2027" with a word beside it, a "floor
+  6" badge in a rotating place. Tapping a row edits it.
+- **Expiry colours.** A best-before is always a colour and a word together (`ExpiryBadge`, from
+  `expiryLevel` in `src/engine/expiry.ts`): **Expired** (red) once its month has gone;
+  **Expires soon** (red) this month and up to 1 month ahead; **Before next check** (amber) up to 3
+  months ahead; nothing extra when later. A `YYYY-MM` best-before is good to the end of its month.
+  The two windows are household settings (Settings, Expiry colours: expires soon within 0 to 3
+  months, next check in 1, 2, 3, 6 or 12 months), kept in `settings.expirySoonMonths` and
+  `expiryCheckMonths` and synced; absent means 1 and 3. The same badge shows in Quick add under the
+  best-before. The words are in `src/app/labels.ts` (`EXPIRY_LABEL`).
 - **Equipment in a place.** Under a place's stock, the equipment kept there (its "Where is it
   kept?" answer) is listed read-only with an Equipment badge, its name, type and key answer
   ("110 Ah"); tapping it opens its edit form on the Equipment screen. Equipment with no place, or whose place no longer exists, is listed after the places under "Equipment, no place", with the same rows. Search matches equipment names too.
@@ -51,6 +59,6 @@ The Stores tab: what the household has, by where it is kept, and the quick way t
 ## Not done
 
 - Barcode scanning (`source: 'barcode'` is unused).
-- Review of items that are about to expire: the colouring is display only.
+- Review of items that are about to expire: the colouring and words are display only.
 - Editing or deleting a custom type.
 - Adding a type to a place's floors without stock in it.

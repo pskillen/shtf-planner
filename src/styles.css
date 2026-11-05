@@ -751,12 +751,14 @@ table.horizon .big td {
   margin: 4px 0;
 }
 
-.bb-past {
+/* A best-before is always a colour and a word together (see ExpiryBadge). */
+.bb-expired,
+.bb-soon {
   color: var(--bad);
   font-weight: 700;
 }
 
-.bb-soon {
+.bb-check {
   color: var(--warn);
   font-weight: 700;
 }

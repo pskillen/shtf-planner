@@ -57,7 +57,7 @@ test('the fixture household: the Stores tab groups stock by place, flags the odd
   await expect(
     page.getByText('This place rotates: the floor counts, not today’s stock.'),
   ).toBeVisible();
-  await expect(page.locator('.bb-past').first()).toBeVisible();
+  await expect(page.locator('.bb-expired').first()).toBeVisible();
   // search narrows across places
   await page.getByLabel('Search stock').fill('torch');
   await expect(page.getByRole('button', { name: /Edit .*[Tt]orch/ })).toHaveCount(3);

@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { floorKey, type Asset, type ItemInstance, type ItemType, type Location } from '../../model';
-import { today } from '../../util';
 import { EditArea } from '../components/EditArea';
+import { ExpiryBadge } from '../components/ExpiryBadge';
 import { useDeferredDelete } from '../components/useDeferredDelete';
 import { useChange, useDocument } from '../state';
 import { usePacks } from '../usePacks';
@@ -11,7 +11,7 @@ import { keyAnswer } from './assets/questionnaire';
 import { FloorSheet, type FloorRow } from './stores/FloorSheet';
 import { ItemSheet } from './stores/ItemSheet';
 import { QuickAdd } from './stores/QuickAdd';
-import { formatMonth, matchTypes, monthTone, suitabilityWarning } from './stores/stock';
+import { matchTypes, suitabilityWarning } from './stores/stock';
 
 /** One line of the list: a stock entry, or a floor with nothing on the shelf (`item` unset). */
 interface Row {
@@ -34,7 +34,6 @@ export function StoresScreen() {
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<ItemInstance | null>(null);
   const [flooring, setFlooring] = useState<string | null>(null);
-  const now = today();
 
   const remove = useDeferredDelete((id) =>
     change('delete stock', (d) => {
@@ -115,7 +114,6 @@ export function StoresScreen() {
     const name = typeName(type, row.typeId);
     const floor = location ? doc.floors[floorKey(location.id, row.typeId)] : undefined;
     const warning = type && location ? suitabilityWarning(type, location) : undefined;
-    const tone = row.item?.bestBefore ? monthTone(row.item.bestBefore, now) : undefined;
     return (
       <li className="row-item" key={row.key}>
         <button
@@ -132,8 +130,7 @@ export function StoresScreen() {
             {row.item?.bestBefore ? (
               <>
                 {' · '}
-                <span className={`bb bb-${tone}`}>{formatMonth(row.item.bestBefore)}</span>
-                {tone === 'past' ? ' (past)' : ''}
+                <ExpiryBadge bestBefore={row.item.bestBefore} showMonth />
               </>
             ) : null}
           </span>

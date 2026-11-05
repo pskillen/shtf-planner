@@ -10,6 +10,7 @@ import {
 } from '../../../model';
 import { today } from '../../../util';
 import { Field, NumberInput } from '../../components/controls';
+import { ExpiryBadge } from '../../components/ExpiryBadge';
 import { Sheet } from '../../components/Sheet';
 import { Stepper } from '../../components/Stepper';
 import { CATEGORY_LABEL, labelOf } from '../../labels';
@@ -379,6 +380,7 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
             shelfLife={type.shelfLife}
             today={today()}
           />
+          {bestBefore ? <ExpiryBadge bestBefore={bestBefore} /> : null}
         </>
       ) : null}
     </Sheet>

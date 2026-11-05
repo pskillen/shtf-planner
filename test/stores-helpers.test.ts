@@ -6,7 +6,6 @@ import {
   formatMonth,
   matchTypes,
   monthChips,
-  monthTone,
   parseMonth,
   suitabilityWarning,
 } from '../src/app/screens/stores/stock';
@@ -58,15 +57,9 @@ describe('suitabilityWarning', () => {
 });
 
 describe('best-before months', () => {
-  it('formats and colours by nearness', () => {
+  it('formats months', () => {
     expect(formatMonth('2027-03')).toBe('Mar 2027');
     expect(formatMonth('nonsense')).toBe('nonsense');
-    const today = '2026-11-04';
-    expect(monthTone('2026-10', today)).toBe('past');
-    // this month is not past yet, but it is soon
-    expect(monthTone('2026-11', today)).toBe('soon');
-    expect(monthTone('2027-02', today)).toBe('soon');
-    expect(monthTone('2027-03', today)).toBe('ok');
   });
 
   it('moves a month across year ends in both directions', () => {

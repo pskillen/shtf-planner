@@ -153,3 +153,10 @@ export const HORIZON_SENTENCE: Record<(typeof HORIZONS)[number], string> = {
   14: 'Two weeks: what Ready.gov suggests.',
   28: 'Four weeks: a long-haul plan; much more to store.',
 };
+
+/** The words that go with the colours of a best-before: always shown, never colour alone. */
+export const EXPIRY_LABEL: Record<'expired' | 'soon' | 'check', string> = {
+  expired: 'Expired',
+  soon: 'Expires soon',
+  check: 'Before next check',
+};

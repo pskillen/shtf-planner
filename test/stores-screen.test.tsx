@@ -120,3 +120,47 @@ describe('the Stores screen markup', () => {
     error.mockRestore();
   });
 });
+
+describe('best-before words and colours', () => {
+  const rowFor = (name: string) => screen.getByRole('button', { name: `Edit ${name}` });
+
+  it('shows Expired, Expires soon and Before next check beside the month, never colour alone', () => {
+    vi.setSystemTime(new Date(2026, 10, 4, 12));
+    const doc = biggarDocument();
+    doc.items['item-water']!.bestBefore = '2026-10';
+    const s = liveStore(doc);
+    render(s.wrap(<StoresScreen />));
+    const badge = within(rowFor('Water can (10 L)')).getByText(/Oct 2026/);
+    expect(badge.textContent).toBe('Oct 2026 · Expired');
+    expect(badge.className).toContain('bb-expired');
+
+    act(() => {
+      s.store.change('t', (d) => void (d.items['item-water']!.bestBefore = '2026-12'));
+    });
+    expect(within(rowFor('Water can (10 L)')).getByText(/Dec 2026/).textContent).toBe(
+      'Dec 2026 · Expires soon',
+    );
+    act(() => {
+      s.store.change('t', (d) => void (d.items['item-water']!.bestBefore = '2027-02'));
+    });
+    const check = within(rowFor('Water can (10 L)')).getByText(/Feb 2027/);
+    expect(check.textContent).toBe('Feb 2027 · Before next check');
+    expect(check.className).toContain('bb-check');
+    act(() => {
+      s.store.change('t', (d) => void (d.items['item-water']!.bestBefore = '2027-06'));
+    });
+    expect(within(rowFor('Water can (10 L)')).getByText(/Jun 2027/).textContent).toBe('Jun 2027');
+  });
+
+  it('follows the household settings', () => {
+    vi.setSystemTime(new Date(2026, 10, 4, 12));
+    const doc = biggarDocument();
+    doc.items['item-water']!.bestBefore = '2027-02';
+    doc.settings.expirySoonMonths = 3;
+    const s = liveStore(doc);
+    render(s.wrap(<StoresScreen />));
+    expect(within(rowFor('Water can (10 L)')).getByText(/Feb 2027/).textContent).toBe(
+      'Feb 2027 · Expires soon',
+    );
+  });
+});

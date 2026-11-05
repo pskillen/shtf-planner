@@ -51,18 +51,6 @@ export function addMonthsYM(ym: string, months: number): string {
   return `${String(year).padStart(4, '0')}-${String((index % 12) + 1).padStart(2, '0')}`;
 }
 
-export type MonthTone = 'past' | 'soon' | 'ok';
-
-/**
- * How near a best-before month is to `todayIso`: `past` once its month has gone (the engine treats
- * stock as expired from the month after), `soon` within the next three months, else `ok`.
- */
-export function monthTone(ym: string, todayIso: string): MonthTone {
-  const now = monthOfDate(todayIso);
-  if (ym < now) return 'past';
-  return monthIndex(ym) - monthIndex(now) <= 3 ? 'soon' : 'ok';
-}
-
 /**
  * A best-before typed by hand as "2027-03", "03/2027", "3/2027" or "Mar 2027", read as
  * `YYYY-MM`; undefined when it is not a real month. A two-digit year ("3/27") is 20xx.
