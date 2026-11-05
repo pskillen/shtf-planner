@@ -132,10 +132,11 @@ only opens a popup for a tap, so **nothing asks Google unless a tap is behind it
   choose or type. If the browser blocks the window anyway, a toast and the Data screen say "Your
   browser blocked Google's window. Tap Reconnect.".
 - **Renewing early.** Inside a tap, a token with under 5 minutes left is renewed before it runs
-  out. If Google's window cannot open or is closed, the token that still works is kept and the next
+  out; the sync does not wait for Google's window and carries on with the token that still works. If the window cannot open or is closed, the token that still works is kept and the next
   tap does not try again for it.
 - **Test control.** Outside `prod` builds, Data shows **Drop the Drive token (test)**: it forgets the
-  token as if it had expired (still connected). Leave the app, come back, and the pill reads
+  token as if it had expired (still connected). A sync within about 5 seconds of that tap still
+  counts as inside a tap, so wait about 10 seconds or switch to another app first. Then come back, and the pill reads
   "Reconnect Drive" without a Google window; tapping it reconnects.
 - **Disconnect** revokes the token and forgets the connection; the household here, the files on
   Drive, and what sync remembers (the folder and file ids, the last state both sides had, and any
