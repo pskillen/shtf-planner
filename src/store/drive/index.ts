@@ -18,6 +18,7 @@ export {
   DriveCancelledError,
   DriveConfigError,
   DriveNetworkError,
+  DrivePopupBlockedError,
   DriveNotFoundError,
   DriveScopeError,
   driveErrorMessage,

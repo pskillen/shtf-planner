@@ -19,6 +19,8 @@ export interface GoogleIdentityClient {
       initTokenClient: (config: {
         client_id: string;
         scope: string;
+        /** The saved account, so Google can go straight through without a chooser. */
+        login_hint?: string;
         callback: (response: GoogleTokenResponse) => void;
         error_callback?: (error: { type?: string; message?: string }) => void;
       }) => GoogleTokenClient;

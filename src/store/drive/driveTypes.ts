@@ -31,11 +31,24 @@ export interface DriveFileMetadata {
   modifiedTime?: string;
 }
 
+export const DRIVE_POPUP_BLOCKED_MESSAGE = "Your browser blocked Google's window. Tap Reconnect.";
+
 export class DriveAuthError extends Error {
   readonly code = 'auth' as const;
   constructor(message = 'Google Drive authentication expired or missing.') {
     super(message);
     this.name = 'DriveAuthError';
+  }
+}
+
+/**
+ * The browser would not open Google's window (GIS `popup_failed_to_open`): no tap behind the
+ * request, or a popup blocker. Still "the person must Reconnect", with its own sentence.
+ */
+export class DrivePopupBlockedError extends DriveAuthError {
+  constructor(message = DRIVE_POPUP_BLOCKED_MESSAGE) {
+    super(message);
+    this.name = 'DrivePopupBlockedError';
   }
 }
 
@@ -91,6 +104,7 @@ export class DriveConfigError extends Error {
 
 /** A sentence for the status pill and the Data screen. */
 export function driveErrorMessage(err: unknown): string {
+  if (err instanceof DrivePopupBlockedError) return err.message;
   if (err instanceof DriveAuthError) return 'Reconnect Google Drive';
   if (err instanceof DriveScopeError) {
     return 'Google Drive refused access. Reconnect and allow access to files this app creates.';

@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { DriveAuthError, DriveCancelledError, DRIVE_OAUTH_SCOPE } from './driveTypes';
+import {
+  DriveAuthError,
+  DriveCancelledError,
+  DrivePopupBlockedError,
+  DRIVE_OAUTH_SCOPE,
+} from './driveTypes';
 import type { GoogleIdentityClient, GoogleTokenResponse } from './loadGoogleIdentity';
 import { createWebAuthProvider } from './webGoogleAuth';
 
@@ -41,10 +46,43 @@ describe('webGoogleAuth', () => {
     expect(requestAccessToken).toHaveBeenCalledWith({ prompt: '' });
   });
 
-  it('passes the prompt on: none for a quiet reconnect', async () => {
-    const { auth, requestAccessToken } = provider(respond({ access_token: 'abc' }));
-    await auth.authorize('client', { prompt: 'none' });
-    expect(requestAccessToken).toHaveBeenCalledWith({ prompt: 'none' });
+  it('passes the saved account to Google as login_hint, and makes one request', async () => {
+    let hint: string | undefined;
+    const { auth, requestAccessToken } = provider((c) => {
+      hint = c.login_hint;
+      c.callback({ access_token: 'abc' });
+    });
+    await auth.authorize('client', { loginHint: 'me@example.test' });
+    expect(hint).toBe('me@example.test');
+    expect(requestAccessToken).toHaveBeenCalledTimes(1);
+    expect(requestAccessToken).toHaveBeenCalledWith({ prompt: '' });
+  });
+
+  it('sends no login_hint when no account is saved', async () => {
+    let config: Config | undefined;
+    const { auth } = provider((c) => {
+      config = c;
+      c.callback({ access_token: 'abc' });
+    });
+    await auth.authorize('client');
+    expect(config).not.toHaveProperty('login_hint');
+  });
+
+  it('a window the browser would not open is the blocked-popup error', async () => {
+    const blocked = provider((c) =>
+      c.error_callback?.({ type: 'popup_failed_to_open', message: 'blocked' }),
+    );
+    await expect(blocked.auth.authorize('c')).rejects.toBeInstanceOf(DrivePopupBlockedError);
+  });
+
+  it('preload loads the script without asking for a token', async () => {
+    const loadIdentity = vi.fn(async () => {
+      throw new Error('offline');
+    });
+    const auth = createWebAuthProvider({ loadIdentity, now: () => 1 });
+    auth.preload();
+    expect(loadIdentity).toHaveBeenCalledTimes(1);
+    await Promise.resolve(); // the failure is swallowed
   });
 
   it('a closed popup (both callbacks) and access_denied are quiet cancels', async () => {

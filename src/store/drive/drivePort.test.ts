@@ -12,6 +12,8 @@ import {
   DriveCancelledError,
   DriveConfigError,
   DriveNetworkError,
+  DrivePopupBlockedError,
+  driveErrorMessage,
 } from './driveTypes';
 import { memoryStorage } from './testStorage';
 import type { DriveAuthProvider } from './webGoogleAuth';
@@ -37,10 +39,22 @@ describe('drivePort', () => {
 
   const auth = (impl?: DriveAuthProvider['authorize']): DriveAuthProvider => ({
     authorize: vi.fn(impl ?? (async () => ({ accessToken: 'fresh', expiresAt: NOW + 3_600_000 }))),
+    preload: vi.fn(),
     revoke: vi.fn(async () => {}),
   });
+  // A tap is behind every call unless a test says otherwise.
+  let tapped = true;
+  beforeEach(() => {
+    tapped = true;
+  });
   const port = (api: DriveApiClient, a: DriveAuthProvider, clientId = 'client') =>
-    createDrivePort({ api, auth: a, getClientId: () => clientId, now: () => NOW });
+    createDrivePort({
+      api,
+      auth: a,
+      getClientId: () => clientId,
+      now: () => NOW,
+      hasUserActivation: () => tapped,
+    });
 
   it('is unconfigured without a client id, and connecting says so', async () => {
     const p = port(fakeApi(), auth(), '');
@@ -133,25 +147,96 @@ describe('drivePort', () => {
     const a = auth();
     await port(fakeApi(), a).connect();
     expect(a.authorize).toHaveBeenCalledTimes(1);
-    expect(a.authorize).toHaveBeenCalledWith('client', { prompt: '' });
+    expect(a.authorize).toHaveBeenCalledWith('client', { loginHint: undefined });
   });
 
-  it('Reconnect asks for no prompt first and falls back to the usual request', async () => {
-    saveDriveSession({ accessToken: 'old', expiresAt: NOW - 1 }); // connected, token gone
-    const calls: string[] = [];
-    const a = auth(async (_id, options) => {
-      calls.push(options?.prompt ?? '?');
-      if (options?.prompt === 'none') throw new DriveAuthError('interaction_required');
-      return { accessToken: 'fresh', expiresAt: NOW + 3_600_000 };
-    });
+  it('Reconnect, already connected, makes exactly one Google request, hinting the saved account', async () => {
+    saveDriveSession({ accessToken: 'old', expiresAt: NOW - 1, accountEmail: 'me@example.test' });
+    const a = auth();
     await port(fakeApi(), a).connect();
-    expect(calls).toEqual(['none', '']);
+    expect(a.authorize).toHaveBeenCalledTimes(1);
+    expect(a.authorize).toHaveBeenCalledWith('client', { loginHint: 'me@example.test' });
     expect(loadDriveSession()?.accessToken).toBe('fresh');
+  });
 
-    const quiet = auth();
-    await port(fakeApi(), quiet).connect();
-    expect(quiet.authorize).toHaveBeenCalledTimes(1); // 'none' worked: no second request
-    expect(quiet.authorize).toHaveBeenCalledWith('client', { prompt: 'none' });
+  it('renewal with no user activation never asks Google and goes straight to Reconnect', async () => {
+    saveDriveSession({ accessToken: 'old', expiresAt: NOW - 1 });
+    tapped = false;
+    const a = auth();
+    const p = port(fakeApi(), a);
+    await expect(p.listFiles('f')).rejects.toBeInstanceOf(DriveAuthError);
+    expect(await p.renew()).toBe(false);
+    expect(a.authorize).not.toHaveBeenCalled();
+    expect(isDriveConnected()).toBe(true);
+    expect(localStorage.getItem(DRIVE_ACCESS_TOKEN_KEY)).toBeNull();
+
+    // the Reconnect tap works, and sync carries on
+    tapped = true;
+    await p.connect();
+    expect(a.authorize).toHaveBeenCalledTimes(1);
+    await expect(p.listFiles('f')).resolves.toEqual([]);
+  });
+
+  it('renewal inside a tap may still ask Google', async () => {
+    saveDriveSession({ accessToken: 'old', expiresAt: NOW - 1 });
+    const a = auth();
+    await port(fakeApi(), a).listFiles('f');
+    expect(a.authorize).toHaveBeenCalledTimes(1);
+  });
+
+  it('a token about to run out is renewed inside a tap, and left alone without one', async () => {
+    const soon = { accessToken: 'soon', expiresAt: NOW + 3 * 60_000 };
+    saveDriveSession(soon);
+    const a = auth();
+    const api = fakeApi();
+    tapped = false;
+    await port(api, a).listFiles('f');
+    expect(a.authorize).not.toHaveBeenCalled();
+    expect(api.listChildren).toHaveBeenLastCalledWith('f', 'soon');
+
+    tapped = true;
+    await port(api, a).listFiles('f');
+    expect(a.authorize).toHaveBeenCalledTimes(1);
+    expect(api.listChildren).toHaveBeenLastCalledWith('f', 'fresh');
+  });
+
+  it('a failed early renewal keeps the working token and is not repeated on every tap', async () => {
+    saveDriveSession({ accessToken: 'soon', expiresAt: NOW + 3 * 60_000 });
+    const a = auth(async () => {
+      throw new DriveCancelledError();
+    });
+    const api = fakeApi();
+    const p = port(api, a);
+    await p.listFiles('f');
+    await p.listFiles('f');
+    expect(a.authorize).toHaveBeenCalledTimes(1);
+    expect(api.listChildren).toHaveBeenLastCalledWith('f', 'soon');
+    expect(loadDriveSession()?.accessToken).toBe('soon');
+  });
+
+  it('a blocked window on Reconnect surfaces its own error', async () => {
+    saveDriveSession({ accessToken: 'old', expiresAt: NOW - 1 });
+    const a = auth(async () => {
+      throw new DrivePopupBlockedError();
+    });
+    const err = await port(fakeApi(), a)
+      .connect()
+      .catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(DrivePopupBlockedError);
+    expect(driveErrorMessage(err)).toBe("Your browser blocked Google's window. Tap Reconnect.");
+  });
+
+  it('warms Google up only when Drive is connected, and drops the token on request', async () => {
+    const a = auth();
+    const p = port(fakeApi(), a);
+    p.warmUp();
+    expect(a.preload).not.toHaveBeenCalled();
+    saveDriveSession({ accessToken: 'tok', expiresAt: NOW + 3_600_000 });
+    p.warmUp();
+    expect(a.preload).toHaveBeenCalledTimes(1);
+    p.dropToken();
+    expect(loadDriveSession()).toBeNull();
+    expect(p.isConnected()).toBe(true);
   });
 
   it('a script that will not load is not latched: the next call may try again', async () => {

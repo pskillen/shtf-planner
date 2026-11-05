@@ -1,7 +1,12 @@
 // Adapted from Codeplug Studio (src/integrations/cloud/webGoogleAuth.ts, driveAuthProvider.ts).
 // The token flow only: no refresh tokens, no native redirect.
 
-import { DriveAuthError, DriveCancelledError, DRIVE_OAUTH_SCOPE } from './driveTypes';
+import {
+  DriveAuthError,
+  DriveCancelledError,
+  DrivePopupBlockedError,
+  DRIVE_OAUTH_SCOPE,
+} from './driveTypes';
 import type { DriveSession } from './drivePrefs';
 import { loadGoogleIdentity, type GoogleIdentityClient } from './loadGoogleIdentity';
 
@@ -11,15 +16,20 @@ export interface DriveAuthTokens {
 }
 
 export interface AuthorizeOptions {
-  /** `''` lets Google decide (the default); `'none'` never shows an account chooser or consent. */
-  prompt?: '' | 'none';
+  /** The saved account's email: Google goes straight through for it instead of asking who. */
+  loginHint?: string;
 }
 
 export interface DriveAuthProvider {
   /**
-   * One token request with `prompt: ''`: Google shows nothing when consent already exists, and
-   * its popup when it does not. Called from a button press (connect) or, once, without one
-   * (renewal), where a blocked popup surfaces as a `DriveAuthError`.
+   * Loads Google's script ahead of time, so nothing slow sits between a tap and the window it
+   * opens. Quiet: a failure here is retried by `authorize`.
+   */
+  preload(): void;
+  /**
+   * Exactly one token request with `prompt: ''`: Google decides what to show. It opens a window,
+   * so it only works inside a tap; a window the browser would not open is a
+   * `DrivePopupBlockedError`.
    */
   authorize(clientId: string, options?: AuthorizeOptions): Promise<DriveAuthTokens>;
   revoke(session: DriveSession): Promise<void>;
@@ -29,12 +39,13 @@ function requestAccessToken(
   identity: GoogleIdentityClient,
   clientId: string,
   now: () => number,
-  prompt: '' | 'none',
+  loginHint: string | undefined,
 ): Promise<DriveAuthTokens> {
   return new Promise((resolve, reject) => {
     const client = identity.accounts.oauth2.initTokenClient({
       client_id: clientId,
       scope: DRIVE_OAUTH_SCOPE,
+      ...(loginHint ? { login_hint: loginHint } : {}),
       callback: (response) => {
         if (response.error) {
           if (response.error === 'popup_closed_by_user' || response.error === 'access_denied') {
@@ -60,11 +71,15 @@ function requestAccessToken(
           reject(new DriveCancelledError());
           return;
         }
+        if (error.type === 'popup_failed_to_open') {
+          reject(new DrivePopupBlockedError());
+          return;
+        }
         reject(new DriveAuthError(error.message ?? error.type));
       },
     });
     // `prompt: ''` lets Google decide: no dialog when consent already exists.
-    client.requestAccessToken({ prompt });
+    client.requestAccessToken({ prompt: '' });
   });
 }
 
@@ -77,9 +92,12 @@ export function createWebAuthProvider(deps?: Partial<WebGoogleAuthDeps>): DriveA
   const loadIdentity = deps?.loadIdentity ?? loadGoogleIdentity;
   const now = deps?.now ?? Date.now;
   return {
+    preload() {
+      loadIdentity().catch(() => {});
+    },
     async authorize(clientId, options) {
       const identity = await loadIdentity();
-      return requestAccessToken(identity, clientId, now, options?.prompt ?? '');
+      return requestAccessToken(identity, clientId, now, options?.loginHint);
     },
     async revoke(session) {
       if (!session.accessToken) return;

@@ -2,6 +2,7 @@ import { SCHEMA_VERSION, type Env } from '../model';
 import type { DocumentStore } from './documentStore';
 import {
   DriveAuthError,
+  DrivePopupBlockedError,
   DriveCancelledError,
   DriveNetworkError,
   DriveNotFoundError,
@@ -124,8 +125,13 @@ export interface Sync {
   /** Loads what sync remembers and starts listening (edits, focus, network, timers). */
   start(): Promise<void>;
   stop(): void;
-  /** From a button: Google's popup, then the first pull. Quiet if the popup is closed. */
+  /**
+   * From a tap (the Connect and Reconnect buttons): Google's one window, then the first pull.
+   * Quiet if the window is closed; a window the browser blocked says so.
+   */
   connect(): Promise<void>;
+  /** Test builds only: forgets the Drive token as if it had expired; the next sync trigger finds out. */
+  dropToken(): void;
   /** Forgets the connection on this device. The document and the files on Drive stay. */
   disconnect(): Promise<void>;
   /** Pushes now (after a review ends, from "Push now"). Resolves when it has settled. */
@@ -664,6 +670,7 @@ export function createSync(options: SyncOptions): Sync {
       rec = loaded.record;
       base = loaded.base;
       if (connected()) await deriveDirty();
+      if (connected()) drive.warmUp(); // so Reconnect opens Google's window straight from the tap
       started = true;
       unsubscribeStore = store.subscribe(onLocalEdit);
       removers.push(
@@ -675,6 +682,7 @@ export function createSync(options: SyncOptions): Sync {
         }),
         host.on('visible', () => void requestSync()),
         host.on('online', () => {
+          if (connected()) drive.warmUp(); // the script may have failed to load offline
           if (!needsReconnect() && !paused) clearProblem();
           void requestSync();
         }),
@@ -711,6 +719,7 @@ export function createSync(options: SyncOptions): Sync {
         await drive.connect();
       } catch (e) {
         if (e instanceof DriveCancelledError) return publish(); // quiet: still "Connect"
+        if (e instanceof DrivePopupBlockedError) toast(e.message); // the pill alone would not say why
         problem = {
           kind: 'error',
           message: driveErrorMessage(e),
@@ -735,6 +744,10 @@ export function createSync(options: SyncOptions): Sync {
         await deriveDirty(); // edits made while disconnected
       });
       await requestSync(); // publishes as it starts: no "Synced" flash before the first pull
+    },
+
+    dropToken() {
+      drive.dropToken();
     },
 
     async disconnect() {

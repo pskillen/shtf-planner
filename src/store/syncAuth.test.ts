@@ -25,7 +25,7 @@ describe('after one failed silent renewal', () => {
       if (!allow) throw new DriveAuthError('popup blocked');
       return { accessToken: `t${authorize.mock.calls.length}`, expiresAt: clock + 3_600_000 };
     });
-    const auth: DriveAuthProvider = { authorize, revoke: vi.fn(async () => {}) };
+    const auth: DriveAuthProvider = { authorize, preload: vi.fn(), revoke: vi.fn(async () => {}) };
     const api = {
       findAppFolders: vi.fn(async () => [{ id: 'f', name: 'SHTF Planner' }]),
       createFolder: vi.fn(),
@@ -60,7 +60,13 @@ describe('after one failed silent renewal', () => {
     });
     const s = createSync({
       store,
-      drive: createDrivePort({ api, auth, getClientId: () => 'client', now: () => clock }),
+      drive: createDrivePort({
+        api,
+        auth,
+        getClientId: () => 'client',
+        now: () => clock,
+        hasUserActivation: () => true,
+      }),
       persistence: createMemoryPersistence(),
       env: 'local',
       host,
@@ -101,6 +107,69 @@ describe('after one failed silent renewal', () => {
     allow = true;
     await s.connect();
     expect(authorize).toHaveBeenCalledTimes(3);
+    expect(s.state().status.kind).toBe('synced');
+  });
+
+  it('with no tap behind a trigger nothing asks Google, and one Reconnect tap syncs', async () => {
+    let tapped = false;
+    const authorize = vi.fn(async () => ({ accessToken: 'fresh', expiresAt: clock + 3_600_000 }));
+    const auth: DriveAuthProvider = { authorize, preload: vi.fn(), revoke: vi.fn(async () => {}) };
+    const api = {
+      findAppFolders: vi.fn(async () => [{ id: 'f', name: 'SHTF Planner' }]),
+      createFolder: vi.fn(),
+      listChildren: vi.fn(async () => []),
+      readBytes: vi.fn(),
+      readText: vi.fn(),
+      writeFile: vi.fn(async (p: { name: string }) => ({
+        id: `id-${p.name}`,
+        name: p.name,
+        modifiedTime: String(clock++),
+      })),
+      getUserEmail: vi.fn(async () => 'me@example.test'),
+    } as unknown as DriveApiClient;
+    store = await openStore({
+      name: `auth-${Math.random()}`,
+      env: 'local',
+      deviceId: 'a',
+      channel: false,
+    });
+    const drive = createDrivePort({
+      api,
+      auth,
+      getClientId: () => 'client',
+      now: () => clock,
+      hasUserActivation: () => tapped,
+    });
+    const s = createSync({
+      store,
+      drive,
+      persistence: createMemoryPersistence(),
+      env: 'local',
+      host: {
+        isOnline: () => true,
+        isVisible: () => true,
+        on: () => () => {},
+      },
+      debounceMs: 10,
+      pollMs: 10_000_000,
+      retryMs: 10_000_000,
+    });
+    sync = s;
+    await s.start();
+    tapped = true;
+    await s.connect();
+    expect(authorize).toHaveBeenCalledTimes(1);
+
+    // the token expires while nobody is tapping
+    tapped = false;
+    clock += 2 * 3_600_000;
+    await s.checkDrive();
+    expect(s.state().status).toMatchObject({ kind: 'error', reconnect: true });
+    expect(authorize).toHaveBeenCalledTimes(1);
+
+    tapped = true;
+    await s.connect();
+    expect(authorize).toHaveBeenCalledTimes(2);
     expect(s.state().status.kind).toBe('synced');
   });
 });
