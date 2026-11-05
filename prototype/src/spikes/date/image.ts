@@ -160,14 +160,58 @@ export function toBMP(g: Gray): Uint8Array {
   return b;
 }
 
-export type Variant = { name: string; apply: (g: Gray) => Gray };
+export type Variant = {
+  name: string;
+  apply: (g: Gray) => Gray;
+  /** true when this variant would give the same image as an earlier one for this crop */
+  redundant?: (g: Gray) => boolean;
+};
 
-/** Height used for OCR input; dots need enough pixels. */
+/** Height used for the small OCR variant; dots need enough pixels, but the whole label does not need more. */
 export const OCR_H = 64;
+/** The crop at the resolution the camera gave us, but never smaller than OCR_H high. */
+const fit = (g: Gray) => (g.h < OCR_H ? resizeToHeight(g, OCR_H) : g);
+const small = (g: Gray) => g.h <= OCR_H * 1.25;
 
+/**
+ * Cheapest likely first. On the owner's photos the shrunk, contrast-stretched crop read the most dates; native
+ * resolution rescues framing that is looser than the box; inverted polarity is for white-on-black print;
+ * adaptive threshold last because it is the one that produces confident wrong reads.
+ */
 export const VARIANTS: Variant[] = [
+  { name: 'stretch@64', apply: (g) => stretch(resizeToHeight(g, OCR_H)) },
+  { name: 'stretch', apply: (g) => stretch(fit(g)), redundant: small },
+  { name: 'inv@64', apply: (g) => invert(stretch(resizeToHeight(g, OCR_H))) },
+  { name: 'inv', apply: (g) => invert(stretch(fit(g))), redundant: small },
+  { name: 'adapt', apply: (g) => adaptive(stretch(fit(g))) },
+];
+
+/** The round-1 variants, kept for the before/after speed comparison in the bench. */
+export const VARIANTS_V1: Variant[] = [
   { name: 'stretch', apply: (g) => stretch(resizeToHeight(g, OCR_H)) },
   { name: 'adapt', apply: (g) => adaptive(stretch(resizeToHeight(g, OCR_H))) },
   { name: 'adapt+dilate', apply: (g) => dilateDark(adaptive(stretch(resizeToHeight(g, OCR_H))), 1) },
   { name: 'inv-adapt', apply: (g) => adaptive(invert(stretch(resizeToHeight(g, OCR_H)))) },
 ];
+
+/** Cheap sharpness: mean absolute horizontal+vertical gradient, on a copy shrunk to at most 160 px wide. */
+export function sharpness(g: Gray): number {
+  const k = Math.min(1, 160 / g.w);
+  const s = k < 1 ? resize(g, g.w * k, g.h * k) : g;
+  let sum = 0, n = 0;
+  for (let y = 0; y < s.h - 1; y++) for (let x = 0; x < s.w - 1; x++) {
+    const i = y * s.w + x;
+    sum += Math.abs(s.d[i] - s.d[i + 1]) + Math.abs(s.d[i] - s.d[i + s.w]);
+    n++;
+  }
+  return n ? sum / n : 0;
+}
+
+/** Mean absolute difference between two same-size small thumbnails of the frame (0..255), for "is it moving". */
+export function thumb(g: Gray, w = 32, h = 8): Gray { return resize(g, w, h); }
+export function frameDiff(a: Gray, b: Gray): number {
+  if (a.w !== b.w || a.h !== b.h) return 255;
+  let s = 0;
+  for (let i = 0; i < a.d.length; i++) s += Math.abs(a.d[i] - b.d[i]);
+  return s / a.d.length;
+}

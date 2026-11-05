@@ -1,0 +1,14 @@
+{
+  "note": "Coordinates only, in pixels of the 1205x1600 phone photos kept outside the repo. tight = how the owner would frame the date in the on-screen box. The bench also derives 'loose' (1.8x) and 'wide' (3x) around the same centre.",
+  "photos": [
+    { "id": "beans",    "file": "PXL_20261105_082102469", "truth": "03/2028", "tight": [190, 720, 640, 160], "what": "beans tin, dot-matrix on metal" },
+    { "id": "milk",     "file": "PXL_20261105_082107928", "truth": "11/2026", "tight": [260, 690, 780, 170], "what": "milk, dot-matrix, no year printed" },
+    { "id": "oil",      "file": "PXL_20261105_082113677", "truth": "03/2027", "tight": [300, 590, 620, 210], "what": "oil, dot-matrix label on glass" },
+    { "id": "washup",   "file": "PXL_20261105_082119239", "truth": "10/2027", "tight": [200, 770, 900, 200], "what": "washing-up liquid, clear bottle, reflections" },
+    { "id": "curry",    "file": "PXL_20261105_082124527", "truth": "01/2027", "tight": [330, 740, 460, 160], "what": "curry powder, white on black, curved" },
+    { "id": "rice-sep", "file": "PXL_20261105_082129878", "truth": "09/2028", "tight": [300, 670, 520, 150], "what": "rice, inkjet misaligned with pre-print, batch code below" },
+    { "id": "can",      "file": "PXL_20261105_082138782", "truth": "09/2027", "tight": [380, 710, 440, 230], "what": "can, dot-matrix on bare metal" },
+    { "id": "rice-oct", "file": "PXL_20261105_082143227", "truth": "10/2028", "tight": [240, 730, 620, 170], "what": "rice, spaced date over pre-print" },
+    { "id": "crackers", "file": "PXL_20261105_082147233", "truth": "02/2027", "tight": [250, 650, 480, 250], "what": "crackers, white on black" }
+  ]
+}

@@ -20,7 +20,7 @@ export type Assets = {
 export const WHITELIST = '0123456789/.-: ABCDEFGHIJLMNOPRSTUVY';
 
 // ---------------------------------------------------------------- Tesseract.js
-export type TessOpts = { workerOpts?: Record<string, unknown>; psm?: string };
+export type TessOpts = { workerOpts?: Record<string, unknown>; psm?: string; noWhitelist?: boolean };
 export function tesseractEngine(importTess: () => Promise<any>, opts: TessOpts = {}): Engine {
   let worker: any;
   return {
@@ -30,8 +30,8 @@ export function tesseractEngine(importTess: () => Promise<any>, opts: TessOpts =
       const createWorker = T.createWorker ?? T.default?.createWorker;
       worker = await createWorker('eng', 1, { logger: () => {}, ...opts.workerOpts }, { load_system_dawg: '0', load_freq_dawg: '0' });
       await worker.setParameters({
-        tessedit_char_whitelist: WHITELIST,
-        tessedit_pageseg_mode: opts.psm ?? '7', // single text line
+        ...(opts.noWhitelist ? {} : { tessedit_char_whitelist: WHITELIST }),
+        tessedit_pageseg_mode: opts.psm ?? '6', // a block of lines: real labels have two or three (psm 7, one line, returned junk on the phone)
         preserve_interword_spaces: '1',
       });
     },
