@@ -116,9 +116,10 @@ export async function installFakeCamera(
       }
       if (current.text) {
         ctx.fillStyle = '#fff';
-        ctx.fillRect(canvas.width / 2 - 300, canvas.height / 2 - 70, 600, 140);
+        // A white label across the middle with the text in dark print: "BEST BEFORE 06/2027" fits.
+        ctx.fillRect(canvas.width / 2 - 600, canvas.height / 2 - 80, 1200, 160);
         ctx.fillStyle = '#000';
-        ctx.font = 'bold 90px monospace';
+        ctx.font = 'bold 80px monospace';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(current.text, canvas.width / 2, canvas.height / 2);
