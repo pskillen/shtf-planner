@@ -1,67 +1,59 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { likelyTypes } from '../../../engine';
-import type { ItemType, ProductInfo } from '../../../model';
+import { suggestItems } from '../../../engine';
+import type { Item, OffFacts } from '../../../model';
 import type { OffProduct, OffResult } from '../../../scan/openFoodFacts';
-import { today } from '../../../util';
+import { sizeFits, today } from '../../../util';
 import { Field } from '../../components/controls';
 import { getOff } from '../../off';
 import { useChange, useDocument } from '../../state';
 import { usePacks } from '../../usePacks';
 import { equipmentAddPath } from '../assets/route';
-import { CustomItemForm } from './CustomItemForm';
-import { matchTypes } from './stock';
-import { productInfoOf, productLine, useEquipmentMatches, useStockTypes } from './scanHelpers';
+import { defaultProductName, ensureProduct, matchItems, rememberBarcode, usualSize } from './stock';
+import { offFactsOf, productLine, useEquipmentMatches, useStockItems } from './scanHelpers';
 
 /**
- * The card for a barcode just read: what is it? A barcode the household has met before is
- * resolved at once (`onType`, no card). Otherwise Open Food Facts is asked (only while online),
- * and the person picks from the likely types, searches all types, makes it its own item, or
- * sorts it later. The choice is remembered for the barcode, for the whole household.
+ * The card for a barcode just read. A barcode the household has met before is resolved at once
+ * (`onProduct`, no card). Otherwise Open Food Facts is asked (only while online), and the person
+ * picks from likely items, searches all items, counts towards nothing, or sorts it later.
  */
 export function ScanResolve({
   code,
   seed,
-  onType,
+  onProduct,
   onSortLater,
   sortLaterBlocked,
   reidentify = false,
 }: {
   code: string;
-  /** What an earlier lookup of a queued scan found, shown while (or instead of) asking again. */
-  seed?: ProductInfo;
-  onType: (type: ItemType) => void;
-  /** Absent: no "Decide later" (the scan is already in the queue). */
-  onSortLater?: (product: ProductInfo | undefined) => void;
-  /** Why "Decide later" cannot be used right now (no place to keep the scan in): shown, and the button is off. */
+  seed?: OffFacts;
+  onProduct: (productId: string) => void;
+  onSortLater?: (off: OffFacts | undefined) => void;
   sortLaterBlocked?: string;
-  /**
-   * The person says the remembered type is wrong ("Not this item?"): show the picker even though
-   * the barcode is known; choosing a type replaces what is remembered (for the whole household).
-   */
   reidentify?: boolean;
 }) {
   const doc = useDocument();
   const change = useChange();
   const packs = usePacks();
-  const types = useStockTypes();
+  const items = useStockItems();
 
   const remembered = doc.barcodes[code];
-  const knownType = remembered ? packs.items[remembered.typeId] : undefined;
-  const knownStock = knownType && knownType.assetTypeId === undefined ? knownType : undefined;
+  const knownProduct = remembered ? doc.products[remembered.productId] : undefined;
+  const knownItem = knownProduct?.itemId ? packs.items[knownProduct.itemId] : undefined;
+  const knownStock =
+    knownProduct && (!knownItem || knownItem.assetTypeId === undefined) ? knownProduct : undefined;
   const known = reidentify ? undefined : knownStock;
 
   const [result, setResult] = useState<OffResult | 'looking'>('looking');
   const [searching, setSearching] = useState(false);
   const [query, setQuery] = useState('');
-  const [own, setOwn] = useState(false);
 
   const resolved = useRef<string | null>(null);
   useEffect(() => {
     if (!known || resolved.current === code) return;
     resolved.current = code;
-    onType(known);
-  }, [known, code, onType]);
+    onProduct(known.id);
+  }, [known, code, onProduct]);
 
   useEffect(() => {
     if (known) return;
@@ -78,65 +70,49 @@ export function ScanResolve({
 
   const product: OffProduct | undefined = typeof result === 'object' ? result : undefined;
   const found = product?.found ? product : undefined;
-  const seeded = !found && seed?.found ? seed : undefined;
-  const line = found ? productLine(found) : seeded ? productLine(seeded) : '';
-  /** The name Open Food Facts gave it, for "New item: <name>". */
-  const newName = found?.name ?? seeded?.name ?? '';
-  // A new lookup's name wins; with none (offline), the name already remembered stays.
-  const keptName = line || remembered?.name;
+  const seeded = !found && seed?.found ? seedToOff(seed) : undefined;
+  const off = found ?? seeded;
+  const line = off ? productLine(off) : '';
+
   const guesses = useMemo(
-    () =>
-      found
-        ? likelyTypes(
-            { categories: found.categories, grams: found.grams, ml: found.ml, name: found.name },
-            types,
-          )
-        : [],
-    [found, types],
+    () => (found ? suggestItems({ categories: found.categories, size: found.size }, items) : []),
+    [found, items],
   );
   const shown = useMemo(
-    () => (searching ? matchTypes(types, query) : []),
-    [searching, types, query],
+    () => (searching ? matchItems(items, query) : []),
+    [searching, items, query],
   );
   const equipmentShown = useEquipmentMatches(query, searching);
 
   if (known) return null;
 
-  function choose(type: ItemType): void {
+  function rememberAndFinish(item: Item): void {
+    let productId = '';
     change('remember barcode', (d) => {
-      d.barcodes[code] = {
-        typeId: type.id,
-        ...(keptName ? { name: keptName } : {}),
-        seen: remembered?.seen ?? today(),
-      };
+      const size = off?.size && sizeFits(off.size, item.measure) ? off.size : usualSize(item);
+      const label =
+        off?.kcalPer100 !== undefined && item.measure !== 'count' ? off.kcalPer100 : undefined;
+      const name = off ? productLine(off) : undefined;
+      ({ id: productId } = ensureProduct(
+        d,
+        { itemId: item.id, size, labelKcalPer100: label, name },
+        packs,
+        today(),
+      ));
+      rememberBarcode(d, code, productId, today());
     });
-    onType(type);
+    onProduct(productId);
   }
 
-  if (own) {
-    const kcal =
-      found?.kcalPer100g !== undefined && found.grams !== undefined
-        ? Math.max(1, Math.round((found.kcalPer100g * found.grams) / 100))
-        : undefined;
-    return (
-      <CustomItemForm
-        initialName={found?.name ?? seeded?.name ?? ''}
-        initialAmount={kcal}
-        onClose={() => setOwn(false)}
-        onBack={() => setOwn(false)}
-        onMade={(made) => {
-          change('add custom item type', (d) => {
-            d.customTypes[made.id] = made;
-            d.barcodes[code] = {
-              typeId: made.id,
-              ...(keptName ? { name: keptName } : {}),
-              seen: remembered?.seen ?? today(),
-            };
-          });
-          onType(made);
-        }}
-      />
-    );
+  function countsTowardsNothing(): void {
+    let productId = '';
+    change('remember barcode', (d) => {
+      const size = off?.size ?? { amount: 1, unit: 'pieces' as const };
+      const name = off ? productLine(off) : defaultProductName(undefined, size);
+      ({ id: productId } = ensureProduct(d, { size, name }, packs, today()));
+      rememberBarcode(d, code, productId, today());
+    });
+    onProduct(productId);
   }
 
   const why =
@@ -144,7 +120,7 @@ export function ScanResolve({
       ? 'Not known yet. You are offline, so Open Food Facts could not be asked.'
       : result === 'busy'
         ? 'Not known yet. Open Food Facts is busy; try again in a minute.'
-        : found || seeded
+        : off
           ? null
           : result === 'looking'
             ? null
@@ -157,7 +133,7 @@ export function ScanResolve({
         {reidentify && knownStock ? ` · remembered as ${knownStock.name}` : ''}
       </p>
       {result === 'looking' && !seeded ? <p role="status">Looking it up…</p> : null}
-      {found || seeded ? (
+      {off ? (
         <p role="status">
           Open Food Facts says: <strong>{line || 'a product with no name'}</strong>
         </p>
@@ -169,9 +145,9 @@ export function ScanResolve({
           <ul className="row-list">
             {guesses.map((t) => (
               <li className="row-item" key={t.id}>
-                <button type="button" className="row-main" onClick={() => choose(t)}>
+                <button type="button" className="row-main" onClick={() => rememberAndFinish(t)}>
                   <strong>{t.name}</strong>
-                  <span className="muted">{t.unitSize ? `${t.unit} · ${t.unitSize}` : t.unit}</span>
+                  <span className="muted">{t.countsAs}</span>
                 </button>
               </li>
             ))}
@@ -180,7 +156,7 @@ export function ScanResolve({
       ) : null}
       {searching ? (
         <>
-          <Field label="Search all types">
+          <Field label="Search items">
             <input
               type="search"
               autoComplete="off"
@@ -205,9 +181,9 @@ export function ScanResolve({
           <ul className="row-list">
             {shown.slice(0, 30).map((t) => (
               <li className="row-item" key={t.id}>
-                <button type="button" className="row-main" onClick={() => choose(t)}>
+                <button type="button" className="row-main" onClick={() => rememberAndFinish(t)}>
                   <strong>{t.name}</strong>
-                  <span className="muted">{t.unitSize ? `${t.unit} · ${t.unitSize}` : t.unit}</span>
+                  <span className="muted">{t.countsAs}</span>
                 </button>
               </li>
             ))}
@@ -226,7 +202,7 @@ export function ScanResolve({
               Pick what it is
             </button>
             <p className="muted" id="choice-pick">
-              Choose from the list of item types
+              Choose from the list of items
             </p>
           </div>
         )}
@@ -234,13 +210,13 @@ export function ScanResolve({
           <button
             type="button"
             className="secondary"
-            aria-describedby="choice-new"
-            onClick={() => setOwn(true)}
+            aria-describedby="choice-nothing"
+            onClick={() => countsTowardsNothing()}
           >
-            {newName ? `New item: ${newName}` : 'New item'}
+            Counts towards nothing
           </button>
-          <p className="muted" id="choice-new">
-            Make it its own type, filled in from the label
+          <p className="muted" id="choice-nothing">
+            Keep it listed; it scores nothing towards the plan
           </p>
         </div>
         {onSortLater ? (
@@ -250,7 +226,11 @@ export function ScanResolve({
               className="secondary"
               aria-describedby="choice-later"
               disabled={sortLaterBlocked !== undefined}
-              onClick={() => onSortLater(found ? productInfoOf(found) : seeded)}
+              onClick={() =>
+                onSortLater(
+                  found ? offFactsOf(found) : seeded ? offFactsOf(seeded as OffProduct) : undefined,
+                )
+              }
             >
               Decide later
             </button>
@@ -263,4 +243,16 @@ export function ScanResolve({
       {onSortLater && sortLaterBlocked ? <p className="muted">{sortLaterBlocked}</p> : null}
     </div>
   );
+}
+
+function seedToOff(seed: OffFacts): OffProduct {
+  return {
+    found: true,
+    ...(seed.name ? { name: seed.name } : {}),
+    ...(seed.brand ? { brand: seed.brand } : {}),
+    ...(seed.quantity ? { quantity: seed.quantity } : {}),
+    ...(seed.size ? { size: seed.size } : {}),
+    ...(seed.kcalPer100 !== undefined ? { kcalPer100: seed.kcalPer100 } : {}),
+    categories: seed.categories ?? [],
+  };
 }

@@ -1,10 +1,7 @@
-import { useMemo } from 'react';
 import type { Packs } from '../model';
-import { bundledPacks, packsFor } from '../packs';
-import { useDocument } from './state';
+import { bundledPacks } from '../packs';
 
-/** The bundled packs with this household's own item types merged in (`custom`). */
+/** The bundled packs: items come only from the pack, so the household adds nothing to them. */
 export function usePacks(): Packs {
-  const { customTypes } = useDocument();
-  return useMemo(() => packsFor(bundledPacks(), { customTypes }), [customTypes]);
+  return bundledPacks();
 }

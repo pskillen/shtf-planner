@@ -38,3 +38,18 @@ export async function forgetThisDevice(): Promise<void> {
   sync.stop();
   await forgetDeviceData(await getStore(), persistence, createDrivePort());
 }
+
+/**
+ * Start again after a too-old household: forget local data but keep the Drive sign-in, then open
+ * the app empty (onboarding).
+ */
+export async function startFreshHousehold(): Promise<void> {
+  try {
+    const sync = await getSync();
+    sync.stop();
+  } catch {
+    // Sync may never have started; still clear the household.
+  }
+  await forgetDeviceData(await getStore(), persistence, createDrivePort(), { keepDrive: true });
+  globalThis.location.assign('/app');
+}

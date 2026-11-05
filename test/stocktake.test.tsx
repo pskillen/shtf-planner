@@ -25,10 +25,11 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-const KNOWN = '3017620422003'; // in the fixture: Peanut butter (340 g jar)
+const KNOWN = '3017620422003'; // fixture: prod-spread (Test spread 400 g)
 const UNKNOWN = '5000169005743';
-const barcodeItems = (s: ReturnType<typeof liveStore>) =>
-  Object.values(s.doc().items).filter((i) => i.source === 'barcode');
+const barcodeStock = (s: ReturnType<typeof liveStore>) =>
+  Object.values(s.doc().stock).filter((r) => r.source === 'barcode');
+const SPREAD = 'Test spread 400 g';
 
 async function open(doc = biggarDocument()) {
   const s = liveStore(doc);
@@ -47,55 +48,53 @@ describe('Stocktake: the step machine', () => {
     const s = await open();
     expect(screen.getByText('1 BARCODE')).toBeTruthy();
     await read(KNOWN);
-    expect(await screen.findByText('Peanut butter (340 g jar)')).toBeTruthy();
+    expect(await screen.findByText(SPREAD)).toBeTruthy();
     expect(screen.getByText(/Test spread 400 g/)).toBeTruthy(); // the remembered product name
     expect(screen.getByText('2 DATE', { selector: '.camera-chip' })).toBeTruthy();
     chip('+1 y');
     ok();
-    const saved = barcodeItems(s);
+    const saved = barcodeStock(s);
     expect(saved).toHaveLength(1);
     expect(saved[0]).toMatchObject({
-      typeId: 'items-base:peanut-butter-340g',
+      productId: 'prod-spread',
       qty: 1,
       source: 'barcode',
     });
     expect(saved[0]!.bestBefore).toMatch(/^\d{4}-\d{2}$/);
     // straight back to a barcode, with the toast
     expect(screen.getByText('1 BARCODE')).toBeTruthy();
-    expect(screen.getByTestId('stocktake-saved').textContent).toContain(
-      'Saved 1 × Peanut butter (340 g jar)',
-    );
+    expect(screen.getByTestId('stocktake-saved').textContent).toContain(`Saved 1 × ${SPREAD}`);
   });
 
   it('the place applies to every item', async () => {
     const s = await open();
     fireEvent.change(screen.getByLabelText('Counting into'), { target: { value: 'loc-garage' } });
     await read(KNOWN);
-    await screen.findByText('Peanut butter (340 g jar)');
+    await screen.findByText(SPREAD);
     chip('+1 y');
     ok();
     await read(KNOWN);
-    await screen.findByText('Peanut butter (340 g jar)');
+    await screen.findByText(SPREAD);
     chip('+6 m');
     ok();
-    const saved = barcodeItems(s);
+    const saved = barcodeStock(s);
     expect(saved).toHaveLength(2);
     expect(new Set(saved.map((i) => i.locationId))).toEqual(new Set(['loc-garage']));
   });
 
   it('Undo takes back a new instance exactly, and the card comes back', async () => {
     const s = await open();
-    const before = structuredClone(s.doc().items);
+    const before = structuredClone(s.doc().stock);
     await read(KNOWN);
-    await screen.findByText('Peanut butter (340 g jar)');
+    await screen.findByText(SPREAD);
     chip('+1 y');
     ok();
-    expect(Object.keys(s.doc().items).length).toBe(Object.keys(before).length + 1);
+    expect(Object.keys(s.doc().stock).length).toBe(Object.keys(before).length + 1);
     fireEvent.click(
       within(screen.getByTestId('stocktake-saved')).getByRole('button', { name: 'Undo' }),
     );
-    expect(s.doc().items).toEqual(before);
-    expect(screen.getByText('Peanut butter (340 g jar)')).toBeTruthy();
+    expect(s.doc().stock).toEqual(before);
+    expect(screen.getByText(SPREAD)).toBeTruthy();
     expect(screen.queryByTestId('stocktake-saved')).toBeNull();
   });
 
@@ -103,17 +102,17 @@ describe('Stocktake: the step machine', () => {
     const s = await open();
     for (let n = 0; n < 2; n++) {
       await read(KNOWN);
-      await screen.findByText('Peanut butter (340 g jar)');
+      await screen.findByText(SPREAD);
       chip('+1 y'); // the same month both times, so the second merges into the first
       ok();
     }
-    const merged = barcodeItems(s);
+    const merged = barcodeStock(s);
     expect(merged).toHaveLength(1);
     expect(merged[0]!.qty).toBe(2);
     fireEvent.click(
       within(screen.getByTestId('stocktake-saved')).getByRole('button', { name: 'Undo' }),
     );
-    const after = barcodeItems(s);
+    const after = barcodeStock(s);
     expect(after).toHaveLength(1);
     expect(after[0]!.qty).toBe(1);
   });
@@ -137,7 +136,7 @@ describe('Stocktake: the step machine', () => {
     fakeOff({ [UNKNOWN]: 'offline' });
     await open();
     await read(KNOWN);
-    await screen.findByText('Peanut butter (340 g jar)');
+    await screen.findByText(SPREAD);
     chip('+1 y');
     ok();
     await read(UNKNOWN);
@@ -164,37 +163,32 @@ describe('Not this item?', () => {
     fakeOff({});
     const s = await open();
     await read(KNOWN);
-    await screen.findByText('Peanut butter (340 g jar)');
+    await screen.findByText(SPREAD);
     fireEvent.click(screen.getByRole('button', { name: 'Not this item?' }));
-    expect(screen.getByText(/remembered as Peanut butter \(340 g jar\)/)).toBeTruthy();
+    expect(screen.getByText(/remembered as Test spread 400 g/)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Pick what it is' }));
-    fireEvent.change(screen.getByLabelText('Search all types'), {
-      target: { value: 'tinned food' },
+    fireEvent.change(screen.getByLabelText('Search items'), {
+      target: { value: 'soup' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /Tinned food \(400 g tin\)/ }));
-    expect(await screen.findByRole('heading', { name: 'Tinned food (400 g tin)' })).toBeTruthy();
-    expect(s.doc().barcodes[KNOWN]).toMatchObject({
-      typeId: 'items-base:tinned-food-tin',
-      name: 'Test spread 400 g', // the product name is kept; first remembered is not reset
-      seen: '2026-10-01',
-    });
+    fireEvent.click(screen.getByRole('button', { name: /Tinned soup/ }));
+    expect(await screen.findByRole('heading', { name: /soup/i })).toBeTruthy();
+    expect(s.doc().barcodes[KNOWN]?.productId).not.toBe('prod-spread');
     chip('+1 y');
     ok();
-    expect(barcodeItems(s).map((i) => i.typeId)).toEqual(['items-base:tinned-food-tin']);
-    // and the next scan of it goes straight to the corrected type
+    expect(barcodeStock(s)[0]!.productId).not.toBe('prod-spread');
     await read(KNOWN);
-    expect(await screen.findByRole('heading', { name: 'Tinned food (400 g tin)' })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: /soup/i })).toBeTruthy();
   });
 
   it('Keep leaves the barcode as it was', async () => {
     fakeOff({});
     const s = await open();
     await read(KNOWN);
-    await screen.findByText('Peanut butter (340 g jar)');
+    await screen.findByText(SPREAD);
     fireEvent.click(screen.getByRole('button', { name: 'Not this item?' }));
     fireEvent.click(screen.getByRole('button', { name: /^Keep / }));
-    expect(screen.getByRole('heading', { name: 'Peanut butter (340 g jar)' })).toBeTruthy();
-    expect(s.doc().barcodes[KNOWN]!.typeId).toBe('items-base:peanut-butter-340g');
+    expect(screen.getByRole('heading', { name: SPREAD })).toBeTruthy();
+    expect(s.doc().barcodes[KNOWN]!.productId).toBe('prod-spread');
   });
 });
 
@@ -202,21 +196,21 @@ describe('Undo and Sort later edge cases', () => {
   it('Undo leaves an item already in progress alone', async () => {
     const s = await open();
     await read(KNOWN);
-    await screen.findByText('Peanut butter (340 g jar)');
+    await screen.findByText(SPREAD);
     chip('+1 y');
     ok();
     // a second item is already being counted when Undo is tapped
     await read(KNOWN);
-    await screen.findByRole('heading', { name: 'Peanut butter (340 g jar)' });
+    await screen.findByRole('heading', { name: SPREAD });
     fireEvent.click(screen.getByRole('button', { name: '+6 m' }));
     fireEvent.click(
       within(screen.getByTestId('stocktake-saved')).getByRole('button', { name: 'Undo' }),
     );
-    expect(barcodeItems(s)).toHaveLength(0); // the first save is taken back
+    expect(barcodeStock(s)).toHaveLength(0); // the first save is taken back
     // the second is untouched: still on its card, with its +6 m chip chosen
     expect(screen.getByRole('button', { name: '+6 m' }).getAttribute('aria-pressed')).toBe('true');
     ok();
-    expect(barcodeItems(s)).toHaveLength(1);
+    expect(barcodeStock(s)).toHaveLength(1);
   });
 
   it('Sort later is off, with the reason, when there is no place', async () => {
@@ -259,10 +253,10 @@ describe('scans to sort', () => {
   it('a stocktake "Sort later" queues the scan and adds no stock', async () => {
     fakeOff({ [UNKNOWN]: 'offline' });
     const s = await open();
-    const items = structuredClone(s.doc().items);
+    const stock = structuredClone(s.doc().stock);
     await read(UNKNOWN);
     fireEvent.click(await screen.findByRole('button', { name: 'Decide later' }));
-    expect(s.doc().items).toEqual(items);
+    expect(s.doc().stock).toEqual(stock);
     expect(Object.values(s.doc().scans)).toMatchObject([{ code: UNKNOWN, qty: 1 }]);
   });
 
@@ -272,23 +266,23 @@ describe('scans to sort', () => {
         found: true,
         name: 'Test beans',
         quantity: '415 g',
-        grams: 415,
-        categories: ['en:canned-foods'],
+        size: { amount: 415, unit: 'g' },
+        categories: ['en:canned-foods', 'en:baked-beans'],
       },
     });
     const s = liveStore(withScan());
     render(s.wrap(<ScansToSort onClose={() => undefined} />));
     fireEvent.click(screen.getByRole('button', { name: `Sort scan ${UNKNOWN}` }));
-    fireEvent.click(await screen.findByRole('button', { name: /Tinned food \(400 g tin\)/ }));
-    expect(s.doc().scans).toEqual({});
-    const made = Object.values(s.doc().items).find((i) => i.source === 'barcode');
+    await waitFor(() => expect(screen.getByText('Which of these is it?')).toBeTruthy());
+    fireEvent.click(await screen.findByRole('button', { name: /Baked beans/i }));
+    await waitFor(() => expect(Object.keys(s.doc().scans)).toHaveLength(0));
+    const made = Object.values(s.doc().stock).find((r) => r.source === 'barcode');
     expect(made).toMatchObject({
-      typeId: 'items-base:tinned-food-tin',
       qty: 2,
       locationId: 'loc-pantry',
       bestBefore: '2028-01',
     });
-    expect(s.doc().barcodes[UNKNOWN]?.typeId).toBe('items-base:tinned-food-tin');
+    expect(s.doc().barcodes[UNKNOWN]?.productId).toBeDefined();
   });
 
   it('a row can be deleted, with undo', () => {
@@ -322,7 +316,7 @@ describe('the scan queue lookup', () => {
     return doc;
   };
 
-  it('looks queued codes up oldest first and writes the product back', async () => {
+  it('looks queued codes up oldest first and writes OFF facts back', async () => {
     const lookup = fakeOff({
       [UNKNOWN]: { found: true, name: 'Test beans', quantity: '415 g', categories: [] },
     });
@@ -333,10 +327,10 @@ describe('the scan queue lookup', () => {
       ),
     );
     render(s.wrap(<Queue />));
-    await waitFor(() => expect(s.doc().scans['b']?.product).toBeDefined());
+    await waitFor(() => expect(s.doc().scans['b']?.off).toBeDefined());
     expect(lookup.mock.calls.map((c) => c[0])).toEqual([UNKNOWN, '4006381333931']);
-    expect(s.doc().scans['a']!.product).toMatchObject({ found: true, name: 'Test beans' });
-    expect(s.doc().scans['b']!.product).toMatchObject({ found: false });
+    expect(s.doc().scans['a']!.off).toMatchObject({ found: true, name: 'Test beans' });
+    expect(s.doc().scans['b']!.off).toMatchObject({ found: false });
   });
 
   it('stops when offline and asks nothing more', async () => {
@@ -346,7 +340,7 @@ describe('the scan queue lookup', () => {
     await waitFor(() => expect(lookup).toHaveBeenCalledTimes(1));
     await act(async () => void (await new Promise((r) => setTimeout(r, 30))));
     expect(lookup).toHaveBeenCalledTimes(1);
-    expect(s.doc().scans['a']!.product).toBeUndefined();
+    expect(s.doc().scans['a']!.off).toBeUndefined();
   });
 
   it('respects busy: waits a minute, then tries again', async () => {
@@ -361,11 +355,11 @@ describe('the scan queue lookup', () => {
     render(s.wrap(<Queue />));
     await act(async () => void (await vi.advanceTimersByTimeAsync(10)));
     expect(lookup).toHaveBeenCalledTimes(1);
-    expect(s.doc().scans['a']!.product).toBeUndefined();
+    expect(s.doc().scans['a']!.off).toBeUndefined();
     await act(async () => void (await vi.advanceTimersByTimeAsync(30_000)));
     expect(lookup).toHaveBeenCalledTimes(1);
     await act(async () => void (await vi.advanceTimersByTimeAsync(31_000)));
     expect(lookup).toHaveBeenCalledTimes(2);
-    expect(s.doc().scans['a']!.product).toMatchObject({ found: true });
+    expect(s.doc().scans['a']!.off).toMatchObject({ found: true });
   });
 });

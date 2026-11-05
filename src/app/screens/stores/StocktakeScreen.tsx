@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import type { ItemType, ProductInfo } from '../../../model';
+import type { Item, OffFacts } from '../../../model';
 import { today } from '../../../util';
 import type { CameraStream } from '../../../scan/camera';
 import { terminateDateReader } from '../../../scan/ocr/client';
@@ -11,6 +11,7 @@ import { Sheet } from '../../components/Sheet';
 import { Stepper } from '../../components/Stepper';
 import { Toast } from '../../components/Toast';
 import { useChange, useDocument } from '../../state';
+import { usePacks } from '../../usePacks';
 import { equipmentAddPath } from '../assets/route';
 import { DateAbout } from './DateAbout';
 import { DateReader, type DateRead } from './DateReader';
@@ -24,16 +25,18 @@ import {
   type DateCounts,
   summaryText,
   useEquipmentMatches,
-  useStockTypes,
+  useStockItems,
 } from './scanHelpers';
 import {
   addStockWithUndo,
   defaultLocationId,
-  matchTypes,
+  ensureProduct,
+  matchItems,
   pushRecent,
   readLastLocation,
   suitabilityWarning,
   undoAddStock,
+  usualSize,
   writeLastLocation,
   type StockAddition,
 } from './stock';
@@ -56,9 +59,9 @@ const writeHint = (): void => {
   }
 };
 
-/** The item being counted: its type, the barcode it came from if any, and the product's name. */
+/** The product being counted: its id, and the barcode it came from if any. */
 interface Counting {
-  type: ItemType;
+  productId: string;
   code?: string;
 }
 
@@ -87,7 +90,7 @@ export function StocktakeScreen() {
   const doc = useDocument();
   const change = useChange();
   const navigate = useNavigate();
-  const types = useStockTypes();
+  const packs = usePacks();
   useScanQueue();
 
   const locations = useMemo(
@@ -112,18 +115,15 @@ export function StocktakeScreen() {
   const [repicking, setRepicking] = useState(false);
   const [saved, setSaved] = useState<Saved | null>(null);
   const [hint, setHint] = useState(() => !readHint());
-  const [items, setItems] = useState(0);
+  const [savedCount, setSavedCount] = useState(0);
   const [sortLater, setSortLater] = useState(0);
   const [started] = useState(() => Date.now());
   const [finishedAfter, setFinishedAfter] = useState(0);
   const [cam, setCam] = useState<CameraStream | null>(null);
-  // The centre of the camera strip, where the status and the read month are drawn, and the catch tick.
   const [centre, setCentre] = useState<HTMLElement | null>(null);
   const [flash, setFlash] = useState(0);
-  // The date was set by hand: the camera stops looking and cannot overwrite it.
   const [handPicked, setHandPicked] = useState(false);
   const [useCamera, setUseCamera] = useState(readUseCamera);
-  // Bumped when the graphics-chip switch changes, so the date step starts a fresh reader.
   const [readerKey, setReaderKey] = useState(0);
   const [dateCounts, setDateCounts] = useState<DateCounts>({ camera: 0, picked: 0, suggestion: 0 });
   const [dateMs, setDateMs] = useState<number[]>([]);
@@ -131,15 +131,19 @@ export function StocktakeScreen() {
   const dateStarted = useRef(0);
   const [copied, setCopied] = useState(false);
 
-  // The reader's models go back to the browser when the screen goes.
   useEffect(() => () => terminateDateReader(), []);
 
-  // The Undo toast goes after a few seconds; only the latest save can be undone.
   useEffect(() => {
     if (!saved) return;
     const t = setTimeout(() => setSaved(null), UNDO_MS);
     return () => clearTimeout(t);
   }, [saved]);
+
+  const product = counting ? doc.products[counting.productId] : undefined;
+  const packItem = product?.itemId ? packs.items[product.itemId] : undefined;
+  const name = product?.name ?? '';
+  const unit = packItem?.unit ?? 'pack';
+  const shelfLife = packItem?.shelfLife ?? 'months';
 
   function got(next: string): void {
     buzz('barcode');
@@ -147,8 +151,8 @@ export function StocktakeScreen() {
     setCode(next);
   }
 
-  function startDate(type: ItemType, from?: string): void {
-    setCounting({ type, code: from });
+  function startDate(productId: string, from?: string): void {
+    setCounting({ productId, code: from });
     setQty(1);
     setBestBefore(undefined);
     setCode(null);
@@ -166,7 +170,7 @@ export function StocktakeScreen() {
     setPhase('barcode');
   }
 
-  function keepForLater(from: string, product: ProductInfo | undefined): void {
+  function keepForLater(from: string, off: OffFacts | undefined): void {
     if (!place) return;
     change('keep scan to sort', (d) => {
       const id = crypto.randomUUID();
@@ -176,7 +180,7 @@ export function StocktakeScreen() {
         qty: 1,
         locationId: place.id,
         scanned: new Date().toISOString(),
-        ...(product ? { product } : {}),
+        ...(off ? { off } : {}),
       };
     });
     setSortLater((n) => n + 1);
@@ -185,13 +189,13 @@ export function StocktakeScreen() {
 
   /** Saves the item with `date` (the card's month, or the one a suggestion carried). */
   function save(date: string | undefined, source: DateSource | null): void {
-    if (!counting || !place) return;
+    if (!counting || !place || !product) return;
     let addition: StockAddition | undefined;
     change('stocktake', (d) => {
       addition = addStockWithUndo(
         d,
         {
-          typeId: counting.type.id,
+          productId: counting.productId,
           qty,
           locationId: place.id,
           bestBefore: date,
@@ -201,8 +205,8 @@ export function StocktakeScreen() {
       );
     });
     if (!addition) return;
-    pushRecent(counting.type.id);
-    setItems((n) => n + qty);
+    if (packItem) pushRecent(packItem.id);
+    setSavedCount((n) => n + qty);
     const took = Date.now() - dateStarted.current;
     if (date && source) setDateCounts((c) => ({ ...c, [source]: c[source] + 1 }));
     setDateMs((l) => [...l, took]);
@@ -213,7 +217,7 @@ export function StocktakeScreen() {
       bestBefore: date,
       source: date ? source : null,
       dateMs: took,
-      label: savedText(qty, counting.type.name, place.name),
+      label: savedText(qty, product.name, place.name),
     });
     backToBarcode();
   }
@@ -223,16 +227,13 @@ export function StocktakeScreen() {
   function undo(): void {
     if (!saved) return;
     change('undo stocktake', (d) => undoAddStock(d, saved.addition));
-    setItems((n) => Math.max(0, n - saved.qty));
-    // The date counts and time go with the item; saving it again counts once.
+    setSavedCount((n) => Math.max(0, n - saved.qty));
     if (saved.source)
       setDateCounts((c) => ({ ...c, [saved.source!]: Math.max(0, c[saved.source!] - 1) }));
     setDateMs((l) => {
       const at = l.lastIndexOf(saved.dateMs);
       return at < 0 ? l : l.filter((_, i) => i !== at);
     });
-    // The undone item's card comes back only when nothing else is being worked on: an item
-    // already in progress (or a code just read) is left exactly as it is.
     if (phase === 'barcode' && code === null) {
       setCounting(saved.counting);
       setQty(saved.qty);
@@ -252,7 +253,6 @@ export function StocktakeScreen() {
     setBestBefore(next);
   }
 
-  /** The camera settled on a month: it fills the field, and nothing is saved until OK. */
   function cameraRead(read: DateRead): void {
     dateSource.current = 'camera';
     setBestBefore(read.bestBefore);
@@ -266,7 +266,7 @@ export function StocktakeScreen() {
 
   const dateText = dateSummaryText(dateCounts, dateMs);
   const copySummary = (): void => {
-    const text = [summaryText(items, finishedAfter, sortLater), dateText]
+    const text = [summaryText(savedCount, finishedAfter, sortLater), dateText]
       .filter(Boolean)
       .join('\n');
     void navigator.clipboard?.writeText(text).then(
@@ -275,12 +275,14 @@ export function StocktakeScreen() {
     );
   };
 
+  const warning = packItem && place ? suitabilityWarning(packItem, place) : undefined;
+
   if (phase === 'done') {
     return (
       <section className="screen stocktake">
         <h1>Stocktake done</h1>
         <p role="status" data-testid="stocktake-summary">
-          {summaryText(items, finishedAfter, sortLater)}
+          {summaryText(savedCount, finishedAfter, sortLater)}
         </p>
         {dateText ? (
           <p className="muted" data-testid="stocktake-date-summary">
@@ -300,10 +302,6 @@ export function StocktakeScreen() {
     );
   }
 
-  const name = counting?.type.name ?? '';
-  const productName = counting?.code ? doc.barcodes[counting.code]?.name : undefined;
-  const warning = counting && place ? suitabilityWarning(counting.type, place) : undefined;
-
   return (
     <section className="screen stocktake">
       <h1 className="visually-hidden">Stocktake</h1>
@@ -313,7 +311,6 @@ export function StocktakeScreen() {
           back.
         </p>
       ) : (
-        // One compact line on both steps, so the strip stays exactly where it is.
         <label className="place-row">
           <span className="field-label">Counting into</span>
           <select
@@ -333,7 +330,6 @@ export function StocktakeScreen() {
       )}
 
       {hint ? (
-        // One line, so the controls below stay on the screen at 360 x 740.
         <p className="stocktake-hint">
           <span>Red line for the barcode, yellow box for the date.</span>
           <button
@@ -405,8 +401,8 @@ export function StocktakeScreen() {
             <ScanResolve
               key={code}
               code={code}
-              onType={(type) => startDate(type, code)}
-              onSortLater={(product) => keepForLater(code, product)}
+              onProduct={(productId) => startDate(productId, code)}
+              onSortLater={(off) => keepForLater(code, off)}
               sortLaterBlocked={
                 place ? undefined : 'Add a place first, then there is somewhere to keep it.'
               }
@@ -425,8 +421,8 @@ export function StocktakeScreen() {
               key={counting.code}
               code={counting.code}
               reidentify
-              onType={(type) => {
-                setCounting({ type, code: counting.code });
+              onProduct={(productId) => {
+                setCounting({ productId, code: counting.code });
                 setRepicking(false);
               }}
             />
@@ -440,7 +436,7 @@ export function StocktakeScreen() {
           <>
             {useCamera ? (
               <DateReader
-                key={`${counting.type.id}:${counting.code ?? ''}:${readerKey}:${items}`}
+                key={`${counting.productId}:${counting.code ?? ''}:${readerKey}:${savedCount}`}
                 cam={cam}
                 todayIso={today()}
                 paused={handPicked}
@@ -462,7 +458,6 @@ export function StocktakeScreen() {
                   </button>
                 ) : null}
               </div>
-              {productName ? <p className="muted">{productName}</p> : null}
               {warning ? (
                 <p className="warn" role="status">
                   ⚠ {warning}
@@ -472,17 +467,12 @@ export function StocktakeScreen() {
                 quiet
                 value={bestBefore}
                 onChange={changeDate}
-                shelfLife={counting.type.shelfLife}
+                shelfLife={shelfLife}
                 today={today()}
               />
               {bestBefore ? <ExpiryBadge bestBefore={bestBefore} /> : null}
-              <Field label={`How many (${counting.type.unit})?`}>
-                <Stepper
-                  label={`How many ${counting.type.unit}`}
-                  value={qty}
-                  min={1}
-                  onChange={setQty}
-                />
+              <Field label={`How many (${unit})?`}>
+                <Stepper label={`How many ${unit}`} value={qty} min={1} onChange={setQty} />
               </Field>
             </div>
             <div className="sticky-bar">
@@ -526,8 +516,7 @@ export function StocktakeScreen() {
 
       {finding ? (
         <FindByName
-          types={types}
-          onPick={(type) => startDate(type)}
+          onPick={(productId) => startDate(productId)}
           onClose={() => setFinding(false)}
         />
       ) : null}
@@ -535,19 +524,28 @@ export function StocktakeScreen() {
   );
 }
 
-/** Pick a type by name when there is no barcode to read: stock only; equipment routes away. */
+/** Pick an item by name when there is no barcode to read: stock only; equipment routes away. */
 function FindByName({
-  types,
   onPick,
   onClose,
 }: {
-  types: ItemType[];
-  onPick: (t: ItemType) => void;
+  onPick: (productId: string) => void;
   onClose: () => void;
 }) {
+  const change = useChange();
+  const packs = usePacks();
+  const stockItems = useStockItems();
   const [query, setQuery] = useState('');
-  const shown = useMemo(() => matchTypes(types, query).slice(0, 40), [types, query]);
+  const shown = useMemo(() => matchItems(stockItems, query).slice(0, 40), [stockItems, query]);
   const equipment = useEquipmentMatches(query);
+
+  function pickItem(item: Item): void {
+    change('ensure product', (d) => {
+      const { id } = ensureProduct(d, { itemId: item.id, size: usualSize(item) }, packs, today());
+      onPick(id);
+    });
+  }
+
   return (
     <Sheet title="Find it by name" onClose={onClose}>
       <Field label="What is it?">
@@ -575,9 +573,9 @@ function FindByName({
       <ul className="row-list">
         {shown.map((t) => (
           <li className="row-item" key={t.id}>
-            <button type="button" className="row-main" onClick={() => onPick(t)}>
+            <button type="button" className="row-main" onClick={() => pickItem(t)}>
               <strong>{t.name}</strong>
-              <span className="muted">{t.unitSize ? `${t.unit} · ${t.unitSize}` : t.unit}</span>
+              <span className="muted">{t.countsAs}</span>
             </button>
           </li>
         ))}

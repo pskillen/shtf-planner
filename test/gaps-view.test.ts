@@ -7,6 +7,7 @@ import {
   type ShoppingSort,
 } from '../src/app/screens/gaps/view';
 import { biggarDocument } from '../src/fixtures/household-biggar';
+import { minimumKey } from '../src/model';
 import { bundledPacks } from '../src/packs';
 
 const asOf = '2026-11-15';
@@ -54,8 +55,9 @@ describe('the gaps view on the fixture household', () => {
   it('makes a restock plus the buy row equal the target’s shortfall, with nothing counted twice', () => {
     const doc = biggarDocument();
     // stock below the floors: milk at 1 of 3, pasta gone
-    doc.items['item-uht']!.qty = 1;
-    delete doc.items['item-pasta'];
+    doc.stock['stock-uht']!.qty = 1;
+    delete doc.stock['stock-pasta'];
+    delete doc.stock['stock-pasta-attic'];
     const all = gaps(doc, packs, asOf, 14);
     const cover = new Map(coverage(doc, packs, asOf, 14).map((c) => [c.targetId, c.amount]));
     const restocks = all.filter((g) => g.kind === 'replenish');
@@ -89,30 +91,33 @@ describe('the gaps view on the fixture household', () => {
 
   it('words a restock with nothing in date as having none, not as 3 below 3', () => {
     const doc = biggarDocument();
-    delete doc.items['item-pasta'];
-    delete doc.items['item-uht'];
+    delete doc.stock['stock-pasta'];
+    delete doc.stock['stock-pasta-attic'];
+    delete doc.stock['stock-uht'];
     const rows = view(14, 'capability', doc).shopping.filter((r) => r.kind === 'replenish');
     const milk = rows.find((r) => /UHT milk/.test(r.label))!;
-    expect(milk.closes).toMatch(/^Pantry: UHT milk[^:]* has none in date \(minimum 3\)$/);
+    expect(milk.closes).toMatch(/^Pantry: UHT milk[^:]* has none in date \(minimum 1\)$/);
     expect(milk.closes).not.toMatch(/below/);
     // some in date: the amount below the floor
     const fresh = biggarDocument();
-    delete fresh.items['item-uht']!.bestBefore;
-    fresh.items['item-uht']!.qty = 1;
+    fresh.minimums[minimumKey('loc-pantry', 'items-base:uht-milk')] = 2;
+    delete fresh.stock['stock-uht']!.bestBefore;
+    fresh.stock['stock-uht']!.qty = 1;
     const partly = view(14, 'capability', fresh).shopping.find((r) => /UHT milk/.test(r.label));
-    expect(partly?.closes).toMatch(/ is 2 below its minimum of 3$/);
+    expect(partly?.closes).toMatch(/ is 1 below its minimum of 2$/);
   });
 
   it('shows no buy row when restocking alone closes the gap', () => {
     const doc = biggarDocument();
     const kcal = packs.items['items-base:uht-milk']!.gives[0]!.amount;
-    doc.floors['loc-pantry|items-base:uht-milk'] = 1;
-    doc.items['item-uht']!.qty = 1;
+    doc.minimums[minimumKey('loc-pantry', 'items-base:uht-milk')] = 1;
+    doc.stock['stock-uht']!.qty = 1;
     const food = (d: typeof doc) =>
       gaps(d, packs, asOf, 14).filter((g) => g.target.id === 'food:foodKcal');
     const open = food(doc).find((g) => g.kind === 'acquire')!;
     // raise the floor so that putting the milk back covers the whole food shortfall
-    doc.floors['loc-pantry|items-base:uht-milk'] = 1 + Math.ceil(open.shortfall / kcal);
+    doc.minimums[minimumKey('loc-pantry', 'items-base:uht-milk')] =
+      1 + Math.ceil(open.shortfall / kcal);
     const after = food(doc);
     expect(after.some((g) => g.kind === 'replenish')).toBe(true);
     expect(after.some((g) => g.kind === 'acquire')).toBe(false);
@@ -120,9 +125,9 @@ describe('the gaps view on the fixture household', () => {
 
   it('says what each row closes, with a price when the pack has one', () => {
     const water = view(14).shopping.find((r) => r.capability === 'water')!;
-    expect(water.label).toMatch(/^\d+ × /);
+    expect(water.label).toMatch(/Bottled water:/);
     expect(water.closes).toMatch(/^water: [\d.]+ L short of 14 days$/);
-    expect(water.itemTypeId).toBeDefined();
+    expect(water.itemId).toBeDefined();
     expect(water.pricePence).toBeGreaterThan(0);
   });
 
@@ -131,8 +136,8 @@ describe('the gaps view on the fixture household', () => {
     expect(heat.length).toBe(2);
     // the heater is equipment (its row opens the equipment form); its fuel is stock
     expect(heat[0]!.assetTypeId).toMatch(/^assets-base:/);
-    expect(heat[0]!.itemTypeId).toBeUndefined();
-    expect(heat[1]!.itemTypeId).toBeDefined();
+    expect(heat[0]!.itemId).toBeUndefined();
+    expect(heat[1]!.itemId).toBeDefined();
     expect(heat[0]!.closes).toBe('heat: 18 h short of 3 days');
   });
 
@@ -197,7 +202,7 @@ describe('the gaps view on the fixture household', () => {
     expect(enough.map((e) => e.capability)).not.toContain('heat');
     const doc = structuredClone(biggarDocument());
     // far more than 3 days of water: the surplus is stated
-    doc.items['item-water']!.qty = 20;
+    doc.stock['stock-water']!.qty = 20;
     const water = view(3, 'capability', doc).enough.find((e) => e.capability === 'water');
     expect(water?.text).toMatch(/^Water: enough for 3 days; [\d.]+ L more than needed$/);
   });
@@ -226,7 +231,9 @@ describe('wording', () => {
   it('words a one-off need without days and litres in gallons for the US', () => {
     const g = gaps(biggarDocument(), packs, asOf, 3).find((x) => x.target.kind === 'device')!;
     expect(closesText(g, 3, 'UK')).toBe('radio: 1 radio short');
-    const w = gaps(biggarDocument(), packs, asOf, 3).find((x) => x.unit === 'L')!;
+    const w = gaps(biggarDocument(), packs, asOf, 14).find(
+      (x) => x.target.id === 'water:waterL' && x.kind === 'acquire',
+    )!;
     expect(closesText(w, 3, 'US')).toMatch(/gal short of 3 days$/);
   });
 });

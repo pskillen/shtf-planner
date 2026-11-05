@@ -5,7 +5,7 @@ import { installFakeCamera, type FakeCam } from './fakeCamera';
 // Chrome has no WebGPU adapter, so the reader runs on WASM), a canvas as the camera.
 
 type Doc = {
-  items: Record<string, { typeId: string; bestBefore?: string; source: string }>;
+  stock: Record<string, { productId: string; bestBefore?: string; source: string }>;
 };
 type Shtf = { doc: () => Promise<Doc>; loadFixture: () => Promise<void> };
 
@@ -14,11 +14,11 @@ const doc = (page: Page) =>
 const show = (page: Page, what: { ean?: string; text?: string }) =>
   page.evaluate((w) => (window as unknown as { __fakeCam: FakeCam }).__fakeCam.show(w), what);
 
-const KNOWN = '3017620422003'; // in the fixture: Peanut butter (340 g jar)
-const PEANUT = 'items-base:peanut-butter-340g';
-const peanut = async (page: Page) =>
-  Object.values((await doc(page)).items).filter(
-    (i) => i.typeId === PEANUT && i.source === 'barcode',
+const KNOWN = '3017620422003'; // fixture: prod-spread
+const SPREAD = 'prod-spread';
+const spreadStock = async (page: Page) =>
+  Object.values((await doc(page)).stock).filter(
+    (i) => i.productId === SPREAD && i.source === 'barcode',
   );
 const ok = (page: Page) => page.getByRole('button', { name: 'OK', exact: true }).click();
 /** Model load on first use, then a couple of frames: generous. */
@@ -64,7 +64,7 @@ test.describe('camera dates', () => {
   test('stocktake: the label is read, nothing is saved until OK', async ({ page }) => {
     const hosts = await setUp(page);
     await toDateStep(page);
-    const before = Object.keys((await doc(page)).items).length;
+    const before = Object.keys((await doc(page)).stock).length;
     await show(page, { text: 'BEST BEFORE 06/2027' });
     await expect(page.getByTestId('date-result')).toContainText('Jun 2027', READ);
     await expect(page.getByTestId('date-status')).toHaveText('Got it');
@@ -73,10 +73,10 @@ test.describe('camera dates', () => {
     const about = (await page.getByTestId('date-about').textContent()) ?? '';
     expect(about).toMatch(/^(WebGPU|WASM) · last read \d/);
     test.info().annotations.push({ type: 'reader', description: about });
-    expect(Object.keys((await doc(page)).items)).toHaveLength(before);
+    expect(Object.keys((await doc(page)).stock)).toHaveLength(before);
     await ok(page);
     await expect(page.getByText('1 BARCODE')).toBeVisible();
-    expect(await peanut(page)).toEqual([expect.objectContaining({ bestBefore: '2027-06' })]);
+    expect(await spreadStock(page)).toEqual([expect.objectContaining({ bestBefore: '2027-06' })]);
     await assertPrivate(page, hosts);
   });
 
@@ -86,12 +86,12 @@ test.describe('camera dates', () => {
     await show(page, { text: '12.26' });
     await expect(page.getByTestId('date-status')).toHaveText('No date found', READ);
     await expect(page.getByTestId('date-result')).toHaveCount(0);
-    expect(await peanut(page)).toHaveLength(0);
+    expect(await spreadStock(page)).toHaveLength(0);
     await page
       .getByRole('group', { name: 'Suggested dates' })
       .getByRole('button', { name: /^Dec 2026/ })
       .click();
-    expect(await peanut(page)).toEqual([expect.objectContaining({ bestBefore: '2026-12' })]);
+    expect(await spreadStock(page)).toEqual([expect.objectContaining({ bestBefore: '2026-12' })]);
     await assertPrivate(page, hosts);
   });
 
@@ -106,7 +106,7 @@ test.describe('camera dates', () => {
     await show(page, { text: 'BEST BEFORE 06/2027' });
     await expect(page.getByTestId('date-result')).toContainText('Jun 2027', READ);
     await ok(page);
-    expect(await peanut(page)).toEqual([expect.objectContaining({ bestBefore: '2027-06' })]);
+    expect(await spreadStock(page)).toEqual([expect.objectContaining({ bestBefore: '2027-06' })]);
     await assertPrivate(page, hosts);
   });
 
@@ -138,16 +138,16 @@ test.describe('camera dates', () => {
     await setUp(page);
     await page.goto('/app/stores?debug=1');
     await page.getByRole('button', { name: 'Add stock' }).click();
-    await page.getByLabel('What are you adding?').fill('peanut');
+    await page.getByLabel('What are you adding?').fill('spreadStock');
     await page.getByRole('button', { name: /Peanut butter \(340 g jar\)/ }).click();
     await page.getByRole('button', { name: 'Read the date' }).click();
     await show(page, { text: 'BEST BEFORE 06/2027' });
     await expect(page.getByTestId('date-result')).toContainText('Jun 2027', READ);
     await page.getByRole('button', { name: 'Use this date' }).click();
     await expect(page.locator('input[type="month"]')).toHaveValue('2027-06');
-    const before = Object.values((await doc(page)).items).filter((i) => i.bestBefore === '2027-06');
+    const before = Object.values((await doc(page)).stock).filter((i) => i.bestBefore === '2027-06');
     await page.getByRole('button', { name: 'Add', exact: true }).click();
-    const after = Object.values((await doc(page)).items).filter((i) => i.bestBefore === '2027-06');
+    const after = Object.values((await doc(page)).stock).filter((i) => i.bestBefore === '2027-06');
     expect(after.length).toBe(before.length + 1);
   });
 });
@@ -168,7 +168,7 @@ test.describe('the reader cannot load', () => {
       .first()
       .click();
     await ok(page);
-    const saved = await peanut(page);
+    const saved = await spreadStock(page);
     expect(saved).toHaveLength(1);
     expect(saved[0]!.bestBefore).toMatch(/^\d{4}-\d{2}$/);
   });

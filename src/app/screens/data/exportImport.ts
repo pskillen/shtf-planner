@@ -40,8 +40,8 @@ export interface ImportSummary {
   pets: number;
   locations: number;
   assets: number;
-  items: number;
-  customTypes: number;
+  products: number;
+  stock: number;
   barcodes: number;
   scans: number;
   reviews: number;
@@ -72,6 +72,12 @@ export function previewImport(text: string): ImportPreview {
       error: 'That export is from a newer version of the app. Update this device first.',
     };
   }
+  if (loaded.kind === 'too-old') {
+    return {
+      ok: false,
+      error: 'This file is from an older version of the app and cannot be imported.',
+    };
+  }
   if (loaded.kind === 'invalid') {
     return {
       ok: false,
@@ -88,8 +94,8 @@ export function previewImport(text: string): ImportPreview {
       pets: doc.household.pets.length,
       locations: Object.keys(doc.locations).length,
       assets: Object.keys(doc.assets).length,
-      items: Object.keys(doc.items).length,
-      customTypes: Object.keys(doc.customTypes).length,
+      products: Object.keys(doc.products).length,
+      stock: Object.keys(doc.stock).length,
       barcodes: Object.keys(doc.barcodes).length,
       scans: Object.keys(doc.scans).length,
       reviews: Object.keys(doc.reviews).length,

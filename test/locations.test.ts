@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { deleteLocation } from '../src/app/screens/locations';
-import { floorKey } from '../src/model';
+import { minimumKey } from '../src/model';
 import { BIGGAR_IDS, biggarDocument } from '../src/fixtures/household-biggar';
 
 const { pantry, shed } = BIGGAR_IDS.locations;
@@ -25,14 +25,14 @@ describe('deleteLocation', () => {
     for (const a of elsewhere) expect(doc.assets[a.id]!.locationId).toBe(a.locationId);
   });
 
-  it('drops the place’s floor entries and no one else’s', () => {
+  it('drops the place’s minimum entries and no one else’s', () => {
     const doc = biggarDocument();
-    doc.floors[floorKey(shed, 'items-base:tinned-food')] = 4;
-    const pantryKeys = Object.keys(doc.floors).filter((k) => k.startsWith(`${pantry}|`));
+    doc.minimums[minimumKey(shed, 'items-base:tinned-food')] = 4;
+    const pantryKeys = Object.keys(doc.minimums).filter((k) => k.startsWith(`${pantry}|`));
     expect(pantryKeys.length).toBeGreaterThan(0);
     deleteLocation(doc, shed);
-    expect(Object.keys(doc.floors).some((k) => k.startsWith(`${shed}|`))).toBe(false);
-    expect(Object.keys(doc.floors).filter((k) => k.startsWith(`${pantry}|`))).toEqual(pantryKeys);
+    expect(Object.keys(doc.minimums).some((k) => k.startsWith(`${shed}|`))).toBe(false);
+    expect(Object.keys(doc.minimums).filter((k) => k.startsWith(`${pantry}|`))).toEqual(pantryKeys);
   });
 
   it('does nothing for a place that is not there', () => {

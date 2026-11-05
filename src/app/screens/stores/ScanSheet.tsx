@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { ItemType, ProductInfo } from '../../../model';
+import type { OffFacts } from '../../../model';
 import { CameraStrip } from '../../components/CameraStrip';
 import { Field } from '../../components/controls';
 import { Sheet } from '../../components/Sheet';
@@ -7,29 +7,21 @@ import { buzz } from './stocktakeTunables';
 import { ScanResolve } from './ScanResolve';
 import { readTypedCode } from './scanHelpers';
 
-/**
- * A sheet that scans a barcode and works out what it is: the camera strip, a way to type the
- * number or find the item by name, and the card from `ScanResolve` once a code is read. Used by
- * Quick add; the stocktake lays the same pieces out on its own screen.
- */
+/** A sheet that scans a barcode and resolves it to a product via `ScanResolve`. */
 export function ScanSheet({
   onClose,
   onBack,
-  onType,
+  onProduct,
   onSortLater,
   sortLaterBlocked,
   reidentify,
   initialCode,
 }: {
   onClose: () => void;
-  /** "Find it by name": back to the search. */
   onBack: () => void;
-  onType: (type: ItemType, code: string) => void;
-  /** Absent: no "Sort later" (there is nowhere to keep a scan). */
-  onSortLater?: (code: string, product: ProductInfo | undefined) => void;
-  /** Why Sort later cannot be used (no place to keep the scan in). */
+  onProduct: (productId: string, code: string) => void;
+  onSortLater?: (code: string, off: OffFacts | undefined) => void;
   sortLaterBlocked?: string;
-  /** Opened for a barcode the person says was mis-remembered: show the picker for `initialCode` again. */
   reidentify?: boolean;
   initialCode?: string;
 }) {
@@ -110,12 +102,12 @@ export function ScanSheet({
             key={code}
             code={code}
             reidentify={reidentify}
-            onType={(type) => onType(type, code)}
+            onProduct={(productId) => onProduct(productId, code)}
             sortLaterBlocked={sortLaterBlocked}
             onSortLater={
               onSortLater
-                ? (product) => {
-                    onSortLater(code, product);
+                ? (off) => {
+                    onSortLater(code, off);
                     setCode(null);
                     setNote('Kept to sort later.');
                   }

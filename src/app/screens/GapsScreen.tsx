@@ -73,11 +73,11 @@ export function GapsScreen() {
       type="button"
       className="tick"
       aria-label={`Bought: ${r.label}`}
-      disabled={!r.itemTypeId && !r.assetTypeId}
+      disabled={!r.itemId && !r.assetTypeId}
       onClick={() => {
         // Equipment goes to the equipment form with its type chosen, never into stock.
         if (r.assetTypeId) navigate(equipmentAddPath(r.assetTypeId));
-        else if (r.itemTypeId) setBuying({ typeId: r.itemTypeId, qty: r.qty });
+        else if (r.itemId) setBuying({ itemId: r.itemId, productId: r.productId, qty: r.qty });
       }}
     >
       ✓
@@ -92,6 +92,7 @@ export function GapsScreen() {
         <li className="row-item" key={r.key}>
           <div className="row-main">
             <strong>{r.label}</strong>
+            {r.detail ? <span className="muted">{r.detail}</span> : null}
             <span className="muted">
               {r.closes}
               {r.pricePence !== undefined ? ` · about ${formatPrice(r.pricePence)}` : ''}

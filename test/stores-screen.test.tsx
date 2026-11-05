@@ -15,7 +15,7 @@ afterEach(() => {
 });
 
 const tick = (ms: number) => act(() => void vi.advanceTimersByTime(ms));
-const edit = () => screen.getByRole('button', { name: 'Edit Water can (10 L)' });
+const edit = () => screen.getByRole('button', { name: 'Edit Water can 10 L' });
 
 describe('the Stores edit sheet', () => {
   it('saves a new quantity', () => {
@@ -24,20 +24,23 @@ describe('the Stores edit sheet', () => {
     fireEvent.click(edit());
     fireEvent.click(screen.getByRole('button', { name: /^One more: / }));
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
-    expect(s.doc().items['item-water']!.qty).toBe(3);
+    expect(s.doc().stock['stock-can']!.qty).toBe(3);
     expect(screen.queryByRole('button', { name: 'Save' })).toBeNull();
   });
 
-  it('stops the stepper at one: deleting is the way to zero', () => {
+  it('stops the stepper at a quarter pack: deleting is the way to zero', () => {
     const s = liveStore(biggarDocument());
     render(s.wrap(<StoresScreen />));
     fireEvent.click(edit());
     const fewer = screen.getByRole('button', { name: /^One fewer: / });
-    fireEvent.click(fewer);
-    expect((screen.getByLabelText(/, number$/) as HTMLInputElement).value).toBe('1');
+    for (let n = 0; n < 8; n++) {
+      if ((fewer as HTMLButtonElement).disabled) break;
+      fireEvent.click(fewer);
+    }
+    expect((screen.getByLabelText(/, number$/) as HTMLInputElement).value).toBe('0.25');
     expect((fewer as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
-    expect(s.doc().items['item-water']!.qty).toBe(1);
+    expect(s.doc().stock['stock-can']!.qty).toBe(0.25);
   });
 
   it('Delete hides the row with an undo toast and removes it after five seconds', () => {
@@ -45,11 +48,11 @@ describe('the Stores edit sheet', () => {
     render(s.wrap(<StoresScreen />));
     fireEvent.click(edit());
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
-    expect(screen.queryByRole('button', { name: 'Edit Water can (10 L)' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Edit Water can 10 L' })).toBeNull();
     expect(screen.getByRole('status').textContent).toContain('deleted');
-    expect(s.doc().items['item-water']).toBeDefined();
+    expect(s.doc().stock['stock-can']).toBeDefined();
     tick(5100);
-    expect(s.doc().items['item-water']).toBeUndefined();
+    expect(s.doc().stock['stock-can']).toBeUndefined();
   });
 
   it('Undo after Delete brings the row back and keeps the stock', () => {
@@ -60,7 +63,7 @@ describe('the Stores edit sheet', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
     expect(edit()).toBeTruthy();
     tick(10_000);
-    expect(s.doc().items['item-water']!.qty).toBe(2);
+    expect(s.doc().stock['stock-can']!.qty).toBe(2);
   });
 });
 
@@ -75,11 +78,12 @@ describe('the Stores floor sheet', () => {
       name: /^One fewer: Minimum for Dried pasta/,
     });
     fireEvent.click(pasta);
+    fireEvent.click(pasta);
     fireEvent.click(within(sheet).getByRole('button', { name: 'Save minimums' }));
-    const floors = s.doc().floors;
-    expect(floors['loc-pantry|items-base:uht-milk']).toBe(4);
-    expect(floors['loc-pantry|items-base:dried-pasta']).toBeUndefined();
-    expect(floors['loc-pantry|items-base:rice-sack']).toBe(1);
+    const mins = s.doc().minimums;
+    expect(mins['loc-pantry|items-base:uht-milk']).toBe(2);
+    expect(mins['loc-pantry|items-base:dried-pasta']).toBeUndefined();
+    expect(mins['loc-pantry|items-base:rice']).toBe(1);
   });
 
   it('writes nothing on Cancel', () => {
@@ -95,9 +99,15 @@ describe('the Stores floor sheet', () => {
 describe('the Stores search', () => {
   it('finds stock whose type is not in the packs whatever the case', () => {
     const doc = biggarDocument();
-    doc.items['item-odd'] = {
-      id: 'item-odd',
-      typeId: 'gone-pack:Mystery-Tin',
+    doc.products['prod-odd'] = {
+      id: 'prod-odd',
+      name: 'Mystery-Tin',
+      size: { amount: 1, unit: 'pieces' },
+      added: '2026-09-01',
+    };
+    doc.stock['stock-odd'] = {
+      id: 'stock-odd',
+      productId: 'prod-odd',
       qty: 1,
       locationId: 'loc-shed',
       added: '2026-09-01',
@@ -129,39 +139,39 @@ describe('best-before words and colours', () => {
   it('shows Expired, Expires soon and Before next check beside the month, never colour alone', () => {
     vi.setSystemTime(new Date(2026, 10, 4, 12));
     const doc = biggarDocument();
-    doc.items['item-water']!.bestBefore = '2026-10';
+    doc.stock['stock-can']!.bestBefore = '2026-10';
     const s = liveStore(doc);
     render(s.wrap(<StoresScreen />));
-    const badge = within(rowFor('Water can (10 L)')).getByText(/Oct 2026/);
+    const badge = within(rowFor('Water can 10 L')).getByText(/Oct 2026/);
     expect(badge.textContent).toBe('Oct 2026 · Expired');
     expect(badge.className).toContain('bb-expired');
 
     act(() => {
-      s.store.change('t', (d) => void (d.items['item-water']!.bestBefore = '2026-12'));
+      s.store.change('t', (d) => void (d.stock['stock-can']!.bestBefore = '2026-12'));
     });
-    expect(within(rowFor('Water can (10 L)')).getByText(/Dec 2026/).textContent).toBe(
+    expect(within(rowFor('Water can 10 L')).getByText(/Dec 2026/).textContent).toBe(
       'Dec 2026 · Expires soon',
     );
     act(() => {
-      s.store.change('t', (d) => void (d.items['item-water']!.bestBefore = '2027-02'));
+      s.store.change('t', (d) => void (d.stock['stock-can']!.bestBefore = '2027-02'));
     });
-    const check = within(rowFor('Water can (10 L)')).getByText(/Feb 2027/);
+    const check = within(rowFor('Water can 10 L')).getByText(/Feb 2027/);
     expect(check.textContent).toBe('Feb 2027 · Before next check');
     expect(check.className).toContain('bb-check');
     act(() => {
-      s.store.change('t', (d) => void (d.items['item-water']!.bestBefore = '2027-06'));
+      s.store.change('t', (d) => void (d.stock['stock-can']!.bestBefore = '2027-06'));
     });
-    expect(within(rowFor('Water can (10 L)')).getByText(/Jun 2027/).textContent).toBe('Jun 2027');
+    expect(within(rowFor('Water can 10 L')).getByText(/Jun 2027/).textContent).toBe('Jun 2027');
   });
 
   it('follows the household settings', () => {
     vi.setSystemTime(new Date(2026, 10, 4, 12));
     const doc = biggarDocument();
-    doc.items['item-water']!.bestBefore = '2027-02';
+    doc.stock['stock-can']!.bestBefore = '2027-02';
     doc.settings.expirySoonMonths = 3;
     const s = liveStore(doc);
     render(s.wrap(<StoresScreen />));
-    expect(within(rowFor('Water can (10 L)')).getByText(/Feb 2027/).textContent).toBe(
+    expect(within(rowFor('Water can 10 L')).getByText(/Feb 2027/).textContent).toBe(
       'Feb 2027 · Expires soon',
     );
   });

@@ -24,9 +24,9 @@ export function ScansToSortNote({ onOpen }: { onOpen: () => void }) {
 
 /** What Open Food Facts said about a queued scan, in a line. */
 function scanLine(scan: Scan): string {
-  if (!scan.product) return 'not looked up yet';
-  if (!scan.product.found) return 'Open Food Facts doesn’t know this one';
-  return productLine(scan.product) || 'a product with no name';
+  if (!scan.off) return 'not looked up yet';
+  if (!scan.off.found) return 'Open Food Facts doesn’t know this one';
+  return productLine(scan.off) || 'a product with no name';
 }
 
 /**
@@ -70,15 +70,15 @@ export function ScansToSort({ onClose }: { onClose: () => void }) {
         <ScanResolve
           key={scan.id}
           code={scan.code}
-          seed={scan.product}
-          onType={(type) => {
+          seed={scan.off}
+          onProduct={(productId) => {
             change('sort scan', (d) => {
               const s = d.scans[scan.id];
               if (!s) return;
               addStock(
                 d,
                 {
-                  typeId: type.id,
+                  productId,
                   qty: s.qty,
                   locationId: s.locationId,
                   bestBefore: s.bestBefore,

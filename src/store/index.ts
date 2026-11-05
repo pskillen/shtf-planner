@@ -10,6 +10,7 @@ export {
 } from './drive';
 export {
   NEWER_VERSION_MESSAGE,
+  OLDER_REMOTE_MESSAGE,
   RECONNECT_MESSAGE,
   browserHost,
   createSync,

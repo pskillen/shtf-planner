@@ -28,8 +28,8 @@ describe('the Open Food Facts client', () => {
       name: 'Test spread',
       brand: 'Acme',
       quantity: '400 g',
-      grams: 400,
-      kcalPer100g: 539,
+      size: { amount: 400, unit: 'g' },
+      kcalPer100: 539,
       categories: ['en:spreads', 'en:canned-foods'],
     });
   });
@@ -40,9 +40,31 @@ describe('the Open Food Facts client', () => {
         fetch: async () =>
           json({ status: 1, product: { product_quantity: q, product_quantity_unit: unit } }),
       }).lookup('3017620422003');
-    expect(await make('1.5', 'l')).toMatchObject({ ml: 1500 });
-    expect(await make('500', 'ml')).toMatchObject({ ml: 500 });
-    expect(await make('2', 'kg')).toMatchObject({ grams: 2000 });
+    expect(await make('1.5', 'l')).toMatchObject({ size: { amount: 1.5, unit: 'L' } });
+    expect(await make('500', 'ml')).toMatchObject({ size: { amount: 500, unit: 'ml' } });
+    expect(await make('2', 'kg')).toMatchObject({ size: { amount: 2, unit: 'kg' } });
+  });
+
+  it('reads a multipack from the text, and a diet drink as 0 kcal', async () => {
+    const r = await offClient({
+      fetch: async () =>
+        json({
+          status: 1,
+          product: {
+            product_name: 'Zx Cola',
+            quantity: '24 x 330 ml',
+            product_quantity: '7920',
+            product_quantity_unit: 'ml',
+            nutriments: { 'energy-kcal_100g': 0 },
+            categories_tags: ['en:sodas'],
+          },
+        }),
+    }).lookup('5449000000996');
+    expect(r).toMatchObject({
+      quantity: '24 x 330 ml',
+      size: { count: 24, amount: 330, unit: 'ml' },
+      kcalPer100: 0,
+    });
   });
 
   it('says not found for status 0 and for a 404', async () => {

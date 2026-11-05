@@ -13,12 +13,12 @@ export function installEngineDebug(hook: Record<string, unknown> | undefined): v
   if (!hook) return;
   // Loaded on first call, so the engine and the packs stay out of the main chunk's way.
   const load = async () => {
-    const [engine, { bundledPacks, packsFor }, doc] = await Promise.all([
+    const [engine, { bundledPacks }, doc] = await Promise.all([
       import('../../engine'),
       import('../../packs'),
       getStore().then((s) => s.get()),
     ]);
-    return { engine, packs: packsFor(bundledPacks(), doc), doc };
+    return { engine, packs: bundledPacks(), doc };
   };
   hook.engine = {
     targets: async (asOf: string = today(), horizonDays?: number) => {

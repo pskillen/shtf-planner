@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { floorKey, type Asset, type ItemInstance, type ItemType, type Location } from '../../model';
+import { minimumKey, type Asset, type Location, type Product, type Stock } from '../../model';
 import { EditArea } from '../components/EditArea';
 import { ExpiryBadge } from '../components/ExpiryBadge';
 import { useDeferredDelete } from '../components/useDeferredDelete';
@@ -8,23 +8,23 @@ import { useChange, useDocument } from '../state';
 import { usePacks } from '../usePacks';
 import { equipmentEditPath } from './assets/route';
 import { keyAnswer } from './assets/questionnaire';
-import { FloorSheet, type FloorRow } from './stores/FloorSheet';
-import { ItemSheet } from './stores/ItemSheet';
+import { MinimumSheet, type MinimumRow } from './stores/MinimumSheet';
 import { QuickAdd } from './stores/QuickAdd';
 import { ScansToSort, ScansToSortNote } from './stores/ScansToSort';
+import { StockSheet } from './stores/StockSheet';
 import { useScanQueue } from './stores/useScanQueue';
-import { matchTypes, suitabilityWarning } from './stores/stock';
+import { matchItems, suitabilityWarning } from './stores/stock';
 
-/** One line of the list: a stock entry, or a floor with nothing on the shelf (`item` unset). */
+/** One line of the list: a stock batch, or a minimum with nothing on the shelf (`stock` unset). */
 interface Row {
   key: string;
-  typeId: string;
-  item?: ItemInstance;
+  stock?: Stock;
+  product?: Product;
+  itemId?: string;
   qty: number;
+  /** Product name for a batch; item name for a minimum-only row. */
+  name: string;
 }
-
-const typeName = (type: ItemType | undefined, typeId: string): string =>
-  type?.name ?? typeId.split(':')[1] ?? typeId;
 
 /** The Stores tab: everything in stock, grouped by where it is kept. */
 export function StoresScreen() {
@@ -34,48 +34,76 @@ export function StoresScreen() {
   const [query, setQuery] = useState('');
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const [adding, setAdding] = useState(false);
-  const [editing, setEditing] = useState<ItemInstance | null>(null);
-  const [flooring, setFlooring] = useState<string | null>(null);
+  const [editing, setEditing] = useState<Stock | null>(null);
+  const [minimumLocationId, setMinimumLocationId] = useState<string | null>(null);
   const [sorting, setSorting] = useState(false);
   useScanQueue();
 
   const remove = useDeferredDelete((id) =>
     change('delete stock', (d) => {
-      delete d.items[id];
+      delete d.stock[id];
     }),
   );
 
   const q = query.trim();
-  const matches = (typeId: string): boolean => {
+  const packItems = useMemo(() => Object.values(packs.items), [packs.items]);
+  const matchedItemIds = useMemo(() => {
+    if (q === '') return undefined;
+    return new Set(matchItems(packItems, q).map((t) => t.id));
+  }, [packItems, q]);
+
+  const matchesProduct = (product: Product | undefined): boolean => {
     if (q === '') return true;
-    const type = packs.items[typeId];
-    return type
-      ? matchTypes([type], q).length > 0
-      : typeName(type, typeId).toLowerCase().includes(q.toLowerCase());
+    if (!product) return false;
+    if (product.name.toLowerCase().includes(q.toLowerCase())) return true;
+    return product.itemId ? matchedItemIds!.has(product.itemId) : false;
   };
 
-  /** The rows of one place: its stock, and for a rotating place a row per floor with none. */
+  const matchesItemId = (itemId: string): boolean => {
+    if (q === '') return true;
+    if (matchedItemIds!.has(itemId)) return true;
+    const item = packs.items[itemId];
+    return item
+      ? item.name.toLowerCase().includes(q.toLowerCase())
+      : itemId.toLowerCase().includes(q.toLowerCase());
+  };
+
+  /** The rows of one place: its stock batches, and for a rotating place a row per minimum with none. */
   const rowsFor = (location: Location): Row[] => {
-    const rows: Row[] = Object.values(doc.items)
-      .filter((i) => i.locationId === location.id && !remove.pending.has(i.id))
-      .map((i) => ({ key: i.id, typeId: i.typeId, item: i, qty: i.qty }));
+    const rows: Row[] = Object.values(doc.stock)
+      .filter((s) => s.locationId === location.id && !remove.pending.has(s.id))
+      .map((s) => {
+        const product = doc.products[s.productId];
+        return {
+          key: s.id,
+          stock: s,
+          product,
+          itemId: product?.itemId,
+          qty: s.qty,
+          name: product?.name ?? s.productId,
+        };
+      });
     if (location.kind === 'rotating') {
-      const have = new Set(rows.map((r) => r.typeId));
-      for (const key of Object.keys(doc.floors)) {
-        const [locId, typeId] = key.split('|') as [string, string];
-        if (locId === location.id && !have.has(typeId)) {
-          rows.push({ key, typeId, qty: 0 });
-          have.add(typeId);
+      const have = new Set(
+        rows.map((r) => r.itemId).filter((id): id is string => id !== undefined),
+      );
+      for (const key of Object.keys(doc.minimums)) {
+        const [locId, itemId] = key.split('|') as [string, string];
+        if (locId === location.id && !have.has(itemId)) {
+          const item = packs.items[itemId];
+          rows.push({
+            key,
+            itemId,
+            qty: 0,
+            name: item?.name ?? itemId.split(':')[1] ?? itemId,
+          });
+          have.add(itemId);
         }
       }
     }
     return rows
-      .filter((r) => matches(r.typeId))
-      .sort((a, b) =>
-        typeName(packs.items[a.typeId], a.typeId).localeCompare(
-          typeName(packs.items[b.typeId], b.typeId),
-        ),
-      );
+      .filter((r) => (r.stock ? matchesProduct(r.product) : matchesItemId(r.itemId!)))
+      .sort((a, b) => a.name.localeCompare(b.name));
   };
 
   const equipmentMatches = (a: Asset): boolean => {
@@ -96,8 +124,11 @@ export function StoresScreen() {
     [doc.locations],
   );
   const knownIds = new Set(locations.map((l) => l.id));
-  const lost = Object.values(doc.items).filter(
-    (i) => !knownIds.has(i.locationId) && !remove.pending.has(i.id) && matches(i.typeId),
+  const lost = Object.values(doc.stock).filter(
+    (s) =>
+      !knownIds.has(s.locationId) &&
+      !remove.pending.has(s.id) &&
+      matchesProduct(doc.products[s.productId]),
   );
 
   // Equipment with no place, or whose place has gone, so the two screens never hide each other.
@@ -114,27 +145,29 @@ export function StoresScreen() {
     });
 
   function renderRow(row: Row, location: Location | undefined) {
-    const type = packs.items[row.typeId];
-    const name = typeName(type, row.typeId);
-    const floor = location ? doc.floors[floorKey(location.id, row.typeId)] : undefined;
-    const warning = type && location ? suitabilityWarning(type, location) : undefined;
+    const item = row.itemId ? packs.items[row.itemId] : undefined;
+    const min =
+      location && row.itemId ? doc.minimums[minimumKey(location.id, row.itemId)] : undefined;
+    const warning = item && location ? suitabilityWarning(item, location) : undefined;
     return (
       <li className="row-item" key={row.key}>
         <button
           type="button"
           className="row-main"
-          aria-label={`${row.item ? 'Edit' : 'Set minimum for'} ${name}`}
-          onClick={() => (row.item ? setEditing(row.item) : location && setFlooring(location.id))}
+          aria-label={`${row.stock ? 'Edit' : 'Set minimum for'} ${row.name}`}
+          onClick={() =>
+            row.stock ? setEditing(row.stock) : location && setMinimumLocationId(location.id)
+          }
         >
           <strong>
-            {name} {floor !== undefined ? <span className="badge">min {floor}</span> : null}
+            {row.name} {min !== undefined ? <span className="badge">min {min}</span> : null}
           </strong>
           <span className="muted">
-            {row.qty} × {type?.unit ?? 'each'}
-            {row.item?.bestBefore ? (
+            {row.qty} × {item?.unit ?? 'packs'}
+            {row.stock?.bestBefore ? (
               <>
                 {' · '}
-                <ExpiryBadge bestBefore={row.item.bestBefore} showMonth />
+                <ExpiryBadge bestBefore={row.stock.bestBefore} showMonth />
               </>
             ) : null}
           </span>
@@ -167,30 +200,38 @@ export function StoresScreen() {
     );
   }
 
-  const flooringLocation = flooring ? doc.locations[flooring] : undefined;
-  const floorRows: FloorRow[] = flooringLocation
+  const minimumLocation = minimumLocationId ? doc.locations[minimumLocationId] : undefined;
+  const minimumRows: MinimumRow[] = minimumLocation
     ? (() => {
         const ids = new Set<string>();
-        for (const i of Object.values(doc.items))
-          if (i.locationId === flooringLocation.id) ids.add(i.typeId);
-        for (const key of Object.keys(doc.floors)) {
-          const [locId, typeId] = key.split('|') as [string, string];
-          if (locId === flooringLocation.id) ids.add(typeId);
+        for (const s of Object.values(doc.stock)) {
+          if (s.locationId === minimumLocation.id) {
+            const itemId = doc.products[s.productId]?.itemId;
+            if (itemId) ids.add(itemId);
+          }
+        }
+        for (const key of Object.keys(doc.minimums)) {
+          const [locId, itemId] = key.split('|') as [string, string];
+          if (locId === minimumLocation.id) ids.add(itemId);
         }
         return [...ids]
-          .map((typeId) => ({
-            typeId,
-            name: typeName(packs.items[typeId], typeId),
-            unit: packs.items[typeId]?.unit ?? 'each',
-            have: Object.values(doc.items)
-              .filter((i) => i.locationId === flooringLocation.id && i.typeId === typeId)
-              .reduce((n, i) => n + i.qty, 0),
+          .map((itemId) => ({
+            itemId,
+            name: packs.items[itemId]?.name ?? itemId.split(':')[1] ?? itemId,
+            unit: packs.items[itemId]?.unit ?? 'packs',
+            have: Object.values(doc.stock)
+              .filter(
+                (s) =>
+                  s.locationId === minimumLocation.id &&
+                  doc.products[s.productId]?.itemId === itemId,
+              )
+              .reduce((n, s) => n + s.qty, 0),
           }))
           .sort((a, b) => a.name.localeCompare(b.name));
       })()
     : [];
 
-  const empty = Object.keys(doc.items).length === 0 && Object.keys(doc.floors).length === 0;
+  const empty = Object.keys(doc.stock).length === 0 && Object.keys(doc.minimums).length === 0;
 
   return (
     <section className="screen stores">
@@ -243,7 +284,11 @@ export function StoresScreen() {
                   <div className="note rotating-note">
                     This place rotates: the minimum counts, not today’s stock.{' '}
                     <EditArea>
-                      <button type="button" className="link" onClick={() => setFlooring(l.id)}>
+                      <button
+                        type="button"
+                        className="link"
+                        onClick={() => setMinimumLocationId(l.id)}
+                      >
                         Set minimums
                       </button>
                     </EditArea>
@@ -277,9 +322,20 @@ export function StoresScreen() {
         <section className="store-group" aria-label="Unknown place">
           <h2>Unknown place</h2>
           <ul className="row-list">
-            {lost.map((i) =>
-              renderRow({ key: i.id, typeId: i.typeId, item: i, qty: i.qty }, undefined),
-            )}
+            {lost.map((s) => {
+              const product = doc.products[s.productId];
+              return renderRow(
+                {
+                  key: s.id,
+                  stock: s,
+                  product,
+                  itemId: product?.itemId,
+                  qty: s.qty,
+                  name: product?.name ?? s.productId,
+                },
+                undefined,
+              );
+            })}
           </ul>
         </section>
       ) : null}
@@ -298,40 +354,46 @@ export function StoresScreen() {
       {adding ? <QuickAdd onClose={() => setAdding(false)} /> : null}
       {sorting ? <ScansToSort onClose={() => setSorting(false)} /> : null}
       {editing ? (
-        <ItemSheet
+        <StockSheet
           key={editing.id}
           initial={editing}
-          type={packs.items[editing.typeId]}
-          onSave={(item) => {
+          product={doc.products[editing.productId]}
+          item={
+            doc.products[editing.productId]?.itemId
+              ? packs.items[doc.products[editing.productId]!.itemId!]
+              : undefined
+          }
+          onSave={(row) => {
             change('edit stock', (d) => {
-              d.items[item.id] = item;
+              d.stock[row.id] = row;
             });
             setEditing(null);
           }}
           onDelete={() => {
-            remove.request(editing.id, typeName(packs.items[editing.typeId], editing.typeId));
+            const product = doc.products[editing.productId];
+            remove.request(editing.id, product?.name ?? editing.productId);
             setEditing(null);
           }}
           onClose={() => setEditing(null)}
         />
       ) : null}
-      {flooringLocation ? (
-        <FloorSheet
-          key={flooringLocation.id}
-          location={flooringLocation}
-          rows={floorRows}
-          floors={doc.floors}
+      {minimumLocation ? (
+        <MinimumSheet
+          key={minimumLocation.id}
+          location={minimumLocation}
+          rows={minimumRows}
+          minimums={doc.minimums}
           onSave={(levels) => {
-            change('set floors', (d) => {
-              for (const [typeId, n] of Object.entries(levels)) {
-                const key = floorKey(flooringLocation.id, typeId);
-                if (n > 0) d.floors[key] = n;
-                else delete d.floors[key];
+            change('set minimums', (d) => {
+              for (const [itemId, n] of Object.entries(levels)) {
+                const key = minimumKey(minimumLocation.id, itemId);
+                if (n > 0) d.minimums[key] = n;
+                else delete d.minimums[key];
               }
             });
-            setFlooring(null);
+            setMinimumLocationId(null);
           }}
-          onClose={() => setFlooring(null)}
+          onClose={() => setMinimumLocationId(null)}
         />
       ) : null}
       {remove.toast}

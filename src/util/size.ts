@@ -15,7 +15,11 @@ export function sizeFits(size: Size, measure: Measure): boolean {
 
 /** The measure a unit belongs to. */
 export function measureOfUnit(unit: SizeUnit): Measure {
-  return unit === 'g' || unit === 'kg' ? 'mass' : unit === 'ml' || unit === 'L' ? 'volume' : 'count';
+  return unit === 'g' || unit === 'kg'
+    ? 'mass'
+    : unit === 'ml' || unit === 'L'
+      ? 'volume'
+      : 'count';
 }
 
 const trim = (n: number): string => String(Math.round(n * 100) / 100);

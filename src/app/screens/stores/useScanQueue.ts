@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { getOff } from '../../off';
 import { useChange, useDocument } from '../../state';
-import { productInfoOf } from './scanHelpers';
+import { offFactsOf } from './scanHelpers';
 
 /** After Open Food Facts says it is busy, wait this long before asking again. */
 const BUSY_WAIT_MS = 60_000;
@@ -25,7 +25,7 @@ export function useScanQueue(): void {
 
   // Re-run when the set of unlooked scans changes, or the device comes back online.
   const waiting = Object.values(doc.scans)
-    .filter((s) => !s.product && !doc.barcodes[s.code])
+    .filter((s) => !s.off && !doc.barcodes[s.code])
     .map((s) => s.id)
     .sort()
     .join(',');
@@ -39,7 +39,7 @@ export function useScanQueue(): void {
         for (;;) {
           const { doc: d } = live.current;
           const next = Object.values(d.scans)
-            .filter((s) => !s.product && !d.barcodes[s.code])
+            .filter((s) => !s.off && !d.barcodes[s.code])
             .sort((a, b) => a.scanned.localeCompare(b.scanned))[0];
           if (!next || !alive) break;
           const result = await getOff().lookup(next.code);
@@ -50,11 +50,11 @@ export function useScanQueue(): void {
             retry.current = setTimeout(() => void run(), BUSY_WAIT_MS);
             break;
           }
-          const info = productInfoOf(result);
+          const info = offFactsOf(result);
           try {
             live.current.change('look up scan', (draft) => {
               const scan = draft.scans[next.id];
-              if (scan && info) scan.product = info;
+              if (scan && info) scan.off = info;
             });
           } catch {
             // read-only: leave the queue as it is

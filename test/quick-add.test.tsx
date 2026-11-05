@@ -8,28 +8,20 @@ import { liveStore } from './helpers/liveStore';
 beforeEach(() => localStorage.clear());
 afterEach(cleanup);
 
-const open = (doc = biggarDocument(), prefill?: { typeId: string; qty?: number }) => {
+const open = (doc = biggarDocument(), prefill?: { itemId: string; qty?: number }) => {
   const s = liveStore(doc);
   render(s.wrap(<QuickAdd onClose={() => undefined} prefill={prefill} />));
   return s;
 };
 
 describe('Quick add: the search step', () => {
-  it('puts "Add as a custom item" beside the search box, not under a long list', () => {
-    open();
-    const search = screen.getByLabelText('What are you adding?');
-    const custom = screen.getByRole('button', { name: 'Add as a custom item' });
-    expect(search.closest('.search-row')).toBe(custom.closest('.search-row'));
-  });
-
-  it('on a fresh device shows a few common types, not 110 rows', () => {
+  it('on a fresh device shows a few common items, not 110 rows', () => {
     open();
     expect(screen.queryByRole('heading', { name: 'Recent' })).toBeNull();
     const common = screen.getByRole('region', { name: 'Common' });
     const rows = within(common).getAllByRole('button');
     expect(rows.length).toBeGreaterThan(5);
     expect(rows.length).toBeLessThanOrEqual(16);
-    // the categories are behind one closed "Browse everything" and not even built until opened
     const browse = document.querySelector('details.type-group') as HTMLDetailsElement;
     expect(browse.open).toBe(false);
     expect(browse.querySelectorAll('details.type-group').length).toBe(0);
@@ -45,19 +37,19 @@ describe('Quick add: the search step', () => {
     for (const g of groups) expect((g as HTMLDetailsElement).open).toBe(false);
   });
 
-  it('shows up to eight recent types above the categories', () => {
+  it('shows up to eight recent items above the categories', () => {
     const ids = [
-      'water-can',
-      'torch-led-200lm',
-      'tinned-food',
-      'rice-sack',
+      'water-container',
+      'torch-aa',
+      'tinned-soup',
+      'rice',
       'dried-pasta',
-      'gas-bottle',
+      'propane-bottle',
       'toilet-bags',
       'candles',
       'first-aid-kit',
     ].map((n) => `items-base:${n}`);
-    localStorage.setItem('shtf.recentItemTypes', JSON.stringify(ids));
+    localStorage.setItem('shtf.recentItems', JSON.stringify(ids));
     open();
     const recent = screen.getByRole('region', { name: 'Recent' });
     const rows = within(recent).getAllByRole('button');
@@ -72,27 +64,33 @@ describe('Quick add: the search step', () => {
     expect(screen.getAllByRole('button', { name: /water/i }).length).toBeGreaterThan(1);
   });
 
-  it('reads the recent types again after each add, so the next search starts with them', () => {
-    open();
-    fireEvent.change(screen.getByLabelText('What are you adding?'), { target: { value: 'water' } });
-    fireEvent.click(screen.getAllByRole('button', { name: /Water can/i })[0]!);
+  it('reads the recent items again after each add, so the next search starts with them', () => {
+    const s = open();
+    fireEvent.change(screen.getByLabelText('What are you adding?'), {
+      target: { value: 'water container' },
+    });
+    fireEvent.click(screen.getAllByRole('button', { name: /Water container/i })[0]!);
     fireEvent.click(screen.getByRole('button', { name: 'Add' }));
     fireEvent.click(screen.getByRole('button', { name: 'Next item' }));
     const recent = screen.getByRole('region', { name: 'Recent' });
-    expect(within(recent).getByRole('button', { name: /Water can/i })).toBeTruthy();
+    expect(within(recent).getByRole('button', { name: /Water container/i })).toBeTruthy();
+    expect(Object.keys(s.doc().products).length).toBeGreaterThan(
+      Object.keys(biggarDocument().products).length,
+    );
   });
 
   it('after an add, Next item is the primary button on the right and Add another keeps the form editable', () => {
     open();
-    fireEvent.change(screen.getByLabelText('What are you adding?'), { target: { value: 'water' } });
-    fireEvent.click(screen.getAllByRole('button', { name: /Water can/i })[0]!);
+    fireEvent.change(screen.getByLabelText('What are you adding?'), {
+      target: { value: 'water container' },
+    });
+    fireEvent.click(screen.getAllByRole('button', { name: /Water container/i })[0]!);
     fireEvent.click(screen.getByRole('button', { name: 'Add' }));
     const another = screen.getByRole('button', { name: 'Add another' });
     const next = screen.getByRole('button', { name: 'Next item' });
     expect(another.className).toBe('secondary');
     expect(next.className).toBe('');
     expect(another.nextElementSibling).toBe(next);
-    // an edit keeps both buttons, and nothing is added until Add another is tapped
     fireEvent.click(screen.getByRole('button', { name: /^One more/ }));
     expect(screen.getByRole('button', { name: 'Add another' })).toBeTruthy();
     expect(screen.getByTestId('added-count').textContent).toBe('Added this session: 1');
@@ -100,7 +98,7 @@ describe('Quick add: the search step', () => {
     expect(screen.getByTestId('added-count').textContent).toBe('Added this session: 3');
   });
 
-  it('puts an item where its type already lives, not in the first place by name', () => {
+  it('puts an item where it already lives, not in the first place by name', () => {
     open();
     fireEvent.change(screen.getByLabelText('What are you adding?'), { target: { value: 'UHT' } });
     fireEvent.click(screen.getByRole('button', { name: /UHT milk/ }));
@@ -108,21 +106,5 @@ describe('Quick add: the search step', () => {
       'loc-pantry',
     );
     expect(screen.queryByText(/may freeze/)).toBeNull();
-  });
-});
-
-describe('Quick add: a custom item', () => {
-  it('with the kcal left blank, focuses the field and says what is missing beside it', () => {
-    open();
-    fireEvent.click(screen.getByRole('button', { name: 'Add as a custom item' }));
-    fireEvent.change(screen.getByLabelText('Name'), { target: { value: "Gran's soup" } });
-    fireEvent.click(screen.getByRole('button', { name: 'Save item' }));
-    const kcal = screen.getByLabelText(/About how many kcal/);
-    expect(document.activeElement).toBe(kcal);
-    const hint = kcal.closest('label')!.querySelector('[role="alert"]');
-    expect(hint?.textContent).toMatch(/How many kcal of food in one each\?/);
-    // typing the amount clears the complaint
-    fireEvent.change(kcal, { target: { value: '300' } });
-    expect(kcal.closest('label')!.querySelector('[role="alert"]')).toBeNull();
   });
 });

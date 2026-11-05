@@ -1,4 +1,14 @@
-import type { Condition, Document, ItemInstance, ItemType, Location } from '../../../model';
+import type {
+  Condition,
+  Document,
+  Item,
+  Location,
+  Packs,
+  Product,
+  Size,
+  Stock,
+} from '../../../model';
+import { formatSize, normaliseGtin, sameSize } from '../../../util';
 
 /** How a place's condition reads in "Water can may freeze in the Shed". */
 const PHRASE: Record<Exclude<Condition, 'indoor-stable'>, string> = {
@@ -8,11 +18,11 @@ const PHRASE: Record<Exclude<Condition, 'indoor-stable'>, string> = {
 };
 
 /**
- * Why this item type does not suit this place, or undefined when it does. A place's conditions
+ * Why this item does not suit this place, or undefined when it does. A place's conditions
  * (frost, heat, damp) must each be in the type's `suitability`; `indoor-stable` asks for nothing.
  */
 export function suitabilityWarning(
-  type: Pick<ItemType, 'name' | 'suitability'>,
+  type: Pick<Item, 'name' | 'suitability'>,
   location: Pick<Location, 'name' | 'conditions'>,
 ): string | undefined {
   const bad = location.conditions.filter(
@@ -78,13 +88,13 @@ export interface MonthChip {
 }
 
 /**
- * The one-tap best-before choices for an item type, from how long it keeps: "+1 y", "+2 y" and
+ * The one-tap best-before choices for an item, from how long it keeps: "+1 y", "+2 y" and
  * "+5 y" for things that keep for years; fewer for things that keep for less; none for things
  * that do not go off.
  */
-export function monthChips(shelfLife: ItemType['shelfLife'], todayIso: string): MonthChip[] {
+export function monthChips(shelfLife: Item['shelfLife'], todayIso: string): MonthChip[] {
   const now = monthOfDate(todayIso);
-  const steps: Record<ItemType['shelfLife'], Array<[string, number]>> = {
+  const steps: Record<Item['shelfLife'], Array<[string, number]>> = {
     none: [],
     years: [
       ['+1 y', 12],
@@ -111,7 +121,7 @@ export function monthChips(shelfLife: ItemType['shelfLife'], todayIso: string): 
 // ---- remembered choices (per device, never in the document) --------------------------------
 
 const LAST_LOCATION_KEY = 'shtf.lastLocationId';
-const RECENT_KEY = 'shtf.recentItemTypes';
+const RECENT_KEY = 'shtf.recentItems';
 const RECENT_MAX = 12;
 
 const read = (key: string): string | null => {
@@ -132,7 +142,7 @@ const write = (key: string, value: string): void => {
 export const readLastLocation = (): string | null => read(LAST_LOCATION_KEY);
 export const writeLastLocation = (id: string): void => write(LAST_LOCATION_KEY, id);
 
-/** Item type ids added lately on this device, newest first. */
+/** Item ids added lately on this device, newest first. */
 export function readRecent(): string[] {
   try {
     const parsed: unknown = JSON.parse(read(RECENT_KEY) ?? '[]');
@@ -141,21 +151,21 @@ export function readRecent(): string[] {
     return [];
   }
 }
-export function pushRecent(typeId: string): void {
+export function pushRecent(itemId: string): void {
   write(
     RECENT_KEY,
-    JSON.stringify([typeId, ...readRecent().filter((t) => t !== typeId)].slice(0, RECENT_MAX)),
+    JSON.stringify([itemId, ...readRecent().filter((t) => t !== itemId)].slice(0, RECENT_MAX)),
   );
 }
 
 /**
- * Where a new item most likely goes: the place that already holds the most of its type, else the
- * place last used, else the fullest place (the most stock records; a tie goes to the first by
- * name). Empty when there are no places.
+ * Where a new item most likely goes: the place that already holds the most packs of it (through
+ * its products), else the place last used, else the fullest place (the most stock records; a tie
+ * goes to the first by name). Empty when there are no places.
  */
 export function defaultLocationId(
-  doc: Pick<Document, 'items' | 'locations'>,
-  typeId: string,
+  doc: Pick<Document, 'stock' | 'products' | 'locations'>,
+  itemId: string,
   lastUsed: string | null,
 ): string {
   const places = Object.values(doc.locations).sort((a, b) => a.name.localeCompare(b.name));
@@ -168,15 +178,15 @@ export function defaultLocationId(
     }
     return top;
   };
-  const items = Object.values(doc.items);
+  const rows = Object.values(doc.stock);
   return (
     best((id) =>
-      items
-        .filter((i) => i.typeId === typeId && i.locationId === id)
-        .reduce((n, i) => n + i.qty, 0),
+      rows
+        .filter((r) => r.locationId === id && doc.products[r.productId]?.itemId === itemId)
+        .reduce((n, r) => n + r.qty, 0),
     ) ??
     (lastUsed && doc.locations[lastUsed] ? lastUsed : undefined) ??
-    best((id) => items.filter((i) => i.locationId === id).length) ??
+    best((id) => rows.filter((r) => r.locationId === id).length) ??
     places[0]?.id ??
     ''
   );
@@ -185,48 +195,128 @@ export function defaultLocationId(
 // ---- searching and adding -------------------------------------------------------------------
 
 /**
- * Item types that match a search, recent ones first. An empty search lists recent types and then
- * all of them by name; a search matches the name, the unit size, the category and the tags.
+ * Items that match a search, recent ones first. An empty search lists recent items and then all
+ * of them in the order given (the pack's aisle order); a search matches the name, the heading, the
+ * category, the tags and what it counts as.
  */
-export function matchTypes(
-  types: readonly ItemType[],
+export function matchItems(
+  items: readonly Item[],
   query: string,
   recent: readonly string[] = [],
-): ItemType[] {
+): Item[] {
   const q = query.trim().toLowerCase();
-  const rank = (t: ItemType) => {
+  const rank = (t: Item) => {
     const at = recent.indexOf(t.id);
     return at < 0 ? Infinity : at;
   };
-  return types
+  return items
+    .map((item, order) => ({ item, order }))
     .filter(
-      (t) =>
+      ({ item: t }) =>
         q === '' ||
-        [t.name, t.unitSize ?? '', t.category, ...t.tags].some((s) => s.toLowerCase().includes(q)),
+        [t.name, t.heading ?? '', t.category, t.countsAs, ...t.tags].some((s) =>
+          s.toLowerCase().includes(q),
+        ),
     )
-    .sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
+    .sort((a, b) => rank(a.item) - rank(b.item) || a.order - b.order)
+    .map((x) => x.item);
 }
 
+/** The item's usual size: the first of its quick sizes. */
+export const usualSize = (item: Item): Size => item.sizes[0]!;
+
+// ---- products ---------------------------------------------------------------------------------
+
+export interface NewProduct {
+  /** Absent: a name made from the item and size. */
+  name?: string;
+  /** Absent: the product counts towards nothing. */
+  itemId?: string;
+  size: Size;
+  /** kcal per 100 g or 100 ml from the label (only kept for a mass or volume item). */
+  labelKcalPer100?: number;
+}
+
+/** "Baked beans 415 g"; with no item, "Product 415 g". */
+export const defaultProductName = (item: Item | undefined, size: Size): string =>
+  `${item?.name ?? 'Product'} ${formatSize(size)}`;
+
+/** Same item, same name (trimmed, case-insensitive) and same size: the product already there. */
+export function findProduct(
+  doc: Pick<Document, 'products'>,
+  p: { itemId?: string; name: string; size: Size },
+): Product | undefined {
+  const name = p.name.trim().toLowerCase();
+  return Object.values(doc.products).find(
+    (x) =>
+      x.itemId === p.itemId && x.name.trim().toLowerCase() === name && sameSize(x.size, p.size),
+  );
+}
+
+/**
+ * The product for a draft: the one already there for the same item, name and size, else a new
+ * one. Says which, and whether it is new.
+ */
+export function ensureProduct(
+  draft: Document,
+  p: NewProduct,
+  packs: Pick<Packs, 'items'>,
+  todayIso: string,
+  newId: () => string = () => crypto.randomUUID(),
+): { id: string; created: boolean } {
+  const item = p.itemId ? packs.items[p.itemId] : undefined;
+  const name = p.name?.trim() || defaultProductName(item, p.size);
+  const same = findProduct(draft, { itemId: p.itemId, name, size: p.size });
+  if (same) return { id: same.id, created: false };
+  const label =
+    p.labelKcalPer100 !== undefined && item && item.measure !== 'count'
+      ? p.labelKcalPer100
+      : undefined;
+  const product: Product = {
+    id: newId(),
+    name,
+    ...(p.itemId ? { itemId: p.itemId } : {}),
+    size: p.size,
+    ...(label !== undefined ? { labelKcalPer100: label } : {}),
+    added: todayIso,
+  };
+  draft.products[product.id] = product;
+  return { id: product.id, created: true };
+}
+
+/** Remembers a barcode as a product; a barcode already remembered keeps its first-seen date. */
+export function rememberBarcode(
+  draft: Document,
+  code: string,
+  productId: string,
+  todayIso: string,
+): void {
+  const key = normaliseGtin(code);
+  draft.barcodes[key] = { productId, seen: draft.barcodes[key]?.seen ?? todayIso };
+}
+
+// ---- stock ------------------------------------------------------------------------------------
+
 export interface NewStock {
-  typeId: string;
+  productId: string;
   qty: number;
   locationId: string;
   bestBefore?: string;
   /** Where it came from; a scan says `barcode`. A merge into stock already there keeps that stock's source. */
-  source?: ItemInstance['source'];
+  source?: Stock['source'];
 }
 
 /** What an addition did, enough to take it back: see `undoAddStock`. */
 export interface StockAddition {
   id: string;
   qty: number;
-  /** True when the addition made a new instance (rather than adding to one there). */
+  /** True when the addition made a new stock row (rather than adding to one there). */
   created: boolean;
 }
 
 /**
- * Adds stock to a draft. Stock of the same type in the same place with the same best-before is
- * added to rather than listed twice. Says which instance and whether it is new.
+ * Adds stock to a draft. Stock of the same product in the same place with the same best-before
+ * month is added to rather than listed twice. Says which row and whether it is new.
  */
 export function addStockWithUndo(
   draft: Document,
@@ -234,30 +324,30 @@ export function addStockWithUndo(
   todayIso: string,
   newId: () => string = () => crypto.randomUUID(),
 ): StockAddition {
-  const same = Object.values(draft.items).find(
+  const same = Object.values(draft.stock).find(
     (i) =>
-      i.typeId === stock.typeId &&
+      i.productId === stock.productId &&
       i.locationId === stock.locationId &&
       i.bestBefore === stock.bestBefore,
   );
   if (same) {
-    draft.items[same.id] = { ...same, qty: same.qty + stock.qty };
+    draft.stock[same.id] = { ...same, qty: same.qty + stock.qty };
     return { id: same.id, qty: stock.qty, created: false };
   }
-  const item: ItemInstance = {
+  const row: Stock = {
     id: newId(),
-    typeId: stock.typeId,
+    productId: stock.productId,
     qty: stock.qty,
     locationId: stock.locationId,
     ...(stock.bestBefore ? { bestBefore: stock.bestBefore } : {}),
     added: todayIso,
     source: stock.source ?? 'manual',
   };
-  draft.items[item.id] = item;
-  return { id: item.id, qty: stock.qty, created: true };
+  draft.stock[row.id] = row;
+  return { id: row.id, qty: stock.qty, created: true };
 }
 
-/** Adds stock to a draft and returns the instance's id. */
+/** Adds stock to a draft and returns the row's id. */
 export function addStock(
   draft: Document,
   stock: NewStock,
@@ -268,13 +358,14 @@ export function addStock(
 }
 
 /**
- * Takes exactly one addition back: subtracts its quantity, and removes the instance if this
- * addition made it or it falls to nothing. Does nothing if the instance has since gone.
+ * Takes exactly one addition back: subtracts its quantity, and removes the row if this addition
+ * made it or it falls to nothing. The product and any barcode made with it stay remembered. Does
+ * nothing if the row has since gone.
  */
 export function undoAddStock(draft: Document, addition: StockAddition): void {
-  const item = draft.items[addition.id];
-  if (!item) return;
-  const left = item.qty - addition.qty;
-  if (addition.created || left <= 0) delete draft.items[addition.id];
-  else draft.items[addition.id] = { ...item, qty: left };
+  const row = draft.stock[addition.id];
+  if (!row) return;
+  const left = row.qty - addition.qty;
+  if (addition.created || left <= 0) delete draft.stock[addition.id];
+  else draft.stock[addition.id] = { ...row, qty: left };
 }

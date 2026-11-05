@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import type { AssetType, Category, ItemType, ProductInfo } from '../../../model';
+import type { AssetType, Category, Item, OffFacts, Product } from '../../../model';
 import { today } from '../../../util';
 import { Field } from '../../components/controls';
 import { ExpiryBadge } from '../../components/ExpiryBadge';
@@ -10,81 +10,72 @@ import { CATEGORY_LABEL, labelOf } from '../../labels';
 import { useChange, useDocument } from '../../state';
 import { EQUIPMENT_PATH, equipmentAddPath } from '../assets/route';
 import { usePacks } from '../../usePacks';
-import { CustomItemForm } from './CustomItemForm';
 import { ScanSheet } from './ScanSheet';
 import { MonthField } from './MonthField';
 import { hasCamera } from './dateSettings';
 import { ReadDateSheet } from './ReadDateSheet';
+import { useStockItems } from './scanHelpers';
 import {
   addStock,
   defaultLocationId,
-  matchTypes,
+  ensureProduct,
+  matchItems,
   pushRecent,
   readLastLocation,
   readRecent,
   suitabilityWarning,
+  usualSize,
   writeLastLocation,
 } from './stock';
 
 export interface QuickAddPrefill {
-  typeId: string;
+  itemId: string;
+  productId?: string;
   qty?: number;
 }
 
-/** How many recent types sit above the list when nothing is typed. */
+/** How many recent items sit above the list when nothing is typed. */
 const RECENT_SHOWN = 8;
 
-/**
- * The everyday types shown when nothing is typed and nothing has been added yet on this device
- * (local ids in the items pack); the rest are one search, or "Browse everything", away.
- */
+/** Common item ids (suffix in the items pack) when nothing has been added on this device yet. */
 const COMMON = [
-  'bottled-water-6x2l',
-  'tinned-food-tin',
-  'dried-pasta-1kg',
-  'rice-1kg',
-  'porridge-oats-1kg',
-  'peanut-butter-340g',
+  'bottled-water',
+  'baked-beans',
+  'dried-pasta',
+  'rice',
+  'porridge-oats',
+  'peanut-butter',
   'uht-milk',
   'gas-canisters',
-  'lpg-bottle-13kg',
-  'power-bank-20000mah',
-  'torch-led-200lm',
+  'propane-bottle',
+  'power-bank-20k',
+  'torch-aa',
   'first-aid-kit',
   'candles',
   'hygiene-kit',
   'toilet-bags',
-  'aa-cells-8',
+  'aa-cells',
 ];
 
-type Step = 'search' | 'form' | 'custom' | 'scan' | 'repick' | 'readdate';
+type Step = 'search' | 'form' | 'scan' | 'repick' | 'readdate';
 
 /**
  * Quick add: search for what you are putting away, pick it, then Add. The place is the last one
  * you used and the quantity is one, so a plain item is a search, a tap on the item and a tap on
- * Add. The sheet stays open afterwards with "Add another" (the form stays filled and editable, and adds only
- * when tapped) and "Next item". Something the packs do not list can be added as a custom item.
+ * Add.
  */
 export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: QuickAddPrefill }) {
   const doc = useDocument();
   const change = useChange();
   const packs = usePacks();
+  const items = useStockItems();
 
-  const enabled = useMemo(
-    () => new Set(['custom', ...packs.enabledPacks(doc.settings).map((p) => p.id)]),
-    [packs, doc.settings],
-  );
-  // Stock only: equipment (a stove, a generator, a leisure battery) is kept under Home, Equipment.
-  const types = useMemo(
-    () =>
-      Object.values(packs.items).filter(
-        (t) => enabled.has(t.id.split(':')[0]!) && t.assetTypeId === undefined,
-      ),
-    [packs, enabled],
-  );
   const equipmentTypes = useMemo(
-    () => Object.values(packs.assets).filter((t) => enabled.has(t.id.split(':')[0]!)),
-    [packs, enabled],
+    () =>
+      Object.values(packs.assets).filter((t) =>
+        packs.enabledPacks(doc.settings).some((p) => t.id.startsWith(`${p.id}:`)),
+      ),
+    [packs, doc.settings],
   );
   const locations = useMemo(
     () => Object.values(doc.locations).sort((a, b) => a.name.localeCompare(b.name)),
@@ -92,56 +83,53 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
   );
   const [recent, setRecent] = useState(readRecent);
 
-  const prefilled = prefill ? packs.items[prefill.typeId] : undefined;
-  const start = prefilled?.assetTypeId === undefined ? prefilled : undefined;
-  const [step, setStep] = useState<Step>(start ? 'form' : 'search');
+  const prefItem = prefill ? packs.items[prefill.itemId] : undefined;
+  const prefProduct = prefill?.productId ? doc.products[prefill.productId] : undefined;
+  const startItem = prefItem?.assetTypeId === undefined ? prefItem : undefined;
+  const [step, setStep] = useState<Step>(startItem || prefProduct ? 'form' : 'search');
   const [query, setQuery] = useState('');
-  const [type, setType] = useState<ItemType | undefined>(start);
+  const [item, setItem] = useState<Item | undefined>(startItem);
+  const [productId, setProductId] = useState<string | undefined>(prefill?.productId);
   const [qty, setQty] = useState(Math.max(1, prefill?.qty ?? 1));
   const [locationId, setLocationId] = useState(() =>
-    defaultLocationId(doc, start?.id ?? '', readLastLocation()),
+    defaultLocationId(doc, startItem?.id ?? prefItem?.id ?? '', readLastLocation()),
   );
   const [bestBefore, setBestBefore] = useState<string | undefined>(undefined);
   const [added, setAdded] = useState(0);
   const [last, setLast] = useState<string | null>(null);
-  /** This item has been added at least once: the form offers "Add another" and "Next item". */
   const [putOnce, setPutOnce] = useState(false);
-  /** The item in the form came from a barcode scan: it is saved as `barcode` and Next item scans again. */
   const [viaScan, setViaScan] = useState(false);
-  /** The barcode behind a scanned item, for "Not this item?". */
   const [scannedCode, setScannedCode] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (step !== 'search') return;
-    // After the sheet has taken focus for itself.
     const t = setTimeout(() => searchRef.current?.focus(), 0);
     return () => clearTimeout(t);
   }, [step]);
 
+  const product: Product | undefined = productId ? doc.products[productId] : undefined;
+  const activeItem = item ?? (product?.itemId ? packs.items[product.itemId] : undefined);
   const location = doc.locations[locationId];
-  const warning = type && location ? suitabilityWarning(type, location) : undefined;
-  const shown = useMemo(() => matchTypes(types, query, recent), [types, query, recent]);
-  // With nothing typed: the few types added lately, then every other type under its category.
+  const warning = activeItem && location ? suitabilityWarning(activeItem, location) : undefined;
+  const shown = useMemo(() => matchItems(items, query, recent), [items, query, recent]);
   const searching = query.trim() !== '';
-  const recentTypes = useMemo(
+  const recentItems = useMemo(
     () =>
       recent
-        .map((id) => types.find((t) => t.id === id))
-        .filter((t): t is ItemType => t !== undefined)
+        .map((id) => items.find((t) => t.id === id))
+        .filter((t): t is Item => t !== undefined)
         .slice(0, RECENT_SHOWN),
-    [recent, types],
+    [recent, items],
   );
-  // With no recent additions, the common types stand in for them.
   const common = useMemo(
     () =>
-      COMMON.map((id) => types.find((t) => t.id.split(':')[1] === id)).filter(
-        (t): t is ItemType => t !== undefined,
+      COMMON.map((slug) => items.find((t) => t.id === `items-base:${slug}`)).filter(
+        (t): t is Item => t !== undefined,
       ),
-    [types],
+    [items],
   );
   const [browsing, setBrowsing] = useState(false);
-  // Equipment that matches the search, by its own name or the name of a thing people buy for it.
   const equipmentShown = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (q === '') return [];
@@ -154,9 +142,9 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
     );
   }, [equipmentTypes, packs, query]);
   const byCategory = useMemo(() => {
-    const skip = new Set(recentTypes.map((t) => t.id));
-    const groups = new Map<Category, ItemType[]>();
-    for (const t of types)
+    const skip = new Set(recentItems.map((t) => t.id));
+    const groups = new Map<Category, Item[]>();
+    for (const t of items)
       if (!skip.has(t.id)) groups.set(t.category, [...(groups.get(t.category) ?? []), t]);
     return [...groups.entries()]
       .map(
@@ -164,21 +152,17 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
           [category, list.sort((a, b) => a.name.localeCompare(b.name))] as const,
       )
       .sort(([a], [b]) => labelOf(CATEGORY_LABEL, a).localeCompare(labelOf(CATEGORY_LABEL, b)));
-  }, [types, recentTypes]);
+  }, [items, recentItems]);
 
-  const typeRow = (t: ItemType) => (
+  const itemRow = (t: Item) => (
     <li className="row-item" key={t.id}>
-      <button type="button" className="row-main" onClick={() => pick(t)}>
+      <button type="button" className="row-main" onClick={() => pickItem(t)}>
         <strong>{t.name}</strong>
-        <span className="muted">
-          {t.unitSize ? `${t.unit} · ${t.unitSize}` : t.unit}
-          {t.id.startsWith('custom:') ? ' · yours' : ''}
-        </span>
+        <span className="muted">{t.countsAs}</span>
       </button>
     </li>
   );
 
-  /** Any edit to the details means the last Add is no longer what the form shows. */
   const edit =
     <T,>(set: (v: T) => void) =>
     (v: T) => {
@@ -187,12 +171,24 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
     };
 
   function put(): void {
-    if (!type || !location) return;
+    if (!location || qty < 1) return;
+    let ensured: string | undefined;
     change('add stock', (d) => {
+      let pid = productId;
+      if (!pid && activeItem) {
+        pid = ensureProduct(
+          d,
+          { itemId: activeItem.id, size: usualSize(activeItem) },
+          packs,
+          today(),
+        ).id;
+        ensured = pid;
+      }
+      if (!pid) return;
       addStock(
         d,
         {
-          typeId: type.id,
+          productId: pid,
           qty,
           locationId,
           bestBefore,
@@ -201,17 +197,22 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
         today(),
       );
     });
-    writeLastLocation(locationId);
-    pushRecent(type.id);
-    setRecent(readRecent());
+    if (ensured) setProductId(ensured);
+    if (activeItem) {
+      writeLastLocation(locationId);
+      pushRecent(activeItem.id);
+      setRecent(readRecent());
+    }
+    const label = product?.name ?? activeItem?.name ?? 'item';
     setAdded((n) => n + qty);
-    setLast(`Added ${qty} × ${type.name} to ${location.name}`);
+    setLast(`Added ${qty} × ${label} to ${location.name}`);
     setPutOnce(true);
   }
 
-  function pick(t: ItemType, scanned = false): void {
-    setViaScan(scanned);
-    setType(t);
+  function pickItem(t: Item): void {
+    setViaScan(false);
+    setItem(t);
+    setProductId(undefined);
     setLocationId(defaultLocationId(doc, t.id, readLastLocation()));
     setQty(1);
     setBestBefore(undefined);
@@ -220,16 +221,30 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
     setStep('form');
   }
 
+  function pickProduct(pid: string, code: string, scanned = true): void {
+    const p = doc.products[pid];
+    setViaScan(scanned);
+    setProductId(pid);
+    setItem(p?.itemId ? packs.items[p.itemId] : undefined);
+    setLocationId(defaultLocationId(doc, p?.itemId ?? '', readLastLocation()));
+    setQty(1);
+    setBestBefore(undefined);
+    setLast(null);
+    setPutOnce(false);
+    setScannedCode(code);
+    setStep('form');
+  }
+
   function next(): void {
-    setType(undefined);
+    setItem(undefined);
+    setProductId(undefined);
     setLast(null);
     setPutOnce(false);
     setQuery('');
     setStep(viaScan ? 'scan' : 'search');
   }
 
-  /** Sort later: keep the scan in the queue with the place last used. */
-  function sortLater(code: string, product: ProductInfo | undefined): void {
+  function sortLater(code: string, off: OffFacts | undefined): void {
     const place = defaultLocationId(doc, '', readLastLocation());
     if (!place) return;
     change('keep scan to sort', (d) => {
@@ -240,11 +255,12 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
         qty: 1,
         locationId: place,
         scanned: new Date().toISOString(),
-        ...(product ? { product } : {}),
+        ...(off ? { off } : {}),
       };
     });
   }
 
+  const formTitle = product?.name ?? activeItem?.name ?? '';
   const counter =
     added > 0 ? (
       <p className="muted" role="status" data-testid="added-count">
@@ -260,10 +276,7 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
           setViaScan(false);
           setStep('search');
         }}
-        onType={(t, code) => {
-          pick(t, true);
-          setScannedCode(code);
-        }}
+        onProduct={(pid, code) => pickProduct(pid, code)}
         onSortLater={sortLater}
         sortLaterBlocked={
           locations.length > 0
@@ -282,10 +295,7 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
         reidentify
         onClose={onClose}
         onBack={() => setStep('form')}
-        onType={(t, code) => {
-          pick(t, true);
-          setScannedCode(code);
-        }}
+        onProduct={(pid, code) => pickProduct(pid, code)}
       />
     );
   }
@@ -302,25 +312,9 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
     );
   }
 
-  if (step === 'custom') {
-    return (
-      <CustomItemForm
-        initialName={query}
-        onClose={onClose}
-        onBack={() => setStep('search')}
-        onMade={(made) => {
-          change('add custom item type', (d) => {
-            d.customTypes[made.id] = made;
-          });
-          pick(made);
-        }}
-      />
-    );
-  }
-
   return (
     <Sheet
-      title={step === 'search' ? 'Add stock' : `Add ${type?.name ?? ''}`}
+      title={step === 'search' ? 'Add stock' : `Add ${formTitle}`}
       onClose={onClose}
       actions={
         step === 'form' ? (
@@ -343,7 +337,11 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
               <button type="button" className="secondary" onClick={next}>
                 Back
               </button>
-              <button type="button" disabled={!location || qty < 1} onClick={put}>
+              <button
+                type="button"
+                disabled={!location || qty < 1 || (!productId && !activeItem)}
+                onClick={put}
+              >
                 Add
               </button>
             </>
@@ -386,28 +384,25 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
                 </ul>
               </section>
             ) : null}
-            <button type="button" className="secondary" onClick={() => setStep('custom')}>
-              Add as a custom item
-            </button>
           </div>
           {searching ? (
             <>
               {shown.length === 0 && equipmentShown.length === 0 ? (
                 <p className="muted">Nothing matches “{query}”.</p>
               ) : null}
-              <ul className="row-list">{shown.map(typeRow)}</ul>
+              <ul className="row-list">{shown.map(itemRow)}</ul>
             </>
           ) : (
             <>
-              {recentTypes.length > 0 ? (
+              {recentItems.length > 0 ? (
                 <section aria-label="Recent" className="recent">
                   <h3>Recent</h3>
-                  <ul className="row-list">{recentTypes.map(typeRow)}</ul>
+                  <ul className="row-list">{recentItems.map(itemRow)}</ul>
                 </section>
               ) : (
                 <section aria-label="Common" className="recent">
                   <h3>Common</h3>
-                  <ul className="row-list">{common.map(typeRow)}</ul>
+                  <ul className="row-list">{common.map(itemRow)}</ul>
                 </section>
               )}
               <Link className="row-main equipment-route" to={EQUIPMENT_PATH}>
@@ -422,7 +417,7 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
                         <summary>
                           {labelOf(CATEGORY_LABEL, category)} ({list.length})
                         </summary>
-                        <ul className="row-list">{list.map(typeRow)}</ul>
+                        <ul className="row-list">{list.map(itemRow)}</ul>
                       </details>
                     ))
                   : null}
@@ -430,7 +425,7 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
             </>
           )}
         </>
-      ) : type ? (
+      ) : activeItem || product ? (
         <>
           {last ? (
             <p className="note" role="status">
@@ -438,8 +433,13 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
             </p>
           ) : null}
           {counter}
-          <Field label={`How many (${type.unit})?`}>
-            <Stepper label={`How many ${type.unit}`} value={qty} min={1} onChange={edit(setQty)} />
+          <Field label={`How many (${activeItem?.unit ?? 'packs'})?`}>
+            <Stepper
+              label={`How many ${activeItem?.unit ?? 'packs'}`}
+              value={qty}
+              min={1}
+              onChange={edit(setQty)}
+            />
           </Field>
           {locations.length === 0 ? (
             <p className="note">
@@ -467,12 +467,14 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
               Not this item?
             </button>
           ) : null}
-          <MonthField
-            value={bestBefore}
-            onChange={edit(setBestBefore)}
-            shelfLife={type.shelfLife}
-            today={today()}
-          />
+          {activeItem ? (
+            <MonthField
+              value={bestBefore}
+              onChange={edit(setBestBefore)}
+              shelfLife={activeItem.shelfLife}
+              today={today()}
+            />
+          ) : null}
           {bestBefore ? <ExpiryBadge bestBefore={bestBefore} /> : null}
           {hasCamera() ? (
             <button type="button" className="secondary" onClick={() => setStep('readdate')}>

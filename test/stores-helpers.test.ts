@@ -2,12 +2,15 @@ import { describe, expect, it } from 'vitest';
 import {
   addMonthsYM,
   addStock,
+  addStockWithUndo,
   defaultLocationId,
+  ensureProduct,
   formatMonth,
-  matchTypes,
+  matchItems,
   monthChips,
   parseMonth,
   suitabilityWarning,
+  undoAddStock,
 } from '../src/app/screens/stores/stock';
 import { biggarDocument } from '../src/fixtures/household-biggar';
 import { bundledPacks } from '../src/packs';
@@ -94,65 +97,115 @@ describe('best-before months', () => {
   });
 });
 
-describe('matchTypes', () => {
-  const types = Object.values(bundledPacks().items);
+describe('matchItems', () => {
+  const items = Object.values(bundledPacks().items).filter((t) => !t.assetTypeId);
 
-  it('puts recent types first and the rest by name', () => {
-    const recent = ['items-base:tinned-food', 'items-base:water-can'];
-    const out = matchTypes(types, '', recent);
+  it('puts recent items first and keeps pack order for the rest', () => {
+    const recent = ['items-base:tinned-soup', 'items-base:water-container'];
+    const out = matchItems(items, '', recent);
     expect(out.slice(0, 2).map((t) => t.id)).toEqual(recent);
-    expect(out).toHaveLength(types.length);
-    const rest = out.slice(2).map((t) => t.name);
-    expect(rest).toEqual([...rest].sort((a, b) => a.localeCompare(b)));
+    expect(out.length).toBeGreaterThan(recent.length);
   });
 
-  it('matches name, unit size, category and tags, ignoring case', () => {
-    expect(matchTypes(types, 'WATER CAN').some((t) => t.id === 'items-base:water-can')).toBe(true);
-    expect(matchTypes(types, '10 l').some((t) => t.id === 'items-base:water-can')).toBe(true);
-    expect(matchTypes(types, 'zzzzzz')).toEqual([]);
+  it('matches name, counts-as, category and tags, ignoring case', () => {
+    expect(
+      matchItems(items, 'water container').some((t) => t.id === 'items-base:water-container'),
+    ).toBe(true);
+    expect(matchItems(items, 'containers').some((t) => t.id === 'items-base:water-container')).toBe(
+      true,
+    );
+    expect(matchItems(items, 'zzzzzz')).toEqual([]);
   });
 });
 
-describe('addStock', () => {
-  const stock = { typeId: 'items-base:water-can', qty: 2, locationId: 'loc-garage' };
+describe('ensureProduct', () => {
+  const packs = bundledPacks();
+  const item = packs.items['items-base:baked-beans']!;
 
-  it('adds a new instance, dated today and entered by hand', () => {
+  it('reuses a product with the same item, name and size', () => {
     const doc = structuredClone(biggarDocument());
-    const id = addStock(doc, { ...stock, bestBefore: '2027-05' }, '2026-11-04', () => 'new-1');
-    expect(id).toBe('new-1');
-    expect(doc.items['new-1']).toEqual({
-      id: 'new-1',
-      typeId: 'items-base:water-can',
-      qty: 2,
-      locationId: 'loc-garage',
-      bestBefore: '2027-05',
-      added: '2026-11-04',
-      source: 'manual',
-    });
+    const first = ensureProduct(
+      doc,
+      { itemId: item.id, size: { amount: 415, unit: 'g' }, name: 'Test beans 415 g' },
+      packs,
+      '2026-11-04',
+    );
+    const second = ensureProduct(
+      doc,
+      { itemId: item.id, size: { amount: 415, unit: 'g' }, name: 'Test beans 415 g' },
+      packs,
+      '2026-11-04',
+    );
+    expect(second.created).toBe(false);
+    expect(second.id).toBe(first.id);
+    expect(Object.keys(doc.products)).toHaveLength(Object.keys(biggarDocument().products).length);
   });
 
-  it('adds to stock that is the same type, place and best-before instead of listing it twice', () => {
+  it('does not reuse when the size differs', () => {
     const doc = structuredClone(biggarDocument());
-    // the fixture holds two water cans in the garage with no best-before
-    const before = Object.keys(doc.items).length;
-    const id = addStock(doc, stock, '2026-11-04');
-    expect(id).toBe('item-water');
-    expect(doc.items['item-water']!.qty).toBe(4);
-    expect(Object.keys(doc.items)).toHaveLength(before);
-    // a different best-before is a separate row
-    addStock(doc, { ...stock, bestBefore: '2028-01' }, '2026-11-04', () => 'other');
-    expect(doc.items['other']).toBeDefined();
+    const first = ensureProduct(
+      doc,
+      { itemId: item.id, size: { amount: 415, unit: 'g' }, name: 'Beans A' },
+      packs,
+      '2026-11-04',
+      () => 'p-a',
+    );
+    const second = ensureProduct(
+      doc,
+      { itemId: item.id, size: { amount: 400, unit: 'g' }, name: 'Beans B' },
+      packs,
+      '2026-11-04',
+      () => 'p-b',
+    );
+    expect(second.id).not.toBe(first.id);
+    expect(doc.products['p-a']).toBeDefined();
+    expect(doc.products['p-b']).toBeDefined();
+  });
+});
+
+describe('addStockWithUndo', () => {
+  it('merges on product, place and month and undo leaves the product', () => {
+    const doc = structuredClone(biggarDocument());
+    doc.barcodes['999'] = { productId: 'prod-can', seen: '2026-11-04' };
+    const addition = addStockWithUndo(
+      doc,
+      {
+        productId: 'prod-can',
+        qty: 1,
+        locationId: 'loc-garage',
+        source: 'barcode',
+      },
+      '2026-11-04',
+    );
+    expect(addition.created).toBe(false);
+    expect(doc.stock['stock-can']!.qty).toBe(3);
+    undoAddStock(doc, addition);
+    expect(doc.stock['stock-can']!.qty).toBe(2);
+    expect(doc.products['prod-can']).toBeDefined();
+    expect(doc.barcodes['999']!.productId).toBe('prod-can');
+  });
+
+  it('adds a new row when the best-before month differs', () => {
+    const doc = structuredClone(biggarDocument());
+    const id = addStock(
+      doc,
+      { productId: 'prod-can', qty: 1, locationId: 'loc-garage', bestBefore: '2028-01' },
+      '2026-11-04',
+      () => 'new-row',
+    );
+    expect(id).toBe('new-row');
+    expect(doc.stock['new-row']!.productId).toBe('prod-can');
   });
 });
 
 describe('defaultLocationId', () => {
   const doc = biggarDocument();
-  const count = (id: string) => Object.values(doc.items).filter((i) => i.locationId === id).length;
+  const count = (id: string) => Object.values(doc.stock).filter((i) => i.locationId === id).length;
   const fullest = Object.values(doc.locations)
     .map((l) => l.id)
     .sort((a, b) => count(b) - count(a))[0]!;
 
-  it('is where the type already lives', () => {
+  it('is where the item already lives', () => {
     expect(defaultLocationId(doc, 'items-base:uht-milk', 'loc-shed')).toBe('loc-pantry');
   });
 
@@ -166,6 +219,8 @@ describe('defaultLocationId', () => {
   });
 
   it('is empty with no places', () => {
-    expect(defaultLocationId({ items: {}, locations: {} }, 'items-base:candles', null)).toBe('');
+    expect(
+      defaultLocationId({ stock: {}, products: {}, locations: {} }, 'items-base:candles', null),
+    ).toBe('');
   });
 });

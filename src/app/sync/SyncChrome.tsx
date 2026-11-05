@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import type { Conflict } from '../../store';
+import { OLDER_REMOTE_MESSAGE, type Conflict } from '../../store';
 import { useSync, useSyncState } from '../state';
 import { Toast } from '../components/Toast';
 import './sync.css';
@@ -180,6 +180,42 @@ function NewerVersionBanner() {
   );
 }
 
+/** Drive holds a household from before the stock model; replace it or turn sync off. */
+function OldRemoteDialog() {
+  const sync = useSync();
+  const { oldRemote } = useSyncState();
+  if (!sync || !oldRemote) return null;
+  return (
+    <div className="sync-backdrop">
+      <div
+        className="sync-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="old-remote"
+        data-testid="old-remote-dialog"
+      >
+        <h2 id="old-remote">Older household on Google Drive</h2>
+        <p>
+          {OLDER_REMOTE_MESSAGE}, which this version cannot open. Replace it with the household on
+          this device?
+        </p>
+        <div className="row">
+          <button type="button" onClick={() => void sync.resolveOldRemote('replace')}>
+            Replace it
+          </button>
+          <button
+            type="button"
+            className="quiet"
+            onClick={() => void sync.resolveOldRemote('cancel')}
+          >
+            Not now
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /** A short message after a pull ("3 changes from your other device"). */
 function SyncToast() {
   const sync = useSync();
@@ -209,6 +245,7 @@ export function SyncChrome() {
       <NewerVersionBanner />
       <WhichCopyDialog />
       <FirstConnectDialog />
+      <OldRemoteDialog />
       <SyncToast />
     </>
   );
