@@ -81,3 +81,6 @@ export const FLAT_SHARPNESS = 2;
 /** Pause between two frames of the date loop, in milliseconds; a little longer after a skip. */
 export const DATE_GAP_MS = 80;
 export const DATE_SKIP_GAP_MS = 110;
+
+/** A date step ends (as "no date found") after this many frames the worker could not read; the first is retried. */
+export const MAX_READ_ERRORS = 2;

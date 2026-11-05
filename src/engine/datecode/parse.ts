@@ -45,7 +45,7 @@ export interface ParseResult {
   suggestions: Suggestion[];
 }
 
-/** Past dates up to this many months back are read as expired (decision 135). */
+/** Past dates up to this many months back are read as expired. */
 export const EXPIRED_MONTHS = 24;
 /** Dates up to this many months ahead are believed. */
 export const AHEAD_MONTHS = 120;
@@ -200,7 +200,7 @@ export const formatMonthYear = (d: MonthYear): string =>
 
 /**
  * Year for a date printed without one, at month level: this month or later is this year, earlier
- * months next year, so it is always under 12 months away (decision 130).
+ * months next year, so it is always under 12 months away.
  */
 function assumedYear(month: number, now: MonthYear): number {
   return month >= now.month ? now.year : now.year + 1;
@@ -280,7 +280,7 @@ export function parseDates(raw: string, todayIso: string): ParseResult {
     if (PROD_RE.test(t.slice(Math.max(0, r.start - 14), r.start))) continue;
     // A bare, unlabelled MM/YY (or a spaced DD MM YY) is too weak to be a result: a batch code, a
     // price or a weight looks the same. A bare past MM/YY is more likely a code. Both only ever
-    // become suggestions (decision 139).
+    // become suggestions.
     if (!labelled && (WEAK_KINDS.has(r.kind) || (expired && !FULL_DATE.has(r.kind)))) {
       weak.push({ month: r.month, year: r.year, text: t.slice(r.start, r.end), expired });
       continue;

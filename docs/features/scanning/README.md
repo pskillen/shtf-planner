@@ -174,8 +174,8 @@ _Got Jun 2027 once, checking…_, _Got it_, _No date found_.
 weights) on onnxruntime-web 1.20.1, in a **web worker** so the screen stays smooth. WebGPU is used only
 when the person has not switched it off, the browser has it, an adapter comes back, both models create
 and a **self-test** (a synthetic "BEST BEFORE 06/2027" label, read in the worker) comes out right;
-otherwise both sessions are made again on WASM (single-threaded: threads need cross-origin isolation,
-decision 134). A collapsed **About the date reader** line shows "WebGPU · last read 0.4 s" or "WASM ·
+otherwise both sessions are made again on WASM (single-threaded: threads need cross-origin isolation, which the app does not set as it
+may break Google sign-in). A collapsed **About the date reader** line shows "WebGPU · last read 0.4 s" or "WASM ·
 last read 1.5 s" (and why WASM) and holds the per-device WebGPU switch. The worker is stopped when the
 stocktake or the sheet goes away; the next use reloads from the cache.
 

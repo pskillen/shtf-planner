@@ -113,7 +113,7 @@ const CASES: Array<[text: string, want: string | null, assumed?: boolean, expire
   ['11 NOVA', null],
   ['BB 06/2027 11 NOV', '06/2027'], // a real date beats an assumed-year one
 
-  // ---- expired dates (decision 135): up to 2 years back, only with a label or as a full day-month-year
+  // ---- expired dates: up to 2 years back, only with a label or as a full day-month-year
   ['BEST BEFORE 09/2026', '09/2026', false, true], // labelled past
   ['BB 06/2025', '06/2025', false, true], // 17 months back
   ['USE BY 14 MAR 2026', '03/2026', false, true],

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { FrameVerdict } from '../engine/datecode';
 import { startDateLoop, type LoopOptions, type LoopStatus } from './dateLoop';
+import { ReadError } from './ocr/errors';
 import { gray, type Gray } from './ocr/image';
 
 const TODAY = '2026-11-15';
@@ -200,5 +201,51 @@ describe('the date loop: what it answers', () => {
     });
     const out = await t.loop.result;
     expect(out).toMatchObject({ outcome: 'failed', message: 'The date reader failed' });
+  });
+});
+
+describe('the date loop: a read the worker could not do, and Stop mid-read', () => {
+  it('retries once after one failed read, and carries on', async () => {
+    const t = setup(
+      [SHARP()],
+      (n) => {
+        if (n === 0) throw new ReadError('bad frame');
+        return june(0.9);
+      },
+      { timeoutMs: 3000 },
+    );
+    const out = await t.loop.result;
+    expect(out.outcome).toBe('got');
+    expect(t.reader.read).toHaveBeenCalledTimes(2);
+  });
+
+  it('a second failed read ends the search as none, with Read again possible', async () => {
+    const t = setup(
+      [SHARP()],
+      () => {
+        throw new ReadError('bad frame');
+      },
+      { timeoutMs: 3000 },
+    );
+    const out = await t.loop.result;
+    expect(out.outcome).toBe('none');
+    expect(out.message).toBeUndefined();
+  });
+
+  it('Stop pressed while a frame is being read wins over that frame settling', async () => {
+    let release!: (v: FrameVerdict) => void;
+    const t = setup(
+      [SHARP()],
+      () =>
+        new Promise<FrameVerdict>((r) => {
+          release = r;
+        }),
+    );
+    await vi.waitFor(() => expect(t.reader.read).toHaveBeenCalled());
+    t.loop.stop();
+    release(june(0.95));
+    const out = await t.loop.result;
+    expect(out.outcome).toBe('none');
+    expect(out.settled).toBeNull();
   });
 });

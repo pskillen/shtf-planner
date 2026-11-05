@@ -5,7 +5,7 @@
  *
  * `onnxruntime-web/webgpu` is the one build that runs both providers from a single wasm file.
  * The wasm runs on one thread: threads need cross-origin isolation, which the app does not set
- * (decision 134). Frames arrive as bytes, are read and dropped; only a verdict goes back.
+ * (it may break Google sign-in). Frames arrive as bytes, are read and dropped; only a verdict goes back.
  */
 import * as ort from 'onnxruntime-web/webgpu';
 import { fromRGBA } from './image';

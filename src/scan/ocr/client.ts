@@ -1,5 +1,6 @@
 import type { FrameVerdict } from '../../engine/datecode';
 import { today } from '../../util';
+import { ReadError } from './errors';
 import type { Gray } from './image';
 import type { FromWorker, ToWorker } from './messages';
 import type { Provider } from './paddle';
@@ -48,6 +49,14 @@ export interface ReaderOptions {
 const realWorker = (): WorkerLike =>
   new Worker(new URL('./ocr.worker.ts', import.meta.url), { type: 'module' });
 
+const listeners = new Set<() => void>();
+/** Told whenever a reader is made, changes state, reads a frame or is stopped (a live "About" line). */
+export function onReaderChange(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => void listeners.delete(listener);
+}
+const notify = (): void => listeners.forEach((l) => l());
+
 /** Makes a reader on its own worker. Most callers want {@link getDateReader}. */
 export function createDateReader(opts: ReaderOptions = {}): DateReader {
   const worker = (opts.spawn ?? realWorker)();
@@ -68,6 +77,7 @@ export function createDateReader(opts: ReaderOptions = {}): DateReader {
   const fail = (message: string): void => {
     if (status.state === 'failed') return;
     status = { state: 'failed', message };
+    notify();
     settleReady.reject(new Error(message));
     for (const p of pending.values()) p.reject(new Error(message));
     pending.clear();
@@ -79,6 +89,7 @@ export function createDateReader(opts: ReaderOptions = {}): DateReader {
       const info = { ep: m.ep, loadMs: m.loadMs, reason: m.reason };
       status = { state: 'ready', ...info };
       settleReady.resolve(info);
+      notify();
     } else if (m.type === 'failed') {
       fail(m.message);
     } else if (m.type === 'read') {
@@ -86,10 +97,12 @@ export function createDateReader(opts: ReaderOptions = {}): DateReader {
       pending.delete(m.id);
       if (status.state === 'ready') status = { ...status, lastReadMs: Math.round(m.result.ms) };
       p?.resolve(m.result);
+      notify();
     } else {
       const p = pending.get(m.id);
       pending.delete(m.id);
-      p?.reject(new Error(m.message));
+      p?.reject(new ReadError(m.message));
+      notify();
     }
   };
   worker.onerror = (e) => fail(e.message || 'The date reader stopped');
@@ -123,6 +136,7 @@ export function createDateReader(opts: ReaderOptions = {}): DateReader {
       for (const p of pending.values()) p.reject(err);
       pending.clear();
       opts.onTerminate?.();
+      notify();
     },
   };
 }
@@ -134,12 +148,15 @@ let single: DateReader | undefined;
  * when this makes it; to change it, {@link DateReader.terminate} the reader and ask again.
  */
 export function getDateReader(preferWebGpu = true): DateReader {
-  single ??= createDateReader({
-    preferWebGpu,
-    onTerminate: () => {
-      single = undefined;
-    },
-  });
+  if (!single) {
+    single = createDateReader({
+      preferWebGpu,
+      onTerminate: () => {
+        single = undefined;
+      },
+    });
+    notify();
+  }
   return single;
 }
 

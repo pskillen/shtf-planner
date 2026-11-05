@@ -4,6 +4,7 @@ import {
   type OfferedSuggestion,
   type Settled,
 } from '../engine/datecode';
+import { ReadError } from './ocr/errors';
 import { frameDiff, saturatedShare, sharpness, thumb, type Gray } from './ocr/image';
 import {
   BLUR_RATIO,
@@ -16,6 +17,7 @@ import {
   GLARE_MAX,
   GLARE_MIN,
   MAX_GLARE_RUN,
+  MAX_READ_ERRORS,
   MAX_SKIPS,
   MOVING_DIFF,
   SHARP_DECAY,
@@ -138,6 +140,7 @@ async function run(
   let skippedBlur = 0;
   let glare = 0;
   let glareRun = 0;
+  let readErrors = 0;
   let skipRun = 0;
   let sharpest = 0;
   let prev: Gray | null = null;
@@ -208,20 +211,29 @@ async function run(
         glareRun = 0;
         say('reading');
         const at = now();
-        let verdict: FrameVerdict;
+        let verdict: FrameVerdict | undefined;
         try {
           verdict = await reader.read(crop, opts.todayIso);
         } catch (e) {
           if (isAborted()) return out('stopped', null, last);
-          return out('failed', null, last, {
-            message: e instanceof Error ? e.message : String(e),
-          });
+          if (!(e instanceof ReadError)) {
+            return out('failed', null, last, {
+              message: e instanceof Error ? e.message : String(e),
+            });
+          }
+          // One frame the worker could not read: try the next one, once. A second ends the search.
+          readErrors++;
+          if (readErrors >= MAX_READ_ERRORS) return out('none', null, last);
         }
-        frames++;
-        // The person moved on while this frame was being read: drop the answer.
-        if (isAborted()) return out('stopped', null, last);
-        const settled = tally.addFrame(verdict, at);
-        if (settled) return out('got', settled, crop);
+        if (verdict) {
+          frames++;
+          // The person moved on while this frame was being read: drop the answer.
+          if (isAborted()) return out('stopped', null, last);
+          const settled = tally.addFrame(verdict, at);
+          // Stop pressed during the read wins over an answer that arrives after it.
+          if (isStopped()) return out('none', null, last);
+          if (settled) return out('got', settled, crop);
+        }
         waiting();
       }
     } else {
