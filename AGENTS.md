@@ -113,3 +113,5 @@ installed.
 
 - Branches `pskil/<slug>`, conventional commits (`feat:`, `fix:`, `docs:`, `ci:`, `chore:`).
 - One PR per phase. Stacked PRs are rebased, never merged up. Never commit to `main`.
+- Work is tracked as GitHub issues (epics, features, labels, milestones): the `tickets` skill
+  (`.claude/skills/tickets/SKILL.md`) says how to file, shape and close them.
