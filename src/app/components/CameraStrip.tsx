@@ -14,12 +14,15 @@ export type StripMode = 'barcode' | 'date';
  * line says so. Camera frames are read here and nowhere else, and never leave the phone.
  */
 export function CameraStrip({
+  compact = false,
   mode,
   chip,
   scanning = false,
   onCode,
   onReady,
 }: {
+  /** A shorter strip, for the steps after a code is read, so the card under it fits on a phone. */
+  compact?: boolean;
   mode: StripMode;
   /** The step chip, "1 BARCODE". */
   chip?: string;
@@ -127,7 +130,7 @@ export function CameraStrip({
   return (
     <div className="camera">
       <div
-        className="camera-strip"
+        className={compact ? 'camera-strip compact' : 'camera-strip'}
         style={{ borderColor: colour }}
         onPointerDown={tap}
         data-testid="camera-strip"

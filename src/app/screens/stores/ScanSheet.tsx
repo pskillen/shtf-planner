@@ -17,6 +17,9 @@ export function ScanSheet({
   onBack,
   onType,
   onSortLater,
+  sortLaterBlocked,
+  reidentify,
+  initialCode,
 }: {
   onClose: () => void;
   /** "Find it by name": back to the search. */
@@ -24,8 +27,13 @@ export function ScanSheet({
   onType: (type: ItemType, code: string) => void;
   /** Absent: no "Sort later" (there is nowhere to keep a scan). */
   onSortLater?: (code: string, product: ProductInfo | undefined) => void;
+  /** Why Sort later cannot be used (no place to keep the scan in). */
+  sortLaterBlocked?: string;
+  /** Opened for a barcode the person says was mis-remembered: show the picker for `initialCode` again. */
+  reidentify?: boolean;
+  initialCode?: string;
 }) {
-  const [code, setCode] = useState<string | null>(null);
+  const [code, setCode] = useState<string | null>(initialCode ?? null);
   const [typed, setTyped] = useState('');
   const [problem, setProblem] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
@@ -42,11 +50,19 @@ export function ScanSheet({
       onClose={onClose}
       actions={
         <button type="button" className="secondary" onClick={onBack}>
-          Find it by name
+          {reidentify ? 'Keep as it was' : 'Find it by name'}
         </button>
       }
     >
-      <CameraStrip mode="barcode" chip="1 BARCODE" scanning={code === null} onCode={got} />
+      {reidentify ? null : (
+        <CameraStrip
+          compact={code !== null}
+          mode="barcode"
+          chip="1 BARCODE"
+          scanning={code === null}
+          onCode={got}
+        />
+      )}
       {note ? (
         <p className="note" role="status">
           {note}
@@ -56,6 +72,7 @@ export function ScanSheet({
         <>
           <p className="muted">Hold the barcode upright in the blue box.</p>
           <form
+            className="number-row"
             onSubmit={(e) => {
               e.preventDefault();
               const r = readTypedCode(typed);
@@ -85,7 +102,9 @@ export function ScanSheet({
           <ScanResolve
             key={code}
             code={code}
+            reidentify={reidentify}
             onType={(type) => onType(type, code)}
+            sortLaterBlocked={sortLaterBlocked}
             onSortLater={
               onSortLater
                 ? (product) => {
@@ -96,9 +115,11 @@ export function ScanSheet({
                 : undefined
             }
           />
-          <button type="button" className="secondary" onClick={() => setCode(null)}>
-            Scan another
-          </button>
+          <div className="scan-actions">
+            <button type="button" className="secondary" onClick={() => setCode(null)}>
+              Scan another
+            </button>
+          </div>
         </>
       )}
     </Sheet>

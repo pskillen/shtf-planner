@@ -1180,3 +1180,45 @@ button.scans-note {
   border: 1px solid var(--warn);
   margin-bottom: 8px;
 }
+
+.camera-strip.compact {
+  height: min(16vh, 120px);
+  min-height: 90px;
+}
+
+/* Actions that stay in reach above the tab bar while the card above them scrolls. */
+.sticky-bar,
+.stocktake .scan-actions {
+  position: sticky;
+  bottom: calc(var(--tab-h) + env(safe-area-inset-bottom));
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 8px 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+.sticky-bar > * {
+  flex: 1;
+}
+
+.sheet-body .scan-actions {
+  position: sticky;
+  bottom: 0;
+  background: var(--surface);
+  padding: 8px 0;
+}
+
+.number-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.number-row .field {
+  flex: 1;
+  min-width: 0;
+}

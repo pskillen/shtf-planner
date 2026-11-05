@@ -95,6 +95,8 @@ export function StocktakeScreen() {
   const [typed, setTyped] = useState('');
   const [problem, setProblem] = useState<string | null>(null);
   const [finding, setFinding] = useState(false);
+  /** "Not this item?" is open: the picker for the remembered barcode of the item being counted. */
+  const [repicking, setRepicking] = useState(false);
   const [saved, setSaved] = useState<Saved | null>(null);
   const [hint, setHint] = useState(() => !readHint());
   const [items, setItems] = useState(0);
@@ -124,6 +126,7 @@ export function StocktakeScreen() {
   }
 
   function backToBarcode(): void {
+    setRepicking(false);
     setCounting(null);
     setCode(null);
     setPhase('barcode');
@@ -179,11 +182,14 @@ export function StocktakeScreen() {
     if (!saved) return;
     change('undo stocktake', (d) => undoAddStock(d, saved.addition));
     setItems((n) => Math.max(0, n - saved.qty));
-    setCounting(saved.counting);
-    setQty(saved.qty);
-    setBestBefore(saved.bestBefore);
-    setCode(null);
-    setPhase('date');
+    // The undone item's card comes back only when nothing else is being worked on: an item
+    // already in progress (or a code just read) is left exactly as it is.
+    if (phase === 'barcode' && code === null) {
+      setCounting(saved.counting);
+      setQty(saved.qty);
+      setBestBefore(saved.bestBefore);
+      setPhase('date');
+    }
     setSaved(null);
   }
 
@@ -259,6 +265,7 @@ export function StocktakeScreen() {
       ) : null}
 
       <CameraStrip
+        compact={phase === 'date' || code !== null}
         mode={phase === 'barcode' ? 'barcode' : 'date'}
         chip={phase === 'barcode' ? '1 BARCODE' : '2 DATE'}
         scanning={phase === 'barcode' && code === null && Boolean(place)}
@@ -269,6 +276,7 @@ export function StocktakeScreen() {
         code === null ? (
           <>
             <form
+              className="number-row"
               onSubmit={(e) => {
                 e.preventDefault();
                 const r = readTypedCode(typed);
@@ -288,18 +296,18 @@ export function StocktakeScreen() {
                   onChange={(e) => setTyped(e.target.value)}
                 />
               </Field>
-              <div className="scan-actions">
-                <button type="submit" className="secondary" disabled={typed.trim() === ''}>
-                  Use this number
-                </button>
-                <button type="button" className="secondary" onClick={() => setFinding(true)}>
-                  Find it by name
-                </button>
-                <button type="button" onClick={finish}>
-                  Done
-                </button>
-              </div>
+              <button type="submit" className="secondary" disabled={typed.trim() === ''}>
+                Use this number
+              </button>
             </form>
+            <div className="scan-actions">
+              <button type="button" className="secondary" onClick={() => setFinding(true)}>
+                Find it by name
+              </button>
+              <button type="button" onClick={finish}>
+                Done
+              </button>
+            </div>
           </>
         ) : (
           <>
@@ -308,50 +316,76 @@ export function StocktakeScreen() {
               code={code}
               onType={(type) => startDate(type, code)}
               onSortLater={(product) => keepForLater(code, product)}
+              sortLaterBlocked={
+                place ? undefined : 'Add a place first, then there is somewhere to keep it.'
+              }
             />
-            <button type="button" className="secondary" onClick={() => setCode(null)}>
-              Scan another
-            </button>
+            <div className="scan-actions">
+              <button type="button" className="secondary" onClick={() => setCode(null)}>
+                Scan another
+              </button>
+            </div>
           </>
         )
       ) : counting ? (
-        <div className="scan-card" aria-label="This item">
-          <p>
-            <span className="step-chip" style={{ background: '#fc0' }}>
-              2 DATE
-            </span>
-          </p>
-          <h2>{name}</h2>
-          {productName ? <p className="muted">{productName}</p> : null}
-          {warning ? (
-            <p className="warn" role="status">
-              ⚠ {warning}
-            </p>
-          ) : null}
-          <Field label={`How many (${counting.type.unit})?`}>
-            <Stepper
-              label={`How many ${counting.type.unit}`}
-              value={qty}
-              min={1}
-              onChange={setQty}
+        repicking && counting.code ? (
+          <>
+            <ScanResolve
+              key={counting.code}
+              code={counting.code}
+              reidentify
+              onType={(type) => {
+                setCounting({ type, code: counting.code });
+                setRepicking(false);
+              }}
             />
-          </Field>
-          <MonthField
-            value={bestBefore}
-            onChange={changeDate}
-            shelfLife={counting.type.shelfLife}
-            today={today()}
-          />
-          {bestBefore ? <ExpiryBadge bestBefore={bestBefore} /> : null}
-          <div className="scan-actions">
-            <button type="button" className="secondary" onClick={backToBarcode}>
-              Cancel
-            </button>
-            <button type="button" onClick={ok} disabled={!place || qty < 1}>
-              OK
-            </button>
-          </div>
-        </div>
+            <div className="scan-actions">
+              <button type="button" className="secondary" onClick={() => setRepicking(false)}>
+                Keep {name}
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="scan-card" aria-label="This item">
+              <h2>{name}</h2>
+              {productName ? <p className="muted">{productName}</p> : null}
+              {counting.code ? (
+                <button type="button" className="link" onClick={() => setRepicking(true)}>
+                  Not this item?
+                </button>
+              ) : null}
+              {warning ? (
+                <p className="warn" role="status">
+                  ⚠ {warning}
+                </p>
+              ) : null}
+              <Field label={`How many (${counting.type.unit})?`}>
+                <Stepper
+                  label={`How many ${counting.type.unit}`}
+                  value={qty}
+                  min={1}
+                  onChange={setQty}
+                />
+              </Field>
+              <MonthField
+                value={bestBefore}
+                onChange={changeDate}
+                shelfLife={counting.type.shelfLife}
+                today={today()}
+              />
+              {bestBefore ? <ExpiryBadge bestBefore={bestBefore} /> : null}
+            </div>
+            <div className="sticky-bar">
+              <button type="button" className="secondary" onClick={backToBarcode}>
+                Cancel
+              </button>
+              <button type="button" onClick={ok} disabled={!place || qty < 1}>
+                OK
+              </button>
+            </div>
+          </>
+        )
       ) : null}
 
       {saved ? (

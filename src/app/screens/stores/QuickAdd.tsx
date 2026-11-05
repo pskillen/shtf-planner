@@ -55,7 +55,7 @@ const COMMON = [
   'aa-cells-8',
 ];
 
-type Step = 'search' | 'form' | 'custom' | 'scan';
+type Step = 'search' | 'form' | 'custom' | 'scan' | 'repick';
 
 /**
  * Quick add: search for what you are putting away, pick it, then Add. The place is the last one
@@ -104,6 +104,8 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
   const [last, setLast] = useState<string | null>(null);
   /** The item in the form came from a barcode scan: it is saved as `barcode` and Next item scans again. */
   const [viaScan, setViaScan] = useState(false);
+  /** The barcode behind a scanned item, for "Not this item?". */
+  const [scannedCode, setScannedCode] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -251,8 +253,32 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
           setViaScan(false);
           setStep('search');
         }}
-        onType={(t) => pick(t, true)}
-        onSortLater={locations.length > 0 ? sortLater : undefined}
+        onType={(t, code) => {
+          pick(t, true);
+          setScannedCode(code);
+        }}
+        onSortLater={sortLater}
+        sortLaterBlocked={
+          locations.length > 0
+            ? undefined
+            : 'Add a place first, then there is somewhere to keep it.'
+        }
+      />
+    );
+  }
+
+  if (step === 'repick' && scannedCode) {
+    return (
+      <ScanSheet
+        key={scannedCode}
+        initialCode={scannedCode}
+        reidentify
+        onClose={onClose}
+        onBack={() => setStep('form')}
+        onType={(t, code) => {
+          pick(t, true);
+          setScannedCode(code);
+        }}
       />
     );
   }
@@ -411,6 +437,11 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
             <p className="warn" role="status">
               ⚠ {warning}. You can still add it.
             </p>
+          ) : null}
+          {viaScan && scannedCode ? (
+            <button type="button" className="link" onClick={() => setStep('repick')}>
+              Not this item?
+            </button>
           ) : null}
           <MonthField
             value={bestBefore}

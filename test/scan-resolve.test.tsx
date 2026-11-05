@@ -62,6 +62,27 @@ describe('Quick add: Scan a barcode', () => {
     expect(added.length).toBe(1);
   });
 
+  it('Not this item? on the form reopens the picker and corrects the remembered type', async () => {
+    fakeOff({});
+    const s = await openScanner();
+    await read(KNOWN);
+    await screen.findByText('Add Peanut butter (340 g jar)');
+    fireEvent.click(screen.getByRole('button', { name: 'Not this item?' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Search all types' }));
+    fireEvent.change(screen.getByLabelText('Search all types'), {
+      target: { value: 'tinned food' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Tinned food \(400 g tin\)/ }));
+    expect(await screen.findByText('Add Tinned food (400 g tin)')).toBeTruthy();
+    expect(s.doc().barcodes[KNOWN]?.typeId).toBe('items-base:tinned-food-tin');
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+    expect(
+      Object.values(s.doc().items).some(
+        (i) => i.typeId === 'items-base:tinned-food-tin' && i.source === 'barcode',
+      ),
+    ).toBe(true);
+  });
+
   it('an unknown barcode asks Open Food Facts, offers likely types, and remembers the pick', async () => {
     const lookup = fakeOff({ [UNKNOWN]: beans });
     const s = await openScanner();

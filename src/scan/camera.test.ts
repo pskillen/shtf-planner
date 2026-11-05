@@ -111,7 +111,10 @@ describe('camera constraints', () => {
   it('lets go of a camera that was granted after stop() (the screen was left while it asked)', async () => {
     const { cam, track, video } = setup(CHROME);
     let grant: (s: MediaStream) => void = () => undefined;
-    const stream = { getVideoTracks: () => [track], getTracks: () => [track] } as unknown as MediaStream;
+    const stream = {
+      getVideoTracks: () => [track],
+      getTracks: () => [track],
+    } as unknown as MediaStream;
     const pending = new CameraStream({
       mediaDevices: {
         getUserMedia: () => new Promise<MediaStream>((r) => (grant = r)),

@@ -24,6 +24,8 @@ export function ScanResolve({
   seed,
   onType,
   onSortLater,
+  sortLaterBlocked,
+  reidentify = false,
 }: {
   code: string;
   /** What an earlier lookup of a queued scan found, shown while (or instead of) asking again. */
@@ -31,6 +33,13 @@ export function ScanResolve({
   onType: (type: ItemType) => void;
   /** Absent: no "Sort later" (the scan is already in the queue). */
   onSortLater?: (product: ProductInfo | undefined) => void;
+  /** Why "Sort later" cannot be used right now (no place to keep the scan in): shown, and the button is off. */
+  sortLaterBlocked?: string;
+  /**
+   * The person says the remembered type is wrong ("Not this item?"): show the picker even though
+   * the barcode is known; choosing a type replaces what is remembered (for the whole household).
+   */
+  reidentify?: boolean;
 }) {
   const doc = useDocument();
   const change = useChange();
@@ -39,7 +48,8 @@ export function ScanResolve({
 
   const remembered = doc.barcodes[code];
   const knownType = remembered ? packs.items[remembered.typeId] : undefined;
-  const known = knownType && knownType.assetTypeId === undefined ? knownType : undefined;
+  const knownStock = knownType && knownType.assetTypeId === undefined ? knownType : undefined;
+  const known = reidentify ? undefined : knownStock;
 
   const [result, setResult] = useState<OffResult | 'looking'>('looking');
   const [searching, setSearching] = useState(false);
@@ -70,6 +80,8 @@ export function ScanResolve({
   const found = product?.found ? product : undefined;
   const seeded = !found && seed?.found ? seed : undefined;
   const line = found ? productLine(found) : seeded ? productLine(seeded) : '';
+  // A new lookup's name wins; with none (offline), the name already remembered stays.
+  const keptName = line || remembered?.name;
   const guesses = useMemo(
     () =>
       found
@@ -90,7 +102,11 @@ export function ScanResolve({
 
   function choose(type: ItemType): void {
     change('remember barcode', (d) => {
-      d.barcodes[code] = { typeId: type.id, ...(line ? { name: line } : {}), seen: today() };
+      d.barcodes[code] = {
+        typeId: type.id,
+        ...(keptName ? { name: keptName } : {}),
+        seen: remembered?.seen ?? today(),
+      };
     });
     onType(type);
   }
@@ -109,7 +125,11 @@ export function ScanResolve({
         onMade={(made) => {
           change('add custom item type', (d) => {
             d.customTypes[made.id] = made;
-            d.barcodes[code] = { typeId: made.id, ...(line ? { name: line } : {}), seen: today() };
+            d.barcodes[code] = {
+              typeId: made.id,
+              ...(keptName ? { name: keptName } : {}),
+              seen: remembered?.seen ?? today(),
+            };
           });
           onType(made);
         }}
@@ -132,6 +152,7 @@ export function ScanResolve({
     <div className="scan-card" aria-label={`Barcode ${code}`}>
       <p className="muted" data-testid="scan-code">
         Barcode {code}
+        {reidentify && knownStock ? ` · remembered as ${knownStock.name}` : ''}
       </p>
       {result === 'looking' && !seeded ? <p role="status">Looking it up…</p> : null}
       {found || seeded ? (
@@ -204,12 +225,14 @@ export function ScanResolve({
           <button
             type="button"
             className="secondary"
+            disabled={sortLaterBlocked !== undefined}
             onClick={() => onSortLater(found ? productInfoOf(found) : seeded)}
           >
             Sort later
           </button>
         ) : null}
       </div>
+      {onSortLater && sortLaterBlocked ? <p className="muted">{sortLaterBlocked}</p> : null}
     </div>
   );
 }

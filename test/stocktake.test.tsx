@@ -159,6 +159,79 @@ describe('Stocktake: the step machine', () => {
   });
 });
 
+describe('Not this item?', () => {
+  it('reopens the picker for a remembered barcode and replaces what is remembered', async () => {
+    fakeOff({});
+    const s = await open();
+    await read(KNOWN);
+    await screen.findByText('Peanut butter (340 g jar)');
+    fireEvent.click(screen.getByRole('button', { name: 'Not this item?' }));
+    expect(screen.getByText(/remembered as Peanut butter \(340 g jar\)/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Search all types' }));
+    fireEvent.change(screen.getByLabelText('Search all types'), {
+      target: { value: 'tinned food' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Tinned food \(400 g tin\)/ }));
+    expect(await screen.findByRole('heading', { name: 'Tinned food (400 g tin)' })).toBeTruthy();
+    expect(s.doc().barcodes[KNOWN]).toMatchObject({
+      typeId: 'items-base:tinned-food-tin',
+      name: 'Test spread 400 g', // the product name is kept; first remembered is not reset
+      seen: '2026-10-01',
+    });
+    chip('+1 y');
+    ok();
+    expect(barcodeItems(s).map((i) => i.typeId)).toEqual(['items-base:tinned-food-tin']);
+    // and the next scan of it goes straight to the corrected type
+    await read(KNOWN);
+    expect(await screen.findByRole('heading', { name: 'Tinned food (400 g tin)' })).toBeTruthy();
+  });
+
+  it('Keep leaves the barcode as it was', async () => {
+    fakeOff({});
+    const s = await open();
+    await read(KNOWN);
+    await screen.findByText('Peanut butter (340 g jar)');
+    fireEvent.click(screen.getByRole('button', { name: 'Not this item?' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Keep / }));
+    expect(screen.getByRole('heading', { name: 'Peanut butter (340 g jar)' })).toBeTruthy();
+    expect(s.doc().barcodes[KNOWN]!.typeId).toBe('items-base:peanut-butter-340g');
+  });
+});
+
+describe('Undo and Sort later edge cases', () => {
+  it('Undo leaves an item already in progress alone', async () => {
+    const s = await open();
+    await read(KNOWN);
+    await screen.findByText('Peanut butter (340 g jar)');
+    chip('+1 y');
+    ok();
+    // a second item is already being counted when Undo is tapped
+    await read(KNOWN);
+    await screen.findByRole('heading', { name: 'Peanut butter (340 g jar)' });
+    fireEvent.click(screen.getByRole('button', { name: '+6 m' }));
+    fireEvent.click(
+      within(screen.getByTestId('stocktake-saved')).getByRole('button', { name: 'Undo' }),
+    );
+    expect(barcodeItems(s)).toHaveLength(0); // the first save is taken back
+    // the second is untouched: still on its card, with its +6 m chip chosen
+    expect(screen.getByRole('button', { name: '+6 m' }).getAttribute('aria-pressed')).toBe('true');
+    ok();
+    expect(barcodeItems(s)).toHaveLength(1);
+  });
+
+  it('Sort later is off, with the reason, when there is no place', async () => {
+    fakeOff({ [UNKNOWN]: 'offline' });
+    const doc = biggarDocument();
+    doc.locations = {};
+    render(liveStore(doc).wrap(<StocktakeScreen />)); // no place, so nothing scans: the number is typed
+    fireEvent.change(screen.getByLabelText('Type the number'), { target: { value: UNKNOWN } });
+    fireEvent.click(screen.getByRole('button', { name: 'Use this number' }));
+    const later = await screen.findByRole('button', { name: 'Sort later' });
+    expect((later as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getAllByText(/Add a place first/).length).toBeGreaterThan(0);
+  });
+});
+
 describe('scans to sort', () => {
   const scan = (over: Partial<Scan> = {}): Scan => ({
     id: 's1',
