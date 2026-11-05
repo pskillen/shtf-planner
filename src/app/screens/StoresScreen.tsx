@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { minimumKey, type Asset, type Item, type Location, type Stock } from '../../model';
 import { formatQty, today } from '../../util';
@@ -46,6 +46,8 @@ export function StoresScreen() {
   const todayIso = today();
   const [query, setQuery] = useState('');
   const [placeFilter, setPlaceFilter] = useState<string | 'all'>('all');
+  const activePlaceFilter =
+    placeFilter !== 'all' && !doc.locations[placeFilter] ? 'all' : placeFilter;
   const [collapsedCats, setCollapsedCats] = useState<ReadonlySet<string>>(new Set());
   const [openItems, setOpenItems] = useState<ReadonlySet<string>>(new Set());
   const [adding, setAdding] = useState(false);
@@ -54,12 +56,6 @@ export function StoresScreen() {
   const [pickMinimumItem, setPickMinimumItem] = useState(false);
   const [sorting, setSorting] = useState(false);
   useScanQueue();
-
-  useEffect(() => {
-    if (placeFilter !== 'all' && !doc.locations[placeFilter]) {
-      setPlaceFilter('all');
-    }
-  }, [placeFilter, doc.locations]);
 
   const remove = useDeferredDelete((id) =>
     change('delete stock', (d) => {
@@ -90,7 +86,7 @@ export function StoresScreen() {
     if (item.name.toLowerCase().includes(q.toLowerCase())) return true;
     if (item.countsAs.toLowerCase().includes(q.toLowerCase())) return true;
     if (matchedItemIds!.has(item.id)) return true;
-    for (const p of productsOfItemInDoc(doc, item.id, placeFilter, remove.pending)) {
+    for (const p of productsOfItemInDoc(doc, item.id, activePlaceFilter, remove.pending)) {
       if (p.name.toLowerCase().includes(q.toLowerCase())) return true;
     }
     for (const loc of locations) {
@@ -109,12 +105,13 @@ export function StoresScreen() {
 
   const placeMatchesSearch =
     q === '' ||
-    placeFilter === 'all' ||
-    (doc.locations[placeFilter] !== undefined && matchesPlaceName(doc.locations[placeFilter]!));
+    activePlaceFilter === 'all' ||
+    (doc.locations[activePlaceFilter] !== undefined &&
+      matchesPlaceName(doc.locations[activePlaceFilter]!));
 
-  const itemIds = itemIdsInView(doc, placeFilter);
+  const itemIds = itemIdsInView(doc, activePlaceFilter);
   const orderedItems = orderedItemsInView(packs, itemIds).filter(matchesItem);
-  const nothingIds = nothingProductIds(doc, placeFilter, remove.pending).filter((id) =>
+  const nothingIds = nothingProductIds(doc, activePlaceFilter, remove.pending).filter((id) =>
     matchesProduct(doc.products[id]!),
   );
 
@@ -139,8 +136,8 @@ export function StoresScreen() {
   const equipmentRows = Object.values(doc.assets)
     .filter((a) => {
       if (!equipmentMatches(a)) return false;
-      if (placeFilter !== 'all') {
-        return a.locationId === placeFilter;
+      if (activePlaceFilter !== 'all') {
+        return a.locationId === activePlaceFilter;
       }
       return true;
     })
@@ -149,11 +146,11 @@ export function StoresScreen() {
   const lost = Object.values(doc.stock).filter((s) => {
     if (knownIds.has(s.locationId)) return false;
     if (remove.pending.has(s.id)) return false;
-    if (placeFilter !== 'all') return false;
+    if (activePlaceFilter !== 'all') return false;
     return matchesProduct(doc.products[s.productId] ?? { name: s.productId });
   });
 
-  const filterLocation = placeFilter === 'all' ? undefined : doc.locations[placeFilter];
+  const filterLocation = activePlaceFilter === 'all' ? undefined : doc.locations[activePlaceFilter];
 
   const toggleCat = (key: string) =>
     setCollapsedCats((cur) => {
@@ -235,7 +232,7 @@ export function StoresScreen() {
   };
 
   const renderItemPanel = (item: Item) => {
-    const products = productsOfItemInDoc(doc, item.id, placeFilter, remove.pending).filter(
+    const products = productsOfItemInDoc(doc, item.id, activePlaceFilter, remove.pending).filter(
       matchesProduct,
     );
     return (
@@ -243,8 +240,8 @@ export function StoresScreen() {
         <p className="muted counts-as">{item.countsAs}</p>
         <ul className="row-list">
           {products.map((product) => {
-            const packsTotal = sumProductPacks(doc, product.id, placeFilter, remove.pending);
-            const batches = batchesForProduct(doc, product.id, placeFilter, remove.pending);
+            const packsTotal = sumProductPacks(doc, product.id, activePlaceFilter, remove.pending);
+            const batches = batchesForProduct(doc, product.id, activePlaceFilter, remove.pending);
             return (
               <li key={product.id}>
                 <div className="row-item">
@@ -273,11 +270,11 @@ export function StoresScreen() {
   };
 
   const renderItemRow = (item: Item) => {
-    const packsTotal = totalPacksForItem(doc, item.id, placeFilter, remove.pending);
-    const base = sumItemBase(doc, item.id, placeFilter, remove.pending);
+    const packsTotal = totalPacksForItem(doc, item.id, activePlaceFilter, remove.pending);
+    const base = sumItemBase(doc, item.id, activePlaceFilter, remove.pending);
     const measure = formatItemMeasureTotal(item.measure, base);
     const mins = minBadgesForItem(doc, item.id);
-    const stocks = stocksForItem(doc, item.id, placeFilter, remove.pending);
+    const stocks = stocksForItem(doc, item.id, activePlaceFilter, remove.pending);
     const worstLevel = worstExpiryLevel(stocks, todayIso, doc.settings);
     const expiryWord = worstLevel && worstLevel !== 'ok' ? EXPIRY_LABEL[worstLevel] : undefined;
     const open = itemOpen(item.id);
@@ -343,7 +340,7 @@ export function StoresScreen() {
             <FieldLike label="Place filter">
               <select
                 aria-label="Place filter"
-                value={placeFilter}
+                value={activePlaceFilter}
                 onChange={(e) => setPlaceFilter(e.target.value === 'all' ? 'all' : e.target.value)}
               >
                 <option value="all">All places</option>
@@ -403,8 +400,8 @@ export function StoresScreen() {
           <ul className="row-list">
             {nothingIds.map((productId) => {
               const product = doc.products[productId]!;
-              const batches = batchesForProduct(doc, productId, placeFilter, remove.pending);
-              const packsTotal = sumProductPacks(doc, productId, placeFilter, remove.pending);
+              const batches = batchesForProduct(doc, productId, activePlaceFilter, remove.pending);
+              const packsTotal = sumProductPacks(doc, productId, activePlaceFilter, remove.pending);
               return (
                 <li key={productId}>
                   <div className="row-item">
