@@ -4,18 +4,11 @@ import { MEASURE_UNITS } from '../../../model';
 import { formatSize } from '../../../util';
 import { Field, NumberInput } from '../../components/controls';
 import { useDocument } from '../../state';
+import { shouldSkipSizeStep } from './pickerHelpers';
 import { productsOfItem } from './products';
 import { defaultProductName, findProduct, type NewProduct } from './stock';
 
 export type SizeStepDone = { productId: string } | NewProduct;
-
-/** One quick size and no household products yet: the size step adds nothing. */
-export function shouldSkipSizeStep(
-  doc: Pick<import('../../../model').Document, 'products'>,
-  item: Item,
-): boolean {
-  return item.sizes.length === 1 && productsOfItem(doc, item.id).length === 0;
-}
 
 /**
  * Choose or define a product size: yours first, then the item's chips, then a typed multipack.

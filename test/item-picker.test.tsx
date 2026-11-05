@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ItemPicker, groupItemsForPicker } from '../src/app/screens/stores/ItemPicker';
+import { ItemPicker } from '../src/app/screens/stores/ItemPicker';
+import { groupItemsForPicker } from '../src/app/screens/stores/pickerHelpers';
 import { biggarDocument } from '../src/fixtures/household-biggar';
 import { bundledPacks } from '../src/packs';
 import { liveStore } from './helpers/liveStore';

@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { SizeStep, shouldSkipSizeStep } from '../src/app/screens/stores/SizeStep';
+import { shouldSkipSizeStep } from '../src/app/screens/stores/pickerHelpers';
+import { SizeStep } from '../src/app/screens/stores/SizeStep';
 import { biggarDocument } from '../src/fixtures/household-biggar';
 import { bundledPacks } from '../src/packs';
 import { liveStore } from './helpers/liveStore';
