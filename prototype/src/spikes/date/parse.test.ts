@@ -146,6 +146,8 @@ export const CASES: [string, string | null, boolean?, boolean?][] = [ // [text, 
   ['01:612229 . 12.26', null],
   ['12.26', null],
   ['BB 12.26', '12/2026'],
+  ['500mle 4335619112049 D 2214101225014133-2 Expirel 10.27 ATD', '10/2027'], // washup, wide crop: the label came out as Expirel
+  ['EXPIREL 12.26', '12/2026'],
   ['BB 06/27', '06/2027'],
   ['12/26', '12/2026'], // a slash is still a date
   // ---- round 4a: the crisp packet (12 Jun 2027, three printed lines, no label)

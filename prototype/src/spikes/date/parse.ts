@@ -12,7 +12,7 @@ const MON_RE = '(JAN(?:UARY)?|FEB(?:RUARY)?|MAR(?:CH)?|APR(?:IL)?|MAY|JUNE?|JULY
 const monthNum = (s: string) => MONTHS.indexOf(s.slice(0, 3)) + 1;
 
 // Date labels, including the way phone OCR mangles them ("Best Befon", "Best Bel", "Befo n").
-const LABEL_RE = /(B[EF]ST\s*B[A-Z]{0,6}(?:\s*END)?|BEFO[A-Z]{0,2}(?:\s*END)?|USE\s*BY(?:\s*END)?|B\.?B\.?E\.?|B\.?B\.?|BBD|EXP(?:IRY|IRES|IRE|IRATION)?\.?|U\/?B)(?![A-Z])/g;
+const LABEL_RE = /(B[EF]ST\s*B[A-Z]{0,6}(?:\s*END)?|BEFO[A-Z]{0,2}(?:\s*END)?|USE\s*BY(?:\s*END)?|B\.?B\.?E\.?|B\.?B\.?|BBD|EXP(?:I[A-Z]{0,6})?\.?|U\/?B)(?![A-Z])/g;
 // A batch / lot / code label says the run after it is a code, not a date ("Batch Code: 23 09 26").
 const BATCH_RE = /(BATCH(?:\s*CODE)?|LOT(?:\s*NO\.?)?|CODE)(?![A-Z])/g;
 // Dates after these labels are made/packed dates, not expiry.
