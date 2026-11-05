@@ -8,6 +8,7 @@
     "preview": "vite preview --host 127.0.0.1",
     "prebuild": "node date-spike/prep-ocr.mjs",
     "predev": "node date-spike/prep-ocr.mjs",
+    "test": "npm run test:parse",
     "test:parse": "node --experimental-strip-types --no-warnings src/spikes/date/parse.test.ts",
     "bench": "node --experimental-strip-types --no-warnings date-spike/bench.ts",
     "gen:dates": "python3 date-spike/gen.py"
