@@ -74,7 +74,7 @@ describe('gaps', () => {
       items: Object.fromEntries(
         Object.entries(packs.items).filter(
           ([id, t]) =>
-            !t.gives.some((g) => g.store === 'waterL') || id === 'items-base:bath-bladder',
+            !t.gives.some((g) => g.resource === 'waterL') || id === 'items-base:bath-bladder',
         ),
       ),
     };
@@ -113,7 +113,7 @@ describe('gaps', () => {
       ...packs,
       items: Object.fromEntries(
         Object.entries(packs.items).filter(
-          ([, t]) => !t.gives.some((g) => g.store === 'waterL') || t.tags.includes('refillable'),
+          ([, t]) => !t.gives.some((g) => g.resource === 'waterL') || t.tags.includes('refillable'),
         ),
       ),
     };
@@ -255,7 +255,7 @@ describe('suggestions and a household’s own item types', () => {
       name: 'Cheap water',
       category: 'water',
       unit: 'bottle',
-      gives: [{ store: 'waterL', amount: 20 }],
+      gives: [{ resource: 'waterL', amount: 20 }],
       suitability: ['frost', 'heat', 'damp'],
       shelfLife: 'none',
       typicalPricePence: 1,

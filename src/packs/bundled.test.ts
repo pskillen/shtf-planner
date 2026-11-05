@@ -41,7 +41,7 @@ describe('the bundled packs', () => {
       const owners = packs
         .enabledPacks(settings)
         .flatMap((p) => (p.kind === 'guidance' ? p.rules : []))
-        .filter((r) => r.capability === 'power' && r.perPersonDay?.store === 'batteryWh');
+        .filter((r) => r.capability === 'power' && r.perPersonDay?.resource === 'batteryWh');
       expect(
         owners.map((r) => r.id),
         region,
@@ -50,10 +50,12 @@ describe('the bundled packs', () => {
   });
 
   it('states first aid once, as a one-off per household, not per day or per region', () => {
-    const owners = Object.values(packs.rules).filter((r) => r.perHousehold?.store === 'firstAid');
+    const owners = Object.values(packs.rules).filter(
+      (r) => r.perHousehold?.resource === 'firstAid',
+    );
     expect(owners.map((r) => r.id)).toEqual(['guidance-grid-free:first-aid']);
     const perDay = Object.values(packs.rules).filter(
-      (r) => r.perHouseholdDay?.store === 'firstAid',
+      (r) => r.perHouseholdDay?.resource === 'firstAid',
     );
     expect(perDay).toEqual([]);
   });
@@ -61,12 +63,14 @@ describe('the bundled packs', () => {
   it('carries the game items plus the planner additions', () => {
     const items = Object.values(packs.items);
     expect(items.length).toBeGreaterThanOrEqual(82);
-    expect(packs.items['items-base:water-can']!.gives).toEqual([{ store: 'waterL', amount: 10 }]);
+    expect(packs.items['items-base:water-can']!.gives).toEqual([
+      { resource: 'waterL', amount: 10 },
+    ]);
     expect(packs.items['items-base:nappies-size-2']!.ageBand).toBeDefined();
     expect(packs.items['items-base:formula-powder']).toBeDefined();
     expect(packs.items['items-base:pet-food-dry-12kg']).toBeDefined();
     expect(packs.items['items-base:toilet-bags']).toBeDefined();
-    expect(packs.items['items-base:lantern-led-300lm']!.gives[0]!.store).toBe('lumenHours');
+    expect(packs.items['items-base:lantern-led-300lm']!.gives[0]!.resource).toBe('lumenHours');
   });
 
   it('models solar, home battery and EV as contributing power only with the right answer', () => {

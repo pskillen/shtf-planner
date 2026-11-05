@@ -7,7 +7,7 @@ import type {
   ItemInstance,
   ItemType,
   Packs,
-  StoreId,
+  ResourceId,
 } from '../model';
 import { ASSUMPTIONS } from './assumptions';
 import { fitsHousehold, fmt, localId, peopleAt, type Person } from './context';
@@ -41,7 +41,7 @@ export interface Coverage {
   /** The `Target.id` this is the coverage of. */
   targetId: string;
   capability: CapabilityId;
-  store?: Target['store'];
+  resource?: Target['resource'];
   /** In the target's unit. */
   amount: number;
   unit: string;
@@ -98,12 +98,12 @@ const NUMBER = (v: unknown): number | undefined =>
 const whenOk = (c: Contribution, a: Asset): boolean =>
   !c.when || a.answers[c.when.question] === c.when.equals;
 
-/** A converter an asset provides: burns `store` at `perHour` and gives `output` capability units an hour. */
+/** A converter an asset provides: burns `resource` at `perHour` and gives `output` capability units an hour. */
 export interface Converter {
   asset: Asset;
   name: string;
   capability: CapabilityId;
-  store: StoreId;
+  resource: ResourceId;
   perHour: number;
   /** Capability units per running hour: 1 for heat or cooking (an hour), watts for power. */
   output: number;
@@ -131,7 +131,7 @@ export function activeConverters(doc: Document, packs: Packs): Converter[] {
         asset,
         name: asset.name ?? type.name,
         capability: c.capability,
-        store: c.converts.store,
+        resource: c.converts.resource,
         perHour,
         output,
       });
@@ -207,7 +207,8 @@ export function analyse(
 
   // ---- 1. Stores from items -------------------------------------------------------------
   const pools = new Map<string, Src[]>();
-  const push = (store: string, s: Src) => pools.set(store, [...(pools.get(store) ?? []), s]);
+  const push = (resource: string, s: Src) =>
+    pools.set(resource, [...(pools.get(resource) ?? []), s]);
   const belowFloor: BelowFloor[] = [];
   let hasTreatmentItem = false;
 
@@ -220,9 +221,9 @@ export function analyse(
   // A floor on a type with no instance at all is a shortfall of the whole floor.
   for (const key of Object.keys(doc.floors)) if (!groups.has(key)) groups.set(key, []);
 
-  const givesOf = (type: ItemType): { store: string; amount: number }[] => [
+  const givesOf = (type: ItemType): { resource: string; amount: number }[] => [
     ...type.gives,
-    ...(type.tags.includes('radio-rx') ? [{ store: DEVICE, amount: 1 }] : []),
+    ...(type.tags.includes('radio-rx') ? [{ resource: DEVICE, amount: 1 }] : []),
   ];
 
   for (const [key, insts] of groups) {
@@ -235,7 +236,7 @@ export function analyse(
     const expired = insts.filter((i) => i.bestBefore && i.bestBefore < month);
     for (const e of expired)
       for (const g of gives)
-        push(g.store, {
+        push(g.resource, {
           kind: 'item',
           id: e.id,
           amount: 0,
@@ -264,7 +265,7 @@ export function analyse(
       const counted = floor === undefined ? 0 : Math.min(liveQty, floor);
       if (counted > 0 && countsAsStock && treatment) hasTreatmentItem = true;
       for (const g of gives) {
-        push(g.store, {
+        push(g.resource, {
           kind: 'floor',
           id: key,
           amount: countsAsStock ? counted * g.amount : 0,
@@ -282,7 +283,7 @@ export function analyse(
       for (const inst of live) {
         if (inst.qty > 0 && countsAsStock && treatment) hasTreatmentItem = true;
         for (const g of gives)
-          push(g.store, {
+          push(g.resource, {
             kind: 'item',
             id: inst.id,
             amount: countsAsStock ? inst.qty * g.amount : 0,
@@ -340,7 +341,7 @@ export function analyse(
       if (c.holds) {
         const n = NUMBER(asset.answers[c.holds.fromQuestion]);
         if (n)
-          push(c.holds.store, {
+          push(c.holds.resource, {
             kind: 'asset',
             id: asset.id,
             amount: n * (c.holds.factor ?? 1),
@@ -359,35 +360,35 @@ export function analyse(
     }
   }
 
-  // ---- 3. Converters burn stores; a store goes to the capability that needs it first ----------
+  // ---- 3. Converters burn resources; a resource goes to the capability that needs it first ----------
   const fuelLeft = new Map<string, number>();
   const fuelStores = new Set<string>();
   const converters = activeConverters(doc, packs);
-  for (const c of converters) fuelStores.add(c.store);
-  for (const store of fuelStores) fuelLeft.set(store, sum(pools.get(store)));
+  for (const c of converters) fuelStores.add(c.resource);
+  for (const resource of fuelStores) fuelLeft.set(resource, sum(pools.get(resource)));
   const caps: CapabilityId[] = ['cooking', 'heat', 'power'];
   for (const c of converters) if (!caps.includes(c.capability)) caps.push(c.capability);
   for (const capability of caps) {
     const targetId = capabilityTargetId(capability);
     let need = (targetId ? tById.get(targetId)?.amount : undefined) ?? 0;
     const here = converters.filter((c) => c.capability === capability);
-    const stores = [...new Set(here.map((c) => c.store))].sort();
-    for (const store of stores) {
+    const resources = [...new Set(here.map((c) => c.resource))].sort();
+    for (const resource of resources) {
       const best = here
-        .filter((c) => c.store === store)
+        .filter((c) => c.resource === resource)
         .reduce((a, b) => (b.output / b.perHour > a.output / a.perHour ? b : a));
-      const left = fuelLeft.get(store) ?? 0;
+      const left = fuelLeft.get(resource) ?? 0;
       const amount = (left / best.perHour) * best.output;
       if (amount <= 0) continue;
       extra(targetId, {
         kind: 'asset',
         id: best.asset.id,
         amount,
-        note: `${fmt(left)} ${store} at ${fmt(best.perHour)} an hour`,
+        note: `${fmt(left)} ${resource} at ${fmt(best.perHour)} an hour`,
       });
       const claim = Math.min(amount, need);
       need -= claim;
-      fuelLeft.set(store, left - (claim / best.output) * best.perHour);
+      fuelLeft.set(resource, left - (claim / best.output) * best.perHour);
     }
   }
 
@@ -398,8 +399,8 @@ export function analyse(
   const treatmentAvailable = hasTreatmentItem || cookingMet;
 
   // ---- 4. Gates: food that needs cooking, raw water that needs treating -----------------------
-  const resolved = (store: string): CoverageSource[] =>
-    (pools.get(store) ?? []).map(({ gate, ...s }) => {
+  const resolved = (resource: string): CoverageSource[] =>
+    (pools.get(resource) ?? []).map(({ gate, ...s }) => {
       if (gate === 'cooking' && !cookingMet && s.amount > 0)
         return { ...s, amount: 0, note: 'needs cooking and cooking is not covered' };
       if (gate === 'treatment' && !treatmentAvailable && s.amount > 0)
@@ -422,8 +423,8 @@ export function analyse(
   const coverage = ts.map((t): Coverage => {
     let from: CoverageSource[] = [];
     switch (t.kind) {
-      case 'store': {
-        from = [...resolved(t.store as string), ...(extras.get(t.id) ?? [])];
+      case 'resource': {
+        from = [...resolved(t.resource as string), ...(extras.get(t.id) ?? [])];
         if (t.id === 'water:waterL') from.push(...resolved('waterRaw'));
         break;
       }
@@ -472,13 +473,13 @@ export function analyse(
     const row: Coverage = {
       targetId: t.id,
       capability: t.capability,
-      ...(t.store ? { store: t.store } : {}),
+      ...(t.resource ? { resource: t.resource } : {}),
       amount,
       unit: t.unit,
       from,
     };
     if (
-      (t.kind === 'store' || t.kind === 'hours' || t.kind === 'medication') &&
+      (t.kind === 'resource' || t.kind === 'hours' || t.kind === 'medication') &&
       !t.fixed &&
       t.amount > 0 &&
       t.days > 0
@@ -501,7 +502,7 @@ export function analyse(
  *   and is listed as expired. In a `rotating` location a type counts at most its floor, and not
  *   at all without one; a `stored` location counts what is there. A baby item counts only while
  *   someone in the household fits its age band.
- * - Assets convert: a heater or stove turns a fuel store into running hours, a generator into
+ * - Assets convert: a heater or stove turns a fuel resource into running hours, a generator into
  *   Wh, a battery or an EV holds Wh, an array provides Wh a day. A contribution whose `when`
  *   does not hold gives nothing and is reported in `blocked`. A fuel is shared: cooking takes what
  *   it needs first, then heat, then power, and the rest is left for the next.

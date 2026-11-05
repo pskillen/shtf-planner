@@ -20,7 +20,7 @@
       "unitSize": "10 L",
       "gives": [
         {
-          "store": "waterL",
+          "resource": "waterL",
           "amount": 10
         }
       ],
@@ -48,7 +48,7 @@
       "unit": "pack",
       "gives": [
         {
-          "store": "gasCanister",
+          "resource": "gasCanister",
           "amount": 4
         }
       ],
@@ -77,7 +77,7 @@
       "unitSize": "10 L",
       "gives": [
         {
-          "store": "paraffinL",
+          "resource": "paraffinL",
           "amount": 10
         }
       ],
@@ -104,7 +104,7 @@
       "unit": "fortnight-store",
       "gives": [
         {
-          "store": "foodKcal",
+          "resource": "foodKcal",
           "amount": 56000
         }
       ],
@@ -120,11 +120,11 @@
       "unit": "lantern",
       "gives": [
         {
-          "store": "batteryWh",
+          "resource": "batteryWh",
           "amount": 20
         },
         {
-          "store": "lumenHours",
+          "resource": "lumenHours",
           "amount": 6000
         }
       ],
@@ -140,7 +140,7 @@
       "unit": "bank",
       "gives": [
         {
-          "store": "batteryWh",
+          "resource": "batteryWh",
           "amount": 100
         }
       ],
@@ -181,7 +181,7 @@
       "unitSize": "20 L",
       "gives": [
         {
-          "store": "petrolL",
+          "resource": "petrolL",
           "amount": 20
         }
       ],
@@ -208,7 +208,7 @@
       "unit": "kit",
       "gives": [
         {
-          "store": "firstAid",
+          "resource": "firstAid",
           "amount": 3
         }
       ],
@@ -248,7 +248,7 @@
       "unitSize": "24 x 500 ml",
       "gives": [
         {
-          "store": "waterL",
+          "resource": "waterL",
           "amount": 12
         }
       ],
@@ -265,7 +265,7 @@
       "unitSize": "6 x 2 L",
       "gives": [
         {
-          "store": "waterL",
+          "resource": "waterL",
           "amount": 12
         }
       ],
@@ -283,7 +283,7 @@
       "unitSize": "5 L",
       "gives": [
         {
-          "store": "waterL",
+          "resource": "waterL",
           "amount": 5
         }
       ],
@@ -301,7 +301,7 @@
       "unitSize": "6 x 5 L",
       "gives": [
         {
-          "store": "waterL",
+          "resource": "waterL",
           "amount": 30
         }
       ],
@@ -319,7 +319,7 @@
       "unitSize": "2 L",
       "gives": [
         {
-          "store": "waterL",
+          "resource": "waterL",
           "amount": 2
         }
       ],
@@ -336,7 +336,7 @@
       "unit": "bladder",
       "gives": [
         {
-          "store": "waterL",
+          "resource": "waterL",
           "amount": 150
         }
       ],
@@ -353,7 +353,7 @@
       "unitSize": "2 x 20 L",
       "gives": [
         {
-          "store": "waterL",
+          "resource": "waterL",
           "amount": 40
         }
       ],
@@ -381,7 +381,7 @@
       "unit": "pack",
       "gives": [
         {
-          "store": "purificationTabs",
+          "resource": "purificationTabs",
           "amount": 50
         }
       ],
@@ -398,11 +398,11 @@
       "unitSize": "2 L",
       "gives": [
         {
-          "store": "bleachMl",
+          "resource": "bleachMl",
           "amount": 2000
         },
         {
-          "store": "hygieneUses",
+          "resource": "hygieneUses",
           "amount": 40
         }
       ],
@@ -419,7 +419,7 @@
       "unitSize": "one person, one week",
       "gives": [
         {
-          "store": "foodKcal",
+          "resource": "foodKcal",
           "amount": 14000
         }
       ],
@@ -436,7 +436,7 @@
       "unitSize": "400 g",
       "gives": [
         {
-          "store": "foodKcal",
+          "resource": "foodKcal",
           "amount": 400
         }
       ],
@@ -454,7 +454,7 @@
       "unitSize": "500 g",
       "gives": [
         {
-          "store": "foodKcal",
+          "resource": "foodKcal",
           "amount": 1750
         }
       ],
@@ -472,7 +472,7 @@
       "unitSize": "1 kg",
       "gives": [
         {
-          "store": "foodKcal",
+          "resource": "foodKcal",
           "amount": 3500
         }
       ],
@@ -490,7 +490,7 @@
       "unitSize": "1 kg",
       "gives": [
         {
-          "store": "foodKcal",
+          "resource": "foodKcal",
           "amount": 3600
         }
       ],
@@ -508,7 +508,7 @@
       "unitSize": "10 kg",
       "gives": [
         {
-          "store": "foodKcal",
+          "resource": "foodKcal",
           "amount": 36000
         }
       ],
@@ -525,7 +525,7 @@
       "unitSize": "5 kg",
       "gives": [
         {
-          "store": "foodKcal",
+          "resource": "foodKcal",
           "amount": 17500
         }
       ],
@@ -542,7 +542,7 @@
       "unitSize": "3 kg",
       "gives": [
         {
-          "store": "foodKcal",
+          "resource": "foodKcal",
           "amount": 11400
         }
       ],
@@ -559,7 +559,7 @@
       "unitSize": "1 kg",
       "gives": [
         {
-          "store": "foodKcal",
+          "resource": "foodKcal",
           "amount": 3800
         }
       ],
@@ -577,7 +577,7 @@
       "unitSize": "10 kg",
       "gives": [
         {
-          "store": "foodKcal",
+          "resource": "foodKcal",
           "amount": 38000
         }
       ],
@@ -594,7 +594,7 @@
       "unit": "pack",
       "gives": [
         {
-          "store": "foodKcal",
+          "resource": "foodKcal",
           "amount": 7200
         }
       ],
@@ -611,7 +611,7 @@
       "unitSize": "2 kg",
       "gives": [
         {
-          "store": "foodKcal",
+          "resource": "foodKcal",
           "amount": 12000
         }
       ],
@@ -628,7 +628,7 @@
       "unitSize": "340 g",
       "gives": [
         {
-          "store": "foodKcal",
+          "resource": "foodKcal",
           "amount": 2040
         }
       ],
@@ -645,7 +645,7 @@
       "unit": "box",
       "gives": [
         {
-          "store": "foodKcal",
+          "resource": "foodKcal",
           "amount": 5300
         }
       ],
@@ -661,7 +661,7 @@
       "unit": "set",
       "gives": [
         {
-          "store": "foodKcal",
+          "resource": "foodKcal",
           "amount": 8000
         }
       ],
@@ -690,7 +690,7 @@
       "unitSize": "20 kg",
       "gives": [
         {
-          "store": "woodKg",
+          "resource": "woodKg",
           "amount": 20
         }
       ],
@@ -739,7 +739,7 @@
       "unit": "each",
       "gives": [
         {
-          "store": "batteryWh",
+          "resource": "batteryWh",
           "amount": 500
         }
       ],
@@ -768,7 +768,7 @@
       "unit": "each",
       "gives": [
         {
-          "store": "batteryWh",
+          "resource": "batteryWh",
           "amount": 660
         }
       ],
@@ -809,7 +809,7 @@
       "unitSize": "5 L",
       "gives": [
         {
-          "store": "petrolL",
+          "resource": "petrolL",
           "amount": 5
         }
       ],
@@ -825,7 +825,7 @@
       "unit": "pack",
       "gives": [
         {
-          "store": "batteryWh",
+          "resource": "batteryWh",
           "amount": 80
         }
       ],
@@ -865,7 +865,7 @@
       "unitSize": "15 kg",
       "gives": [
         {
-          "store": "lpgKg",
+          "resource": "lpgKg",
           "amount": 15
         }
       ],
@@ -970,11 +970,11 @@
       "unit": "torch",
       "gives": [
         {
-          "store": "batteryWh",
+          "resource": "batteryWh",
           "amount": 4
         },
         {
-          "store": "lumenHours",
+          "resource": "lumenHours",
           "amount": 1500
         }
       ],
@@ -990,7 +990,7 @@
       "unit": "pack",
       "gives": [
         {
-          "store": "candleHours",
+          "resource": "candleHours",
           "amount": 80
         }
       ],
@@ -1006,11 +1006,11 @@
       "unit": "lantern",
       "gives": [
         {
-          "store": "batteryWh",
+          "resource": "batteryWh",
           "amount": 10
         },
         {
-          "store": "lumenHours",
+          "resource": "lumenHours",
           "amount": 3000
         }
       ],
@@ -1026,7 +1026,7 @@
       "unit": "kit",
       "gives": [
         {
-          "store": "firstAid",
+          "resource": "firstAid",
           "amount": 10
         }
       ],
@@ -1042,7 +1042,7 @@
       "unit": "kit",
       "gives": [
         {
-          "store": "firstAid",
+          "resource": "firstAid",
           "amount": 4
         }
       ],
@@ -1069,7 +1069,7 @@
       "unit": "kit",
       "gives": [
         {
-          "store": "hygieneUses",
+          "resource": "hygieneUses",
           "amount": 30
         }
       ],
@@ -1096,7 +1096,7 @@
       "unit": "kit",
       "gives": [
         {
-          "store": "sanitationUses",
+          "resource": "sanitationUses",
           "amount": 30
         }
       ],
@@ -1328,7 +1328,7 @@
       "unit": "box",
       "gives": [
         {
-          "store": "foodKcal",
+          "resource": "foodKcal",
           "amount": 10000
         }
       ],
@@ -1345,7 +1345,7 @@
       "unitSize": "pack of 50",
       "gives": [
         {
-          "store": "nappies",
+          "resource": "nappies",
           "amount": 50
         }
       ],
@@ -1366,7 +1366,7 @@
       "unitSize": "pack of 50",
       "gives": [
         {
-          "store": "nappies",
+          "resource": "nappies",
           "amount": 50
         }
       ],
@@ -1387,7 +1387,7 @@
       "unitSize": "pack of 50",
       "gives": [
         {
-          "store": "nappies",
+          "resource": "nappies",
           "amount": 50
         }
       ],
@@ -1408,7 +1408,7 @@
       "unitSize": "pack of 50",
       "gives": [
         {
-          "store": "nappies",
+          "resource": "nappies",
           "amount": 50
         }
       ],
@@ -1429,7 +1429,7 @@
       "unitSize": "pack of 50",
       "gives": [
         {
-          "store": "nappies",
+          "resource": "nappies",
           "amount": 50
         }
       ],
@@ -1450,7 +1450,7 @@
       "unitSize": "800 g",
       "gives": [
         {
-          "store": "formulaG",
+          "resource": "formulaG",
           "amount": 800
         }
       ],
@@ -1471,7 +1471,7 @@
       "unitSize": "6 x 200 ml",
       "gives": [
         {
-          "store": "formulaG",
+          "resource": "formulaG",
           "amount": 156
         }
       ],
@@ -1492,7 +1492,7 @@
       "unitSize": "12 pouches",
       "gives": [
         {
-          "store": "foodKcal",
+          "resource": "foodKcal",
           "amount": 720
         }
       ],
@@ -1513,7 +1513,7 @@
       "unitSize": "2 kg",
       "gives": [
         {
-          "store": "petFoodKcal",
+          "resource": "petFoodKcal",
           "amount": 7000
         }
       ],
@@ -1530,7 +1530,7 @@
       "unitSize": "12 kg",
       "gives": [
         {
-          "store": "petFoodKcal",
+          "resource": "petFoodKcal",
           "amount": 42000
         }
       ],
@@ -1547,7 +1547,7 @@
       "unitSize": "12 x 400 g",
       "gives": [
         {
-          "store": "petFoodKcal",
+          "resource": "petFoodKcal",
           "amount": 4800
         }
       ],
@@ -1564,7 +1564,7 @@
       "unitSize": "30 bags",
       "gives": [
         {
-          "store": "sanitationUses",
+          "resource": "sanitationUses",
           "amount": 30
         }
       ],
@@ -1581,7 +1581,7 @@
       "unitSize": "100 bags",
       "gives": [
         {
-          "store": "sanitationUses",
+          "resource": "sanitationUses",
           "amount": 100
         }
       ],
@@ -1599,7 +1599,7 @@
       "unitSize": "500 ml",
       "gives": [
         {
-          "store": "hygieneUses",
+          "resource": "hygieneUses",
           "amount": 100
         }
       ],
@@ -1616,7 +1616,7 @@
       "unitSize": "240 wipes",
       "gives": [
         {
-          "store": "hygieneUses",
+          "resource": "hygieneUses",
           "amount": 60
         }
       ],
@@ -1633,7 +1633,7 @@
       "unitSize": "1 L",
       "gives": [
         {
-          "store": "foodKcal",
+          "resource": "foodKcal",
           "amount": 640
         }
       ],
@@ -1650,7 +1650,7 @@
       "unitSize": "13 kg",
       "gives": [
         {
-          "store": "lpgKg",
+          "resource": "lpgKg",
           "amount": 13
         }
       ],
@@ -1666,7 +1666,7 @@
       "unit": "torch",
       "gives": [
         {
-          "store": "lumenHours",
+          "resource": "lumenHours",
           "amount": 2000
         }
       ],
@@ -1682,7 +1682,7 @@
       "unit": "lantern",
       "gives": [
         {
-          "store": "lumenHours",
+          "resource": "lumenHours",
           "amount": 6000
         }
       ],
@@ -1698,7 +1698,7 @@
       "unit": "set",
       "gives": [
         {
-          "store": "lumenHours",
+          "resource": "lumenHours",
           "amount": 2000
         }
       ],
@@ -1714,7 +1714,7 @@
       "unit": "pack",
       "gives": [
         {
-          "store": "batteryWh",
+          "resource": "batteryWh",
           "amount": 26
         }
       ],
@@ -1730,7 +1730,7 @@
       "unit": "pack",
       "gives": [
         {
-          "store": "batteryWh",
+          "resource": "batteryWh",
           "amount": 12
         }
       ],
@@ -1746,7 +1746,7 @@
       "unit": "pack",
       "gives": [
         {
-          "store": "batteryWh",
+          "resource": "batteryWh",
           "amount": 60
         }
       ],
@@ -1762,7 +1762,7 @@
       "unit": "bank",
       "gives": [
         {
-          "store": "batteryWh",
+          "resource": "batteryWh",
           "amount": 74
         }
       ],
@@ -1779,7 +1779,7 @@
       "unitSize": "5 L",
       "gives": [
         {
-          "store": "waterL",
+          "resource": "waterL",
           "amount": 5
         }
       ],
@@ -1796,7 +1796,7 @@
       "unitSize": "25 L",
       "gives": [
         {
-          "store": "waterL",
+          "resource": "waterL",
           "amount": 25
         }
       ],
@@ -1823,7 +1823,7 @@
       "unit": "radio",
       "gives": [
         {
-          "store": "lumenHours",
+          "resource": "lumenHours",
           "amount": 300
         }
       ],

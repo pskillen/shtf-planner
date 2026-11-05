@@ -215,7 +215,7 @@ const soup = (id: string, name = `Soup ${id}`) => ({
   name,
   category: 'food' as const,
   unit: 'tin',
-  gives: [{ store: 'foodKcal' as const, amount: 300 }],
+  gives: [{ resource: 'foodKcal' as const, amount: 300 }],
   suitability: ['frost' as const],
   shelfLife: 'none' as const,
   tags: [],

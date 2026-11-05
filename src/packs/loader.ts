@@ -96,7 +96,7 @@ export function loadPacks(raws: ReadonlyArray<{ label: string; raw: unknown }>):
               `${where}: source ${item.source} is not listed in the pack's sources (with the date checked)`,
             );
           item.gives.forEach((g, j) => {
-            if (g.store === 'medicationDays')
+            if (g.resource === 'medicationDays')
               issues.push(
                 `${where}.gives[${j}]: medicationDays is computed, an item cannot give it`,
               );

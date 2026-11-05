@@ -2,7 +2,7 @@ import type { CapabilityId, Document, Packs } from '../model';
 import { compareText } from '../util';
 import { CAPABILITY_ORDER, fitsHousehold } from './context';
 import { analyse, capabilityTargetId, type Analysis, type Coverage } from './coverage';
-import { closeHours, closeStore, type SuggestContext, type Suggestion } from './suggest';
+import { closeHours, closeResource, type SuggestContext, type Suggestion } from './suggest';
 import type { Target } from './targets';
 
 export type { Suggestion } from './suggest';
@@ -17,7 +17,7 @@ export interface Gap {
   /** The cheapest sensible ways to close it, best first. */
   suggestions: Suggestion[];
   /**
-   * `acquire`: buy or get more (a store's shortfall less what restocking puts back, so the two
+   * `acquire`: buy or get more (a resource's shortfall less what restocking puts back, so the two
    * add up to the target's shortfall). `replenish`: a rotating location is below its floor. `task`: an asset gives nothing until a question is put
    * right, or a driving range needs keeping up. `plan`: a plan item to do or redo.
    */
@@ -49,7 +49,7 @@ export function gapsFrom(doc: Document, packs: Packs, a: Analysis): Gap[] {
     const type = packs.items[b.typeId];
     const give = type?.gives[0];
     const t = give
-      ? a.targets.find((x) => x.kind === 'store' && x.store === give.store)
+      ? a.targets.find((x) => x.kind === 'resource' && x.resource === give.resource)
       : undefined;
     if (!type || !give || !t) continue;
     if (!fitsHousehold(type, a.people)) continue;
@@ -117,14 +117,14 @@ export function gapsFrom(doc: Document, packs: Packs, a: Analysis): Gap[] {
         });
         break;
       }
-      case 'store': {
+      case 'resource': {
         const buy = shortfall - (restocking.get(t.id) ?? 0);
         if (buy <= EPS) break;
         out.push({
           ...base,
           shortfall: buy,
           kind: 'acquire',
-          suggestions: closeStore(ctx, t.store as string, buy),
+          suggestions: closeResource(ctx, t.resource as string, buy),
         });
         break;
       }
@@ -136,7 +136,7 @@ export function gapsFrom(doc: Document, packs: Packs, a: Analysis): Gap[] {
     const type = packs.items[b.typeId];
     const give = type?.gives[0];
     const t = give
-      ? a.targets.find((x) => x.kind === 'store' && x.store === give.store)
+      ? a.targets.find((x) => x.kind === 'resource' && x.resource === give.resource)
       : undefined;
     if (!type || !give || !t) continue;
     const qty = b.floor - b.actual;
@@ -191,7 +191,7 @@ export function gapsFrom(doc: Document, packs: Packs, a: Analysis): Gap[] {
 
 /**
  * What is missing against each target, with the cheapest sensible way to close it: whole units of
- * the cheapest item that gives the store; a heater and its fuel when there is no heater;
+ * the cheapest item that gives the resource; a heater and its fuel when there is no heater;
  * `replenish` for a rotating location below its floor; `task` for an asset that gives nothing
  * until a question is put right (solar without an EPS); `plan` for a plan item not done or expired.
  */

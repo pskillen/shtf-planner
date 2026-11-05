@@ -1,12 +1,18 @@
-import { STORE_INFO, type CapabilityId, type Document, type Packs, type StoreId } from '../model';
+import {
+  RESOURCE_INFO,
+  type CapabilityId,
+  type Document,
+  type Packs,
+  type ResourceId,
+} from '../model';
 import { compareText } from '../util';
 import { ASSUMPTIONS } from './assumptions';
 import { CAPABILITY_ORDER, guidanceRules, peopleAt, type Person } from './context';
 import { addMonths } from './dates';
 
 export type TargetKind =
-  /** An amount of a named store (water, food kcal, nappies). */
-  | 'store'
+  /** An amount of a named resource (water, food kcal, nappies). */
+  | 'resource'
   /** Running hours of a converter (heat, cooking). */
   | 'hours'
   /** Doses of one medication. */
@@ -27,13 +33,13 @@ export interface TargetRule {
 }
 
 export interface Target {
-  /** Stable key: `<capability>:<store>`, `heat:hours`, `plan:<planItemId>` ... Coverage matches on it. */
+  /** Stable key: `<capability>:<resource>`, `heat:hours`, `plan:<planItemId>` ... Coverage matches on it. */
   id: string;
   kind: TargetKind;
   /** For a plan item, the capability the plan item belongs to (it is scored under `plans`). */
   capability: CapabilityId;
-  /** A `StoreId`, `medication:<id>` or `plan:<id>`; absent for hours, range and devices. */
-  store?: StoreId | `medication:${string}` | `plan:${string}`;
+  /** A `ResourceId`, `medication:<id>` or `plan:<id>`; absent for hours, range and devices. */
+  resource?: ResourceId | `medication:${string}` | `plan:${string}`;
   label: string;
   amount: number;
   unit: string;
@@ -96,7 +102,7 @@ export function applicablePlanItems(doc: Document, packs: Packs): string[] {
 }
 
 /**
- * What the household needs for `horizonDays` as of `asOf`, per capability: store amounts from the
+ * What the household needs for `horizonDays` as of `asOf`, per capability: resource amounts from the
  * guidance rules (people x days x amount, by age band, pet size and multipliers), running hours of
  * heat and cooking, doses per medication, a driving range, a radio, and the plan items that apply.
  * Zero-amount targets are left out (no baby, no nappies).
@@ -155,23 +161,23 @@ export function targets(
     const formulaFeeds = (p: Person): boolean =>
       rules.some((r) => {
         const f = r.perPersonDay;
-        if (f?.store !== 'formulaG') return false;
+        if (f?.resource !== 'formulaG') return false;
         const band = f.ageBands?.find(
           (b) => p.ageMonths >= b.fromMonths && p.ageMonths < b.toMonths,
         );
         return (f.ageBands ? (band?.amount ?? 0) : f.amount) > 0;
       });
     const base = { ruleId: rule.id, text: rule.text, source: rule.source };
-    const storeTarget = (store: StoreId, contribution: number, fixed = false) => {
+    const resourceTarget = (resource: ResourceId, contribution: number, fixed = false) => {
       if (!(contribution > 0)) return;
       add(
         {
-          id: `${rule.capability}:${store}`,
-          kind: 'store',
+          id: `${rule.capability}:${resource}`,
+          kind: 'resource',
           capability: rule.capability,
-          store,
-          label: STORE_INFO[store].name,
-          unit: STORE_INFO[store].unit,
+          resource,
+          label: RESOURCE_INFO[resource].name,
+          unit: RESOURCE_INFO[resource].unit,
         },
         { ...base, contribution },
         fixed,
@@ -180,30 +186,33 @@ export function targets(
 
     if (rule.perPersonDay) {
       const q = rule.perPersonDay;
-      if (q.store === 'medicationDays') continue; // computed per medication below
+      if (q.resource === 'medicationDays') continue; // computed per medication below
       let total = 0;
       for (const p of covered) {
-        if (q.store === 'foodKcal' && formulaFeeds(p)) continue;
+        if (q.resource === 'foodKcal' && formulaFeeds(p)) continue;
         const band = q.ageBands?.find(
           (b) => p.ageMonths >= b.fromMonths && p.ageMonths < b.toMonths,
         );
         const amount = q.ageBands ? (band?.amount ?? 0) : q.amount;
         total += amount * factor(p);
       }
-      storeTarget(q.store, total * days);
+      resourceTarget(q.resource, total * days);
     }
     if (rule.perPetDay) {
       const q = rule.perPetDay;
       let total = 0;
       for (const pet of doc.household.pets)
         total += (q.bySize?.[pet.size] ?? q.amount) * factor(null);
-      storeTarget(q.store, total * days);
+      resourceTarget(q.resource, total * days);
     }
     if (rule.perHouseholdDay) {
-      storeTarget(rule.perHouseholdDay.store, rule.perHouseholdDay.amount * factor(null) * days);
+      resourceTarget(
+        rule.perHouseholdDay.resource,
+        rule.perHouseholdDay.amount * factor(null) * days,
+      );
     }
     if (rule.perHousehold) {
-      storeTarget(rule.perHousehold.store, rule.perHousehold.amount, true);
+      resourceTarget(rule.perHousehold.resource, rule.perHousehold.amount, true);
     }
     if (rule.hoursPerDay !== undefined) {
       add(
@@ -248,7 +257,7 @@ export function targets(
   }
 
   // Medication: one target per medication in the household, whatever the pack says.
-  const medicationRule = rules.find((r) => r.perPersonDay?.store === 'medicationDays');
+  const medicationRule = rules.find((r) => r.perPersonDay?.resource === 'medicationDays');
   for (const member of doc.household.members) {
     for (const med of member.medication) {
       if (!(med.dosePerDay > 0)) continue;
@@ -258,7 +267,7 @@ export function targets(
           id: `medical:medication:${med.id}`,
           kind: 'medication',
           capability: 'medical',
-          store: `medication:${med.id}`,
+          resource: `medication:${med.id}`,
           label: med.name,
           unit: 'doses',
           critical: med.critical,
@@ -274,7 +283,7 @@ export function targets(
     }
   }
 
-  // A radio: comms has no store, so the engine asks for one device.
+  // A radio: comms has no resource, so the engine asks for one device.
   add(
     {
       id: 'comms:radio',
@@ -298,7 +307,7 @@ export function targets(
       id: `plan:${planId}`,
       kind: 'plan',
       capability: def.capability,
-      store: `plan:${planId}`,
+      resource: `plan:${planId}`,
       label: def.text,
       amount: 1,
       unit: 'done',

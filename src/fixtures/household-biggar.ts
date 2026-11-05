@@ -24,11 +24,11 @@ const ASSETS = 'assets-base';
 const TODAY = '2026-09-01';
 /** The pack versions the fixture was written against (a test checks they are current). */
 const PACK_VERSIONS: Record<string, number> = {
-  'assets-base': 4,
+  'assets-base': 5,
   'items-base': 8,
-  'guidance-grid-free': 2,
-  'guidance-uk-prepare': 2,
-  'guidance-us-ready': 3,
+  'guidance-grid-free': 3,
+  'guidance-uk-prepare': 3,
+  'guidance-us-ready': 4,
   regions: 3,
 };
 

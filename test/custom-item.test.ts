@@ -6,7 +6,7 @@ describe('buildCustomType', () => {
 
   it('makes a valid item type for food from a name and the calories in one piece', () => {
     const r = buildCustomType(
-      { name: ' Gran’s soup ', category: 'food', unit: 'jar', store: 'foodKcal', amount: 600 },
+      { name: ' Gran’s soup ', category: 'food', unit: 'jar', resource: 'foodKcal', amount: 600 },
       uuid,
     );
     expect(r.ok && r.type).toMatchObject({
@@ -14,7 +14,7 @@ describe('buildCustomType', () => {
       name: 'Gran’s soup',
       category: 'food',
       unit: 'jar',
-      gives: [{ store: 'foodKcal', amount: 600 }],
+      gives: [{ resource: 'foodKcal', amount: 600 }],
     });
   });
 
@@ -29,7 +29,7 @@ describe('buildCustomType', () => {
     });
     expect(
       buildCustomType(
-        { name: 'Cordial', category: 'water', unit: 'bottle', store: 'waterL', amount: 0 },
+        { name: 'Cordial', category: 'water', unit: 'bottle', resource: 'waterL', amount: 0 },
         uuid,
       ).ok,
     ).toBe(false);

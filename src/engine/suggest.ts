@@ -12,7 +12,7 @@ export interface Suggestion {
   label: string;
   /** The price of the whole suggestion (qty x the typical unit price), when the pack has one. */
   pricePence?: number;
-  /** How much of the store one unit gives. */
+  /** How much of the resource one unit gives. */
   perUnitCoverage?: number;
 }
 
@@ -32,16 +32,16 @@ const NEAR_PRICE = 0.2;
 export const NO_SUGGEST = 'no-suggest';
 
 /**
- * The cheapest sensible ways to close a shortfall of `store`, best first (at most `limit`).
+ * The cheapest sensible ways to close a shortfall of `resource`, best first (at most `limit`).
  * Each is a whole number of units of one item type. "Sensible" means the units do not overshoot
  * the shortfall by more than `MAX_OVERSHOOT` times (unless nothing else is left); they are sorted
- * by price per unit of the store, then by total price, and unpriced types come last, largest
+ * by price per unit of the resource, then by total price, and unpriced types come last, largest
  * unit first. Item types tagged `no-suggest` (a bath bladder, loose cells: cheap per unit but an
- * odd first answer) are used only when nothing else gives the store.
+ * odd first answer) are used only when nothing else gives the resource.
  */
-export function closeStore(
+export function closeResource(
   ctx: SuggestContext,
-  store: string,
+  resource: string,
   shortfall: number,
   limit = 3,
 ): Suggestion[] {
@@ -51,7 +51,7 @@ export function closeStore(
   for (const type of Object.values(ctx.packs.items)) {
     // The household's own types are what it has, not something to suggest buying.
     if (type.id.startsWith('custom:')) continue;
-    const give = type.gives.find((g) => g.store === store);
+    const give = type.gives.find((g) => g.resource === resource);
     if (!give || !(give.amount > 0)) continue;
     if (!fitsHousehold(type, ctx.people)) continue;
     if (type.tags.includes('needs-cooking') && !ctx.cookingMet) continue;
@@ -124,11 +124,16 @@ export function closeHours(
   const owned = activeConverters(doc, ctx.packs).filter((c) => c.capability === capability);
   if (owned.length > 0) {
     const out: Suggestion[] = [];
-    for (const store of [...new Set(owned.map((c) => c.store))].sort()) {
+    for (const resource of [...new Set(owned.map((c) => c.resource))].sort()) {
       const best = owned
-        .filter((c) => c.store === store)
+        .filter((c) => c.resource === resource)
         .reduce((a, b) => (b.output / b.perHour > a.output / a.perHour ? b : a));
-      const fuel = closeStore(ctx, store, (shortfallHours / best.output) * best.perHour, 1)[0];
+      const fuel = closeResource(
+        ctx,
+        resource,
+        (shortfallHours / best.output) * best.perHour,
+        1,
+      )[0];
       if (fuel) out.push({ ...fuel, label: `${fuel.label} for the ${best.name}` });
     }
     return out;
@@ -140,7 +145,7 @@ export function closeHours(
     const c = asset.contributes.find((x) => x.capability === capability && x.converts?.perHour);
     if (!c?.converts?.perHour) continue;
     const item = Object.values(ctx.packs.items).find((i) => i.assetTypeId === asset.id);
-    const fuel = closeStore(ctx, c.converts.store, shortfallHours * c.converts.perHour, 1)[0];
+    const fuel = closeResource(ctx, c.converts.resource, shortfallHours * c.converts.perHour, 1)[0];
     const price =
       item?.typicalPricePence !== undefined && fuel?.pricePence !== undefined
         ? item.typicalPricePence + fuel.pricePence

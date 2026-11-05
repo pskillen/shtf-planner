@@ -15,7 +15,7 @@ const items = {
       name: 'Water',
       category: 'water',
       unit: 'L',
-      gives: [{ store: 'waterL', amount: 1 }],
+      gives: [{ resource: 'waterL', amount: 1 }],
       suitability: ['frost'],
       shelfLife: 'years',
       tags: [],
@@ -59,7 +59,7 @@ const guidance = {
       id: 'guidance-t:water',
       capability: 'water',
       text: 'water',
-      perPersonDay: { store: 'waterL', amount: 3 },
+      perPersonDay: { resource: 'waterL', amount: 3 },
       source: 'https://example.org/x',
     },
   ],
@@ -107,14 +107,14 @@ describe('loadPacks', () => {
 
   it('rejects a broken pack with a readable error naming the field', () => {
     const broken = structuredClone(items) as typeof items;
-    (broken.items[0]!.gives[0] as { store: string }).store = 'waterLitres';
+    (broken.items[0]!.gives[0] as { resource: string }).resource = 'waterLitres';
     expect(() => loadPacks([file(broken)])).toThrow(PackError);
     try {
       loadPacks([file(broken)]);
     } catch (e) {
       const msg = (e as PackError).message;
       expect(msg).toContain('Pack items-t is invalid');
-      expect(msg).toContain('items[0].gives[0].store');
+      expect(msg).toContain('items[0].gives[0].resource');
     }
   });
 
@@ -142,7 +142,7 @@ describe('loadPacks', () => {
 
   it('rejects an item that gives medicationDays', () => {
     const bad = structuredClone(items) as typeof items;
-    (bad.items[0]!.gives[0] as { store: string }).store = 'medicationDays';
+    (bad.items[0]!.gives[0] as { resource: string }).resource = 'medicationDays';
     expect(() => loadPacks([file(bad)])).toThrow(/medicationDays is computed/);
   });
 
@@ -200,7 +200,7 @@ describe('loadPacks', () => {
     const bands = (list: unknown) => {
       const g = structuredClone(guidance) as typeof guidance;
       (g.rules[0] as Record<string, unknown>).perPersonDay = {
-        store: 'nappies',
+        resource: 'nappies',
         amount: 0,
         ageBands: list,
       };
@@ -249,14 +249,14 @@ describe('loadPacks', () => {
   it('accepts a perHousehold quantity (a one-off, independent of the horizon) as a rule quantity', () => {
     const oneOff = structuredClone(guidance) as typeof guidance;
     delete (oneOff.rules[0] as { perPersonDay?: unknown }).perPersonDay;
-    (oneOff.rules[0] as Record<string, unknown>).perHousehold = { store: 'firstAid', amount: 3 };
+    (oneOff.rules[0] as Record<string, unknown>).perHousehold = { resource: 'firstAid', amount: 3 };
     const packs = loadPacks([file(oneOff)]);
     expect(packs.rules[oneOff.rules[0]!.id]!.perHousehold).toEqual({
-      store: 'firstAid',
+      resource: 'firstAid',
       amount: 3,
     });
 
-    (oneOff.rules[0] as Record<string, unknown>).perHousehold = { store: 'firstAid', amount: 0 };
+    (oneOff.rules[0] as Record<string, unknown>).perHousehold = { resource: 'firstAid', amount: 0 };
     expect(() => loadPacks([file(oneOff)])).toThrow();
   });
 });

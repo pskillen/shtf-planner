@@ -9,13 +9,14 @@ const soup: ItemType = {
   name: 'Gran’s soup',
   category: 'food',
   unit: 'jar',
-  gives: [{ store: 'foodKcal', amount: 800 }],
+  gives: [{ resource: 'foodKcal', amount: 800 }],
   suitability: [],
   shelfLife: 'years',
   tags: [],
 };
 
-const kcal = (c: ReturnType<typeof coverage>) => c.find((x) => x.store === 'foodKcal')?.amount ?? 0;
+const kcal = (c: ReturnType<typeof coverage>) =>
+  c.find((x) => x.resource === 'foodKcal')?.amount ?? 0;
 
 describe('withCustomTypes', () => {
   const packs = bundledPacks();

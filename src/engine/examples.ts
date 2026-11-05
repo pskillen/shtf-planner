@@ -14,7 +14,7 @@ export const EXAMPLE_MAX_UNITS = 12;
 
 const EPS = 1e-9;
 
-/** A pick: `units` whole units of `type`, each giving `per` of the store. */
+/** A pick: `units` whole units of `type`, each giving `per` of the resource. */
 interface Pick {
   type: ItemType;
   per: number;
@@ -25,19 +25,19 @@ const unitsFor = (amount: number, per: number): number =>
   Math.max(1, Math.ceil(amount / per - EPS));
 
 /**
- * The best size of an item for `amount` of `store` among `types`: the cheapest per unit of the
- * store whose count is at most `EXAMPLE_MAX_UNITS` (and which does not overshoot wildly); when no
- * size is that big, the one with the fewest units. Undefined when no type gives the store.
+ * The best size of an item for `amount` of `resource` among `types`: the cheapest per unit of the
+ * resource whose count is at most `EXAMPLE_MAX_UNITS` (and which does not overshoot wildly); when no
+ * size is that big, the one with the fewest units. Undefined when no type gives the resource.
  */
 export function pickSize(
   types: readonly ItemType[],
-  store: string,
+  resource: string,
   amount: number,
   max: number = EXAMPLE_MAX_UNITS,
 ): Pick | undefined {
   const all: Pick[] = [];
   for (const type of types) {
-    const per = type.gives.find((g) => g.store === store)?.amount ?? 0;
+    const per = type.gives.find((g) => g.resource === resource)?.amount ?? 0;
     if (per > 0) all.push({ type, per, units: unitsFor(amount, per) });
   }
   if (all.length === 0) return undefined;
@@ -52,7 +52,7 @@ export function pickSize(
 }
 
 /** The types an example may name: stock a household buys, that suit it, not odd first answers. */
-function everyday(ctx: SuggestContext, store: string): ItemType[] {
+function everyday(ctx: SuggestContext, resource: string): ItemType[] {
   return Object.values(ctx.packs.items).filter(
     (t) =>
       !t.id.startsWith('custom:') &&
@@ -62,7 +62,7 @@ function everyday(ctx: SuggestContext, store: string): ItemType[] {
       !t.tags.includes('refillable') &&
       fitsHousehold(t, ctx.people) &&
       !(t.tags.includes('needs-cooking') && !ctx.cookingMet) &&
-      t.gives.some((g) => g.store === store),
+      t.gives.some((g) => g.resource === resource),
   );
 }
 
@@ -165,7 +165,7 @@ export function foodMixExample(ctx: SuggestContext, kcal: number): string | unde
     : phrases[0]!;
 }
 
-// ---- other stores ----------------------------------------------------------------------------
+// ---- other resources ----------------------------------------------------------------------------
 
 /**
  * Power for phones: power banks, which people own for this. When even they would be a pile (more
@@ -186,21 +186,21 @@ function phonePower(ctx: SuggestContext, wh: number): string | undefined {
 }
 
 /**
- * An example for an amount of a store: a short mix for food, power banks for phone power, and
+ * An example for an amount of a resource: a short mix for food, power banks for phone power, and
  * for everything else one everyday size chosen so that the count is picturable. Undefined when
- * nothing in the packs gives the store.
+ * nothing in the packs gives the resource.
  */
-export function storeExample(
+export function resourceExample(
   ctx: SuggestContext,
-  store: string,
+  resource: string,
   amount: number,
 ): string | undefined {
   if (!(amount > EPS)) return undefined;
-  if (store === 'foodKcal') {
+  if (resource === 'foodKcal') {
     const mix = foodMixExample(ctx, amount);
     if (mix) return mix;
   }
-  if (store === 'batteryWh') return phonePower(ctx, amount);
-  const pick = pickSize(everyday(ctx, store), store, amount);
+  if (resource === 'batteryWh') return phonePower(ctx, amount);
+  const pick = pickSize(everyday(ctx, resource), resource, amount);
   return pick ? label(pick) : undefined;
 }

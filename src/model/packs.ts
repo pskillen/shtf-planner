@@ -38,7 +38,7 @@ export type CapabilityId = z.infer<typeof CapabilityIdSchema>;
  * `medicationDays` is computed per medication from the document, never held as stock, so an item
  * type may not give it.
  */
-export const STORE_INFO = {
+export const RESOURCE_INFO = {
   waterL: { name: 'water', unit: 'L' },
   waterRaw: { name: 'untreated water', unit: 'L' },
   purificationTabs: { name: 'purification tablets', unit: 'tablets' },
@@ -60,9 +60,9 @@ export const STORE_INFO = {
   medicationDays: { name: 'medication', unit: 'days' },
   lumenHours: { name: 'light', unit: 'lumen-hours' },
 } as const;
-export type StoreId = keyof typeof STORE_INFO;
-export const STORE_IDS = Object.keys(STORE_INFO) as [StoreId, ...StoreId[]];
-export const StoreIdSchema = z.enum(STORE_IDS);
+export type ResourceId = keyof typeof RESOURCE_INFO;
+export const RESOURCE_IDS = Object.keys(RESOURCE_INFO) as [ResourceId, ...ResourceId[]];
+export const ResourceIdSchema = z.enum(RESOURCE_IDS);
 
 export const CATEGORIES = [
   'water',
@@ -134,7 +134,7 @@ export const ItemTypeSchema = z.strictObject({
   unitSize: z.string().optional(),
   gives: z.array(
     z.strictObject({
-      store: StoreIdSchema,
+      resource: ResourceIdSchema,
       amount: z.number().positive(),
     }),
   ),
@@ -186,10 +186,10 @@ export const ContributionSchema = z.strictObject({
   capability: CapabilityIdSchema,
   /** Counts only while the asset's answer to `question` equals `equals`. */
   when: z.strictObject({ question: z.string(), equals: AnswerValue }).optional(),
-  /** Burns `store` while running: `perHour` units per hour, or the answer to a question. */
+  /** Burns `resource` while running: `perHour` units per hour, or the answer to a question. */
   converts: z
     .strictObject({
-      store: StoreIdSchema,
+      resource: ResourceIdSchema,
       perHour: z.number().positive().optional(),
       perHourFrom: z.string().optional(),
     })
@@ -214,10 +214,10 @@ export const ContributionSchema = z.strictObject({
       perUnitWh: z.number().positive(),
     })
     .optional(),
-  /** Holds a stock of `store` (a water butt holds raw water): the answer x `factor` (default 1). */
+  /** Holds a stock of `resource` (a water butt holds raw water): the answer x `factor` (default 1). */
   holds: z
     .strictObject({
-      store: StoreIdSchema,
+      resource: ResourceIdSchema,
       fromQuestion: z.string(),
       factor: z.number().positive().optional(),
     })
@@ -269,7 +269,7 @@ export const RuleSchema = z
      */
     perPersonDay: z
       .strictObject({
-        store: StoreIdSchema,
+        resource: ResourceIdSchema,
         amount: z.number().min(0),
         ageBands: z
           .array(AmountBand)
@@ -287,18 +287,20 @@ export const RuleSchema = z
       .optional(),
     perPetDay: z
       .strictObject({
-        store: StoreIdSchema,
+        resource: ResourceIdSchema,
         amount: z.number().min(0),
         bySize: z.strictObject({ S: z.number(), M: z.number(), L: z.number() }).optional(),
       })
       .optional(),
-    perHouseholdDay: z.strictObject({ store: StoreIdSchema, amount: z.number().min(0) }).optional(),
+    perHouseholdDay: z
+      .strictObject({ resource: ResourceIdSchema, amount: z.number().min(0) })
+      .optional(),
     /**
-     * A fixed amount of `store` for the household, whatever the horizon: a one-off item (a first
+     * A fixed amount of `resource` for the household, whatever the horizon: a one-off item (a first
      * aid kit) rather than a daily need. Not multiplied by days.
      */
     perHousehold: z
-      .strictObject({ store: StoreIdSchema, amount: z.number().positive() })
+      .strictObject({ resource: ResourceIdSchema, amount: z.number().positive() })
       .optional(),
     /** Hours of the capability per day for the household (heat), met by assets' `converts`. */
     hoursPerDay: z.number().positive().optional(),

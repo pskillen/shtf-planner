@@ -2,7 +2,7 @@
   "format": 1,
   "id": "assets-base",
   "kind": "assets",
-  "version": 4,
+  "version": 5,
   "name": "Base household assets",
   "sources": [
     {
@@ -32,7 +32,7 @@
             "equals": "1.3 kW"
           },
           "converts": {
-            "store": "lpgKg",
+            "resource": "lpgKg",
             "perHour": 0.095
           },
           "source": "assumption",
@@ -45,7 +45,7 @@
             "equals": "4.2 kW"
           },
           "converts": {
-            "store": "lpgKg",
+            "resource": "lpgKg",
             "perHour": 0.3
           },
           "source": "assumption",
@@ -74,7 +74,7 @@
         {
           "capability": "heat",
           "converts": {
-            "store": "lpgKg",
+            "resource": "lpgKg",
             "perHour": 0.1
           },
           "source": "assumption",
@@ -98,7 +98,7 @@
         {
           "capability": "heat",
           "converts": {
-            "store": "woodKg",
+            "resource": "woodKg",
             "perHour": 1.5
           },
           "source": "assumption",
@@ -122,7 +122,7 @@
         {
           "capability": "heat",
           "converts": {
-            "store": "paraffinL",
+            "resource": "paraffinL",
             "perHour": 0.25
           },
           "source": "assumption",
@@ -151,7 +151,7 @@
         {
           "capability": "cooking",
           "converts": {
-            "store": "gasCanister",
+            "resource": "gasCanister",
             "perHour": 0.4
           },
           "source": "assumption",
@@ -182,7 +182,7 @@
         {
           "capability": "cooking",
           "converts": {
-            "store": "lpgKg",
+            "resource": "lpgKg",
             "perHour": 0.3
           },
           "source": "assumption",
@@ -206,7 +206,7 @@
         {
           "capability": "cooking",
           "converts": {
-            "store": "woodKg",
+            "resource": "woodKg",
             "perHour": 1
           },
           "source": "assumption",
@@ -311,7 +311,7 @@
             "equals": "petrol"
           },
           "converts": {
-            "store": "petrolL",
+            "resource": "petrolL",
             "perHourFrom": "fuelPerHour"
           },
           "outputPerHour": {
@@ -326,7 +326,7 @@
             "equals": "lpg"
           },
           "converts": {
-            "store": "lpgKg",
+            "resource": "lpgKg",
             "perHourFrom": "fuelPerHour"
           },
           "outputPerHour": {
@@ -482,7 +482,7 @@
         {
           "capability": "water",
           "holds": {
-            "store": "waterRaw",
+            "resource": "waterRaw",
             "fromQuestion": "litres"
           },
           "source": "assumption",

@@ -83,7 +83,7 @@ describe('targets', () => {
     expect(at14.amount).toBe(14);
     expect(at14.unit).toBe('doses');
     expect(at14.critical).toBe(true);
-    expect(at14.store).toBe('medication:med-ramipril');
+    expect(at14.resource).toBe('medication:med-ramipril');
     expect(byId(targets(doc, packs, NOW, 28), 'medical:medication:med-ramipril')!.amount).toBe(28);
   });
 

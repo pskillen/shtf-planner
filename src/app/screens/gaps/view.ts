@@ -89,7 +89,7 @@ function restockText(r: NonNullable<Gap['restock']>): string {
  * Store and device gaps list alternatives (any one will do); a gap for running hours lists what
  * works together (the heater and its fuel); a floor to restock or a medicine is one line.
  */
-const ALTERNATIVES = new Set<Gap['target']['kind']>(['store', 'device']);
+const ALTERNATIVES = new Set<Gap['target']['kind']>(['resource', 'device']);
 
 function shoppingRowsFor(gap: Gap, horizonDays: number, region: 'UK' | 'US', at: number) {
   if (gap.kind !== 'acquire' && gap.kind !== 'replenish') return [];
@@ -223,7 +223,7 @@ export function buildGapsView(input: {
       const lead = t.fixed ? `${name}: covered` : `${name}: enough for ${horizonDays} days`;
       // Only an amount of something is worth saying; hours, doses and ranges are not "more than needed".
       const more =
-        t.kind === 'store' && spare > 0.05 * t.amount && spare >= 0.1
+        t.kind === 'resource' && spare > 0.05 * t.amount && spare >= 0.1
           ? `; ${formatAmount(spare, t.unit, region)} more than needed`
           : '';
       return { capability: c.capability, text: lead + more };

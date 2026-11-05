@@ -1,5 +1,11 @@
 import { useRef, useState } from 'react';
-import { CATEGORIES, STORE_INFO, type Category, type ItemType, type StoreId } from '../../../model';
+import {
+  CATEGORIES,
+  RESOURCE_INFO,
+  type Category,
+  type ItemType,
+  type ResourceId,
+} from '../../../model';
 import { Field, NumberInput } from '../../components/controls';
 import { Sheet } from '../../components/Sheet';
 import { CATEGORY_LABEL, labelOf } from '../../labels';
@@ -29,7 +35,7 @@ export function CustomItemForm({
   const [name, setName] = useState(initialName);
   const [category, setCategory] = useState<Category>('food');
   const [unit, setUnit] = useState('each');
-  const [store, setStore] = useState<StoreId | ''>(DEFAULT_STORE.food ?? '');
+  const [store, setStore] = useState<ResourceId | ''>(DEFAULT_STORE.food ?? '');
   const [amount, setAmount] = useState<number | undefined>(initialAmount);
   const [problem, setProblem] = useState<string | null>(null);
   // The amount is what is usually missing: say so beside it and put the cursor there.
@@ -59,7 +65,7 @@ export function CustomItemForm({
             type="button"
             onClick={() => {
               const r = buildCustomType(
-                { name, category, unit, store: store || undefined, amount },
+                { name, category, unit, resource: store || undefined, amount },
                 crypto.randomUUID(),
               );
               if (r.ok) return onMade(r.type);
@@ -105,11 +111,11 @@ export function CustomItemForm({
       </Field>
       {NEEDS_GIVES.has(category) ? null : (
         <Field label="What does it give?">
-          <select value={store} onChange={(e) => setStore(e.target.value as StoreId | '')}>
+          <select value={store} onChange={(e) => setStore(e.target.value as ResourceId | '')}>
             <option value="">Nothing the plan counts</option>
             {GIVEABLE_STORES.map((s) => (
               <option key={s} value={s}>
-                {STORE_INFO[s].name} ({STORE_INFO[s].unit})
+                {RESOURCE_INFO[s].name} ({RESOURCE_INFO[s].unit})
               </option>
             ))}
           </select>

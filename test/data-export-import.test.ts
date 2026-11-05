@@ -40,7 +40,7 @@ describe('custom types in export and import', () => {
       name: 'Soup',
       category: 'food',
       unit: 'tin',
-      gives: [{ store: 'foodKcal', amount: 300 }],
+      gives: [{ resource: 'foodKcal', amount: 300 }],
       suitability: ['frost'],
       shelfLife: 'none',
       tags: [],

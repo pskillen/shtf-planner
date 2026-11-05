@@ -16,7 +16,7 @@ const soup = (id: string): ItemType => ({
   name: `Soup ${id}`,
   category: 'food',
   unit: 'tin',
-  gives: [{ store: 'foodKcal', amount: 300 }],
+  gives: [{ resource: 'foodKcal', amount: 300 }],
   suitability: ['frost', 'heat', 'damp'],
   shelfLife: 'none',
   tags: [],

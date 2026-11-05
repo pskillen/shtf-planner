@@ -44,7 +44,7 @@ describe('migrate', () => {
       name: 'Grandad’s soup',
       category: 'food',
       unit: 'tin',
-      gives: [{ store: 'foodKcal', amount: 300 }],
+      gives: [{ resource: 'foodKcal', amount: 300 }],
       suitability: [],
       shelfLife: 'none',
       tags: [],

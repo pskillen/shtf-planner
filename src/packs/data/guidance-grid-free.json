@@ -2,7 +2,7 @@
   "format": 1,
   "id": "guidance-grid-free",
   "kind": "guidance",
-  "version": 2,
+  "version": 3,
   "name": "Grid-free capability rules (planner assumptions)",
   "sources": [
     {
@@ -50,7 +50,7 @@
       "capability": "light",
       "text": "Light for the evening: about 200 lumens for 5 hours, 1,000 lumen-hours a day. An assumption; a torch beats a candle.",
       "perHouseholdDay": {
-        "store": "lumenHours",
+        "resource": "lumenHours",
         "amount": 1000
       },
       "source": "assumption"
@@ -60,7 +60,7 @@
       "capability": "power",
       "text": "Phone charging: about 15 Wh per person per day, more for anyone on powered equipment. Both figures are assumptions.",
       "perPersonDay": {
-        "store": "batteryWh",
+        "resource": "batteryWh",
         "amount": 15
       },
       "multipliers": [
@@ -76,7 +76,7 @@
       "capability": "sanitation",
       "text": "Toilet uses per person per day when the toilet cannot be flushed. Five a day is an assumption.",
       "perPersonDay": {
-        "store": "sanitationUses",
+        "resource": "sanitationUses",
         "amount": 5
       },
       "source": "assumption"
@@ -86,7 +86,7 @@
       "capability": "sanitation",
       "text": "Hand sanitiser, wet wipes and bathroom products. Three uses per person per day is an assumption.",
       "perPersonDay": {
-        "store": "hygieneUses",
+        "resource": "hygieneUses",
         "amount": 3
       },
       "source": "assumption"
@@ -96,7 +96,7 @@
       "capability": "medical",
       "text": "Essential medication on hand for at least the horizon, for everyone who takes it. Request repeat prescriptions up to 5 working days before you run out.",
       "perPersonDay": {
-        "store": "medicationDays",
+        "resource": "medicationDays",
         "amount": 1
       },
       "appliesTo": {
@@ -116,7 +116,7 @@
       "capability": "sanitation",
       "text": "Nappies and wipes for babies and toddlers. Per day by age: 10 under 6 months, 8 to 12 months, 6 to 36 months. Typical figures, assumptions.",
       "perPersonDay": {
-        "store": "nappies",
+        "resource": "nappies",
         "amount": 0,
         "ageBands": [
           {
@@ -143,7 +143,7 @@
       "capability": "food",
       "text": "Infant formula for babies under 12 months. Ready-to-feed is preferred over powder (the site gives no quantity). About 100 g of powder a day is an assumption.",
       "perPersonDay": {
-        "store": "formulaG",
+        "resource": "formulaG",
         "amount": 0,
         "ageBands": [
           {
@@ -160,7 +160,7 @@
       "capability": "food",
       "text": "Pet food. The site gives no quantity; per day by size (small, medium, large) 300, 700 and 1,200 kcal are assumptions.",
       "perPetDay": {
-        "store": "petFoodKcal",
+        "resource": "petFoodKcal",
         "amount": 700,
         "bySize": {
           "S": 300,
@@ -175,7 +175,7 @@
       "capability": "water",
       "text": "Water for pets. The site gives no quantity; per day by size 0.25, 0.75 and 1.5 litres are assumptions.",
       "perPetDay": {
-        "store": "waterL",
+        "resource": "waterL",
         "amount": 0.75,
         "bySize": {
           "S": 0.25,
@@ -190,7 +190,7 @@
       "capability": "medical",
       "text": "One first aid kit per household, whatever the horizon: plasters, bandages, thermometer, antiseptic, eyewash, sterile dressings, gloves, tape, tweezers. A standard kit counts as 3 uses, so one kit meets it. Both the need and the 3 uses are assumptions.",
       "perHousehold": {
-        "store": "firstAid",
+        "resource": "firstAid",
         "amount": 3
       },
       "source": "assumption"
