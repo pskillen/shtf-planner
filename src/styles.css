@@ -716,6 +716,26 @@ table.horizon .big td {
   font-weight: 700;
 }
 
+.stocktake-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 4px 0;
+  padding: 0 8px 0 12px;
+  border-left: 4px solid var(--accent);
+  background: var(--surface);
+  font-size: 0.875rem;
+}
+
+.stocktake-hint span {
+  min-width: 0;
+}
+
+.stocktake-hint button {
+  white-space: nowrap;
+}
+
 .note {
   padding: 8px 12px;
   border-left: 4px solid var(--accent);

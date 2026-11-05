@@ -333,9 +333,9 @@ export function StocktakeScreen() {
       )}
 
       {hint ? (
-        <p className="note stocktake-hint">
-          Hold the barcode upright in the blue box. Then hold the date in the yellow box. OK saves
-          and goes to the next one.{' '}
+        // One line, so the controls below stay on the screen at 360 x 740.
+        <p className="stocktake-hint">
+          <span>Barcode in blue, date in yellow.</span>
           <button
             type="button"
             className="link"

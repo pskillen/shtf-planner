@@ -150,12 +150,12 @@ describe('Stocktake: the step machine', () => {
 
   it('shows the hint once and remembers it was dismissed', async () => {
     await open();
-    expect(screen.getByText(/Hold the barcode upright in the blue box/)).toBeTruthy();
+    expect(screen.getByText(/Barcode in blue, date in yellow/)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Got it' }));
-    expect(screen.queryByText(/Hold the barcode upright in the blue box/)).toBeNull();
+    expect(screen.queryByText(/Barcode in blue, date in yellow/)).toBeNull();
     cleanup();
     await open();
-    expect(screen.queryByText(/Hold the barcode upright in the blue box/)).toBeNull();
+    expect(screen.queryByText(/Barcode in blue, date in yellow/)).toBeNull();
   });
 });
 
