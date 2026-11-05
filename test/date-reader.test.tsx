@@ -302,11 +302,23 @@ describe('Stocktake: the date step stays what the person sees', () => {
     expect(screen.getByTestId('date-about').textContent).toBe('WebGPU · last read 0.4 s');
   });
 
-  it('keeps the strip tall while the reader looks, and compact once it has an answer', async () => {
-    await toDateStep();
-    expect(screen.getByTestId('camera-strip').className).not.toMatch(/compact/);
+  it('the strip is one size for both steps and after a read, and the status and month are drawn on it', async () => {
+    const s = liveStore(biggarDocument());
+    render(s.wrap(<StocktakeScreen />));
+    await waitFor(() => expect(scanState.onCode).toBeDefined());
+    const strip = () => screen.getByTestId('camera-strip').className;
+    expect(strip()).not.toMatch(/compact/);
+    expect(screen.queryByText('Barcode caught')).toBeNull();
+    await act(async () => scanState.onCode!(KNOWN));
+    await screen.findByText('Peanut butter (340 g jar)');
+    expect(document.querySelector('.camera-flash')).not.toBeNull(); // the catch tick
+    await waitFor(() => expect(dateState.starts).toBe(1));
+    expect(strip()).not.toMatch(/compact/);
+    const centre = document.querySelector('.camera-centre')!;
+    expect(centre.contains(screen.getByTestId('date-status'))).toBe(true);
     await act(async () => dateState.finish(gotRead(6, 2028)));
-    await screen.findByTestId('date-result');
-    expect(screen.getByTestId('camera-strip').className).toMatch(/compact/);
+    const result = await screen.findByTestId('date-result');
+    expect(centre.contains(result)).toBe(true);
+    expect(strip()).not.toMatch(/compact/);
   });
 });

@@ -117,8 +117,9 @@ export function StocktakeScreen() {
   const [started] = useState(() => Date.now());
   const [finishedAfter, setFinishedAfter] = useState(0);
   const [cam, setCam] = useState<CameraStream | null>(null);
-  // The date reader is loading or looking: the strip stays tall so the box is a good size.
-  const [looking, setLooking] = useState(false);
+  // The centre of the camera strip, where the status and the read month are drawn, and the catch tick.
+  const [centre, setCentre] = useState<HTMLElement | null>(null);
+  const [flash, setFlash] = useState(0);
   // The date was set by hand: the camera stops looking and cannot overwrite it.
   const [handPicked, setHandPicked] = useState(false);
   const [useCamera, setUseCamera] = useState(readUseCamera);
@@ -142,6 +143,7 @@ export function StocktakeScreen() {
 
   function got(next: string): void {
     buzz('barcode');
+    setFlash((n) => n + 1);
     setCode(next);
   }
 
@@ -346,16 +348,18 @@ export function StocktakeScreen() {
       ) : null}
 
       <CameraStrip
-        compact={phase === 'date' ? !looking : code !== null}
         mode={phase === 'barcode' ? 'barcode' : 'date'}
         chip={phase === 'barcode' ? '1 BARCODE' : '2 DATE'}
         scanning={phase === 'barcode' && code === null && Boolean(place)}
         onCode={got}
         onReady={setCam}
+        onCentre={setCentre}
+        flashKey={flash}
       />
       {phase === 'barcode' ? (
         code === null ? (
           <>
+            <h3 className="type-title">Type the barcode number</h3>
             <form
               className="number-row"
               onSubmit={(e) => {
@@ -367,7 +371,7 @@ export function StocktakeScreen() {
                 got(r.code);
               }}
             >
-              <Field label="Type the number" hint={problem ?? undefined}>
+              <Field label="Barcode number">
                 <input
                   type="text"
                   inputMode="numeric"
@@ -381,6 +385,11 @@ export function StocktakeScreen() {
                 Use this number
               </button>
             </form>
+            {problem ? (
+              <p className="field-hint warn" role="alert">
+                {problem}
+              </p>
+            ) : null}
             <div className="scan-actions">
               <button type="button" className="secondary" onClick={() => setFinding(true)}>
                 Find it by name
@@ -438,7 +447,7 @@ export function StocktakeScreen() {
                   setHandPicked(false);
                   dateSource.current = null;
                 }}
-                onBusy={setLooking}
+                centre={centre}
                 onResult={cameraRead}
                 onSuggestion={(ym) => save(ym, 'suggestion')}
               />

@@ -167,3 +167,11 @@ export const peekDateReader = (): DateReader | undefined => single;
 export function terminateDateReader(): void {
   single?.terminate();
 }
+
+// A hidden page lets the models' memory go (about 0.5 GB): the camera is let go then too, and the
+// strip hands the date step a new stream when the page is shown again, which loads a new reader.
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') terminateDateReader();
+  });
+}

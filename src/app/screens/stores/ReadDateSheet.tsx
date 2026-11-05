@@ -21,6 +21,7 @@ export function ReadDateSheet({
 }) {
   const [cam, setCam] = useState<CameraStream | null>(null);
   const [read, setRead] = useState<DateRead | null>(null);
+  const [centre, setCentre] = useState<HTMLElement | null>(null);
 
   // The models' memory goes back when the sheet goes.
   useEffect(() => () => terminateDateReader(), []);
@@ -35,9 +36,10 @@ export function ReadDateSheet({
         </button>
       }
     >
-      <CameraStrip mode="date" chip="DATE" onReady={setCam} />
+      <CameraStrip mode="date" chip="DATE" onReady={setCam} onCentre={setCentre} />
       <DateReader
         cam={cam}
+        centre={centre}
         todayIso={today()}
         onResult={setRead}
         onSuggestion={(ym) => {

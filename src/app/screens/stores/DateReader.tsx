@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { expiryLevel, expiryWindows } from '../../../engine';
 import { toYearMonth, type OfferedSuggestion } from '../../../engine/datecode';
 import {
@@ -94,7 +95,7 @@ export function DateReader({
   onSearched,
   paused = false,
   onAgain,
-  onBusy,
+  centre = null,
 }: {
   cam: DateCamera | null;
   todayIso: string;
@@ -107,8 +108,8 @@ export function DateReader({
   paused?: boolean;
   /** Read again was tapped. */
   onAgain?: () => void;
-  /** True while the reader is loading or looking (the strip stays tall then), false otherwise. */
-  onBusy?: (busy: boolean) => void;
+  /** The centre of the camera strip, where the status and the read month are drawn. */
+  centre?: HTMLElement | null;
 }) {
   const { settings } = useDocument();
   const windows = expiryWindows(settings);
@@ -120,9 +121,9 @@ export function DateReader({
   );
   const [suggestions, setSuggestions] = useState<OfferedSuggestion[]>([]);
   const loopRef = useRef<DateLoop | null>(null);
-  const live = useRef({ onResult, onSearched, todayIso, onAgain, onBusy });
+  const live = useRef({ onResult, onSearched, todayIso, onAgain });
   useEffect(() => {
-    live.current = { onResult, onSearched, todayIso, onAgain, onBusy };
+    live.current = { onResult, onSearched, todayIso, onAgain };
   });
   // What the card shows now, so a new camera stream (hide and show) does not redo a finished read.
   const phaseRef = useRef<Phase>('idle');
@@ -214,11 +215,6 @@ export function DateReader({
         : phaseState === 'idle'
           ? 'loading'
           : phaseState;
-  const busy = phase === 'loading' || phase === 'running';
-  useEffect(() => {
-    live.current.onBusy?.(busy);
-    return () => live.current.onBusy?.(false);
-  }, [busy]);
   const shownLine =
     line ||
     (peekDateReader()?.status().state === 'ready'
@@ -250,12 +246,34 @@ export function DateReader({
     );
   }
 
+  // The status and the month are drawn on the camera strip, at the centre where the eye is
+  // (`centre`); with no strip to draw on they sit here.
+  const onStrip = (
+    <div className="centre-stack">
+      <div
+        className="centre-pill"
+        role="status"
+        aria-live="polite"
+        data-testid="date-status"
+        data-phase={phase}
+      >
+        {shownLine}
+      </div>
+      {phase === 'got' && read ? (
+        <div className="centre-result" data-testid="date-result">
+          <strong className="date-month">{formatMonth(read.ym)}</strong>{' '}
+          <ExpiryBadge bestBefore={read.ym} />
+          {read.assumed ? <span className="bb bb-check"> · year assumed</span> : null}
+        </div>
+      ) : null}
+    </div>
+  );
+
   return (
     <div className="date-reader">
+      {centre ? createPortal(onStrip, centre) : onStrip}
       <div className="date-head">
-        <p role="status" aria-live="polite" className="date-status" data-testid="date-status">
-          {shownLine}
-        </p>
+        {phase === 'got' && read?.crop ? <Crop crop={read.crop} /> : <span />}
         {phase === 'loading' || phase === 'running' ? (
           <button type="button" className="secondary" onClick={() => loopRef.current?.stop()}>
             Stop
@@ -267,16 +285,6 @@ export function DateReader({
           </button>
         ) : null}
       </div>
-      {phase === 'got' && read ? (
-        <div className="date-result" data-testid="date-result">
-          <div>
-            <strong className="date-month">{formatMonth(read.ym)}</strong>{' '}
-            <ExpiryBadge bestBefore={read.ym} />
-            {read.assumed ? <span className="bb bb-check"> · year assumed</span> : null}
-          </div>
-          {read.crop ? <Crop crop={read.crop} /> : null}
-        </div>
-      ) : null}
       {phase === 'none' && suggestions.length > 0 ? (
         <div className="chips" role="group" aria-label="Suggested dates">
           {suggestions.map((s) => {

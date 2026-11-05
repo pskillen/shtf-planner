@@ -68,7 +68,7 @@ describe('Quick add: Scan a barcode', () => {
     await read(KNOWN);
     await screen.findByText('Add Peanut butter (340 g jar)');
     fireEvent.click(screen.getByRole('button', { name: 'Not this item?' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Search all types' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Pick what it is' }));
     fireEvent.change(screen.getByLabelText('Search all types'), {
       target: { value: 'tinned food' },
     });
@@ -107,9 +107,9 @@ describe('Quick add: Scan a barcode', () => {
     const s = await openScanner();
     await read(UNKNOWN);
     expect(await screen.findByText(/You are offline/)).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Search all types' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Save as its own item' })).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Sort later' }));
+    expect(screen.getByRole('button', { name: 'Pick what it is' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^New item/ })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Decide later' }));
     const scans = Object.values(s.doc().scans);
     expect(scans).toHaveLength(1);
     expect(scans[0]).toMatchObject({ code: UNKNOWN, qty: 1 });
@@ -122,7 +122,7 @@ describe('Quick add: Scan a barcode', () => {
     const s = await openScanner();
     const before = Object.keys(s.doc().items).length;
     await read(UNKNOWN);
-    fireEvent.click(await screen.findByRole('button', { name: 'Search all types' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Pick what it is' }));
     fireEvent.change(screen.getByLabelText('Search all types'), { target: { value: 'stove' } });
     const route = screen.getByRole('list', { name: 'Equipment: add to your home' });
     expect(route.querySelector('a')?.getAttribute('href')).toMatch(/^\/app\/assets\?add=/);
@@ -135,7 +135,7 @@ describe('Quick add: Scan a barcode', () => {
     fakeOff({ [UNKNOWN]: beans });
     const s = await openScanner();
     await read(UNKNOWN);
-    fireEvent.click(await screen.findByRole('button', { name: 'Save as its own item' }));
+    fireEvent.click(await screen.findByRole('button', { name: /^New item/ }));
     expect((screen.getByLabelText('Name') as HTMLInputElement).value).toBe('Test beans');
     expect((screen.getByLabelText(/kcal/) as HTMLInputElement).value).toBe('332'); // 80 per 100 g x 415 g
     fireEvent.click(screen.getByRole('button', { name: 'Save item' }));
@@ -152,7 +152,7 @@ describe('Quick add: Scan a barcode', () => {
     render(s.wrap(<QuickAdd onClose={() => undefined} />));
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Scan a barcode' })));
     expect(await screen.findByText(/No camera\./)).toBeTruthy();
-    const box = screen.getByLabelText('Type the number');
+    const box = screen.getByLabelText('Barcode number');
     fireEvent.change(box, { target: { value: '3017620422004' } });
     fireEvent.click(screen.getByRole('button', { name: 'Use this number' }));
     expect(screen.getByText(/does not look right/)).toBeTruthy();

@@ -108,6 +108,30 @@ test.describe('camera dates', () => {
     await assertPrivate(page, hosts);
   });
 
+  test('a finished read survives the page being hidden and shown; a new search can follow', async ({
+    page,
+  }) => {
+    await setUp(page);
+    await toDateStep(page);
+    await show(page, { text: 'BEST BEFORE 06/2027' });
+    await expect(page.getByTestId('date-result')).toContainText('Jun 2027', READ);
+    const hide = (state: 'hidden' | 'visible') =>
+      page.evaluate((s) => {
+        Object.defineProperty(document, 'visibilityState', { value: s, configurable: true });
+        document.dispatchEvent(new Event('visibilitychange'));
+      }, state);
+    await hide('hidden');
+    await show(page, { text: 'BEST BEFORE 03/2028' });
+    await hide('visible');
+    await page.waitForTimeout(1500);
+    // Still what the person saw, not what the camera shows now.
+    await expect(page.getByTestId('date-result')).toContainText('Jun 2027');
+    await expect(page.locator('input[type="month"]')).toHaveValue('2027-06');
+    // Read again loads a fresh reader (the hidden page let the old one go) and reads the new label.
+    await page.getByRole('button', { name: 'Read again' }).click();
+    await expect(page.getByTestId('date-result')).toContainText('Mar 2028', READ);
+  });
+
   test('quick add: Read the date, Use this date, Add', async ({ page }) => {
     await setUp(page);
     await page.goto('/app/stores?debug=1');
@@ -155,52 +179,74 @@ for (const size of [
   test.describe(`layout at ${size.width}x${size.height}`, () => {
     test.use({ viewport: size });
 
-    test('aiming and after Got it, the strip, status, card and month field are all above OK', async ({
-      page,
-    }) => {
-      await page.addInitScript(() => localStorage.setItem('shtf.stocktake.hintSeen', '1'));
-      await setUp(page);
-      await toDateStep(page);
-      await page.evaluate(() => window.scrollTo(0, 0));
-      const box = async (loc: ReturnType<Page['locator']>) => (await loc.boundingBox())!;
-      const strip = page.getByTestId('camera-strip');
-      const status = page.getByTestId('date-status');
-      const month = page.locator('input[type="month"]');
-      const okBtn = page.getByRole('button', { name: 'OK', exact: true });
-      const above = async (label: string) => {
-        const barTop = (await box(okBtn)).y - 8;
-        for (const [name, loc] of [
-          ['strip', strip],
-          ['status', status],
-          ['month field', month],
-        ] as const) {
-          const b = await box(loc);
-          expect(b.y, `${label}: ${name} top`).toBeGreaterThanOrEqual(0);
-          expect(b.y + b.height, `${label}: ${name} above the OK bar`).toBeLessThanOrEqual(
-            barTop + 1,
-          );
+    for (const hintShown of [false, true]) {
+      test(`one strip size; status and month on the strip; month field above OK (hint ${hintShown ? 'showing' : 'dismissed'})`, async ({
+        page,
+      }) => {
+        if (!hintShown) {
+          await page.addInitScript(() => localStorage.setItem('shtf.stocktake.hintSeen', '1'));
         }
-        return box(strip);
-      };
-      // Aiming: the reader is looking, the strip is the tall one.
-      await show(page, { text: '   ' });
-      await expect(status).toBeVisible();
-      const aiming = await above('aiming');
-      // The date box on the screen is 88% by 56% of the strip.
-      test.info().annotations.push({
-        type: 'layout',
-        description: `${size.width}x${size.height} aiming strip ${Math.round(aiming.width)}x${Math.round(aiming.height)}, date box ${Math.round(aiming.width * 0.88)}x${Math.round(aiming.height * 0.56)}`,
+        await setUp(page);
+        await page.goto('/app/stores/stocktake?debug=1');
+        await page.getByLabel('Counting into').selectOption({ label: 'Pantry' });
+        const box = async (loc: ReturnType<Page['locator']>) => (await loc.boundingBox())!;
+        const strip = page.getByTestId('camera-strip');
+        const stripBarcode = await box(strip);
+
+        await show(page, { ean: KNOWN });
+        await expect(
+          page.getByRole('heading', { name: 'Peanut butter (340 g jar)' }),
+        ).toBeVisible();
+        await page.evaluate(() => window.scrollTo(0, 0));
+        const status = page.getByTestId('date-status');
+        await show(page, { text: '   ' });
+        await expect(status).toBeVisible();
+        const stripAiming = await box(strip);
+        // One camera size for both steps: it never changes.
+        expect(stripAiming.height).toBeCloseTo(stripBarcode.height, 0);
+        expect(stripAiming.width).toBeCloseTo(stripBarcode.width, 0);
+        // The status is drawn on the strip, at its centre.
+        const s = await box(status);
+        expect(s.y).toBeGreaterThanOrEqual(stripAiming.y);
+        expect(s.y + s.height).toBeLessThanOrEqual(stripAiming.y + stripAiming.height);
+        expect(Math.abs(s.x + s.width / 2 - (stripAiming.x + stripAiming.width / 2))).toBeLessThan(
+          8,
+        );
+
+        const month = page.locator('input[type="month"]');
+        const okBtn = page.getByRole('button', { name: 'OK', exact: true });
+        const barTop = async () => (await box(okBtn)).y - 8;
+        let monthState = 'above the OK bar';
+        if (!hintShown) {
+          const m = await box(month);
+          expect(m.y).toBeGreaterThanOrEqual(0);
+          expect(m.y + m.height).toBeLessThanOrEqual((await barTop()) + 1);
+        } else {
+          const m = await box(month);
+          monthState =
+            m.y + m.height <= (await barTop()) + 1 ? 'above the OK bar' : 'below the fold';
+        }
+        // The date box on the screen is 88% by 56% of the strip.
+        test.info().annotations.push({
+          type: 'layout',
+          description: `${size.width}x${size.height} hint ${hintShown ? 'showing' : 'dismissed'}: strip ${Math.round(stripAiming.width)}x${Math.round(stripAiming.height)}, date box ${Math.round(stripAiming.width * 0.88)}x${Math.round(stripAiming.height * 0.56)}, month field ${monthState}`,
+        });
+
+        // After Got it: the month is on the strip, and the strip is the same size.
+        await show(page, { text: 'BEST BEFORE 06/2027' });
+        const card = page.getByTestId('date-result');
+        await expect(card).toContainText('Jun 2027', READ);
+        await page.evaluate(() => window.scrollTo(0, 0));
+        const after = await box(strip);
+        expect(after.height).toBeCloseTo(stripBarcode.height, 0);
+        const c = await box(card);
+        expect(c.y).toBeGreaterThanOrEqual(after.y);
+        expect(c.y + c.height).toBeLessThanOrEqual(after.y + after.height);
+        if (!hintShown) {
+          const m = await box(month);
+          expect(m.y + m.height).toBeLessThanOrEqual((await barTop()) + 1);
+        }
       });
-      // After Got it: the card is there too.
-      await show(page, { text: 'BEST BEFORE 06/2027' });
-      const card = page.getByTestId('date-result');
-      await expect(card).toContainText('Jun 2027', READ);
-      await page.evaluate(() => window.scrollTo(0, 0));
-      const barTop = (await box(okBtn)).y - 8;
-      const cb = await box(card);
-      expect(cb.y).toBeGreaterThanOrEqual(0);
-      expect(cb.y + cb.height).toBeLessThanOrEqual(barTop + 1);
-      await above('after Got it');
-    });
+    }
   });
 }
