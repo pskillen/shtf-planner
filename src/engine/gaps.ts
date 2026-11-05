@@ -1,6 +1,7 @@
 import type { CapabilityId, Document, Packs } from '../model';
-import { compareText } from '../util';
+import { baseAmount as baseAmountOf, compareText, formatSize } from '../util';
 import { CAPABILITY_ORDER, fitsHousehold } from './context';
+import { usualPack } from './products';
 import { analyse, capabilityTargetId, type Analysis, type Coverage } from './coverage';
 import { closeHours, closeResource, type SuggestContext, type Suggestion } from './suggest';
 import type { Target } from './targets';
@@ -18,43 +19,44 @@ export interface Gap {
   suggestions: Suggestion[];
   /**
    * `acquire`: buy or get more (a resource's shortfall less what restocking puts back, so the two
-   * add up to the target's shortfall). `replenish`: a rotating location is below its floor. `task`: an asset gives nothing until a question is put
+   * add up to the target's shortfall). `replenish`: a rotating location is below its minimum. `task`: an asset gives nothing until a question is put
    * right, or a driving range needs keeping up. `plan`: a plan item to do or redo.
    */
   kind: 'acquire' | 'replenish' | 'task' | 'plan';
   /** A critical medication. */
   critical?: boolean;
-  /** For `replenish`: which floor, so a screen can say "3 below its minimum of 6". */
-  restock?: { place: string; typeName: string; floor: number; actual: number };
+  /** For `replenish`: which minimum, so a screen can say "3 below its minimum of 6". */
+  restock?: { place: string; itemName: string; minimum: number; actual: number };
 }
 
 const KIND_ORDER: Gap['kind'][] = ['acquire', 'replenish', 'task', 'plan'];
 const EPS = 1e-9;
 
-export function suggestContext(packs: Packs, a: Analysis): SuggestContext {
-  return { packs, people: a.people, cookingMet: a.cookingMet };
+export function suggestContext(doc: Document, packs: Packs, a: Analysis): SuggestContext {
+  return { doc, packs, people: a.people, cookingMet: a.cookingMet };
 }
 
 /** Gaps from an analysis (so `score` and others can share the work). */
 export function gapsFrom(doc: Document, packs: Packs, a: Analysis): Gap[] {
-  const ctx = suggestContext(packs, a);
+  const ctx = suggestContext(doc, packs, a);
   const cov = new Map(a.coverage.map((c) => [c.targetId, c]));
   const tById = new Map(a.targets.map((t) => [t.id, t]));
   const out: Gap[] = [];
 
-  // Stock below a rotating place's floor counts only as far as it goes, so the missing part is in
+  // Stock below a rotating place's minimum counts only as far as it goes, so the missing part is in
   // the target's shortfall. A restock puts it back; the buy row is the shortfall beyond that.
   const restocking = new Map<string, number>();
-  for (const b of a.belowFloor) {
-    const type = packs.items[b.typeId];
-    const give = type?.gives[0];
+  for (const b of a.belowMinimum) {
+    const item = packs.items[b.itemId];
+    const pack = item ? usualPack(doc, item) : undefined;
+    const give = pack?.gives[0];
     const t = give
       ? a.targets.find((x) => x.kind === 'resource' && x.resource === give.resource)
       : undefined;
-    if (!type || !give || !t) continue;
-    if (!fitsHousehold(type, a.people)) continue;
-    if (type.tags.includes('needs-cooking') && !a.cookingMet) continue;
-    restocking.set(t.id, (restocking.get(t.id) ?? 0) + (b.floor - b.actual) * give.amount);
+    if (!item || !give || !t) continue;
+    if (!fitsHousehold(item, a.people)) continue;
+    if (item.tags.includes('needs-cooking') && !a.cookingMet) continue;
+    restocking.set(t.id, (restocking.get(t.id) ?? 0) + (b.minimum - b.actual) * give.amount);
   }
 
   for (const t of a.targets) {
@@ -109,7 +111,7 @@ export function gapsFrom(doc: Document, packs: Packs, a: Analysis): Gap[] {
           ...base,
           kind: 'acquire',
           suggestions: radios.slice(0, 3).map((r) => ({
-            itemTypeId: r.id,
+            itemId: r.id,
             qty: 1,
             label: `1 × ${r.name}`,
             pricePence: r.typicalPricePence!,
@@ -131,16 +133,19 @@ export function gapsFrom(doc: Document, packs: Packs, a: Analysis): Gap[] {
     }
   }
 
-  // Rotating locations below their floor: restock the type there.
-  for (const b of a.belowFloor) {
-    const type = packs.items[b.typeId];
-    const give = type?.gives[0];
+  // Rotating locations below their minimum: restock the item there.
+  for (const b of a.belowMinimum) {
+    const item = packs.items[b.itemId];
+    const pack = item ? usualPack(doc, item) : undefined;
+    const give = pack?.gives[0];
     const t = give
       ? a.targets.find((x) => x.kind === 'resource' && x.resource === give.resource)
       : undefined;
-    if (!type || !give || !t) continue;
-    const qty = b.floor - b.actual;
+    if (!item || !pack || !give || !t) continue;
+    const qty = b.minimum - b.actual;
     const where = doc.locations[b.locationId]?.name ?? b.locationId;
+    const name = pack.product?.name ?? `${item.name} ${formatSize(pack.size)}`;
+    const first = item.sizes[0];
     out.push({
       capability: t.capability,
       target: t,
@@ -148,14 +153,20 @@ export function gapsFrom(doc: Document, packs: Packs, a: Analysis): Gap[] {
       shortfall: qty * give.amount,
       unit: t.unit,
       kind: 'replenish',
-      restock: { place: where, typeName: type.name, floor: b.floor, actual: b.actual },
+      restock: { place: where, itemName: item.name, minimum: b.minimum, actual: b.actual },
       suggestions: [
         {
-          itemTypeId: type.id,
+          itemId: item.id,
+          ...(pack.product ? { productId: pack.product.id } : {}),
           qty,
-          label: `${qty} × ${type.name} back into ${where}`,
-          ...(type.typicalPricePence !== undefined
-            ? { pricePence: qty * type.typicalPricePence }
+          size: pack.size,
+          label: `${qty} × ${name} back into the ${where}`,
+          ...(item.typicalPricePence !== undefined && first
+            ? {
+                pricePence: Math.round(
+                  (qty * item.typicalPricePence * baseAmountOf(pack.size)) / baseAmountOf(first),
+                ),
+              }
             : {}),
           perUnitCoverage: give.amount,
         },
@@ -192,7 +203,7 @@ export function gapsFrom(doc: Document, packs: Packs, a: Analysis): Gap[] {
 /**
  * What is missing against each target, with the cheapest sensible way to close it: whole units of
  * the cheapest item that gives the resource; a heater and its fuel when there is no heater;
- * `replenish` for a rotating location below its floor; `task` for an asset that gives nothing
+ * `replenish` for a rotating location below its minimum; `task` for an asset that gives nothing
  * until a question is put right (solar without an EPS); `plan` for a plan item not done or expired.
  */
 export function gaps(

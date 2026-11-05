@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { biggarDocument } from '../fixtures/household-biggar';
+import { addStock } from '../fixtures/stock';
 import type { Asset, Document } from '../model';
 import { bundledPacks } from '../packs/bundled';
 import { CAPABILITY_ORDER } from './context';
@@ -75,14 +76,7 @@ describe('score', () => {
   it('lifts heat once there is a heater and fuel', () => {
     const doc = biggarDocument();
     doc.assets['asset-heater'] = asset('asset-heater', 'cabinet-heater', { setting: '1.3 kW' });
-    doc.items['item-gas'] = {
-      id: 'item-gas',
-      typeId: 'items-base:gas-bottle',
-      qty: 2,
-      locationId: 'loc-garage',
-      added: '2026-09-01',
-      source: 'manual',
-    };
+    addStock(doc, packs, { id: 'gas', item: 'butane-bottle', qty: 2, locationId: 'loc-garage' });
     const heat = pct(doc, 'heat');
     expect(heat.percent).toBe(100);
     expect(score(doc, packs, NOW, 3).weakest).not.toBe('heat');

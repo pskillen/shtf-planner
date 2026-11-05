@@ -1,4 +1,4 @@
-import type { CapabilityId, Document, ItemType, Packs, RiskTag, Rule } from '../model';
+import type { CapabilityId, Document, Item, Packs, RiskTag, Rule } from '../model';
 import { ageInMonths } from './dates';
 
 /** Capabilities in the order the app lists them (also the tie-break for the weakest). */
@@ -30,7 +30,7 @@ export function peopleAt(doc: Document, asOf: string): Person[] {
 }
 
 /** An item's `ageBand` (half-open) fits at least one person, or the item has no band. */
-export function fitsHousehold(item: ItemType, people: readonly Person[]): boolean {
+export function fitsHousehold(item: Item, people: readonly Person[]): boolean {
   const band = item.ageBand;
   if (!band) return true;
   return people.some((p) => p.ageMonths >= band.fromMonths && p.ageMonths < band.toMonths);

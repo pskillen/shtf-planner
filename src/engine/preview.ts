@@ -67,7 +67,7 @@ export function preview(doc: Document, packs: Packs, asOf: string): PreviewHoriz
   return HORIZONS.map((horizonDays) => {
     const a = analyse(doc, packs, asOf, horizonDays);
     // Examples assume cooking works, so food is not steered away from rice and pasta.
-    const ctx = { ...suggestContext(packs, a), cookingMet: true };
+    const ctx = { ...suggestContext(doc, packs, a), cookingMet: true };
     const rows: PreviewRow[] = [];
     for (const t of a.targets) {
       if (t.kind === 'plan') continue;

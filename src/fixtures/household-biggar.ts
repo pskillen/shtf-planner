@@ -1,11 +1,13 @@
 import {
   DEFAULT_PACKS,
   SCHEMA_VERSION,
-  floorKey,
+  minimumKey,
   type Asset,
   type Document,
-  type ItemInstance,
   type Location,
+  type Product,
+  type Size,
+  type Stock,
 } from '../model';
 
 /**
@@ -25,7 +27,7 @@ const TODAY = '2026-09-01';
 /** The pack versions the fixture was written against (a test checks they are current). */
 const PACK_VERSIONS: Record<string, number> = {
   'assets-base': 5,
-  'items-base': 8,
+  'items-base': 9,
   'guidance-grid-free': 3,
   'guidance-uk-prepare': 3,
   'guidance-us-ready': 4,
@@ -43,15 +45,29 @@ const asset = (
   a: Omit<Asset, 'id' | 'typeId' | 'answers' | 'maintenance'> &
     Partial<Pick<Asset, 'answers' | 'maintenance'>>,
 ): Asset => ({ id, typeId: `${ASSETS}:${type}`, answers: {}, maintenance: {}, ...a });
-const item = (
+const product = (
   id: string,
-  type: string,
+  name: string,
+  itemId: string | undefined,
+  size: Size,
+  labelKcalPer100?: number,
+): Product => ({
+  id,
+  name,
+  ...(itemId ? { itemId: `${ITEMS}:${itemId}` } : {}),
+  size,
+  ...(labelKcalPer100 !== undefined ? { labelKcalPer100 } : {}),
+  added: TODAY,
+});
+const stock = (
+  id: string,
+  productId: string,
   qty: number,
   locationId: string,
   bestBefore?: string,
-): ItemInstance => ({
+): Stock => ({
   id,
-  typeId: `${ITEMS}:${type}`,
+  productId,
   qty,
   locationId,
   ...(bestBefore ? { bestBefore } : {}),
@@ -122,22 +138,51 @@ export function biggarDocument(): Document {
     }),
   ];
 
-  const items = [
-    item('item-tinned', 'tinned-food', 3, L.pantry, '2028-06'),
-    item('item-pasta', 'dried-pasta', 2, L.pantry, '2027-09'),
-    item('item-rice', 'rice-sack', 1, L.pantry, '2027-12'),
-    item('item-oats', 'porridge-oats', 1, L.pantry, '2026-12'),
+  const g = (amount: number): Size => ({ amount, unit: 'g' });
+  const piece = (amount = 1): Size => ({ amount, unit: 'pieces' });
+  const products = [
+    product('prod-beans', 'Test beans 415 g', 'baked-beans', g(415), 75),
+    product('prod-soup', 'Tomato soup 400 g', 'tinned-soup', g(400)),
+    product('prod-pasta', 'Fusilli 500 g', 'dried-pasta', g(500)),
+    product('prod-rice', 'Rice 10 kg sack', 'rice', { amount: 10, unit: 'kg' }),
+    product('prod-oats', 'Porridge oats 1 kg', 'porridge-oats', { amount: 1, unit: 'kg' }),
+    product('prod-uht', 'UHT milk 6 × 1 L', 'uht-milk', { count: 6, amount: 1, unit: 'L' }),
+    product('prod-spread', 'Test spread 400 g', 'peanut-butter', g(400)),
+    product('prod-water', 'Spring water 6 × 2 L', 'bottled-water', {
+      count: 6,
+      amount: 2,
+      unit: 'L',
+    }),
+    product('prod-can', 'Water can 10 L', 'water-container', { amount: 10, unit: 'L' }),
+    product('prod-first-aid', 'First aid kit', 'first-aid-kit', piece()),
+    product('prod-torch', 'LED torch', 'torch-aa', piece()),
+    product('prod-aa', 'AA cells 8-pack', 'aa-cells', piece(8)),
+    product('prod-nappies', 'Nappies size 2, 50', 'nappies-size-2', piece(50)),
+    product('prod-propane', 'Propane 13 kg', 'propane-bottle', { amount: 13, unit: 'kg' }),
+    // Counts towards nothing: kept and listed, scores nothing.
+    product('prod-twine', 'Garden twine', undefined, piece()),
+  ];
+
+  const stocks = [
+    stock('stock-beans', 'prod-beans', 12, L.pantry, '2028-06'),
+    stock('stock-soup', 'prod-soup', 6, L.pantry, '2027-11'),
+    stock('stock-pasta', 'prod-pasta', 4, L.pantry, '2027-09'),
+    stock('stock-pasta-attic', 'prod-pasta', 6, L.attic, '2028-01'),
+    stock('stock-rice', 'prod-rice', 1, L.pantry, '2027-12'),
+    stock('stock-oats', 'prod-oats', 1.5, L.pantry, '2026-12'),
     // The one deliberately expired item: best before 2026-10 is past on the fixture's "today".
-    item('item-uht', 'uht-milk', 6, L.pantry, '2026-10'),
-    item('item-tea', 'tea-and-sugar', 1, L.pantry, '2027-03'),
-    item('item-water', 'water-can', 2, L.garage),
-    item('item-first-aid', 'first-aid-kit', 1, L.hall, '2028-01'),
-    item('item-torch-1', 'torch-led-200lm', 1, L.hall),
-    item('item-torch-2', 'torch-led-200lm', 1, L.pantry),
-    item('item-torch-3', 'torch-led-200lm', 1, L.garage),
-    item('item-aa', 'aa-cells-8', 1, L.hall, '2031-01'),
-    item('item-nappies', 'nappies-size-2', 1, L.hall),
-    item('item-lpg', 'lpg-bottle-13kg', 1, L.shed),
+    stock('stock-uht', 'prod-uht', 1, L.pantry, '2026-10'),
+    stock('stock-spread', 'prod-spread', 2, L.pantry, '2027-06'),
+    stock('stock-water', 'prod-water', 3, L.garage, '2027-08'),
+    stock('stock-can', 'prod-can', 2, L.garage),
+    stock('stock-first-aid', 'prod-first-aid', 1, L.hall, '2028-01'),
+    stock('stock-torch-1', 'prod-torch', 1, L.hall),
+    stock('stock-torch-2', 'prod-torch', 1, L.pantry),
+    stock('stock-torch-3', 'prod-torch', 1, L.garage),
+    stock('stock-aa', 'prod-aa', 1, L.hall, '2031-01'),
+    stock('stock-nappies', 'prod-nappies', 1, L.hall),
+    stock('stock-propane', 'prod-propane', 1, L.shed),
+    stock('stock-twine', 'prod-twine', 1, L.shed),
   ];
 
   const M = BIGGAR_IDS.members;
@@ -192,22 +237,18 @@ export function biggarDocument(): Document {
     },
     locations: Object.fromEntries(locations.map((l) => [l.id, l])),
     assets: Object.fromEntries(assets.map((a) => [a.id, a])),
-    items: Object.fromEntries(items.map((i) => [i.id, i])),
-    customTypes: {},
+    products: Object.fromEntries(products.map((p) => [p.id, p])),
     barcodes: {
-      // A known barcode for the e2e: a made-up display name on a real pack type.
-      '3017620422003': {
-        typeId: `${ITEMS}:peanut-butter-340g`,
-        name: 'Test spread 400 g',
-        seen: '2026-10-01',
-      },
+      // A known barcode for the e2e: a made-up display name on a product of a real pack item.
+      '3017620422003': { productId: 'prod-spread', seen: '2026-10-01' },
     },
+    stock: Object.fromEntries(stocks.map((x) => [x.id, x])),
     scans: {},
-    floors: {
-      [floorKey(L.pantry, `${ITEMS}:tinned-food`)]: 2,
-      [floorKey(L.pantry, `${ITEMS}:dried-pasta`)]: 1,
-      [floorKey(L.pantry, `${ITEMS}:rice-sack`)]: 1,
-      [floorKey(L.pantry, `${ITEMS}:uht-milk`)]: 3,
+    minimums: {
+      [minimumKey(L.pantry, `${ITEMS}:baked-beans`)]: 6,
+      [minimumKey(L.pantry, `${ITEMS}:dried-pasta`)]: 2,
+      [minimumKey(L.pantry, `${ITEMS}:rice`)]: 1,
+      [minimumKey(L.pantry, `${ITEMS}:uht-milk`)]: 1,
     },
     plans: {
       'plans-base:meeting-point': { doneAt: '2026-01-20' },
