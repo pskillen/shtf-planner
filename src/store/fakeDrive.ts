@@ -111,6 +111,10 @@ export function createFakeCloud(): FakeCloud {
           connected = true;
           port.authExpired = false;
         },
+        warmUp() {},
+        dropToken() {
+          port.authExpired = true;
+        },
         async disconnect() {
           connected = false;
         },

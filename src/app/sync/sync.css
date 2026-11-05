@@ -21,6 +21,13 @@
   text-decoration: none;
 }
 
+.sync-pill-button {
+  background: none;
+  border: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+
 .sync-pill-text {
   overflow: hidden;
   text-overflow: ellipsis;

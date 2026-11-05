@@ -19,6 +19,8 @@ export interface GoogleIdentityClient {
       initTokenClient: (config: {
         client_id: string;
         scope: string;
+        /** The saved account, so Google can go straight through without a chooser. */
+        login_hint?: string;
         callback: (response: GoogleTokenResponse) => void;
         error_callback?: (error: { type?: string; message?: string }) => void;
       }) => GoogleTokenClient;
@@ -33,7 +35,7 @@ declare global {
   }
 }
 
-/** The one third-party script the app loads, and only when the person connects Drive. */
+/** The one third-party script the app loads, and only once the person has connected Drive (at the tap, then at each start-up). */
 export const GIS_SCRIPT_SRC = 'https://accounts.google.com/gsi/client';
 
 let loadPromise: Promise<GoogleIdentityClient> | null = null;

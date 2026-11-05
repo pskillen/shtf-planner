@@ -1,8 +1,8 @@
 import 'fake-indexeddb/auto';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Document, Env } from '../model';
 import { openStore, type DocumentStore } from './documentStore';
-import { DriveAuthError, JSON_FILE_NAME, YJS_FILE_NAME } from './drive';
+import { DriveAuthError, DrivePopupBlockedError, JSON_FILE_NAME, YJS_FILE_NAME } from './drive';
 import { createFakeCloud, type FakeCloud, type FakePort } from './fakeDrive';
 import {
   NEWER_VERSION_MESSAGE,
@@ -400,6 +400,59 @@ describe('disconnect and reconnect', () => {
     await a.sync.connect();
     expect(a.sync.state().status).toMatchObject({ kind: 'error' });
     expect(a.sync.state().status).toHaveProperty('reconnect', false);
+  });
+
+  it('a blocked Google window says so, offers Reconnect, and the next tap recovers', async () => {
+    const cloud = createFakeCloud();
+    const a = await device(cloud);
+    await a.sync.connect();
+    a.port.authExpired = true;
+    a.port.connectError = new DrivePopupBlockedError();
+    await a.sync.connect();
+    expect(a.sync.state().status).toMatchObject({
+      kind: 'error',
+      reconnect: true,
+      message: "Your browser blocked Google's window. Tap Reconnect.",
+    });
+    expect(a.sync.state().notice?.text).toBe(
+      "Your browser blocked Google's window. Tap Reconnect.",
+    );
+    await a.sync.connect();
+    expect(a.sync.state().status.kind).toBe('synced');
+  });
+
+  it('a double tap on Connect makes one Google request and one follow-up run', async () => {
+    const cloud = createFakeCloud();
+    const a = await device(cloud);
+    const connect = vi.spyOn(a.port, 'connect');
+    const states: string[] = [];
+    a.sync.subscribe((s) => states.push(s.status.kind));
+    await Promise.all([a.sync.connect(), a.sync.connect()]);
+    expect(connect).toHaveBeenCalledTimes(1);
+    expect(states.filter((k) => k === 'pulling')).toHaveLength(1);
+    expect(a.sync.state().status.kind).toBe('synced');
+    // and the next tap is a fresh connect
+    await a.sync.connect();
+    expect(connect).toHaveBeenCalledTimes(2);
+  });
+
+  it('a window the browser blocked on the very first Connect says Tap Connect', async () => {
+    const cloud = createFakeCloud();
+    const a = await device(cloud);
+    a.port.connectError = new DrivePopupBlockedError();
+    await a.sync.connect();
+    expect(a.sync.state().notice?.text).toBe("Your browser blocked Google's window. Tap Connect.");
+  });
+
+  it('dropping the token (test builds) makes the next sync ask for Reconnect', async () => {
+    const cloud = createFakeCloud();
+    const a = await device(cloud);
+    await a.sync.connect();
+    a.sync.dropToken();
+    await a.sync.checkDrive();
+    expect(a.sync.state().status).toMatchObject({ kind: 'error', reconnect: true });
+    await a.sync.connect();
+    expect(a.sync.state().status.kind).toBe('synced');
   });
 
   it('an account whose email cannot be read asks first instead of merging silently', async () => {

@@ -81,6 +81,13 @@ function DriveSection() {
           </>
         ) : null}
       </div>
+      {state.connected && __BUILD_ENV__ !== 'prod' ? (
+        <div className="row">
+          <button type="button" className="quiet" onClick={() => sync?.dropToken()}>
+            Drop the Drive token (test)
+          </button>
+        </div>
+      ) : null}
       {confirmDisconnect ? (
         <p className="muted">
           Disconnecting stops syncing on this device. Your plan here and the files on Drive are left

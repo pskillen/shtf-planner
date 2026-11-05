@@ -109,19 +109,35 @@ Edits made offline stay marked as unsent across reloads and are sent when the ne
 
 ## Signing in
 
-Google Identity Services' token flow, loaded only when the person connects. The access token (an
-hour) is kept in localStorage; there is no refresh token. Nothing opens a popup unprompted:
+Google Identity Services' token flow, loaded when the person connects (and again at start-up once
+Drive is connected, so a later tap has nothing slow before Google's window). The access token (an
+hour) is kept in localStorage; there is no refresh token. Google's window is a popup, and a browser
+only opens a popup for a tap, so **nothing asks Google unless a tap is behind it**:
 
 - **Connect** is a button. If the popup is closed (Firefox does this after a few seconds) the app
   goes quietly back to "Connect Google Drive"; no error is shown, and pressing it again works.
-- On expiry or a 401 the app tries **one** silent token request. If Google needs the person, the
-  status becomes `error` "Reconnect Google Drive" with a button, and pending edits are kept. The
-  failure is remembered: no focus, poll, edit, network-return or Check Drive asks Google again, and
-  sync does no Drive work, until the person presses the button and it works. (A page reload starts
-  with one new silent attempt.) The Data screen shows the Reconnect button only for this error.
-  Reconnect takes one tap: it asks Google for a token with `prompt: 'none'` first and falls back
-  to the usual request if that fails. Google's own window still flashes open and shut on its own
-  (renewal is never fully invisible), but there is nothing to choose or type.
+- On expiry or a 401 the app asks Google for a new token **only if the page has a live user
+  activation** (`navigator.userActivation.isActive`, the few seconds after a tap; where the API is
+  missing the answer is no). That happens when a tap starts the sync, such as **Push now**, **Check
+  Drive** or the end of a review. A sync that starts on its own (page open, focus, the poll, an edit's
+  5 second timer, the network returning) has no tap, so it does not ask: the status goes straight to
+  `error` "Reconnect Google Drive", and the browser's "Allow this site to open?" dialog never
+  appears. Pending edits are kept. The failure is remembered: no focus, poll, edit, network-return
+  or Check Drive asks Google again, and sync does no Drive work, until the person reconnects.
+- **Reconnect is one tap, one Google window.** The pill in the top bar ("! Reconnect Drive") is the
+  Reconnect button itself (it no longer links to Data), and so is the button on the Data screen.
+  `connect()` makes a single token request with the saved account as `login_hint`, straight from the
+  tap; a second request would find the tap's activation spent and be blocked. Google's window still
+  flashes open and shut on its own (renewal is never fully invisible), but there is nothing to
+  choose or type. If the browser blocks the window anyway, a toast and the Data screen say "Your
+  browser blocked Google's window. Tap Reconnect.".
+- **Renewing early.** Inside a tap, a token with under 5 minutes left is renewed before it runs
+  out; the sync does not wait for Google's window and carries on with the token that still works. If the window cannot open or is closed, the token that still works is kept and the next
+  tap does not try again for it.
+- **Test control.** Outside `prod` builds, Data shows **Drop the Drive token (test)**: it forgets the
+  token as if it had expired (still connected). A sync within about 5 seconds of that tap still
+  counts as inside a tap, so wait about 10 seconds or switch to another app first. Then come back, and the pill reads
+  "Reconnect Drive" without a Google window; tapping it reconnects.
 - **Disconnect** revokes the token and forgets the connection; the household here, the files on
   Drive, and what sync remembers (the folder and file ids, the last state both sides had, and any
   which-copy questions still open) are kept. An open question is still open after Connect, and
@@ -161,7 +177,8 @@ sync switched off. For tests and local development, a client id kept in localSto
 5. Open a household file written by a `dev` build on a `next` build: the other-build dialog appears and
    nothing merges until you choose.
 6. Leave a phone for over an hour, open the app: it either syncs quietly or asks you to reconnect;
-   no popup appears by itself.
+   no popup and no "Allow this site to open?" dialog appears by itself. Tapping the pill reconnects in
+   one tap. (On a non-prod build, **Drop the Drive token (test)** on Data does the same in a second.)
 
 ## Not done / rejected
 
