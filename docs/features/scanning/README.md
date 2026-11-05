@@ -43,6 +43,11 @@ in Chrome on Android (torch, zoom, tap to focus) and degrades cleanly in Firefox
    from a chip or a month gives two buzzes. The expiry word and colour show beside it. **OK** saves
    and goes straight to the next barcode, with a **6 second Undo** that takes exactly that addition
    back (a merged addition gives back only its own quantity) and puts the card back.
+   Cancel and OK sit in a bar that stays above the tab bar (and the unknown-item card's buttons do the
+   same), and the strip is shorter once a code is read, so neither needs a scroll on a 360 by 740 phone.
+   Undo gives the undone item's card back only when nothing else is in progress; **Sort later** is off,
+   with the reason, when there is no place to keep the scan in.
+
 5. **Done** says "14 items in 5 min (2.8 a minute) · 2 to sort later".
 
 A stocktake **adds** stock, like Quick add. It does not recount a place. An equipment type is never
@@ -54,10 +59,16 @@ offered as stock: a search that matches a stove routes to the equipment form.
 the name Open Food Facts gave it. It is part of the household document, so it syncs. A number that
 fails its check digit is a misread and is ignored.
 
+**Not this item?** If a remembered barcode turns out to be the wrong type, the date card of the
+stocktake and Quick add's form both have **Not this item?**. It reopens "Which of these is it?"
+(and Search all types) for that barcode; choosing a type replaces what the household remembers,
+for all its devices, and keeps the first-seen date and the product name. **Keep** (stocktake) or
+**Keep as it was** (Quick add) leaves it alone.
+
 ## Scans to sort
 
 Offline, or when Open Food Facts does not know a code, **Sort later** keeps the scan (`scans`):
-code, quantity, place, best-before. It counts towards nothing until sorted. Stores shows "3 scans to
+code, quantity and place (nothing sets a best-before on a scan today; a row shows one if it has one). It counts towards nothing until sorted. Stores shows "3 scans to
 sort ›". When the device is online the app looks queued codes up by itself, oldest first, within its
 rate limit, so the names are there. Tapping a row shows the same card; choosing a type makes stock
 with `source: 'barcode'`, remembers the barcode and removes the scan. A scan sorted on another device
@@ -67,7 +78,8 @@ just disappears. Delete has an undo.
 
 - **Sent:** only the digits of the barcode in the URL, with the `fields` list; no cookies, no
   referrer, no name, place, photo or household fact. Photos are never fetched.
-- **Only when:** the device is online and the household has not met the barcode before.
+- **Only when:** the device is online and the household has not met the barcode, or the person said
+  "Not this item?" for it, or it is a queued scan being sorted.
 - **Rate limit:** Open Food Facts allows 15 reads a minute per IP. The client keeps to 10 in any
   rolling minute and answers "busy" beyond that; the queue waits a minute and tries again.
 - **Identification:** `SHTF-Planner/<version> (https://prep.mm9pdy.net)`, no email. Sent as both
@@ -78,10 +90,10 @@ just disappears. Delete has an undo.
 
 ## Browsers
 
-|                           | Chrome on Android                                  | Firefox on Android                                          |
-| ------------------------- | -------------------------------------------------- | ----------------------------------------------------------- |
-| Barcode reading           | native `BarcodeDetector` (EAN/UPC), any way up     | zxing, upright, and a retry turned 90 degrees in a tall box |
-| Torch, zoom, tap to focus | yes (zoom starts at 1.75x, remembered per browser) | not offered: one line says so                               |
+|                           | Chrome on Android                                                   | Firefox on Android                                          |
+| ------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------- |
+| Barcode reading           | native `BarcodeDetector` (EAN/UPC), reading what is in the wide box | zxing, upright, and a retry turned 90 degrees in a tall box |
+| Torch, zoom, tap to focus | yes (zoom starts at 1.75x, remembered per browser)                  | not offered: one line says so                               |
 
 zxing measured a median of 384 ms from barcode in frame to recognised on the owner's phone. The
 camera stream is shared by the whole screen and never torn down between steps; frames are drawn to
@@ -104,5 +116,5 @@ and runs in CI. With `?debug=1`, `window.__shtf.scan.code('...')` injects a code
   proves the flow, not the optics.
 - A code held sideways is read by zxing's retry only if its whole length fits the tall box.
 - Reading the best-before date from the camera is not built (the date step is the month field).
-- A remembered barcode cannot be edited or forgotten except by choosing a different type on a later scan.
+- A remembered barcode can be corrected with Not this item? but not forgotten.
 - iOS Safari is not a target.

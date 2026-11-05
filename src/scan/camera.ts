@@ -1,7 +1,7 @@
 import { DEFAULT_ZOOM, FOCUS_HOLD_MS, type Box } from './tunables';
 
 /**
- * One camera stream per screen, shared by the barcode step and (in P9b) the date step: it stays
+ * One camera stream per screen, shared by the barcode step and (later) the date step: it stays
  * open between steps. Each camera setting (torch, zoom, focus) is applied on its own, because a
  * browser that refuses one should not lose the others; a refusal is recorded, never thrown.
  * Frames are only read to find a barcode; they never leave the phone and are never stored.

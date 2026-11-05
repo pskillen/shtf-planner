@@ -46,4 +46,12 @@ describe('expiryWindows', () => {
       checkMonths: 12,
     });
   });
+
+  it('never makes the check window shorter than the soon window', () => {
+    expect(expiryWindows({ expirySoonMonths: 3, expiryCheckMonths: 1 })).toEqual({
+      soonMonths: 3,
+      checkMonths: 3,
+    });
+    expect(expiryWindows({ expirySoonMonths: 3 })).toEqual({ soonMonths: 3, checkMonths: 3 });
+  });
 });

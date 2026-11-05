@@ -37,7 +37,7 @@ other item type. The pseudo-pack is not in `packs.all` and not a Settings toggle
 `barcodes` and `scans` (schema 3) belong to scanning (`docs/features/scanning/`). `barcodes` is the
 household's memory of which item type a barcode is, keyed by the normalised GTIN (a UPC-A and its
 EAN-13 form are one key), with the name Open Food Facts gave it and the date first remembered.
-`scans` holds scans saved for later ("sort later"): a code, quantity, place, best-before, and what
+`scans` holds scans saved for later ("sort later"): a code, quantity, place, an optional best-before (nothing sets one yet), and what
 Open Food Facts said once looked up. A scan counts towards nothing until it is sorted into stock.
 `settings.expirySoonMonths` (0 to 3) and `settings.expiryCheckMonths` (1 to 12) are optional: absent
 means 1 and 3, so no step writes them.

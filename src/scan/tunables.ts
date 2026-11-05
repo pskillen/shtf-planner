@@ -33,7 +33,7 @@ export interface Box {
 /** Barcode step: a wide, short box across the middle (blue). */
 export const BARCODE_BOX: Box = { x: 0.04, y: 0.36, w: 0.92, h: 0.28 };
 
-/** Date step: a taller box (yellow). Used by the camera date reading (P9b). */
+/** Date step: a taller box (yellow). Used by the camera date reading, once built. */
 export const DATE_BOX: Box = { x: 0.06, y: 0.22, w: 0.88, h: 0.56 };
 
 /**

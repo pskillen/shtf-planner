@@ -184,10 +184,16 @@ describe('barcodes and scans (schema 3)', () => {
     const b = await openStore({ name: nameB, env: 'local', deviceId: 'b', channel: false });
     remember(a, '3017620422003');
     remember(b, '5000169005743');
+    const scan = (id: string, code: string) =>
+      ({ id, code, qty: 1, locationId: 'l', scanned: '2026-11-04T10:00:00.000Z' }) as const;
+    a.change('keep scan', (d) => void (d.scans['s-a'] = scan('s-a', '3017620422003')));
+    b.change('keep scan', (d) => void (d.scans['s-b'] = scan('s-b', '5000169005743')));
     a.mergeBytes(b.bytes());
     b.mergeBytes(a.bytes());
     for (const s of [a, b]) {
       expect(Object.keys(s.get().barcodes).sort()).toEqual(['3017620422003', '5000169005743']);
+      // and one scans map too: neither device's scan is lost
+      expect(Object.keys(s.get().scans).sort()).toEqual(['s-a', 's-b']);
     }
     await a.close();
     await b.close();

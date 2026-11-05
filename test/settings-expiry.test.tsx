@@ -26,4 +26,20 @@ describe('Settings, Expiry colours', () => {
     expect(s.doc().settings.expirySoonMonths).toBe(3);
     expect(s.doc().settings.expiryCheckMonths).toBe(12);
   });
+
+  it('the check window cannot be shorter than the soon window', () => {
+    const doc = biggarDocument();
+    doc.settings.expiryCheckMonths = 1;
+    const s = liveStore(doc);
+    render(s.wrap(<SettingsScreen />));
+    const soon = screen.getByRole('radiogroup', { name: 'Expires soon within' });
+    fireEvent.click(within(soon).getByRole('radio', { name: '3 months' }));
+    expect(s.doc().settings.expiryCheckMonths).toBe(3); // moved up with it
+    const check = screen.getByRole('radiogroup', { name: 'Next check in' });
+    expect(within(check).queryByRole('radio', { name: '1 month' })).toBeNull();
+    expect(within(check).queryByRole('radio', { name: '2 months' })).toBeNull();
+    expect(
+      within(check).getByRole('radio', { name: '3 months' }).getAttribute('aria-checked'),
+    ).toBe('true');
+  });
 });

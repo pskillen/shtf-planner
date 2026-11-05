@@ -3,7 +3,7 @@ import type { Page } from '@playwright/test';
 /**
  * A fake camera for the e2e suite: `getUserMedia` returns a `canvas.captureStream`, and
  * `window.__fakeCam.show({ ean?, text?, sideways? })` draws a rendered EAN-13 (or a text label,
- * which the camera date reading of P9b uses) onto it. No real camera is needed, so it runs in CI.
+ * which a camera date reading would use) onto it. No real camera is needed, so it runs in CI.
  *
  *  - `capabilities: 'chrome'` gives the track torch, zoom 1 to 7 and focus modes, as Chrome on
  *    Android reports; `'none'` reports nothing, as Firefox does.

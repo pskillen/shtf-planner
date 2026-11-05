@@ -23,10 +23,13 @@ export const DEFAULT_EXPIRY: ExpiryWindows = { soonMonths: 1, checkMonths: 3 };
 export function expiryWindows(
   settings: Pick<Settings, 'expirySoonMonths' | 'expiryCheckMonths'>,
 ): ExpiryWindows {
-  return {
-    soonMonths: settings.expirySoonMonths ?? DEFAULT_EXPIRY.soonMonths,
-    checkMonths: settings.expiryCheckMonths ?? DEFAULT_EXPIRY.checkMonths,
-  };
+  const soonMonths = settings.expirySoonMonths ?? DEFAULT_EXPIRY.soonMonths;
+  // The check window includes the soon window: "check" can't be shorter than "soon".
+  const checkMonths = Math.max(
+    soonMonths,
+    settings.expiryCheckMonths ?? DEFAULT_EXPIRY.checkMonths,
+  );
+  return { soonMonths, checkMonths };
 }
 
 const monthIndex = (ym: string): number => {

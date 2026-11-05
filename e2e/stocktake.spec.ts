@@ -255,6 +255,24 @@ test.describe('stocktake with a fake camera', () => {
     expect(applied.some((a) => typeof a.zoom === 'number' && a.zoom > 1.75)).toBe(true);
   });
 
+  test('on a 360 by 740 phone OK is above the tab bar with no scrolling', async ({
+    page,
+    context,
+  }) => {
+    await page.setViewportSize({ width: 360, height: 740 });
+    await setUp(page, context);
+    await open(page, '/app/stores/stocktake');
+    await show(page, KNOWN);
+    await expect(dateCard(page, 'Peanut butter (340 g jar)')).toBeVisible();
+    await page.evaluate(() => window.scrollTo(0, 0));
+    const [okBox, tabBox] = await Promise.all([
+      page.getByRole('button', { name: 'OK', exact: true }).boundingBox(),
+      page.getByRole('navigation', { name: 'Main' }).boundingBox(),
+    ]);
+    expect(okBox!.y + okBox!.height).toBeLessThanOrEqual(tabBox!.y + 1);
+    expect(okBox!.y).toBeGreaterThanOrEqual(0);
+  });
+
   test('Quick add: Scan a barcode, a known code, Add', async ({ page, context }) => {
     await setUp(page, context);
     await open(page, '/app/stores');

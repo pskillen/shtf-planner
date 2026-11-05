@@ -129,6 +129,16 @@ describe('the lint fence', () => {
       "import { bundledPacks } from '../packs';\nbundledPacks;",
     ],
     [
+      'scan imports a Google module (the Drive/Google rule alone)',
+      'src/scan/x.ts',
+      "import { gapi } from './google-auth';\ngapi;",
+    ],
+    [
+      'scan imports a Drive module by name',
+      'src/scan/x.ts',
+      "import { sync } from './drive/sync';\nsync;",
+    ],
+    [
       'scan imports Drive',
       'src/scan/x.ts',
       "import { sync } from '../../store/drive/sync';\nsync;",
