@@ -13,7 +13,7 @@ import { resultCard, statusLine, styleBtn } from './date/widgets.ts';
 type Outcome = 'ok' | 'date_misread' | 'date_unreadable' | 'barcode_unreadable';
 type Item = {
   n: number; ean: string; tBarcodeMs: number; tDateMs: number; totalMs: number; outcome: Outcome; engine: string; raw: string; parsed: string; final: string;
-  aimMs?: number; computeMs?: number; frames?: number; skipped?: number; yearAssumed?: boolean;
+  aimMs?: number; computeMs?: number; frames?: number; skipped?: number; yearAssumed?: boolean; agreed?: number; stop?: string; needAgree?: boolean;
 };
 type Session = { id: string; mode: 'ocr' | 'picker'; engine: string; startedAt: number; stoppedAt?: number; items: Item[] };
 const KEY = 'stocktake-sessions';
@@ -42,6 +42,8 @@ export function summaryText(sessions: Session[]) {
     L.push(`  median time to barcode ${median(bc).toFixed(1)} s, to date ${median(dt).toFixed(1)} s`);
     const cm = s.items.filter((i) => i.computeMs !== undefined && i.engine !== 'picker' && i.engine !== 'none').map((i) => i.computeMs! / 1000);
     const am = s.items.filter((i) => i.aimMs !== undefined && i.engine !== 'picker' && i.engine !== 'none').map((i) => i.aimMs! / 1000);
+    const stops = (k: string) => s.items.filter((i) => i.stop === k).length;
+    if (s.items.some((i) => i.stop)) L.push(`  date reads stopped on: agreement ${stops('agreement')}, one confident read ${stops('confident')}, first read (agreement off) ${stops('single')}`);
     if (cm.length) L.push(`  date step split: median aim ${median(am).toFixed(1)} s, median compute ${median(cm).toFixed(1)} s (OCR + parse of the frame that read)`);
     if (s.mode === 'ocr' && pickerDate.length) {
       const swapped = s.items.map((i) => (i.totalMs - i.tDateMs + pickerMed) / 1000);
@@ -50,8 +52,8 @@ export function summaryText(sessions: Session[]) {
     }
   }
   if (!picker.length) L.push('(no picker-only session yet: run a second basket with the Picker only toggle for the baseline)');
-  L.push('', 'items (session | n | ean | barcode s | date s | total s | outcome | engine | raw OCR | parsed | final | aim s | compute s | frames read (skipped) | year assumed):');
-  for (const s of sessions) for (const i of s.items) L.push(`${s.id} | ${i.n} | ${i.ean} | ${sec(i.tBarcodeMs)} | ${sec(i.tDateMs)} | ${sec(i.totalMs)} | ${i.outcome} | ${i.engine} | ${i.raw.replace(/\s+/g, ' ')} | ${i.parsed || '-'} | ${i.final || '-'} | ${i.aimMs === undefined ? '-' : sec(i.aimMs)} | ${i.computeMs === undefined ? '-' : sec(i.computeMs)} | ${i.frames ?? '-'} (${i.skipped ?? '-'}) | ${i.yearAssumed ? 'yes' : 'no'}`);
+  L.push('', 'items (session | n | ean | barcode s | date s | total s | outcome | engine | raw OCR | parsed | final | aim s | compute s | frames read (skipped) | year assumed | frames agreed | stopped on | need two frames):');
+  for (const s of sessions) for (const i of s.items) L.push(`${s.id} | ${i.n} | ${i.ean} | ${sec(i.tBarcodeMs)} | ${sec(i.tDateMs)} | ${sec(i.totalMs)} | ${i.outcome} | ${i.engine} | ${i.raw.replace(/\s+/g, ' ')} | ${i.parsed || '-'} | ${i.final || '-'} | ${i.aimMs === undefined ? '-' : sec(i.aimMs)} | ${i.computeMs === undefined ? '-' : sec(i.computeMs)} | ${i.frames ?? '-'} (${i.skipped ?? '-'}) | ${i.yearAssumed ? 'yes' : 'no'} | ${i.agreed ?? '-'} | ${i.stop || '-'} | ${i.needAgree === undefined ? '-' : i.needAgree ? 'yes' : 'no'}`);
   return L.join('\n');
 }
 
@@ -68,7 +70,7 @@ export function mount(root: HTMLElement) {
   let phase: 'idle' | 'scan' | 'date' | 'done' = 'idle';
   let itemStart = 0, tBarcode = 0, tDate = 0, ean = '', barcodeFail = false;
   let parsed: MonthYear | null = null, value: MonthYear | null = null, raw = '', engineName = '';
-  let aimMs = 0, computeMs = 0, frames = 0, skippedFrames = 0, yearAssumed = false, shownCrop: Gray | null = null;
+  let aimMs = 0, computeMs = 0, frames = 0, skippedFrames = 0, yearAssumed = false, shownCrop: Gray | null = null, agreed = 0, stop = '';
   let dateState: 'reading' | 'result' | 'fix' | 'pick' = 'reading', pickOutcome: Outcome = 'ok';
   let abort = false, stopBarcode: (() => void) | undefined, runId = 0;
 
@@ -79,6 +81,7 @@ export function mount(root: HTMLElement) {
   const buttons = el('div');
   const summary = el('pre');
   const note = el('div'); note.style.cssText = 'font-size:12px;opacity:.8;';
+  const agreeBox = el('input', { type: 'checkbox', checked: true }); // round 3: two frames must agree before "Got it"
   const modeBox = el('input', { type: 'checkbox' });
   modeBox.onchange = () => { pickerOnly = modeBox.checked; };
   const sel = el('select');
@@ -131,7 +134,7 @@ export function mount(root: HTMLElement) {
     const id = ++runId;
     phase = 'scan'; abort = false; barcodeFail = false;
     ean = ''; parsed = value = null; raw = ''; engineName = pickerOnly ? 'picker' : engineId;
-    tBarcode = tDate = 0; aimMs = computeMs = frames = skippedFrames = 0; yearAssumed = false; shownCrop = null;
+    tBarcode = tDate = 0; aimMs = computeMs = frames = skippedFrames = agreed = 0; stop = ''; yearAssumed = false; shownCrop = null;
     itemStart = performance.now();
     if (!cam.running) await cam.start();
     cam.setBoxVisible(false); cam.setStripVisible(true); void cam.video.play().catch(() => {});
@@ -156,12 +159,12 @@ export function mount(root: HTMLElement) {
     try {
       const engine = await getEngine(cur!.engine as EngineId);
       // engine load time lands in the item time on purpose: the first item pays it, the owner should feel that
-      const lo = await scanUntil(cam, engine, 8000, () => abort || id !== runId || phase !== 'date' || dateState !== 'reading', (s, i) => { if (id === runId && phase === 'date' && dateState === 'reading') status.set(s, i); });
+      const lo = await scanUntil(cam, engine, 8000, () => abort || id !== runId || phase !== 'date' || dateState !== 'reading', (s, i) => { if (id === runId && phase === 'date' && dateState === 'reading') status.set(s, i); }, { needAgree: agreeBox.checked });
       if (id !== runId || phase !== 'date' || dateState !== 'reading') return;
       engineName = engine.name;
       raw = lo.res?.text ?? '';
       aimMs = lo.aimMs; computeMs = lo.computeMs; frames = lo.frames; skippedFrames = lo.skipped; shownCrop = lo.crop;
-      yearAssumed = !!lo.res?.yearAssumed;
+      yearAssumed = !!lo.res?.yearAssumed; agreed = lo.agreed; stop = lo.stop ?? '';
       cam.video.pause(); // freeze on the frame that was read
       if (lo.res?.value) {
         parsed = value = lo.res.value; dateState = 'result';
@@ -181,7 +184,7 @@ export function mount(root: HTMLElement) {
     if (!tBarcode) tBarcode = total;
     if (!tDate) tDate = Math.max(0, total - tBarcode);
     const o: Outcome = barcodeFail ? 'barcode_unreadable' : outcome;
-    cur.items.push({ n: cur.items.length + 1, ean, tBarcodeMs: tBarcode, tDateMs: tDate, totalMs: total, outcome: o, engine: engineName, raw, parsed: parsed ? fmtMY(parsed) : '', final: value ? fmtMY(value) : '', aimMs, computeMs, frames, skipped: skippedFrames, yearAssumed });
+    cur.items.push({ n: cur.items.length + 1, ean, tBarcodeMs: tBarcode, tDateMs: tDate, totalMs: total, outcome: o, engine: engineName, raw, parsed: parsed ? fmtMY(parsed) : '', final: value ? fmtMY(value) : '', aimMs, computeMs, frames, skipped: skippedFrames, yearAssumed, agreed, stop, needAgree: agreeBox.checked });
     persist(); refreshSummary();
     phase = 'done'; cam.setBoxVisible(false); cam.setStripVisible(true); void cam.video.play().catch(() => {});
     status.set('ready');
@@ -202,7 +205,7 @@ export function mount(root: HTMLElement) {
     // the strip gives its room to the month picker when the picker is up
     cam.setStripVisible(!!cur && !(phase === 'date' && (dateState === 'fix' || dateState === 'pick')));
     if (!cur) { stage.append('Press Start. Aim at a barcode, then at the best-before date.'); return; }
-    const detail = () => `${raw.replace(/\s+/g, ' ') || '(nothing)'} | ${engineName} | aim ${Math.round(aimMs)} + compute ${Math.round(computeMs)} ms, ${frames} frame${frames === 1 ? '' : 's'}, ${skippedFrames} skipped`;
+    const detail = () => `${raw.replace(/\s+/g, ' ') || '(nothing)'} | ${engineName} | aim ${Math.round(aimMs)} + compute ${Math.round(computeMs)} ms, ${frames} frame${frames === 1 ? '' : 's'}, ${skippedFrames} skipped${stop ? `, stopped on ${stop}${stop === 'agreement' ? ` (${agreed} frames)` : ''}` : ''}`;
     if (phase === 'scan') {
       buttons.append(big(button('Barcode can\'t read', () => manualEntry()), '#a52'));
     } else if (phase === 'date') {
@@ -261,7 +264,7 @@ export function mount(root: HTMLElement) {
 
   const title = el('div', { textContent: 'Spike F: mock stocktake' });
   title.style.cssText = 'font-size:15px;font-weight:700;margin:2px 0 4px;';
-  const cfgRow = el('div', {}, sel, el('label', {}, ' ', modeBox, ' picker only (baseline)'));
+  const cfgRow = el('div', {}, sel, el('label', {}, ' ', modeBox, ' picker only (baseline)'), el('label', {}, ' ', agreeBox, ' Need two frames to agree'));
   cfgRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;margin-top:4px;font-size:14px;';
   sel.style.cssText = 'font-size:15px;padding:6px;max-width:55vw;';
   const topRow = el('div', {}, startBtn, stopBtn, clock, count);
