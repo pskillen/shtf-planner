@@ -35,6 +35,16 @@ async function setUp(page: Page): Promise<Set<string>> {
   await installFakeCamera(page, { capabilities: 'chrome', detector: true });
   await page.goto('/?debug=1');
   await page.evaluate(() => (window as unknown as { __shtf: Shtf }).__shtf.loadFixture());
+  // No spread in the pantry yet: stocktake should add a new barcode row (not merge manual stock).
+  await page.evaluate(() => {
+    (
+      window as unknown as {
+        __shtf: Shtf & { change: (fn: (d: { stock: Record<string, unknown> }) => void) => void };
+      }
+    ).__shtf.change((d) => {
+      delete d.stock['stock-spread'];
+    });
+  });
   return hosts;
 }
 
@@ -54,7 +64,7 @@ async function toDateStep(page: Page): Promise<void> {
   await page.goto('/app/stores/stocktake?debug=1');
   await page.getByLabel('Counting into').selectOption({ label: 'Pantry' });
   await show(page, { ean: KNOWN });
-  await expect(page.getByRole('heading', { name: 'Peanut butter (340 g jar)' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Test spread 400 g' })).toBeVisible();
 }
 
 test.describe.configure({ mode: 'serial' });
@@ -138,8 +148,8 @@ test.describe('camera dates', () => {
     await setUp(page);
     await page.goto('/app/stores?debug=1');
     await page.getByRole('button', { name: 'Add stock' }).click();
-    await page.getByLabel('What are you adding?').fill('spreadStock');
-    await page.getByRole('button', { name: /Peanut butter \(340 g jar\)/ }).click();
+    await page.getByLabel('What are you adding?').fill('peanut');
+    await page.getByRole('button', { name: /^Peanut butter/ }).click();
     await page.getByRole('button', { name: 'Read the date' }).click();
     await show(page, { text: 'BEST BEFORE 06/2027' });
     await expect(page.getByTestId('date-result')).toContainText('Jun 2027', READ);
@@ -223,9 +233,7 @@ for (const size of [
         }
 
         await show(page, { ean: KNOWN });
-        await expect(
-          page.getByRole('heading', { name: 'Peanut butter (340 g jar)' }),
-        ).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Test spread 400 g' })).toBeVisible();
         await page.evaluate(() => window.scrollTo(0, 0));
         const status = page.getByTestId('date-status');
         await show(page, { text: '   ' });
