@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { likelyTypes } from '../../../engine';
-import type { AssetType, ItemType, ProductInfo } from '../../../model';
+import type { ItemType, ProductInfo } from '../../../model';
 import type { OffProduct, OffResult } from '../../../scan/openFoodFacts';
 import { today } from '../../../util';
 import { Field } from '../../components/controls';
@@ -11,7 +11,7 @@ import { usePacks } from '../../usePacks';
 import { equipmentAddPath } from '../assets/route';
 import { CustomItemForm } from './CustomItemForm';
 import { matchTypes } from './stock';
-import { productInfoOf, productLine, useStockTypes } from './scanHelpers';
+import { productInfoOf, productLine, useEquipmentMatches, useStockTypes } from './scanHelpers';
 
 /**
  * The card for a barcode just read: what is it? A barcode the household has met before is
@@ -84,17 +84,7 @@ export function ScanResolve({
     () => (searching ? matchTypes(types, query) : []),
     [searching, types, query],
   );
-  const equipmentShown = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!searching || q === '') return [] as AssetType[];
-    const linked = (t: AssetType) =>
-      Object.values(packs.items)
-        .filter((i) => i.assetTypeId === t.id)
-        .map((i) => i.name);
-    return Object.values(packs.assets).filter((t) =>
-      [t.name, ...linked(t)].some((n) => n.toLowerCase().includes(q)),
-    );
-  }, [searching, query, packs]);
+  const equipmentShown = useEquipmentMatches(query, searching);
 
   if (known) return null;
 

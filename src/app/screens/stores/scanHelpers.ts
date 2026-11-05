@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { ItemType, ProductInfo } from '../../../model';
+import type { AssetType, ItemType, ProductInfo } from '../../../model';
 import type { OffResult } from '../../../scan/openFoodFacts';
 import { isValidGtin, normaliseGtin } from '../../../util';
 import { useDocument } from '../../state';
@@ -45,4 +45,39 @@ export function readTypedCode(text: string): { code: string } | { problem: strin
     return { problem: 'That number does not look right. Check the digits under the bars.' };
   }
   return { code: normaliseGtin(digits) };
+}
+
+/**
+ * Equipment (a stove, a generator) that matches a search, by its own name or the name of a thing
+ * people buy for it. Equipment is never stock: these route to the equipment form.
+ */
+export function useEquipmentMatches(query: string, active = true): AssetType[] {
+  const packs = usePacks();
+  return useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!active || q === '') return [];
+    const linked = (t: AssetType) =>
+      Object.values(packs.items)
+        .filter((i) => i.assetTypeId === t.id)
+        .map((i) => i.name);
+    return Object.values(packs.assets).filter((t) =>
+      [t.name, ...linked(t)].some((n) => n.toLowerCase().includes(q)),
+    );
+  }, [active, query, packs]);
+}
+
+/** "Saved 1 × Tinned food (400 g tin) to Pantry". */
+export const savedText = (qty: number, name: string, place: string): string =>
+  `Saved ${qty} × ${name} to ${place}`;
+
+/** The summary line for the Done screen. */
+export function summaryText(items: number, ms: number, sortLater: number): string {
+  const minutes = Math.max(ms / 60_000, 1 / 60);
+  const mins = Math.max(1, Math.round(minutes));
+  const rate = items / minutes;
+  const parts = [
+    `${items} ${items === 1 ? 'item' : 'items'} in ${mins} min (${rate.toFixed(1)} a minute)`,
+  ];
+  if (sortLater > 0) parts.push(`${sortLater} to sort later`);
+  return parts.join(' · ');
 }

@@ -544,6 +544,7 @@ button.danger {
 }
 
 button.secondary,
+.button.secondary,
 .quiet-button {
   background: transparent;
   color: var(--accent);
@@ -1162,4 +1163,20 @@ a.row-main {
   border-radius: 6px;
   font-weight: 800;
   color: #001;
+}
+
+.stores-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+button.scans-note {
+  width: 100%;
+  justify-content: flex-start;
+  text-align: left;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--warn);
+  margin-bottom: 8px;
 }

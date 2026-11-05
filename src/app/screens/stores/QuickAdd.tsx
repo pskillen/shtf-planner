@@ -308,6 +308,9 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
             <button type="button" className="secondary" onClick={() => setStep('scan')}>
               Scan a barcode
             </button>
+            <Link className="button secondary" to="/app/stores/stocktake" onClick={onClose}>
+              Stocktake a pile
+            </Link>
             <Field label="What are you adding?">
               <input
                 ref={searchRef}

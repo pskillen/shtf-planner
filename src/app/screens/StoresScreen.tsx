@@ -11,6 +11,8 @@ import { keyAnswer } from './assets/questionnaire';
 import { FloorSheet, type FloorRow } from './stores/FloorSheet';
 import { ItemSheet } from './stores/ItemSheet';
 import { QuickAdd } from './stores/QuickAdd';
+import { ScansToSort, ScansToSortNote } from './stores/ScansToSort';
+import { useScanQueue } from './stores/useScanQueue';
 import { matchTypes, suitabilityWarning } from './stores/stock';
 
 /** One line of the list: a stock entry, or a floor with nothing on the shelf (`item` unset). */
@@ -34,6 +36,8 @@ export function StoresScreen() {
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<ItemInstance | null>(null);
   const [flooring, setFlooring] = useState<string | null>(null);
+  const [sorting, setSorting] = useState(false);
+  useScanQueue();
 
   const remove = useDeferredDelete((id) =>
     change('delete stock', (d) => {
@@ -191,6 +195,12 @@ export function StoresScreen() {
   return (
     <section className="screen stores">
       <h1>Stores</h1>
+      <ScansToSortNote onOpen={() => setSorting(true)} />
+      <div className="stores-actions">
+        <Link className="button secondary" to="/app/stores/stocktake">
+          Stocktake
+        </Link>
+      </div>
       {empty ? (
         <p className="muted">Nothing in stock yet. Tap + to add what you have.</p>
       ) : (
@@ -286,6 +296,7 @@ export function StoresScreen() {
       </EditArea>
 
       {adding ? <QuickAdd onClose={() => setAdding(false)} /> : null}
+      {sorting ? <ScansToSort onClose={() => setSorting(false)} /> : null}
       {editing ? (
         <ItemSheet
           key={editing.id}

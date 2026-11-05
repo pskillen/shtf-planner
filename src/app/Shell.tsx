@@ -19,6 +19,7 @@ import { ScoreScreen } from './screens/ScoreScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { GapsScreen } from './screens/GapsScreen';
 import { StoresScreen } from './screens/StoresScreen';
+import { StocktakeScreen } from './screens/stores/StocktakeScreen';
 import type { ReactNode } from 'react';
 
 function Screen({ children }: { children: ReactNode }) {
@@ -116,6 +117,7 @@ export function Shell() {
               }
             />
             <Route path="stores" element={<StoresScreen />} />
+            <Route path="stores/stocktake" element={<StocktakeScreen />} />
             <Route path="gaps" element={<GapsScreen />} />
             <Route path="score" element={<ScoreScreen />} />
             <Route path="*" element={<Navigate to="/app" replace />} />
