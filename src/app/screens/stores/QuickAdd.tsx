@@ -282,25 +282,25 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
                 onChange={(e) => setQuery(e.target.value)}
               />
             </Field>
+            {equipmentShown.length > 0 ? (
+              <section aria-label="Equipment: add to your home" className="equipment-route">
+                <h3>Equipment: add to your home</h3>
+                <ul className="row-list">
+                  {equipmentShown.map((t) => (
+                    <li className="row-item" key={t.id}>
+                      <Link className="row-main" to={equipmentAddPath(t.id)}>
+                        <strong>{t.name}</strong>
+                        <span className="muted">Opens the equipment form, not stock</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
             <button type="button" className="secondary" onClick={() => setStep('custom')}>
               Add as a custom item
             </button>
           </div>
-          {equipmentShown.length > 0 ? (
-            <section aria-label="Equipment: add to your home" className="equipment-route">
-              <h3>Equipment: add to your home</h3>
-              <ul className="row-list">
-                {equipmentShown.map((t) => (
-                  <li className="row-item" key={t.id}>
-                    <Link className="row-main" to={equipmentAddPath(t.id)}>
-                      <strong>{t.name}</strong>
-                      <span className="muted">Opens the equipment form, not stock</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ) : null}
           {searching ? (
             <>
               {shown.length === 0 && equipmentShown.length === 0 ? (

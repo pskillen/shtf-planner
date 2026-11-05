@@ -63,6 +63,9 @@ describe('equipment is added to the home, never as stock', () => {
     expect(
       searchRow.compareDocumentPosition(route) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
+    // and above "Add as a custom item", so a stove is not saved as a custom stock item
+    const custom = screen.getByRole('button', { name: 'Add as a custom item' });
+    expect(route.compareDocumentPosition(custom) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(route.compareDocumentPosition(stock) & Node.DOCUMENT_POSITION_PRECEDING).toBeFalsy();
   });
 

@@ -984,7 +984,8 @@ a.row-main {
   align-items: flex-start;
   gap: 0.5rem;
 }
-.search-row .field {
+.search-row .field,
+.search-row .equipment-route {
   align-self: stretch;
 }
 .type-group > summary {
