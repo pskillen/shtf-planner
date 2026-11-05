@@ -32,8 +32,8 @@ The Stores tab: what the household has, grouped by **item** (the generic from th
 - **Quarters.** Batch and quick-add quantities use whole packs plus optional ¼, ½ or ¾ (shown as ½, 2½, …).
 - **Quick add.** Pick an item (search, recent products, or browse by category and heading), then a **size** (your
   products of that item, suggested chips, or another size with optional name). Same item + name + size reuses the
-  product. No custom items. After Add: **Next item** (primary) and **Add another**. Scan a barcode and Stocktake
-  a pile sit above the search box.
+  product. No custom items. After Add you return to search or the scanner with **Added …** and **Edit** for the
+  row just saved. Scan a barcode and Stocktake a pile sit above the search box.
 - **Your products.** Footer link and each product's › in Stores open the list: every product by item, with kcal
   source, stock total and barcode count. Merge moves **packs** and barcodes to another product and deletes the
   duplicate.

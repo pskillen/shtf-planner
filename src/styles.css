@@ -415,10 +415,22 @@ fieldset.plain:disabled .switch-row {
   font-size: 0.9rem;
 }
 
+.field-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.field-input-main {
+  flex: 1;
+  min-width: 0;
+}
+
 input[type='text'],
 input[type='search'],
 input[type='number'],
 input[type='date'],
+input[type='month'],
 select,
 textarea {
   width: 100%;

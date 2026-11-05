@@ -115,8 +115,6 @@ test('Quick add: nine items, two of them added again, each in few taps', async (
     }
     if (opts.chip) await tap(() => page.getByRole('button', { name: opts.chip! }).click());
     await tap(() => page.getByRole('button', { name: 'Add', exact: true }).click());
-    // The sheet stays open for the next one: one tap to go back to the search.
-    await tap(() => page.getByRole('button', { name: 'Next item' }).click());
     taps.push(count);
   }
 
@@ -133,12 +131,18 @@ test('Quick add: nine items, two of them added again, each in few taps', async (
   await tap(() => pickSizeInDialog(page));
   await tap(() => page.getByLabel('Where does it go?').selectOption({ label: 'Garage' }));
   await tap(() => page.getByRole('button', { name: 'Add', exact: true }).click());
-  await expect(page.getByText(/Added 1 × .* to Garage/)).toBeVisible();
-  // add another, twice
-  await page.getByRole('button', { name: 'Add another' }).click();
-  await page.getByRole('button', { name: 'Add another' }).click();
+  await expect(page.getByTestId('last-add-status')).toContainText(/Added 1 × .* to Garage/);
+  for (let i = 0; i < 2; i++) {
+    await page.getByRole('searchbox', { name: 'What are you adding?' }).fill('water container');
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: /Water containers/i })
+      .click();
+    count = 0;
+    await tap(() => pickSizeInDialog(page));
+    await tap(() => page.getByRole('button', { name: 'Add', exact: true }).click());
+  }
   await expect(page.getByTestId('added-count')).toHaveText('Added this session: 3');
-  await page.getByRole('button', { name: 'Next item' }).click();
 
   // The place starts where the type lives, else the last one used: a plain item is a few taps.
   await plain('bottled', /Bottled water/, { more: 1, chip: '+1 y' });
@@ -147,7 +151,7 @@ test('Quick add: nine items, two of them added again, each in few taps', async (
   await plain('oats', /Porridge oats/, { chip: '+1 y' });
   await plain('candles', /Candles/);
   expect(Math.max(...taps)).toBeLessThanOrEqual(6);
-  expect(taps).toEqual([5, 4, 3, 4, 3]);
+  expect(taps).toEqual([4, 3, 2, 3, 2]);
 
   await page.getByRole('button', { name: 'Close' }).click();
 

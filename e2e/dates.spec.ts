@@ -322,3 +322,53 @@ for (const size of [
     }
   });
 }
+
+for (const size of [{ width: 360, height: 740 }] as const) {
+  test.describe(`quick add form layout at ${size.width}x${size.height}`, () => {
+    test.use({ viewport: size });
+
+    for (const monthBox of ['picker', 'text box'] as const) {
+      test(`Read the date beside the month field; month clears Add (${monthBox})`, async ({
+        page,
+      }) => {
+        if (monthBox === 'text box') {
+          await page.addInitScript(() => {
+            const desc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'type')!;
+            Object.defineProperty(HTMLInputElement.prototype, 'type', {
+              ...desc,
+              get() {
+                const t = desc.get!.call(this) as string;
+                return t === 'month' ? 'text' : t;
+              },
+            });
+          });
+        }
+        await installFakeCamera(page, { capabilities: 'chrome', detector: true });
+        await page.goto('/?debug=1');
+        await page.evaluate(() => (window as unknown as { __shtf: Shtf }).__shtf.loadFixture());
+        await page.goto('/app/stores?debug=1');
+        await page.getByRole('button', { name: 'Add stock' }).click();
+        await page.getByLabel('What are you adding?').fill('peanut');
+        await page.getByRole('button', { name: /^Peanut butter Food/ }).click();
+        await maybePickSize(page);
+        await page.evaluate(() => window.scrollTo(0, 0));
+
+        const month = page.locator('input[type="month"], input[placeholder="Mar 2027"]');
+        const read = page.getByRole('button', { name: 'Read the date' });
+        await expect(month).toBeVisible();
+        await expect(read).toBeVisible();
+
+        const box = async (loc: ReturnType<Page['locator']>) => (await loc.boundingBox())!;
+        const m = await box(month);
+        const r = await box(read);
+        expect(r.x).toBeGreaterThanOrEqual(m.x + m.width * 0.45 - 4);
+        expect(r.y).toBeGreaterThanOrEqual(m.y - 6);
+        expect(r.y + r.height).toBeLessThanOrEqual(m.y + m.height + 6);
+
+        const addBtn = page.getByRole('button', { name: 'Add', exact: true });
+        const addTop = async () => (await box(addBtn)).y - 8;
+        expect(m.y + m.height).toBeLessThanOrEqual((await addTop()) - MONTH_SLACK);
+      });
+    }
+  });
+}

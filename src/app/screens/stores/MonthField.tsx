@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Field } from '../../components/controls';
 import { formatMonth, monthChips, parseMonth } from './stock';
 import type { Item } from '../../../model';
@@ -16,6 +16,7 @@ export function MonthField({
   today,
   label = 'Best before',
   quiet = false,
+  action,
 }: {
   value: string | undefined;
   onChange: (next: string | undefined) => void;
@@ -24,6 +25,8 @@ export function MonthField({
   label?: string;
   /** No hint line unless the text is not a month: for a screen short of room. */
   quiet?: boolean;
+  /** Sits on the same row as the input, to its right (e.g. Read the date). */
+  action?: ReactNode;
 }) {
   const native = supportsMonthInput();
   const [text, setText] = useState(value ?? '');
@@ -34,40 +37,47 @@ export function MonthField({
   }
   const chips = monthChips(shelfLife, today);
   const bad = !native && text.trim() !== '' && parseMonth(text) === undefined;
+  const hint = bad
+    ? 'Read as a month and year, like Mar 2027 or 03/2027.'
+    : quiet
+      ? undefined
+      : !value
+        ? 'Optional.'
+        : native
+          ? undefined
+          : formatMonth(value);
+
+  const input = native ? (
+    <input
+      type="month"
+      value={value ?? ''}
+      onChange={(e) => onChange(parseMonth(e.target.value))}
+    />
+  ) : (
+    <input
+      type="text"
+      inputMode="numeric"
+      autoComplete="off"
+      placeholder="Mar 2027"
+      value={text}
+      aria-invalid={bad || undefined}
+      onChange={(e) => {
+        setText(e.target.value);
+        onChange(parseMonth(e.target.value));
+      }}
+    />
+  );
 
   return (
     <>
-      <Field
-        label={label}
-        hint={
-          bad
-            ? 'Read as a month and year, like Mar 2027 or 03/2027.'
-            : quiet
-              ? undefined
-              : value
-                ? formatMonth(value)
-                : 'Optional.'
-        }
-      >
-        {native ? (
-          <input
-            type="month"
-            value={value ?? ''}
-            onChange={(e) => onChange(parseMonth(e.target.value))}
-          />
+      <Field label={label} hint={hint}>
+        {action ? (
+          <div className="field-input-row">
+            <div className="field-input-main">{input}</div>
+            {action}
+          </div>
         ) : (
-          <input
-            type="text"
-            inputMode="numeric"
-            autoComplete="off"
-            placeholder="Mar 2027"
-            value={text}
-            aria-invalid={bad || undefined}
-            onChange={(e) => {
-              setText(e.target.value);
-              onChange(parseMonth(e.target.value));
-            }}
-          />
+          input
         )}
       </Field>
       {chips.length > 0 || value ? (

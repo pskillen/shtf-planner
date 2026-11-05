@@ -16,6 +16,7 @@ export function ScanSheet({
   sortLaterBlocked,
   reidentify,
   initialCode,
+  addedStatus,
 }: {
   onClose: () => void;
   onBack: () => void;
@@ -24,6 +25,7 @@ export function ScanSheet({
   sortLaterBlocked?: string;
   reidentify?: boolean;
   initialCode?: string;
+  addedStatus?: { message: string; stockId: string | undefined; onEdit: () => void };
 }) {
   const [code, setCode] = useState<string | null>(initialCode ?? null);
   const [typed, setTyped] = useState('');
@@ -48,6 +50,19 @@ export function ScanSheet({
         </button>
       }
     >
+      {addedStatus ? (
+        <p className="note" role="status" data-testid="last-add-status">
+          {addedStatus.message}
+          {addedStatus.stockId ? (
+            <>
+              {' '}
+              <button type="button" className="link" onClick={addedStatus.onEdit}>
+                Edit
+              </button>
+            </>
+          ) : null}
+        </p>
+      ) : null}
       {reidentify ? null : (
         <CameraStrip
           mode="barcode"
