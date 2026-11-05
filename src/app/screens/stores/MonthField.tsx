@@ -34,21 +34,19 @@ export function MonthField({
   }
   const chips = monthChips(shelfLife, today);
   const bad = !native && text.trim() !== '' && parseMonth(text) === undefined;
+  const hint = bad
+    ? 'Read as a month and year, like Mar 2027 or 03/2027.'
+    : quiet
+      ? undefined
+      : !value
+        ? 'Optional.'
+        : native
+          ? undefined
+          : formatMonth(value);
 
   return (
     <>
-      <Field
-        label={label}
-        hint={
-          bad
-            ? 'Read as a month and year, like Mar 2027 or 03/2027.'
-            : quiet
-              ? undefined
-              : value
-                ? formatMonth(value)
-                : 'Optional.'
-        }
-      >
+      <Field label={label} hint={hint}>
         {native ? (
           <input
             type="month"
