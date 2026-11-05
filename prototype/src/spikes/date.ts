@@ -12,7 +12,7 @@ import { resultCard, smallCrop, statusLine, styleBtn } from './date/widgets.ts';
 type Attempt = {
   at: string; engine: string; ms: number; raw: string; parsed: string; final: string;
   outcome: 'ok' | 'corrected' | 'picked' | 'unread'; conf: number;
-  aimMs?: number; computeMs?: number; frames?: number; skipped?: number; passes?: number; yearAssumed?: boolean;
+  aimMs?: number; computeMs?: number; frames?: number; skipped?: number; passes?: number; yearAssumed?: boolean; zoom?: number;
 };
 const KEY = 'date-spike-attempts';
 
@@ -29,8 +29,8 @@ export function summaryText(rows: Attempt[]) {
     const aim = a.filter((x) => x.aimMs !== undefined).map((x) => x.aimMs!);
     lines.push(`${e} | ${a.length} | ${c('ok')} (${Math.round((100 * c('ok')) / a.length)}%) | ${c('corrected')} | ${c('picked')} | ${c('unread')} | ${Math.round(median(ms))} | ${Math.round(p90(ms))} | ${comp.length ? Math.round(median(comp)) : '-'} | ${aim.length ? Math.round(median(aim)) : '-'}`);
   }
-  lines.push('', 'attempts (engine | total ms | aim ms | compute ms | frames read (skipped) | passes | raw OCR | parsed | final | outcome | year assumed):');
-  for (const r of rows) lines.push(`${r.engine} | ${n0(r.ms)} | ${n0(r.aimMs)} | ${n0(r.computeMs)} | ${r.frames ?? '-'} (${r.skipped ?? '-'}) | ${r.passes ?? '-'} | ${r.raw.replace(/\s+/g, ' ')} | ${r.parsed || '-'} | ${r.final || '-'} | ${r.outcome} | ${r.yearAssumed ? 'yes' : 'no'}`);
+  lines.push('', 'attempts (engine | total ms | aim ms | compute ms | frames read (skipped) | passes | raw OCR | parsed | final | outcome | year assumed | zoom):');
+  for (const r of rows) lines.push(`${r.engine} | ${n0(r.ms)} | ${n0(r.aimMs)} | ${n0(r.computeMs)} | ${r.frames ?? '-'} (${r.skipped ?? '-'}) | ${r.passes ?? '-'} | ${r.raw.replace(/\s+/g, ' ')} | ${r.parsed || '-'} | ${r.final || '-'} | ${r.outcome} | ${r.yearAssumed ? 'yes' : 'no'} | ${r.zoom ? r.zoom.toFixed(1) + 'x' : '-'}`);
   return lines.join('\n');
 }
 
@@ -92,7 +92,7 @@ export function mount(root: HTMLElement) {
     const r: Attempt = {
       at: new Date().toISOString(), engine: current.engine, ms: current.ms, raw: current.raw, parsed: current.parsed ? fmtMY(current.parsed) : '',
       final: current.value ? fmtMY(current.value) : '', outcome, conf: Math.round(current.conf * 100) / 100,
-      aimMs: Math.round(current.aimMs), computeMs: Math.round(current.computeMs), frames: current.frames, skipped: current.skipped, passes: current.passes, yearAssumed: current.yearAssumed,
+      aimMs: Math.round(current.aimMs), computeMs: Math.round(current.computeMs), frames: current.frames, skipped: current.skipped, passes: current.passes, yearAssumed: current.yearAssumed, zoom: cam.zoom ?? undefined,
     };
     rows.push(r);
     if (current.crop) thumbs.set(r, current.crop);
@@ -203,13 +203,13 @@ export function mount(root: HTMLElement) {
 
   root.append(
     title, cfg,
-    cam.wrap, status.box, note, area,
+    cam.ui, status.box, note, area,
     el('div', {}, 'Or test a photo: ', fileIn),
     el('h4', { textContent: 'Log (tap a row for the crop and the raw text)' }),
     logList,
     el('h4', { textContent: 'Summary' }),
     table,
-    button('Copy summary', async () => { note.textContent = (await copyText(summaryText(rows))) ? 'copied' : 'copy failed'; }),
+    button('Copy summary', async () => { note.textContent = (await copyText(cam.summaryLine() + '\n\n' + summaryText(rows))) ? 'copied' : 'copy failed'; }),
     button('Clear log', () => { if (confirm('Clear the attempt log?')) { rows.length = 0; thumbs.clear(); save(KEY, rows); refreshLog(); } }),
     el('h4', { textContent: 'Download sizes' }),
     button('Measure sizes', async () => { sizes.textContent = (await measureSizes(async (b) => gz(b))).join('\n'); }),

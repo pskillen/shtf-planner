@@ -268,9 +268,9 @@ export function mount(root: HTMLElement) {
   topRow.style.cssText = 'display:flex;flex-wrap:wrap;align-items:center;';
   root.append(
     title, topRow, cfgRow,
-    cam.wrap, status.box, stage, buttons, note,
+    cam.ui, status.box, stage, buttons, note,
     el('h4', { textContent: 'Summary' }), summary,
-    button('Copy summary', async () => { note.textContent = (await copyText(summaryText(sessions))) ? 'copied' : 'copy failed'; }),
+    button('Copy summary', async () => { note.textContent = (await copyText(cam.summaryLine() + '\n\n' + summaryText(sessions))) ? 'copied' : 'copy failed'; }),
     button('Clear sessions', () => { if (confirm('Clear all stocktake sessions?')) { sessions.length = 0; persist(); refreshSummary(); } }),
   );
   cam.setBoxVisible(false);
