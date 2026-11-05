@@ -9,6 +9,9 @@ the app has not met are looked up on Open Food Facts for a name and size; offlin
 queue and are sorted later. It works in Chrome on Android (torch, zoom, tap to focus) and degrades
 cleanly in Firefox on Android.
 
+Deep dive: [Why the reader is what it is](why-the-reader.md) (the go bars, phone timings, the
+engines and models compared, what the parser had to handle, what was rejected).
+
 ## Map
 
 | Piece               | Where                                                                                               | What                                                                                                     |
@@ -274,12 +277,19 @@ Apache-2.0) is its own lazily loaded chunk, so the main bundle does not carry it
 
 ## Known gaps
 
-- Only a phone can say how well the real camera, torch, zoom and focus behave; the fake camera
-  proves the flow, not the optics.
+- The fake camera proves the flow, not the optics; the e2e reads synthetic labels.
 - A code held sideways is read by zxing's retry only if its whole length fits the tall box.
-- Only a phone can say how accurate the date reader is on real print (the e2e reads synthetic
-  labels), how long a read takes there, whether WebGPU helps, and how much memory the models use.
+- Accuracy on real print was measured on the spike's reader (main thread, WASM), not on the shipped
+  worker: how long a read takes on a phone, whether WebGPU helps there and how much memory the
+  models use are unmeasured ([#36](https://github.com/pskillen/shtf-planner/issues/36)).
 - Only upright text is read (no rotation); day-level dates are stored as month-year; a misaligned
   print is not re-aimable (no nudging the crop).
 - A remembered barcode can be corrected with Not this item? but not forgotten.
 - iOS Safari is not a target.
+
+## Not built yet
+
+Scanning, round 2 ([#33](https://github.com/pskillen/shtf-planner/issues/33)): a phone-propped
+stocktake (dexterity is the biggest cost), a looser motion gate, measuring the worker on a phone,
+a lazily cached model to shrink the install (about 27 MB precached today), and the stocktake chips
+that sit under the OK bar while the first-use hint shows.
