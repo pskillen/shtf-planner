@@ -42,7 +42,8 @@ export const CASES: [string, string | null, boolean?, boolean?][] = [ // [text, 
   ['BB 06 / 2027', '06/2027'],
   ['BB 06-2027', '06/2027'],
   ['BB 06.27', '06/2027'],
-  ['06/27', '06/2027'],
+  ['06/27', null], // round 4a: a bare unlabelled MM/YY is too weak to be a result (suggestion only)
+  ['BB 06/27', '06/2027'],
   ['13/27', null], // no month 13
   ['31/02/2027', null], // no 31 Feb
   ['BB 30.06.2027 L77', '06/2027'],
@@ -149,12 +150,24 @@ export const CASES: [string, string | null, boolean?, boolean?][] = [ // [text, 
   ['500mle 4335619112049 D 2214101225014133-2 Expirel 10.27 ATD', '10/2027'], // washup, wide crop: the label came out as Expirel
   ['EXPIREL 12.26', '12/2026'],
   ['BB 06/27', '06/2027'],
-  ['12/26', '12/2026'], // a slash is still a date
+  ['12/26', null], // a slash does not make it stronger
+  ['12/2026', '12/2026'], // a four-digit year is specific enough
   // ---- round 4a: the crisp packet (12 Jun 2027, three printed lines, no label)
   ['12 06 27 GBS 305 255 05:13 2004', null], // the printed lines joined
   ['1206 27 089 306 390 05:13 2004 POPPED', null], // what the phone OCR returned
 ];
 
+// suggestions: weak runs that never become a result but are offered as one-tap choices (today 15 Nov 2026)
+const SUGGEST: [string, string[]][] = [
+  ['01:612229 . 12.26', ['12/2026']], // the rice bag's half-read batch code
+  ['12 06 27 GBS 305 255 05:13 2004', ['06/2027']], // the crisp packet, as printed
+  ['1206 27 089 306 390 05:13 2004 POPPED', ['06/2027']], // ...as the phone read it
+  ['06/27 09/26', ['06/2027', '09/2026']], // future before past
+  ['L2314B', []],
+  ['BB 06/2027', []], // a result needs no suggestion
+  ['LOT 12 03 2026', []], // batch codes are not offered
+  ['12.26 AB 12 06 27 CD 05/28 EF 01.29', ['12/2026', '06/2027', '05/2028']], // at most three
+];
 // month-level year with a different today: the wide-crop milk read `1 NOV` on 5 Nov 2026 is 11/2026
 const EXTRA: [string, Date, string | null][] = [
   ['MILK / JC FAT / 1 NOV', new Date(2026, 10, 5), '11/2026'],
@@ -176,6 +189,10 @@ for (const [text, now, want] of EXTRA) {
   const got = r.best ? fmtMY(r.best) : null;
   if (got === want && r.best?.yearAssumed) ok++; else fails.push(`  "${text}" @${now.toDateString()} -> ${got} (want ${want})`);
 }
-console.log(`parser: ${ok}/${CASES.length + EXTRA.length} (${((100 * ok) / (CASES.length + EXTRA.length)).toFixed(1)}%)`);
+for (const [text, want] of SUGGEST) {
+  const got = parseDates(text, NOW).suggestions.map((x) => fmtMY(x));
+  if (JSON.stringify(got) === JSON.stringify(want)) ok++; else fails.push(`  suggestions for "${text}" -> ${got.join(',')} (want ${want.join(',')})`);
+}
+console.log(`parser: ${ok}/${CASES.length + EXTRA.length + SUGGEST.length} (${((100 * ok) / (CASES.length + EXTRA.length + SUGGEST.length)).toFixed(1)}%)`);
 for (const f of fails) console.log(f);
 if (fails.length) throw new Error("parser cases failed");

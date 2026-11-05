@@ -5,7 +5,9 @@
 
 export type MonthYear = { month: number; year: number }; // month 1..12
 export type DateHit = MonthYear & { text: string; kind: string; labelled: boolean; day?: number; yearAssumed?: boolean; expired?: boolean };
-export type ParseResult = { best: DateHit | null; all: DateHit[]; confidence: number };
+/** A date-like run that is too weak to be a result (an unlabelled bare MM/YY, a spaced DD MM YY with no label, a bare past date). Offered as a one-tap suggestion. */
+export type Suggestion = MonthYear & { text: string; expired: boolean };
+export type ParseResult = { best: DateHit | null; all: DateHit[]; confidence: number; suggestions: Suggestion[] };
 
 const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 const MON_RE = '(JAN(?:UARY)?|FEB(?:RUARY)?|MAR(?:CH)?|APR(?:IL)?|MAY|JUNE?|JULY?|AUG(?:UST)?|SEP(?:T(?:EMBER)?)?|OCT(?:OBER)?|NOV(?:EMBER)?|DEC(?:EMBER)?)';
@@ -19,7 +21,7 @@ const BATCH_RE = /(BATCH(?:\s*CODE)?|LOT(?:\s*NO\.?)?|CODE)(?![A-Z])/g;
 const PROD_RE = /(PROD(?:UCED|UCTION)?|MFD|MFG|PKD|PACKED|MADE|MANUFACTURED)\b[^0-9A-Z]{0,3}$/;
 
 /** Shapes that carry a day, month and year: a past date in one of these is read as expired even with no label. */
-const FULL_DATE = new Set(['DD/MM/YY', 'DD MMM YY', 'DD MM YYYY', 'DD MM YY (label)', 'DDMMYY', 'YYYY-MM-DD']);
+const FULL_DATE = new Set(['DD/MM/YY', 'DD MMM YY', 'DD MM YYYY', 'DD MM YY (label)', 'DDMM YY (label)', 'DDMMYY', 'YYYY-MM-DD']);
 const EXPIRED_MONTHS = 24;
 
 const sep = '[\\/.\\-]';
@@ -70,7 +72,9 @@ function scan(t: string): Raw[] {
   run(/(?<![0-9])(\d{1,2}) (\d{1,2}) (20\d{2})(?![0-9])/g, (m) => add(m, +m[2], +m[3], 'DD MM YYYY', +m[1]));
   run(/(?<![0-9])(\d{1,2}) (\d{1,2}) (\d{2})(?![0-9])/g, (m) => add(m, +m[2], yr(m[3]), 'DD MM YY (label)', +m[1]));
   // MM/YY(YY)
-  run(new RegExp(`(?<![0-9./\\-])(\\d{1,2})\\s?${sep}\\s?(\\d{4}|\\d{2})(?![0-9]|${sep}\\d)`, 'g'), (m) => add(m, +m[1], yr(m[2]), /^\d{1,2}\s?[.,]\s?\d{2}$/.test(m[0]) ? 'MM.YY (label)' : 'MM/YY'));
+  run(new RegExp(`(?<![0-9./\\-])(\\d{1,2})\\s?${sep}\\s?(\\d{4}|\\d{2})(?![0-9]|${sep}\\d)`, 'g'), (m) => add(m, +m[1], yr(m[2]), m[2].length === 2 ? 'MM/YY (label)' : 'MM/YY'));
+  // DDMM YY: OCR glued the day and month and kept the space ("1206 27"); weak, a label must claim it
+  run(/(?<![0-9])(0[1-9]|[12]\d|3[01])(0[1-9]|1[0-2]) (\d{2})(?![0-9])/g, (m) => add(m, +m[2], yr(m[3]), 'DDMM YY (label)', +m[1]));
   // Day and month with no year ("11 NOV"): the year is assumed by the caller
   run(new RegExp(`(?<![0-9])(\\d{1,2})\\s?[ ./\\-]?\\s?${MON_RE}(?![A-Z0-9])`, 'g'), (m) => add(m, monthNum(m[2]), 2000, 'DD MMM', +m[1]));
   return out;
@@ -98,6 +102,7 @@ export function parseDates(raw: string, now: Date = new Date()): ParseResult {
   const lo = now.getFullYear() * 12 + now.getMonth();
   const hi = lo + 120;
   const hits: DateHit[] = [];
+  const weak: Suggestion[] = [];
   const cands = [...scan(t), ...extra].sort((a, b) => a.start - b.start);
   // a label claims only the first candidate after it, and only if no other label sits between them
   const claimed = new Set<Raw>();
@@ -110,7 +115,7 @@ export function parseDates(raw: string, now: Date = new Date()): ParseResult {
   }
   for (const r of cands) {
     if (notDates.has(r)) continue;
-    if ((r.kind === 'DD MM YY (label)' || r.kind === 'MM.YY (label)') && !claimed.has(r)) continue; // a bare "12.26" is as likely a price or weight
+    const weakKind = r.kind === 'DD MM YY (label)' || r.kind === 'DDMM YY (label)' || r.kind === 'MM/YY (label)';
     let yearAssumed = false;
     if (r.kind === 'DD MMM') {
       r.year = nextYear(r.day!, r.month, now);
@@ -121,11 +126,18 @@ export function parseDates(raw: string, now: Date = new Date()): ParseResult {
     const labelled = claimed.has(r);
     const expired = idx < lo;
     if (idx > hi || idx < lo - EXPIRED_MONTHS) continue;
-    if (expired && !labelled && !FULL_DATE.has(r.kind)) continue; // a bare past MM/YY is more likely a code
     if (PROD_RE.test(t.slice(Math.max(0, r.start - 14), r.start))) continue;
+    // A bare, unlabelled MM/YY (or a spaced DD MM YY) is too weak to be a result: a batch code, a price or a weight looks the same.
+    // A bare past MM/YY is more likely a code. Both only ever become suggestions.
+    if (!labelled && (weakKind || (expired && !FULL_DATE.has(r.kind)))) { weak.push({ month: r.month, year: r.year, text: t.slice(r.start, r.end), expired }); continue; }
     hits.push({ month: r.month, year: r.year, day: r.day, text: t.slice(r.start, r.end), kind: r.kind, labelled, ...(yearAssumed ? { yearAssumed } : {}), ...(expired ? { expired } : {}) });
   }
-  if (!hits.length) return { best: null, all: [], confidence: 0 };
+  // suggestions: weak runs first (future before past, nearest first), then the best non-winning hits; three at most, one per month-year
+  const sug: Suggestion[] = [];
+  const addSug = (x: Suggestion) => { if (!sug.some((y) => y.year === x.year && y.month === x.month)) sug.push(x); };
+  [...weak].sort((a, b) => Number(a.expired) - Number(b.expired) || a.year * 12 + a.month - (b.year * 12 + b.month)).forEach(addSug);
+  const suggestions = sug.slice(0, 3);
+  if (!hits.length) return { best: null, all: [], confidence: 0, suggestions };
   const key = (h: DateHit) => h.year * 12 + h.month;
   // tier 0: real dates, and labelled past ones (labelled first, then the future one, then the later). 1: year assumed. 2: unlabelled past.
   const tier = (h: DateHit) => (h.expired && !h.labelled ? 2 : h.yearAssumed ? 1 : 0);
@@ -138,7 +150,7 @@ export function parseDates(raw: string, now: Date = new Date()): ParseResult {
   if (distinct > 1) c -= 0.2;
   if (best.yearAssumed) c = Math.min(c, 0.45);
   if (best.expired) c = Math.min(c, 0.6); // never sure on its own: it needs two agreeing frames
-  return { best, all: hits, confidence: Math.max(0.05, Math.min(0.95, c)) };
+  return { best, all: hits, confidence: Math.max(0.05, Math.min(0.95, c)), suggestions };
 }
 
 export const fmtMY = (d: MonthYear) => `${String(d.month).padStart(2, '0')}/${d.year}`;
