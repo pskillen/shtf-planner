@@ -438,6 +438,11 @@ export function StoresScreen() {
         </section>
       ) : null}
 
+      <p className="note">
+        <Link to="/app/stores/products">Your products</Link>
+        {' — rename, merge duplicates, or change what they count as.'}
+      </p>
+
       <EditArea>
         <button
           type="button"
