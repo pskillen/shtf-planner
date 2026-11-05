@@ -1,67 +1,54 @@
 # Inventory
 
-**Status:** Done
+**Status:** Done  
 **Tracking:** none
 
-The Stores tab: what the household has, by where it is kept, and the quick way to add to it.
+The Stores tab: what the household has, grouped by **item** (the generic from the pack), then **product**
+(the household's size and name), then **batches** (quantity in a place with a best-before month).
 
 ## Map
 
-| Piece             | Where                                                                    | What                                                                                                  |
-| ----------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| Stores tab        | `/app/stores`, `StoresScreen.tsx`                                        | Stock grouped by place (collapsible), search across places, a floating + for Quick add.               |
-| Quick add         | `screens/stores/QuickAdd.tsx`                                            | Search, pick, Add; then Add another or Next item. Also opened from the Gaps tab.                      |
-| Edit and minimums | `screens/stores/StockSheet.tsx`, `MinimumSheet.tsx`                      | Quantity stepper, place, best-before, delete with undo; the minimum of each item in a rotating place. |
-| Month field       | `screens/stores/MonthField.tsx`                                          | A month box and one-tap chips for the best-before.                                                    |
-| Scanning          | `screens/stores/ScanSheet.tsx`, `StocktakeScreen.tsx`, `ScansToSort.tsx` | Scan a barcode in Quick add, stocktake mode, scans to sort. See [Scanning](../scanning/README.md).    |
-| Pure helpers      | `screens/stores/stock.ts`                                                | Suitability warning, month parsing, search, adding stock.                                             |
+| Piece             | Where                                                            | What                                                                                                       |
+| ----------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Stores tab        | `/app/stores`, `StoresScreen.tsx`                                | Items in category and heading order, search, place filter, Stocktake, scans to sort, **Your products**.    |
+| Quick add         | `screens/stores/QuickAdd.tsx`                                    | Item picker, size step, Add; Scan a barcode and Stocktake a pile. Opened from Gaps with a row pre-filled.  |
+| Product list      | `/app/stores/products`, `ProductsScreen.tsx`, `ProductSheet.tsx` | Rename, counts-as, size, merge, delete. Linked from a product's › in Stores.                               |
+| Edit and minimums | `StockSheet.tsx`, `MinimumSheet.tsx`                             | Batch quantity with ¼ ½ ¾, place, best-before, delete with undo; **minimum per item** in a rotating place. |
+| Month field       | `MonthField.tsx`                                                 | Month box and quick chips for best-before.                                                                 |
+| Scanning          | `ScanSheet.tsx`, `StocktakeScreen.tsx`, `ScansToSort.tsx`        | See [Scanning](../scanning/README.md).                                                                     |
+| Grouping helpers  | `storesGrouping.ts`, `pickerHelpers.ts`, `products.ts`           | Pack totals, use first, aisle order, product ops.                                                          |
 
-## Behaviour worth knowing
+## Stores list
 
-- **Rows.** Name, quantity and unit, the best-before as "Mar 2027" with a word beside it, a "min
-  6" badge in a rotating place. Tapping a row edits it.
-- **Expiry colours.** A best-before is always a colour and a word together (`ExpiryBadge`, from
-  `expiryLevel` in `src/engine/expiry.ts`): **Expired** (red) once its month has gone;
-  **Expires soon** (red) this month and up to 1 month ahead; **Before next check** (amber) up to 3
-  months ahead; nothing extra when later. A `YYYY-MM` best-before is good to the end of its month.
-  The two windows are household settings (Settings, Expiry colours: expires soon within 0 to 3
-  months, next check in 1, 2, 3, 6 or 12 months), kept in `settings.expirySoonMonths` and
-  `expiryCheckMonths` and synced; absent means 1 and 3. The same badge shows in Quick add under the
-  best-before. The words are in `src/app/labels.ts` (`EXPIRY_LABEL`).
-- **Equipment in a place.** Under a place's stock, the equipment kept there (its "Where is it
-  kept?" answer) is listed read-only with an Equipment badge, its name, type and key answer
-  ("110 Ah"); tapping it opens its edit form on the Equipment screen. Equipment with no place, or whose place no longer exists, is listed after the places under "Equipment, no place", with the same rows. Search matches equipment names too.
-- **Rotating places.** "The minimum counts, not today's stock": the engine counts the lower of what is
-  on the shelf and the minimum. "Set minimums" opens "Always keep at least", which lists the items in that place with a stepper each; 0
-  removes the minimum. A minimum with nothing on the shelf is still listed, at 0.
-- **Suitability.** An item that does not tolerate every condition of its place (frost, heat,
-  damp; indoor and stable asks for nothing) shows a warning such as "Water can (10 L) may freeze in
-  the Shed", on the row and in Quick add. Quick add still allows it.
-- **Quick add** remembers the last place and recent items in `localStorage` (per device, never in the
-  document); the recent list is read again after each add. With nothing typed it shows up to eight
-  recent items (on a fresh device, sixteen common ones instead), then "Browse everything by
-  category", closed and not built until opened; a search lists matches flat. Equipment is never
-  stock: a search that matches a stove, generator or battery lists it under "Equipment: add to
-  your home", which opens the equipment form with that type chosen, and with nothing typed there is
-  one such route to the equipment screen. The
-  equipment matches sit under the search box so a stove is not saved as stock by mistake. Items
-  come only from the pack (no custom items). The place starts as where that item already
-  lives, else the last place used, else the fullest place. Stock of the same item, place and best-before is added to rather than listed twice. The
-  best-before is optional; the chips follow how long the item keeps (+1 y, +2 y, +5 y for things that
-  keep for years). A counter shows what was added this session. After an add the sheet offers
-  **Next item** (primary, on the right) and **Add another**: the form stays filled and editable
-  (change the date, place or quantity) and adds only when Add another is tapped.
-- **Scanning.** Quick add's search step starts with **Scan a barcode** (above the search box) and
-  **Stocktake a pile**. A scanned item lands on the form with its item picked and is saved with
-  `source: 'barcode'`; Next item goes back to the scanner. Stores shows "3 scans to sort ›" when
-  scans are waiting. The form's **Read the date** (where the browser has a camera) opens a sheet that
-  reads the best-before month off the pack (it ignores the stocktake's "Read dates with the camera"
-  switch); **Use this date** fills the field and you still tap Add.
-  See [Scanning](../scanning/README.md).
-- **Read-only.** When the document is read-only (`too-new` or `too-old` on the store) the controls
-  that write are disabled.
+- **Grouping.** Collapsible categories (Food, Water, …), then **items** in pack heading order (Tins, Dried, …).
+  Each item row shows pack total, amount in base units (g, kg, ml, L), **min N in Pantry** badges on rotating
+  places, and the worst expiry word on its batches. Tap an item to expand: its counts-as line, each **product**
+  with its total and › to the product list, then **batches** (quantity · place · month, expiry badge, **Use first**
+  on the earliest in-date batch across that item's products).
+- **Place filter.** All places, or one place. A rotating place shows: "This place rotates: the minimum counts,
+  not today's stock." and **Set a minimum** (or **Set minimum** on an open item).
+- **Minimums.** One stepper per item in that rotating place ("Always keep at least"). Any product of the item
+  counts towards the minimum. Badge text: **min N in Pantry**.
+- **Quarters.** Batch and quick-add quantities use whole packs plus optional ¼, ½ or ¾ (shown as ½, 2½, …).
+- **Quick add.** Pick an item (search, recent products, or browse by category and heading), then a **size** (your
+  products of that item, suggested chips, or another size with optional name). Same item + name + size reuses the
+  product. No custom items. After Add: **Next item** (primary) and **Add another**. Scan a barcode and Stocktake
+  a pile sit above the search box.
+- **Your products.** Footer link and each product's › in Stores open the list: every product by item, with kcal
+  source, stock total and barcode count. Merge moves **packs** and barcodes to another product and deletes the
+  duplicate.
+- **Counts towards nothing.** Products with no item sit in a last group. Equipment in places is read-only with an
+  Equipment badge, as before.
+- **Expiry colours.** Unchanged on batches (`ExpiryBadge`, household settings in Settings). See labels in
+  `src/app/labels.ts`.
 
 ## Not done
 
-- Review of items that are about to expire: the colouring and words are display only.
-- Adding an item to a place's minimums without stock in it.
+- Editing pack **items** in the app (items come only from content packs).
+- **Custom items** by design; a recurring "nothing fits" is a pack change.
+- Review workflow for expiry beyond colours and words on screen.
+
+## Tests
+
+`test/stores-screen.test.tsx`, `test/stores-helpers.test.tsx`, `test/quick-add.test.tsx`, `test/products-screen.test.tsx`,
+`test/size-step.test.tsx`, `test/item-picker.test.tsx`, Playwright `e2e/inventory.spec.ts`, `e2e/products.spec.ts`.
