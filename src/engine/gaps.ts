@@ -142,7 +142,8 @@ export function gapsFrom(doc: Document, packs: Packs, a: Analysis): Gap[] {
       ? a.targets.find((x) => x.kind === 'resource' && x.resource === give.resource)
       : undefined;
     if (!item || !pack || !give || !t) continue;
-    const qty = b.minimum - b.actual;
+    const shortfallQty = b.minimum - b.actual;
+    const qty = Math.ceil(shortfallQty - 1e-9);
     const where = doc.locations[b.locationId]?.name ?? b.locationId;
     const name = pack.product?.name ?? `${item.name} ${formatSize(pack.size)}`;
     const first = item.sizes[0];
@@ -150,7 +151,7 @@ export function gapsFrom(doc: Document, packs: Packs, a: Analysis): Gap[] {
       capability: t.capability,
       target: t,
       coverage: cov.get(t.id) ?? null,
-      shortfall: qty * give.amount,
+      shortfall: shortfallQty * give.amount,
       unit: t.unit,
       kind: 'replenish',
       restock: { place: where, itemName: item.name, minimum: b.minimum, actual: b.actual },

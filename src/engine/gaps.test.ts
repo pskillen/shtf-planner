@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { biggarDocument } from '../fixtures/household-biggar';
 import type { Asset, Document } from '../model';
+import { minimumKey } from '../model';
 import { bundledPacks } from '../packs/bundled';
 import { addStock } from '../fixtures/stock';
 import { gaps, type Gap } from './gaps';
@@ -307,6 +308,22 @@ describe('suggestions by item, with an amount and the usual product', () => {
     const food = find(gaps(empty(), packs, NOW, 28), 'food:foodKcal')!;
     const ids = food.suggestions.map((s) => s.itemId);
     expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('restock asks for whole packs when the shortfall is fractional', () => {
+    const doc = biggarDocument();
+    doc.minimums[minimumKey('loc-pantry', 'items-base:baked-beans')] = 2;
+    doc.stock['stock-beans']!.qty = 1.5;
+    const rows = gaps(doc, packs, NOW, 3).filter((g) => g.kind === 'replenish');
+    const beans = rows.find((g) => g.restock?.itemName === 'Baked beans')!;
+    expect(beans.suggestions[0]!.qty).toBe(1);
+    expect(beans.shortfall).toBeCloseTo(0.5 * 311.25);
+    expect(beans.restock).toEqual({
+      place: 'Pantry',
+      itemName: 'Baked beans',
+      minimum: 2,
+      actual: 1.5,
+    });
   });
 
   it('the restock row names the usual product', () => {
