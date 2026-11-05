@@ -188,7 +188,7 @@ test.describe('stocktake with a fake camera', () => {
     await show(page, BEANS);
     await expect(page.getByText(/You are offline/)).toBeVisible();
     await cam(page, 'clear');
-    await page.getByRole('button', { name: 'Sort later' }).click();
+    await page.getByRole('button', { name: 'Decide later' }).click();
     await page.getByRole('button', { name: 'Done' }).click();
     await expect(page.getByTestId('stocktake-summary')).toContainText('1 to sort later');
     await page.getByRole('button', { name: 'Back to Stores' }).click();

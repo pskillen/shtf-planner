@@ -48,7 +48,7 @@ describe('Stocktake: the step machine', () => {
     expect(screen.getByText('1 BARCODE')).toBeTruthy();
     await read(KNOWN);
     expect(await screen.findByText('Peanut butter (340 g jar)')).toBeTruthy();
-    expect(screen.getByText('Test spread 400 g')).toBeTruthy(); // the remembered product name
+    expect(screen.getByText(/Test spread 400 g/)).toBeTruthy(); // the remembered product name
     expect(screen.getByText('2 DATE', { selector: '.camera-chip' })).toBeTruthy();
     chip('+1 y');
     ok();
@@ -141,7 +141,7 @@ describe('Stocktake: the step machine', () => {
     chip('+1 y');
     ok();
     await read(UNKNOWN);
-    fireEvent.click(await screen.findByRole('button', { name: 'Sort later' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Decide later' }));
     fireEvent.click(screen.getByRole('button', { name: 'Done' }));
     expect(screen.getByTestId('stocktake-summary').textContent).toMatch(
       /^1 item in 1 min \(\d+\.\d a minute\) · 1 to sort later$/,
@@ -167,7 +167,7 @@ describe('Not this item?', () => {
     await screen.findByText('Peanut butter (340 g jar)');
     fireEvent.click(screen.getByRole('button', { name: 'Not this item?' }));
     expect(screen.getByText(/remembered as Peanut butter \(340 g jar\)/)).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Search all types' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Pick what it is' }));
     fireEvent.change(screen.getByLabelText('Search all types'), {
       target: { value: 'tinned food' },
     });
@@ -224,9 +224,9 @@ describe('Undo and Sort later edge cases', () => {
     const doc = biggarDocument();
     doc.locations = {};
     render(liveStore(doc).wrap(<StocktakeScreen />)); // no place, so nothing scans: the number is typed
-    fireEvent.change(screen.getByLabelText('Type the number'), { target: { value: UNKNOWN } });
+    fireEvent.change(screen.getByLabelText('Barcode number'), { target: { value: UNKNOWN } });
     fireEvent.click(screen.getByRole('button', { name: 'Use this number' }));
-    const later = await screen.findByRole('button', { name: 'Sort later' });
+    const later = await screen.findByRole('button', { name: 'Decide later' });
     expect((later as HTMLButtonElement).disabled).toBe(true);
     expect(screen.getAllByText(/Add a place first/).length).toBeGreaterThan(0);
   });
@@ -259,7 +259,7 @@ describe('scans to sort', () => {
     const s = await open();
     const items = structuredClone(s.doc().items);
     await read(UNKNOWN);
-    fireEvent.click(await screen.findByRole('button', { name: 'Sort later' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Decide later' }));
     expect(s.doc().items).toEqual(items);
     expect(Object.values(s.doc().scans)).toMatchObject([{ code: UNKNOWN, qty: 1 }]);
   });

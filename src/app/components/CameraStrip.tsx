@@ -20,6 +20,8 @@ export function CameraStrip({
   scanning = false,
   onCode,
   onReady,
+  onCentre,
+  flashKey = 0,
 }: {
   /** A shorter strip, for the steps after a code is read, so the card under it fits on a phone. */
   compact?: boolean;
@@ -29,6 +31,13 @@ export function CameraStrip({
   scanning?: boolean;
   onCode?: (code: string) => void;
   onReady?: (cam: CameraStream) => void;
+  /**
+   * Gives the centre of the strip (an element on top of the picture, where the eye is while
+   * aiming) to the screen, which draws the status and the read month there.
+   */
+  onCentre?: (el: HTMLElement | null) => void;
+  /** Change it to flash a tick in the centre: a barcode was caught. */
+  flashKey?: number;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const camRef = useRef<CameraStream | null>(null);
@@ -144,22 +153,25 @@ export function CameraStrip({
               top: `${box.y * 100}%`,
               width: `${box.w * 100}%`,
               height: `${box.h * 100}%`,
-              borderColor: colour,
+              // The barcode box is only a faint aid: the red line is the target.
+              borderColor: mode === 'barcode' ? 'rgba(255, 255, 255, 0.55)' : colour,
             }}
+          />
+        ) : null}
+        {mode === 'barcode' && state === 'live' ? (
+          <span
+            className="camera-laser"
+            style={{
+              left: `${BARCODE_BOX.x * 100}%`,
+              width: `${BARCODE_BOX.w * 100}%`,
+              top: `${(BARCODE_BOX.y + BARCODE_BOX.h / 2) * 100}%`,
+            }}
+            aria-hidden="true"
           />
         ) : null}
         {chip ? (
           <span className="camera-chip" style={{ background: colour }}>
             {chip}
-          </span>
-        ) : null}
-        {mode === 'barcode' && state === 'live' ? (
-          <span className="camera-guide" aria-hidden="true" title="Hold the bars upright">
-            <span />
-            <span />
-            <span />
-            <span />
-            <span />
           </span>
         ) : null}
         {ring ? (
@@ -169,19 +181,14 @@ export function CameraStrip({
             aria-hidden="true"
           />
         ) : null}
-        {state === 'none' ? (
-          <p className="camera-none" role="status">
-            No camera. Allow it in the browser’s site settings, or type the number / find it by
-            name.{' '}
-            <button type="button" className="secondary" onClick={() => setAttempt((n) => n + 1)}>
-              Try again
-            </button>
-          </p>
+        {flashKey > 0 ? (
+          <span key={flashKey} className="camera-flash" aria-hidden="true">
+            ✓
+          </span>
         ) : null}
-      </div>
-      {state === 'live' ? (
-        known ? (
-          <div className="camera-controls">
+        <div className="camera-centre" ref={onCentre} />
+        {state === 'live' && known ? (
+          <div className="camera-controls" onPointerDown={(e) => e.stopPropagation()}>
             {caps.torch ? (
               <button
                 type="button"
@@ -224,15 +231,22 @@ export function CameraStrip({
                 </button>
               </div>
             ) : null}
-            {caps.pointsOfInterest ? (
-              <span className="muted">Tap the picture to focus.</span>
-            ) : null}
           </div>
-        ) : (
-          <p className="muted camera-fallback">
-            Zoom, focus and torch aren’t available in this browser. Chrome has them.
+        ) : null}
+        {state === 'none' ? (
+          <p className="camera-none" role="status">
+            No camera. Allow it in the browser’s site settings, or type the number / find it by
+            name.{' '}
+            <button type="button" className="secondary" onClick={() => setAttempt((n) => n + 1)}>
+              Try again
+            </button>
           </p>
-        )
+        ) : null}
+      </div>
+      {state === 'live' && !known ? (
+        <p className="muted camera-fallback">
+          Zoom, focus and torch aren’t available in this browser. Chrome has them.
+        </p>
       ) : null}
     </div>
   );

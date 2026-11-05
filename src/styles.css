@@ -1064,29 +1064,6 @@ a.row-main {
   pointer-events: none;
 }
 
-.camera-guide {
-  position: absolute;
-  right: 8px;
-  top: 8px;
-  display: flex;
-  gap: 3px;
-  padding: 4px 6px;
-  height: 34px;
-  background: #fff;
-  border-radius: 4px;
-  pointer-events: none;
-}
-
-.camera-guide span {
-  display: block;
-  width: 3px;
-  background: #000;
-}
-
-.camera-guide span:nth-child(2n) {
-  width: 2px;
-}
-
 .camera-ring {
   position: absolute;
   width: 48px;
@@ -1110,19 +1087,26 @@ a.row-main {
   background: rgba(0, 0, 0, 0.8);
 }
 
+/* Torch and zoom sit on the strip's bottom edge, so they take no room below it. */
 .camera-controls {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: 6px;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 6px;
+  padding: 2px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.45);
 }
 
 .camera-zoom {
   display: flex;
   align-items: center;
   gap: 6px;
-  flex: 1 1 200px;
+  flex: 1;
+  min-width: 0;
 }
 
 .camera-zoom input[type='range'] {
@@ -1221,4 +1205,239 @@ button.scans-note {
 .number-row .field {
   flex: 1;
   min-width: 0;
+}
+
+/* Reading the best-before date with the camera (stocktake date step, quick add's sheet). */
+.date-reader {
+  display: grid;
+  gap: 6px;
+  margin: 4px 0;
+}
+
+/* The status and its one button share a line, so the card under the strip stays short. */
+.date-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.date-head button {
+  flex: none;
+}
+
+.date-status {
+  margin: 0;
+  font-weight: 600;
+}
+
+.date-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.date-month {
+  font-size: 1.5rem;
+  line-height: 1.2;
+}
+
+.date-crop {
+  max-width: 45%;
+  height: auto;
+  max-height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.date-about {
+  margin: 4px 0 8px;
+}
+
+.date-about summary {
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.item-head h2 {
+  margin: 0;
+}
+
+/* The typed-barcode row: the button lines up with the input, not the label above it. */
+.type-title {
+  margin: 12px 0 0;
+  font-size: 1rem;
+}
+
+.number-row {
+  margin: 4px 0 8px;
+}
+
+.number-row .field {
+  margin: 0;
+}
+
+.scan-choices {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.scan-choice {
+  display: grid;
+  gap: 2px;
+}
+
+.scan-choice p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* On the strip, where the eye is: the red line (barcode), the catch tick, the status and the read month. */
+.camera-laser {
+  position: absolute;
+  height: 2px;
+  background: #ff2a2a;
+  box-shadow: 0 0 6px 1px rgba(255, 42, 42, 0.8);
+  pointer-events: none;
+}
+
+.camera-centre {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.centre-stack {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  max-width: 90%;
+  text-align: center;
+}
+
+.centre-pill,
+.centre-result {
+  background: rgba(0, 0, 0, 0.62);
+  color: #fff;
+  border-radius: 999px;
+  padding: 4px 14px;
+  font-weight: 700;
+}
+
+.centre-result {
+  border-radius: 12px;
+  padding: 6px 14px;
+}
+
+.centre-result .bb {
+  background: #fff;
+  border-radius: 6px;
+  padding: 0 6px;
+}
+
+.camera-flash {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  font-weight: 800;
+  color: #fff;
+  background: rgba(42, 200, 90, 0.45);
+  pointer-events: none;
+  animation: camera-flash 700ms ease-out forwards;
+}
+
+@keyframes camera-flash {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .camera-flash {
+    animation-duration: 1ms;
+  }
+}
+
+/* One compact line for the place, the same height on both steps. */
+.place-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 4px;
+}
+
+.place-row select {
+  flex: 1;
+  min-width: 0;
+}
+
+/* While aiming, the status sits just inside the top edge of the date box, so nothing covers the label. */
+.centre-pill:not([data-phase='got']) {
+  position: absolute;
+  top: calc(22% + 6px); /* DATE_BOX.y */
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 84%;
+  padding: 2px 10px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Stop / Read again and the crop sit in the strip's bottom corner, so nothing below it is pushed down. */
+.centre-actions {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.centre-actions .date-crop {
+  max-height: 28px;
+  background: #fff;
+}
+
+.centre-actions button {
+  background: #fff;
+  color: #1a1a1a;
+  border-color: #fff;
+}
+
+.camera-controls .secondary {
+  background: #fff;
+  color: #1a1a1a;
+  border-color: #fff;
 }

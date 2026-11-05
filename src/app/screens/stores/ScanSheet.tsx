@@ -37,9 +37,11 @@ export function ScanSheet({
   const [typed, setTyped] = useState('');
   const [problem, setProblem] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
+  const [flash, setFlash] = useState(0);
 
   function got(next: string): void {
     buzz('barcode');
+    setFlash((n) => n + 1);
     setNote(null);
     setCode(next);
   }
@@ -56,11 +58,11 @@ export function ScanSheet({
     >
       {reidentify ? null : (
         <CameraStrip
-          compact={code !== null}
           mode="barcode"
           chip="1 BARCODE"
           scanning={code === null}
           onCode={got}
+          flashKey={flash}
         />
       )}
       {note ? (
@@ -71,6 +73,7 @@ export function ScanSheet({
       {code === null ? (
         <>
           <p className="muted">Hold the barcode upright in the blue box.</p>
+          <h3 className="type-title">Type the barcode number</h3>
           <form
             className="number-row"
             onSubmit={(e) => {
@@ -82,7 +85,7 @@ export function ScanSheet({
               got(r.code);
             }}
           >
-            <Field label="Type the number" hint={problem ?? undefined}>
+            <Field label="Barcode number">
               <input
                 type="text"
                 inputMode="numeric"
@@ -96,6 +99,11 @@ export function ScanSheet({
               Use this number
             </button>
           </form>
+          {problem ? (
+            <p className="field-hint warn" role="alert">
+              {problem}
+            </p>
+          ) : null}
         </>
       ) : (
         <>

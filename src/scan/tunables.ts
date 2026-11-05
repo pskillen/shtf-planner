@@ -33,7 +33,7 @@ export interface Box {
 /** Barcode step: a wide, short box across the middle (blue). */
 export const BARCODE_BOX: Box = { x: 0.04, y: 0.36, w: 0.92, h: 0.28 };
 
-/** Date step: a taller box (yellow). Used by the camera date reading, once built. */
+/** Date step: a taller box (yellow), where the camera reads the best-before date. */
 export const DATE_BOX: Box = { x: 0.06, y: 0.22, w: 0.88, h: 0.56 };
 
 /**
@@ -44,3 +44,43 @@ export const BARCODE_BOX_SIDEWAYS: Box = { x: 0.3, y: 0.04, w: 0.4, h: 0.92 };
 
 export const BARCODE_COLOUR = '#2aa8ff';
 export const DATE_COLOUR = '#fc0';
+
+// ---- Reading the date (src/scan/dateLoop.ts, src/scan/ocr). The agreement and confidence
+// numbers are in src/engine/datecode/tally.ts; the parser's ranges in src/engine/datecode/parse.ts.
+
+/** A date step gives up and offers suggestions after this long, in milliseconds. */
+export const DATE_TIMEOUT_MS = 8000;
+
+/** One frame stops trying more pictures after this long, in milliseconds. */
+export const FRAME_MAX_MS = 3000;
+
+/** The box is captured at most this many pixels high (and never narrower than 480). */
+export const CAPTURE_MAX_H = 256;
+
+/** The small picture the text reader sees is this many pixels high. */
+export const OCR_H = 64;
+
+/** Glare: this share of the box (250+ grey) or more, up to GLARE_MAX, says "tilt the phone" and skips the frame. */
+export const GLARE_MIN = 0.2;
+/** Above this the label is just bright paper, not a reflection: read it as usual. */
+export const GLARE_MAX = 0.65;
+/** After this many glare frames in a row, read anyway: a label that really is that bright must not lock the loop. */
+export const MAX_GLARE_RUN = 25;
+
+/** A frame is "moving" when its thumbnail differs from the last by more than this many grey levels. */
+export const MOVING_DIFF = 18;
+/** A frame is "blurred" when its sharpness is under this share of the sharpest so far. */
+export const BLUR_RATIO = 0.5;
+/** The sharpest-so-far memory decays by this each frame, so one sharp frame does not make the rest look blurred. */
+export const SHARP_DECAY = 0.9;
+/** Never skip more than this many frames in a row: read one anyway. */
+export const MAX_SKIPS = 4;
+/** Mean edge strength under this means nothing to read in the box. */
+export const FLAT_SHARPNESS = 2;
+
+/** Pause between two frames of the date loop, in milliseconds; a little longer after a skip. */
+export const DATE_GAP_MS = 80;
+export const DATE_SKIP_GAP_MS = 110;
+
+/** A date step ends (as "no date found") after this many frames the worker could not read; the first is retried. */
+export const MAX_READ_ERRORS = 2;

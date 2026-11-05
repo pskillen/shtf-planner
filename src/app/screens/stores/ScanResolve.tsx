@@ -31,9 +31,9 @@ export function ScanResolve({
   /** What an earlier lookup of a queued scan found, shown while (or instead of) asking again. */
   seed?: ProductInfo;
   onType: (type: ItemType) => void;
-  /** Absent: no "Sort later" (the scan is already in the queue). */
+  /** Absent: no "Decide later" (the scan is already in the queue). */
   onSortLater?: (product: ProductInfo | undefined) => void;
-  /** Why "Sort later" cannot be used right now (no place to keep the scan in): shown, and the button is off. */
+  /** Why "Decide later" cannot be used right now (no place to keep the scan in): shown, and the button is off. */
   sortLaterBlocked?: string;
   /**
    * The person says the remembered type is wrong ("Not this item?"): show the picker even though
@@ -80,6 +80,8 @@ export function ScanResolve({
   const found = product?.found ? product : undefined;
   const seeded = !found && seed?.found ? seed : undefined;
   const line = found ? productLine(found) : seeded ? productLine(seeded) : '';
+  /** The name Open Food Facts gave it, for "New item: <name>". */
+  const newName = found?.name ?? seeded?.name ?? '';
   // A new lookup's name wins; with none (offline), the name already remembered stays.
   const keptName = line || remembered?.name;
   const guesses = useMemo(
@@ -212,24 +214,50 @@ export function ScanResolve({
           </ul>
         </>
       ) : null}
-      <div className="scan-actions">
+      <div className="scan-choices">
         {searching ? null : (
-          <button type="button" className="secondary" onClick={() => setSearching(true)}>
-            Search all types
-          </button>
+          <div className="scan-choice">
+            <button
+              type="button"
+              className="secondary"
+              aria-describedby="choice-pick"
+              onClick={() => setSearching(true)}
+            >
+              Pick what it is
+            </button>
+            <p className="muted" id="choice-pick">
+              Choose from the list of item types
+            </p>
+          </div>
         )}
-        <button type="button" className="secondary" onClick={() => setOwn(true)}>
-          Save as its own item
-        </button>
-        {onSortLater ? (
+        <div className="scan-choice">
           <button
             type="button"
             className="secondary"
-            disabled={sortLaterBlocked !== undefined}
-            onClick={() => onSortLater(found ? productInfoOf(found) : seeded)}
+            aria-describedby="choice-new"
+            onClick={() => setOwn(true)}
           >
-            Sort later
+            {newName ? `New item: ${newName}` : 'New item'}
           </button>
+          <p className="muted" id="choice-new">
+            Make it its own type, filled in from the label
+          </p>
+        </div>
+        {onSortLater ? (
+          <div className="scan-choice">
+            <button
+              type="button"
+              className="secondary"
+              aria-describedby="choice-later"
+              disabled={sortLaterBlocked !== undefined}
+              onClick={() => onSortLater(found ? productInfoOf(found) : seeded)}
+            >
+              Decide later
+            </button>
+            <p className="muted" id="choice-later">
+              Keep the scan; sort it on Stores
+            </p>
+          </div>
         ) : null}
       </div>
       {onSortLater && sortLaterBlocked ? <p className="muted">{sortLaterBlocked}</p> : null}
