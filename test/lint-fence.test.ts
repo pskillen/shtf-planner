@@ -120,6 +120,29 @@ describe('the lint fence', () => {
       'src/store/x.tsx',
       "import { App } from '../app/App';\nApp;",
     ],
+    ['scan imports React', 'src/scan/x.ts', "import { useState } from 'react';\nuseState;"],
+    ['scan imports the app', 'src/scan/x.ts', "import { App } from '../app/App';\nApp;"],
+    ['scan imports the store', 'src/scan/x.ts', "import { open } from '../store/db';\nopen;"],
+    [
+      'scan imports the packs',
+      'src/scan/x.ts',
+      "import { bundledPacks } from '../packs';\nbundledPacks;",
+    ],
+    [
+      'scan imports a Google module (the Drive/Google rule alone)',
+      'src/scan/x.ts',
+      "import { gapi } from './google-auth';\ngapi;",
+    ],
+    [
+      'scan imports a Drive module by name',
+      'src/scan/x.ts',
+      "import { sync } from './drive/sync';\nsync;",
+    ],
+    [
+      'scan imports Drive',
+      'src/scan/x.ts',
+      "import { sync } from '../../store/drive/sync';\nsync;",
+    ],
   ];
   for (const [name, file, code] of bad) {
     it(`fails when ${name}`, async () => {
@@ -167,6 +190,11 @@ describe('the lint fence', () => {
       'the app imports everything',
       'src/app/x.tsx',
       "import { useState } from 'react';\nimport { score } from '../engine/score';\nimport { open } from '../store/db';\nuseState;\nscore;\nopen;",
+    ],
+    [
+      'scan imports a package, the model, the util and the engine',
+      'src/scan/x.ts',
+      "import { BrowserMultiFormatReader } from '@zxing/library';\nimport { Doc } from '../model/doc';\nimport { isValidGtin } from '../util/gtin';\nimport { score } from '../engine/score';\nBrowserMultiFormatReader;\nDoc;\nisValidGtin;\nscore;",
     ],
   ];
   for (const [name, file, code] of good) {

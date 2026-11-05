@@ -1,4 +1,5 @@
 export * from './age';
+export * from './gtin';
 export * from './medication';
 export * from './text';
 export * from './units';

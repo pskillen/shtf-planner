@@ -180,6 +180,8 @@ function ImportSection() {
             <li>{plural(preview.summary.assets, 'asset')}</li>
             <li>{plural(preview.summary.items, 'item')}</li>
             <li>{plural(preview.summary.customTypes, 'custom item type')}</li>
+            <li>{plural(preview.summary.barcodes, 'remembered barcode')}</li>
+            <li>{plural(preview.summary.scans, 'scan to sort', 'scans to sort')}</li>
           </ul>
           <EnvLine fileEnv={preview.fileEnv} buildEnv={__BUILD_ENV__} />
           <p>Importing replaces everything on this device.</p>

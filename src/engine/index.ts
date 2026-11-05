@@ -1,5 +1,13 @@
 export { ASSUMPTIONS, HORIZONS, type EngineAssumption } from './assumptions';
 export { ageInMonths, addMonths } from './dates';
+export {
+  DEFAULT_EXPIRY,
+  expiryLevel,
+  expiryWindows,
+  type ExpiryLevel,
+  type ExpiryWindows,
+} from './expiry';
+export { likelyTypes, type ProductHints } from './productMatch';
 export { CAPABILITY_ORDER } from './context';
 export {
   targets,

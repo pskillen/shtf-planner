@@ -51,18 +51,6 @@ export function addMonthsYM(ym: string, months: number): string {
   return `${String(year).padStart(4, '0')}-${String((index % 12) + 1).padStart(2, '0')}`;
 }
 
-export type MonthTone = 'past' | 'soon' | 'ok';
-
-/**
- * How near a best-before month is to `todayIso`: `past` once its month has gone (the engine treats
- * stock as expired from the month after), `soon` within the next three months, else `ok`.
- */
-export function monthTone(ym: string, todayIso: string): MonthTone {
-  const now = monthOfDate(todayIso);
-  if (ym < now) return 'past';
-  return monthIndex(ym) - monthIndex(now) <= 3 ? 'soon' : 'ok';
-}
-
 /**
  * A best-before typed by hand as "2027-03", "03/2027", "3/2027" or "Mar 2027", read as
  * `YYYY-MM`; undefined when it is not a real month. A two-digit year ("3/27") is 20xx.
@@ -224,18 +212,28 @@ export interface NewStock {
   qty: number;
   locationId: string;
   bestBefore?: string;
+  /** Where it came from; a scan says `barcode`. A merge into stock already there keeps that stock's source. */
+  source?: ItemInstance['source'];
+}
+
+/** What an addition did, enough to take it back: see `undoAddStock`. */
+export interface StockAddition {
+  id: string;
+  qty: number;
+  /** True when the addition made a new instance (rather than adding to one there). */
+  created: boolean;
 }
 
 /**
  * Adds stock to a draft. Stock of the same type in the same place with the same best-before is
- * added to rather than listed twice. Returns the instance's id.
+ * added to rather than listed twice. Says which instance and whether it is new.
  */
-export function addStock(
+export function addStockWithUndo(
   draft: Document,
   stock: NewStock,
   todayIso: string,
   newId: () => string = () => crypto.randomUUID(),
-): string {
+): StockAddition {
   const same = Object.values(draft.items).find(
     (i) =>
       i.typeId === stock.typeId &&
@@ -244,7 +242,7 @@ export function addStock(
   );
   if (same) {
     draft.items[same.id] = { ...same, qty: same.qty + stock.qty };
-    return same.id;
+    return { id: same.id, qty: stock.qty, created: false };
   }
   const item: ItemInstance = {
     id: newId(),
@@ -253,8 +251,30 @@ export function addStock(
     locationId: stock.locationId,
     ...(stock.bestBefore ? { bestBefore: stock.bestBefore } : {}),
     added: todayIso,
-    source: 'manual',
+    source: stock.source ?? 'manual',
   };
   draft.items[item.id] = item;
-  return item.id;
+  return { id: item.id, qty: stock.qty, created: true };
+}
+
+/** Adds stock to a draft and returns the instance's id. */
+export function addStock(
+  draft: Document,
+  stock: NewStock,
+  todayIso: string,
+  newId: () => string = () => crypto.randomUUID(),
+): string {
+  return addStockWithUndo(draft, stock, todayIso, newId).id;
+}
+
+/**
+ * Takes exactly one addition back: subtracts its quantity, and removes the instance if this
+ * addition made it or it falls to nothing. Does nothing if the instance has since gone.
+ */
+export function undoAddStock(draft: Document, addition: StockAddition): void {
+  const item = draft.items[addition.id];
+  if (!item) return;
+  const left = item.qty - addition.qty;
+  if (addition.created || left <= 0) delete draft.items[addition.id];
+  else draft.items[addition.id] = { ...item, qty: left };
 }

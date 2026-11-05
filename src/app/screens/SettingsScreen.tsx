@@ -1,3 +1,4 @@
+import { DEFAULT_EXPIRY, expiryWindows } from '../../engine';
 import { REGIONS } from '../../model';
 import { bundledPacks } from '../../packs';
 import { FieldGroup, Segmented, Switch } from '../components/controls';
@@ -14,6 +15,7 @@ export function SettingsScreen() {
   const { settings } = useDocument();
   const { change, note } = useSavedChange();
   const packs = bundledPacks();
+  const windows = expiryWindows(settings);
 
   return (
     <div>
@@ -72,6 +74,40 @@ export function SettingsScreen() {
             onChange={(m) =>
               change('review cadence', (d) => void (d.settings.reviewCadenceMonths = m))
             }
+          />
+        </FieldGroup>
+
+        <FieldGroup
+          label="Expiry colours"
+          hint="Best-before dates show in words and colours: Expired and Expires soon (red), Before next check (amber)."
+        >
+          <Segmented
+            label="Expires soon within"
+            value={windows.soonMonths}
+            options={[0, 1, 2, 3].map((m) => ({
+              value: m,
+              label: m === 0 ? 'This month' : m === 1 ? '1 month' : `${m} months`,
+            }))}
+            onChange={(m) =>
+              change('expiry soon', (d) => {
+                d.settings.expirySoonMonths = m;
+                // The check window includes the soon window, so it moves up with it.
+                if ((d.settings.expiryCheckMonths ?? DEFAULT_EXPIRY.checkMonths) < m) {
+                  d.settings.expiryCheckMonths = m;
+                }
+              })
+            }
+          />
+          <Segmented
+            label="Next check in"
+            value={windows.checkMonths}
+            options={[1, 2, 3, 6, 12]
+              .filter((m) => m >= windows.soonMonths)
+              .map((m) => ({
+                value: m,
+                label: m === 12 ? '1 year' : m === 1 ? '1 month' : `${m} months`,
+              }))}
+            onChange={(m) => change('expiry check', (d) => void (d.settings.expiryCheckMonths = m))}
           />
         </FieldGroup>
 

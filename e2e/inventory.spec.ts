@@ -57,7 +57,7 @@ test('the fixture household: the Stores tab groups stock by place, flags the odd
   await expect(
     page.getByText('This place rotates: the floor counts, not today’s stock.'),
   ).toBeVisible();
-  await expect(page.locator('.bb-past').first()).toBeVisible();
+  await expect(page.locator('.bb-expired').first()).toBeVisible();
   // search narrows across places
   await page.getByLabel('Search stock').fill('torch');
   await expect(page.getByRole('button', { name: /Edit .*[Tt]orch/ })).toHaveCount(3);
@@ -148,7 +148,7 @@ test('Quick add: ten items, two of them same-again and one custom, each in few t
   await page.evaluate(() => (window as unknown as { __shtf: Shtf }).__shtf.flush());
   await page.goto('/app/stores?debug=1');
   const after = await doc(page);
-  expect(after.meta.schemaVersion).toBe(2);
+  expect(after.meta.schemaVersion).toBe(3);
   expect(Object.values(after.customTypes).map((t) => t.name)).toEqual(["Gran's soup"]);
   expect(Object.values(after.customTypes)[0]!.gives).toEqual([{ store: 'foodKcal', amount: 600 }]);
 

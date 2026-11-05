@@ -288,13 +288,13 @@ describe('custom item types (schema 2)', () => {
     expect(b.store.get().customTypes['custom:x']?.name).toBe('Lentil soup');
   });
 
-  it('a sidecar from schema 3 is refused without merging', async () => {
+  it('a sidecar from schema 4 is refused without merging', async () => {
     const cloud = createFakeCloud();
     const a = await device(cloud);
     setType(a, 'one');
     await a.sync.connect();
     const sidecar = JSON.parse(cloud.text(JSON_FILE_NAME)!);
-    sidecar.meta.schemaVersion = 3;
+    sidecar.meta.schemaVersion = 4;
     cloud.put(JSON_FILE_NAME, JSON.stringify(sidecar));
     cloud.put(YJS_FILE_NAME, a.store.bytes());
     const b = await device(cloud);

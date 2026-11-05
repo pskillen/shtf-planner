@@ -544,6 +544,7 @@ button.danger {
 }
 
 button.secondary,
+.button.secondary,
 .quiet-button {
   background: transparent;
   color: var(--accent);
@@ -751,12 +752,14 @@ table.horizon .big td {
   margin: 4px 0;
 }
 
-.bb-past {
+/* A best-before is always a colour and a word together (see ExpiryBadge). */
+.bb-expired,
+.bb-soon {
   color: var(--bad);
   font-weight: 700;
 }
 
-.bb-soon {
+.bb-check {
   color: var(--warn);
   font-weight: 700;
 }
@@ -1011,4 +1014,211 @@ a.row-main {
   display: flex;
   align-items: center;
   cursor: pointer;
+}
+
+/* Camera strip and scanning. */
+.camera {
+  margin-bottom: 0.5rem;
+}
+
+.camera-strip {
+  position: relative;
+  width: 100%;
+  height: min(30vh, 260px);
+  min-height: 140px;
+  background: #000;
+  overflow: hidden;
+  border: 5px solid var(--border);
+  border-radius: 8px;
+  touch-action: manipulation;
+}
+
+.camera-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  max-height: none;
+}
+
+.camera-box {
+  position: absolute;
+  border: 3px solid #fc0;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+.camera-chip {
+  position: absolute;
+  left: 6px;
+  top: 6px;
+  padding: 2px 10px;
+  border-radius: 6px;
+  color: #001;
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  pointer-events: none;
+}
+
+.camera-guide {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  display: flex;
+  gap: 3px;
+  padding: 4px 6px;
+  height: 34px;
+  background: #fff;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.camera-guide span {
+  display: block;
+  width: 3px;
+  background: #000;
+}
+
+.camera-guide span:nth-child(2n) {
+  width: 2px;
+}
+
+.camera-ring {
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  margin: -24px 0 0 -24px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.camera-none {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  justify-content: center;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.camera-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.camera-zoom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 200px;
+}
+
+.camera-zoom input[type='range'] {
+  flex: 1;
+  min-width: 0;
+}
+
+.camera-fallback {
+  margin: 8px 0 0;
+}
+
+.scan-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 12px;
+  margin: 8px 0;
+}
+
+.scan-card h3 {
+  margin: 0 0 4px;
+}
+
+.scan-card .row-list {
+  margin: 8px 0;
+}
+
+.scan-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.step-chip {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 6px;
+  font-weight: 800;
+  color: #001;
+}
+
+.stores-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+button.scans-note {
+  width: 100%;
+  justify-content: flex-start;
+  text-align: left;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--warn);
+  margin-bottom: 8px;
+}
+
+.camera-strip.compact {
+  height: min(16vh, 120px);
+  min-height: 90px;
+}
+
+/* Actions that stay in reach above the tab bar while the card above them scrolls. */
+.sticky-bar,
+.stocktake .scan-actions {
+  position: sticky;
+  bottom: calc(var(--tab-h) + env(safe-area-inset-bottom));
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 8px 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+.sticky-bar > * {
+  flex: 1;
+}
+
+.sheet-body .scan-actions {
+  position: sticky;
+  bottom: 0;
+  background: var(--surface);
+  padding: 8px 0;
+}
+
+.number-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.number-row .field {
+  flex: 1;
+  min-width: 0;
 }

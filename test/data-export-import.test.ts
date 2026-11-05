@@ -27,7 +27,7 @@ describe('export', () => {
   it('writes the same document as YAML', () => {
     const file = yamlExport(json());
     expect(file.mime).toBe('application/yaml');
-    expect(file.text).toContain('schemaVersion: 2');
+    expect(file.text).toContain('schemaVersion: 3');
     expect(file.text).toContain('Alex');
   });
 });
@@ -74,10 +74,10 @@ describe('custom types in export and import', () => {
     expect(JSON.parse(p.json).customTypes).toEqual({});
   });
 
-  it('refuses a schema-3 export', () => {
-    const v3: Record<string, unknown> = JSON.parse(json());
-    (v3.meta as Record<string, unknown>).schemaVersion = 3;
-    expect(previewImport(JSON.stringify(v3))).toMatchObject({ ok: false });
+  it('refuses a schema-4 export', () => {
+    const v4: Record<string, unknown> = JSON.parse(json());
+    (v4.meta as Record<string, unknown>).schemaVersion = 4;
+    expect(previewImport(JSON.stringify(v4))).toMatchObject({ ok: false });
   });
 });
 
@@ -113,5 +113,57 @@ describe('import preview', () => {
     const out = previewImport(JSON.stringify(doc));
     expect(out).toMatchObject({ ok: false });
     expect(out.ok === false && out.error).toMatch(/newer version/);
+  });
+});
+
+describe('barcodes and scans in export and import', () => {
+  const withScanning = () => {
+    const doc = biggarDocument();
+    doc.scans['s1'] = {
+      id: 's1',
+      code: '5000169005743',
+      qty: 2,
+      locationId: Object.keys(doc.locations)[0]!,
+      bestBefore: '2027-06',
+      scanned: '2026-11-04T10:00:00.000Z',
+      product: {
+        found: true,
+        name: 'Test beans',
+        quantity: '415 g',
+        checked: '2026-11-04T10:01:00.000Z',
+      },
+    };
+    return doc;
+  };
+
+  it('round-trips a remembered barcode and a scan through JSON and YAML', () => {
+    const doc = withScanning();
+    expect(Object.keys(doc.barcodes)).toContain('3017620422003');
+    const text = JSON.stringify(doc, null, 2);
+    for (const source of [text, yamlExport(text).text]) {
+      const p = previewImport(source);
+      if (!p.ok) throw new Error(p.error);
+      const back = JSON.parse(p.json);
+      expect(back.barcodes).toEqual(doc.barcodes);
+      expect(back.scans).toEqual(doc.scans);
+    }
+  });
+
+  it('counts them in the preview', () => {
+    const p = previewImport(JSON.stringify(withScanning()));
+    if (!p.ok) throw new Error(p.error);
+    expect(p.summary.barcodes).toBe(1);
+    expect(p.summary.scans).toBe(1);
+  });
+
+  it('a schema-2 export imports with empty barcodes and scans', () => {
+    const v2: Record<string, unknown> = JSON.parse(json());
+    delete v2.barcodes;
+    delete v2.scans;
+    (v2.meta as Record<string, unknown>).schemaVersion = 2;
+    const p = previewImport(JSON.stringify(v2));
+    if (!p.ok) throw new Error(p.error);
+    expect(JSON.parse(p.json).barcodes).toEqual({});
+    expect(JSON.parse(p.json).scans).toEqual({});
   });
 });
