@@ -44,6 +44,19 @@ describe('SizeStep', () => {
     expect(onDone).toHaveBeenCalledWith({ productId: 'prod-beans' });
   });
 
+  it('initialises Another size with the first suggested unit', () => {
+    const onDone = vi.fn();
+    const packs = bundledPacks();
+    const water = packs.items['items-base:water-container']!;
+    const doc = biggarDocument();
+    delete doc.products['prod-can'];
+    const s = liveStore(doc);
+    render(s.wrap(<SizeStep item={water} onDone={onDone} />));
+    fireEvent.click(screen.getByRole('button', { name: 'Another size' }));
+    expect(screen.getByRole('radio', { name: 'L' }).getAttribute('aria-checked')).toBe('true');
+    expect((screen.getByLabelText('Amount') as HTMLInputElement).value).toBe('10');
+  });
+
   it('accepts a typed multipack size', () => {
     const onDone = vi.fn();
     const doc = biggarDocument();

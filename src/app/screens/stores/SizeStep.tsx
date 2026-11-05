@@ -30,10 +30,11 @@ export function SizeStep({
   const skipped = useRef(false);
   const yours = useMemo(() => productsOfItem(doc, item.id), [doc, item.id]);
   const units = MEASURE_UNITS[item.measure];
+  const defaultUnit = item.sizes[0]?.unit ?? units[0]!;
 
   const [custom, setCustom] = useState(false);
   const [amount, setAmount] = useState(item.sizes[0]?.amount ?? 1);
-  const [unit, setUnit] = useState<SizeUnit>(units[0]!);
+  const [unit, setUnit] = useState<SizeUnit>(defaultUnit);
   const [multipack, setMultipack] = useState<number | undefined>(undefined);
   const [name, setName] = useState(initialName ?? '');
 
