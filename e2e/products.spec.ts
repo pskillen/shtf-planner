@@ -77,6 +77,9 @@ test('items, products and batches through quick add, the product list and Stores
   d = await doc(page);
   expect(product220(d)).toBeUndefined();
   expect(d.products['prod-beans']).toBeDefined();
+  expect(
+    Object.values(d.stock).filter((s) => s.productId === 'prod-beans' && s.qty === 3),
+  ).toHaveLength(1);
 
   await page
     .getByRole('navigation', { name: 'Main' })
@@ -94,6 +97,10 @@ test('items, products and batches through quick add, the product list and Stores
   await expect(page.getByText('2½')).toBeVisible();
 
   await expect(page.getByText('min 6 in Pantry')).toBeVisible();
+  const useFirstRow = page
+    .getByRole('button', { name: /Edit .*Test beans 415 g in Pantry/ })
+    .filter({ hasText: 'Jun 2028' });
+  await expect(useFirstRow.getByText('Use first')).toBeVisible();
   await expect(page.getByText('Use first').first()).toBeVisible();
 
   await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Gaps' }).click();
