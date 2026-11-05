@@ -229,7 +229,7 @@ export class Cam {
     const bits: string[] = [];
     if (this.zoomRange) bits.push(`zoom ${this.zoom?.toFixed(1) ?? '?'}x`);
     if (this.focusModes.length) bits.push(`focus ${this.settings.focusMode ?? this.focusModes[0]}`);
-    if (this.focusPoint) bits.push('tap to focus');
+    if (this.focusPoint) bits.push(this.focusModes.length ? 'tap to focus' : 'tap to focus (untested)');
     if (this.torchSupported()) bits.push('torch');
     return bits.length ? `Camera: ${b}, ${bits.join(', ')}` : `Camera: ${b}, zoom and focus control not supported here`;
   }
