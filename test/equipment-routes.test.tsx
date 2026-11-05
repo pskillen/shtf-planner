@@ -92,16 +92,16 @@ describe('equipment is added to the home, never as stock', () => {
 describe('Stores shows the equipment kept in each place', () => {
   it('lists a place’s equipment as read-only rows that open the equipment form', () => {
     app('/app/stores');
-    const shed = screen.getByRole('region', { name: 'Shed' });
-    const row = within(shed).getByRole('link', { name: 'Edit equipment Gas BBQ' });
+    fireEvent.change(screen.getByLabelText('Place filter'), { target: { value: 'loc-shed' } });
+    const equipment = screen.getByRole('region', { name: 'Equipment' });
+    const row = within(equipment).getByRole('link', { name: 'Edit equipment Gas BBQ' });
     expect(row.getAttribute('href')).toBe('/app/assets?edit=asset-bbq');
-    // read-only: the row is a link, with no stepper or delete beside it
-    expect(within(shed).queryByRole('button', { name: /Gas BBQ/ })).toBeNull();
+    expect(within(equipment).queryByRole('button', { name: /Gas BBQ/ })).toBeNull();
     fireEvent.click(row);
     expect(screen.getByText('Edit Gas BBQ')).toBeTruthy();
   });
 
-  it('lists equipment with no place, or a place that has gone, under its own group', () => {
+  it('lists equipment with no place, or a place that has gone, in the equipment group', () => {
     const s = liveStore(biggarDocument());
     s.store.change('orphan', (d) => {
       d.assets['asset-lost'] = {
@@ -120,12 +120,17 @@ describe('Stores shows the equipment kept in each place', () => {
         </StoreContext.Provider>
       </MemoryRouter>,
     );
-    const group = screen.getByRole('region', { name: 'Equipment, no place' });
-    // Roof solar has no place at all; the spare alarm's place no longer exists
+    const group = screen.getByRole('region', { name: 'Equipment' });
     expect(within(group).getByRole('link', { name: 'Edit equipment Roof solar' })).toBeTruthy();
     expect(within(group).getByRole('link', { name: 'Edit equipment Spare alarm' })).toBeTruthy();
-    // placed equipment stays with its place
-    expect(within(group).queryByRole('link', { name: 'Edit equipment Gas BBQ' })).toBeNull();
+    expect(
+      within(group).getByRole('link', { name: 'Edit equipment Roof solar' }).closest('li')!
+        .textContent,
+    ).toContain('No place');
+    expect(
+      within(group).getByRole('link', { name: 'Edit equipment Gas BBQ' }).closest('li')!
+        .textContent,
+    ).toContain('Shed');
   });
 });
 

@@ -10,7 +10,16 @@ type Stock = {
   source: string;
 };
 type Doc = {
-  products: Record<string, { id: string; name: string; itemId?: string }>;
+  products: Record<
+    string,
+    {
+      id: string;
+      name: string;
+      itemId?: string;
+      size?: { count?: number; amount: number; unit: string };
+      labelKcalPer100?: number;
+    }
+  >;
   stock: Record<string, Stock>;
   barcodes: Record<string, { productId: string; seen: string }>;
   scans: Record<
@@ -24,6 +33,12 @@ type Shtf = {
   doc: () => Promise<Doc>;
   loadFixture: () => Promise<void>;
   flush: () => Promise<void>;
+  engine: {
+    coverage: (
+      asOf?: string,
+      horizonDays?: number,
+    ) => Promise<{ targetId: string; amount: number }[]>;
+  };
 };
 
 const doc = (page: Page) =>
@@ -40,27 +55,46 @@ const show = (page: Page, ean: string, sideways = false) => cam(page, 'show', { 
 
 const KNOWN = '3017620422003'; // in the fixture: ${SPREAD}, "Test spread 400 g"
 const BEANS = '5000169005743'; // Open Food Facts (faked): baked beans, 415 g
+const COLA = '5449000000996'; // Open Food Facts (faked): Zx Cola multipack
 const NOT_FOUND = '4006381333931'; // Open Food Facts (faked): 404
 
 /** A recorded-shape answer for the product API; a 404 for anything else. */
-const offAnswers = (code: string): { status: number; body: unknown } =>
-  code === BEANS
-    ? {
-        status: 200,
-        body: {
-          status: 1,
-          product: {
-            product_name: 'Test beans',
-            brands: 'Acme',
-            quantity: '415 g',
-            product_quantity: '415',
-            product_quantity_unit: 'g',
-            nutriments: { 'energy-kcal_100g': 80 },
-            categories_tags: ['en:canned-foods', 'en:baked-beans'],
-          },
+const offAnswers = (code: string): { status: number; body: unknown } => {
+  if (code === BEANS) {
+    return {
+      status: 200,
+      body: {
+        status: 1,
+        product: {
+          product_name: 'Test beans',
+          brands: 'Acme',
+          quantity: '415 g',
+          product_quantity: '415',
+          product_quantity_unit: 'g',
+          nutriments: { 'energy-kcal_100g': 80 },
+          categories_tags: ['en:canned-foods', 'en:baked-beans'],
         },
-      }
-    : { status: 404, body: { status: 0 } };
+      },
+    };
+  }
+  if (code === COLA) {
+    return {
+      status: 200,
+      body: {
+        status: 1,
+        product: {
+          product_name: 'Zx Cola',
+          quantity: '24 x 330 ml',
+          product_quantity: '7920',
+          product_quantity_unit: 'ml',
+          nutriments: { 'energy-kcal_100g': 42 },
+          categories_tags: ['en:sodas'],
+        },
+      },
+    };
+  }
+  return { status: 404, body: { status: 0 } };
+};
 
 interface Net {
   offUrls: string[];
@@ -134,12 +168,12 @@ test.describe('stocktake with a fake camera', () => {
     await countTin(page, KNOWN, SPREAD);
     expect(net.offUrls).toHaveLength(0);
 
-    // 2. A new one: Open Food Facts says what it is, the person picks, the app remembers.
+    // 2. A new one: Open Food Facts says what it is, the person confirms counts-as, the app remembers.
     await show(page, BEANS);
-    await expect(page.getByText('Open Food Facts says:')).toBeVisible();
     await expect(page.getByText('Test beans 415 g')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Counts as: Baked beans?' })).toBeVisible();
     await cam(page, 'clear');
-    await page.getByRole('button', { name: /Baked beans/ }).click();
+    await page.getByRole('button', { name: 'Yes' }).click();
     await expect(dateCard(page, BEANS_PRODUCT)).toBeVisible();
     await firstChip(page);
     await ok(page);
@@ -160,6 +194,81 @@ test.describe('stocktake with a fake camera', () => {
     expect(d.barcodes[BEANS]?.productId).toBeDefined();
     expect(d.products[d.barcodes[BEANS]!.productId]!.name).toBe(BEANS_PRODUCT);
     expect(Object.keys(d.scans)).toHaveLength(0);
+  });
+
+  test('Zx Cola: counts as soft drinks and gives 7.92 L of water', async ({ page, context }) => {
+    const net = await setUp(page, context);
+    await open(page, '/app/stores/stocktake');
+    await show(page, COLA);
+    await expect(page.getByText(/Zx Cola.*24.*330 ml/)).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('42 kcal per 100 ml (from the label)')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Counts as: Soft drinks?' })).toBeVisible();
+    await cam(page, 'clear');
+    await page.getByRole('button', { name: 'Yes' }).click();
+    await expect(page.getByRole('heading', { name: /Zx Cola/i })).toBeVisible();
+    await firstChip(page);
+    await ok(page);
+    await page.evaluate(() => (window as unknown as { __shtf: Shtf }).__shtf.flush());
+    await expect(page.getByText('1 BARCODE')).toBeVisible();
+    expect(net.offUrls).toHaveLength(1);
+    const d = await doc(page);
+    const cola = Object.values(d.products).find((p) => p.name.includes('Zx Cola'));
+    expect(cola?.itemId).toBe('items-base:soft-drinks');
+    expect(cola?.size).toMatchObject({ count: 24, amount: 330, unit: 'ml' });
+    expect(cola?.labelKcalPer100).toBe(42);
+    expect(Object.values(d.stock).some((s) => s.productId === cola!.id && s.qty === 1)).toBe(true);
+    // packGives for this product is 7.92 L water (see products.test.ts); on the Biggar fixture
+    // `coverage(...).water:waterL.amount` stays at 56 once water is already above target.
+  });
+
+  test('an unknown barcode: What is it, size, then the date', async ({ page, context }) => {
+    const net = await setUp(page, context);
+    await open(page, '/app/stores/stocktake');
+    await show(page, NOT_FOUND);
+    await expect(page.getByText(/does not have this one/)).toBeVisible();
+    await cam(page, 'clear');
+    await page.getByLabel('What is it?').fill('tinned soup');
+    await page.getByRole('button', { name: /^Tinned soup / }).click();
+    await page
+      .getByRole('region', { name: 'Suggested sizes' })
+      .getByRole('button', { name: '400 g', exact: true })
+      .click();
+    await expect(page.getByRole('heading', { name: /Tinned soup 400 g/i })).toBeVisible();
+    await firstChip(page);
+    await ok(page);
+    expect(net.offUrls).toHaveLength(1);
+    const d = await doc(page);
+    expect(Object.values(d.stock).some((s) => s.source === 'barcode')).toBe(true);
+  });
+
+  test('offline unknown: decide later and sort without another lookup', async ({
+    page,
+    context,
+  }) => {
+    const net = await setUp(page, context);
+    await open(page, '/app/stores/stocktake');
+    net.offline = true;
+    await context.setOffline(true);
+    await show(page, NOT_FOUND);
+    await expect(page.getByText(/You are offline/)).toBeVisible();
+    await cam(page, 'clear');
+    await page.getByRole('button', { name: 'Decide later' }).click();
+    await page.getByRole('button', { name: 'Done' }).click();
+    await page.getByRole('button', { name: 'Back to Stores' }).click();
+    expect(net.offUrls).toHaveLength(0);
+    await page.getByRole('button', { name: '1 scan to sort ›' }).click();
+    await page.getByRole('button', { name: `Sort scan ${NOT_FOUND}` }).click();
+    const sortDlg = page.getByRole('dialog', { name: 'Sort this scan' });
+    await sortDlg.getByLabel('What is it?').fill('tinned soup');
+    await sortDlg.getByRole('button', { name: /^Tinned soup / }).click();
+    await sortDlg
+      .getByRole('region', { name: 'Suggested sizes' })
+      .getByRole('button', { name: '400 g', exact: true })
+      .click();
+    expect(net.offUrls).toHaveLength(0);
+    await expect
+      .poll(async () => Object.keys((await doc(page)).scans).length, { timeout: 10_000 })
+      .toBe(0);
   });
 
   test('Undo after OK removes exactly that addition', async ({ page, context }) => {
@@ -212,7 +321,7 @@ test.describe('stocktake with a fake camera', () => {
     await expect(
       page.getByRole('dialog', { name: 'Sort this scan' }).getByText('Test beans 415 g'),
     ).toBeVisible({ timeout: 15_000 });
-    await page.getByRole('button', { name: /Baked beans/ }).click();
+    await page.getByRole('button', { name: 'Yes' }).click();
     const d = await doc(page);
     expect(Object.keys(d.scans)).toHaveLength(0);
     expect(Object.values(d.stock).filter((i) => i.source === 'barcode')).toHaveLength(1);
@@ -234,9 +343,9 @@ test.describe('stocktake with a fake camera', () => {
 
     // A code held sideways: the turned attempts find it.
     await show(page, BEANS, true);
-    await expect(page.getByText('Open Food Facts says:')).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('Test beans 415 g')).toBeVisible({ timeout: 15_000 });
     await cam(page, 'clear');
-    await page.getByRole('button', { name: /Baked beans/ }).click();
+    await page.getByRole('button', { name: 'Yes' }).click();
     await firstChip(page);
     await ok(page);
     await page.getByRole('button', { name: 'Done' }).click();
@@ -302,7 +411,7 @@ test.describe('stocktake with a fake camera', () => {
     const net = await setUp(page, context);
     await open(page, '/app/stores/stocktake');
     await show(page, BEANS);
-    await expect(page.getByText('Open Food Facts says:')).toBeVisible();
+    await expect(page.getByText('Test beans 415 g')).toBeVisible();
     await cam(page, 'clear');
     await page.getByRole('button', { name: 'Scan another' }).click();
     await show(page, NOT_FOUND);

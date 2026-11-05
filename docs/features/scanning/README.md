@@ -23,7 +23,7 @@ cleanly in Firefox on Android.
 | Models, notice      | `public/ocr/`                                                                                       | FP16 PaddleOCR models, `NOTICE.md`, Apache-2.0 text, the self-test label                                 |
 | Tunables            | `src/scan/tunables.ts`, `screens/stores/stocktakeTunables.ts`                                       | Intervals, zoom, timeouts, limits, box shapes, Undo time, buzz patterns: one line each                   |
 | Camera strip        | `src/app/components/CameraStrip.tsx`                                                                | The live strip, red line or date box, catch tick, centre overlay, torch, zoom, tap to focus              |
-| The card for a code | `screens/stores/ScanResolve.tsx`                                                                    | Known: straight on. Unknown: Open Food Facts, "Which of these is it?", Pick, New item, Decide later      |
+| The card for a code | `screens/stores/ScanResolve.tsx`                                                                    | Counts-as card, item picker, size step, Decide later                                                     |
 | Quick add's scanner | `screens/stores/ScanSheet.tsx`                                                                      | The strip, type the barcode number, find it by name                                                      |
 | Stocktake           | `screens/stores/StocktakeScreen.tsx`, route `/app/stores/stocktake`                                 | Step 1 BARCODE, step 2 DATE, OK, Undo, Done summary                                                      |
 | Scans to sort       | `screens/stores/ScansToSort.tsx`, `useScanQueue.ts`                                                 | The queue note on Stores, its sheet, and the lookup of queued codes when online                          |
@@ -47,11 +47,9 @@ cleanly in Firefox on Android.
    (with **Use this number** beside it), **Find it by name**, **Done**.
 3. On a barcode there is one buzz and a brief green tick in the centre of the strip. A **known**
    barcode (remembered by the household) goes straight to the date. An **unknown** one asks Open
-   Food Facts (at most four seconds) and shows what it said with up to three likely pack types,
-   then three choices, each with a short hint under it: **Pick what it is** (choose from the list of
-   item types), **New item: <name>** (make it its own type, filled in from the label: the name and,
-   with weight and energy, kcal per piece) and **Decide later** (keep the scan; sort it on Stores).
-   The choice is remembered for that barcode, for the whole household, on all its devices.
+   Food Facts (at most four seconds), then shows the **Counts as** card (see below): confirm the
+   suggested item, pick another, count towards nothing, or **Decide later**. The choice is
+   remembered for that barcode, for the whole household, on all its devices.
 4. **2 DATE.** The strip shows the yellow date box instead of the red line, and the status and the
    read month are drawn in its centre (see Reading dates). Below it: the item card with the month
    field and chips, then the quantity. A date set from a chip or a month gives two buzzes; the expiry
@@ -65,6 +63,40 @@ cleanly in Firefox on Android.
 
 A stocktake **adds** stock, like Quick add. It does not recount a place. An equipment type is never
 offered as stock: a search that matches a stove routes to the equipment form.
+
+## The Counts as card
+
+When Open Food Facts knows a code, the card shows the **product** it will create (name, size, label kcal when
+present) and one question: **Counts as: [suggested item]?**
+
+- **Yes** — make the product for that item and remember the barcode for the household.
+- **Something else** — item picker, then size if needed.
+- **Counts towards nothing** — listed; scores nothing.
+- **Decide later** — queue the scan on Stores (stocktake when a place exists; Quick add's scan sheet when
+  `onSortLater` is wired).
+
+Each choice has a one-line hint under the button (same style as other scan choices).
+
+A **remembered** barcode skips the card and goes straight to quantity and date.
+
+**Not this item?** on the date step (stocktake), or **Not this item?** in Quick add after a scan, re-opens
+identification for that code. **Keep** leaves the remembered product unchanged; choosing a different item or
+product replaces what the household remembers on all devices.
+
+## Unknown codes
+
+When Open Food Facts does not know a code (or you are offline with no stored facts), the card asks **What is it?**
+(item picker), then the **size step** if size is not already known, then the date (stocktake) or Add (quick add).
+You can choose **Counts towards nothing** or **Decide later** instead.
+
+## Product from Open Food Facts
+
+The app builds a household **product**: name and size from the label, optional **label kcal per 100 g or 100 ml**
+when OFF provides it. Calories count from the label when present, else the item's typical figure; the product list
+shows which ("label: …" or "typical for …").
+
+Multipacks (e.g. 24 × 330 ml) are stored as count × amount; water and food from soft drinks follow the item rules
+(1 L water per litre of drink plus label kcal).
 
 ## Reading dates
 
@@ -190,7 +222,7 @@ code, quantity and place (optional best-before). It counts towards nothing until
 shows "3 scans to sort ›". When the device is online the app looks queued codes up by itself,
 oldest first, within its rate limit, and stores the answer on the scan as **`off`** (Open Food Facts
 facts: name, size, kcal, categories…). Sorting from the queue uses that cached `off` without a
-fresh lookup. Tapping a row shows the same card; resolving it makes a product and stock with
+fresh lookup. Tapping a row shows the same **Counts as** card; resolving it makes a product and stock with
 `source: 'barcode'`, remembers the barcode and removes the scan. A scan sorted on another device
 just disappears. Delete has an undo.
 

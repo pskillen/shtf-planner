@@ -15,6 +15,15 @@ const NUMBERS = 'Write down 999 or 112';
 const done = () => screen.getByRole('button', { name: new RegExp(`^Done: ${NUMBERS}`) });
 const tick = (ms: number) => act(() => void vi.advanceTimersByTime(ms));
 
+describe('the Gaps tab: shopping sort', () => {
+  it('By aisle groups rows under category and heading', () => {
+    const s = liveStore(biggarDocument());
+    render(s.wrap(<GapsScreen />));
+    fireEvent.click(screen.getByRole('radio', { name: 'By aisle' }));
+    expect(screen.getByRole('heading', { name: /Food and cooking ›/ })).toBeTruthy();
+  });
+});
+
 describe('the Gaps tab: plan items marked done', () => {
   it('hides the item at once with an undo toast, and writes the date after five seconds', () => {
     const s = liveStore(biggarDocument());

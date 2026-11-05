@@ -20,6 +20,19 @@ type Shtf = {
 const doc = (page: Page) =>
   page.evaluate(() => (window as unknown as { __shtf: Shtf }).__shtf.doc());
 
+async function pickSizeInDialog(page: Page): Promise<void> {
+  const dialog = page.getByRole('dialog');
+  const yours = dialog.getByRole('region', { name: 'Your products' });
+  if (await yours.isVisible().catch(() => false)) {
+    await yours.getByRole('button').first().click();
+    return;
+  }
+  const suggested = dialog.getByRole('region', { name: 'Suggested sizes' });
+  if (await suggested.isVisible().catch(() => false)) {
+    await suggested.getByRole('button').first().click();
+  }
+}
+
 async function fixture(page: Page, path = '/app/stores'): Promise<void> {
   await page.goto('/?debug=1');
   await page.evaluate(() => (window as unknown as { __shtf: Shtf }).__shtf.loadFixture());
@@ -54,24 +67,21 @@ async function waterShort(page: Page): Promise<number> {
   return Number(/water: ([\d.]+) L/.exec(await row.innerText())![1]);
 }
 
-test('the fixture household: the Stores tab groups stock by place, flags the odd item, shows floors', async ({
+test('the fixture household: the Stores tab groups stock by item, flags the odd item, shows minimums', async ({
   page,
 }) => {
   await fixture(page);
   await expect(page.getByRole('heading', { name: 'Stores' })).toBeVisible();
-  // grouped by place, with a floor badge on the rotating pantry and a past best-before
-  await expect(page.getByRole('region', { name: 'Pantry' })).toBeVisible();
-  await expect(
-    page.getByRole('region', { name: 'Pantry' }).getByText('min 2').first(),
-  ).toBeVisible();
+  await expect(page.getByText('min 2').first()).toBeVisible();
+  await page.getByLabel('Place filter').selectOption({ label: 'Pantry' });
   await expect(
     page.getByText('This place rotates: the minimum counts, not today’s stock.'),
   ).toBeVisible();
   await expect(page.locator('.bb-expired').first()).toBeVisible();
-  // search narrows across places
+  await page.getByLabel('Place filter').selectOption({ label: 'All places' });
   await page.getByLabel('Search stock').fill('torch');
-  await expect(page.getByRole('button', { name: /Edit .*[Tt]orch/ })).toHaveCount(3);
-  await expect(page.getByRole('region', { name: 'Shed' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /Edit .* LED torch in / })).toHaveCount(3);
+  await expect(page.getByText('Propane 13 kg')).toHaveCount(0);
 });
 
 test('Quick add: nine items, two of them added again, each in few taps', async ({ page }) => {
@@ -91,7 +101,7 @@ test('Quick add: nine items, two of them added again, each in few taps', async (
     await fn();
   };
 
-  /** Search, pick (not counted), then qty, a best-before chip and Add (counted). */
+  /** Search, pick (not counted), size when shown, then qty, a best-before chip and Add (counted). */
   async function plain(search: string, name: RegExp, opts: { more?: number; chip?: string } = {}) {
     const dialog = page.getByRole('dialog');
     if (!(await dialog.isVisible())) await page.getByRole('button', { name: 'Add stock' }).click();
@@ -99,6 +109,7 @@ test('Quick add: nine items, two of them added again, each in few taps', async (
     await box.fill(search);
     await page.getByRole('dialog').getByRole('button', { name }).first().click();
     count = 0;
+    await tap(() => pickSizeInDialog(page));
     for (let i = 0; i < (opts.more ?? 0); i++) {
       await tap(() => page.getByRole('button', { name: /^One more/ }).click());
     }
@@ -110,14 +121,18 @@ test('Quick add: nine items, two of them added again, each in few taps', async (
   }
 
   // The first add chooses a place (the next ones start from it).
-  await page.getByRole('button', { name: 'Add stock' }).click();
+  count = 0;
+  await tap(() => page.getByRole('button', { name: 'Add stock' }).click());
   await page.getByRole('searchbox', { name: 'What are you adding?' }).fill('water container');
-  await page
-    .getByRole('dialog')
-    .getByRole('button', { name: /Water containers/i })
-    .click();
-  await page.getByLabel('Where does it go?').selectOption({ label: 'Garage' });
-  await page.getByRole('button', { name: 'Add', exact: true }).click();
+  await tap(() =>
+    page
+      .getByRole('dialog')
+      .getByRole('button', { name: /Water containers/i })
+      .click(),
+  );
+  await tap(() => pickSizeInDialog(page));
+  await tap(() => page.getByLabel('Where does it go?').selectOption({ label: 'Garage' }));
+  await tap(() => page.getByRole('button', { name: 'Add', exact: true }).click());
   await expect(page.getByText(/Added 1 × .* to Garage/)).toBeVisible();
   // add another, twice
   await page.getByRole('button', { name: 'Add another' }).click();
@@ -132,13 +147,12 @@ test('Quick add: nine items, two of them added again, each in few taps', async (
   await plain('oats', /Porridge oats/, { chip: '+1 y' });
   await plain('candles', /Candles/);
   expect(Math.max(...taps)).toBeLessThanOrEqual(6);
-  expect(taps).toEqual([4, 3, 2, 3, 2]);
+  expect(taps).toEqual([5, 4, 3, 4, 3]);
 
   await page.getByRole('button', { name: 'Close' }).click();
 
-  await expect(
-    page.getByRole('region', { name: 'Garage' }).getByRole('button', { name: /Water can 10 L/i }),
-  ).toBeVisible();
+  await page.getByLabel('Search stock').fill('water container');
+  await expect(page.getByRole('button', { name: /Edit .* in Garage/ }).first()).toBeVisible();
 
   await page.evaluate(() => (window as unknown as { __shtf: Shtf }).__shtf.flush());
   await page.goto('/app/stores?debug=1');
@@ -184,8 +198,15 @@ test('a pantry floor counts towards food, and Gaps hands a ticked row to Quick a
     ).find((c) => c.targetId === 'food:foodKcal')!.amount;
   const before = await food();
 
-  await page.getByRole('button', { name: 'Set minimums' }).click();
-  await page.getByRole('button', { name: /^One more: Minimum for Baked beans/ }).click();
+  await page.getByLabel('Place filter').selectOption({ label: 'Pantry' });
+  await page.getByRole('button', { name: 'Set a minimum' }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: /^Baked beans/i })
+    .click();
+  await page
+    .getByRole('button', { name: /^One more: Minimum for Baked beans in the Pantry/ })
+    .click();
   await page.getByRole('button', { name: 'Save minimums' }).click();
   expect((await food()) - before).toBeGreaterThan(0);
 
@@ -211,13 +232,17 @@ test('Quick add warns when the place does not suit the item, and still allows it
     .getByRole('dialog')
     .getByRole('button', { name: /UHT milk/ })
     .click();
+  await pickSizeInDialog(page);
   await page.getByLabel('Where does it go?').selectOption({ label: 'Shed' });
   await expect(page.getByRole('status').filter({ hasText: 'in the Shed' })).toContainText(
     'You can still add it.',
   );
   await page.getByRole('button', { name: 'Add', exact: true }).click();
   await page.getByRole('button', { name: 'Close' }).click();
-  await expect(page.getByRole('region', { name: 'Shed' }).getByText(/⚠/).first()).toBeVisible();
+  await page.getByLabel('Place filter').selectOption({ label: 'Shed' });
+  await page.getByLabel('Search stock').fill('uht');
+  await page.getByRole('button', { name: /UHT milk ·/i }).click();
+  await expect(page.getByText(/⚠/).first()).toBeVisible();
 });
 
 test('Equipment marks solar with no EPS as blocked', async ({ page }) => {
@@ -245,6 +270,7 @@ test('the three tabs and Quick add fit a 375 px phone with big targets', async (
     .getByRole('dialog')
     .getByRole('button', { name: /Tinned soup/ })
     .click();
+  await pickSizeInDialog(page);
   for (const name of [/^One more/, /^One fewer/, 'Add']) {
     const box = await page.getByRole('button', { name }).first().boundingBox();
     expect(box!.height).toBeGreaterThanOrEqual(44);

@@ -8,7 +8,7 @@ import { CameraStrip } from '../../components/CameraStrip';
 import { Field, Switch } from '../../components/controls';
 import { ExpiryBadge } from '../../components/ExpiryBadge';
 import { Sheet } from '../../components/Sheet';
-import { Stepper } from '../../components/Stepper';
+import { QtyField } from '../../components/QtyField';
 import { Toast } from '../../components/Toast';
 import { useChange, useDocument } from '../../state';
 import { usePacks } from '../../usePacks';
@@ -458,6 +458,7 @@ export function StocktakeScreen() {
                   </button>
                 ) : null}
               </div>
+              {packItem ? <p className="muted">Counts as {packItem.name}</p> : null}
               {warning ? (
                 <p className="warn" role="status">
                   ⚠ {warning}
@@ -472,7 +473,7 @@ export function StocktakeScreen() {
               />
               {bestBefore ? <ExpiryBadge bestBefore={bestBefore} /> : null}
               <Field label={`How many (${unit})?`}>
-                <Stepper label={`How many ${unit}`} value={qty} min={1} onChange={setQty} />
+                <QtyField value={qty} onChange={setQty} label={`How many ${unit}`} />
               </Field>
             </div>
             <div className="sticky-bar">

@@ -27,6 +27,15 @@ afterEach(() => {
 
 const KNOWN = '3017620422003'; // fixture: prod-spread (Test spread 400 g)
 const UNKNOWN = '5000169005743';
+const BEANS_PRODUCT = 'Test beans 415 g';
+const beans = {
+  found: true as const,
+  name: 'Test beans',
+  quantity: '415 g',
+  size: { amount: 415, unit: 'g' as const },
+  kcalPer100: 80,
+  categories: ['en:canned-foods', 'en:baked-beans'],
+};
 const barcodeStock = (s: ReturnType<typeof liveStore>) =>
   Object.values(s.doc().stock).filter((r) => r.source === 'barcode');
 const SPREAD = 'Test spread 400 g';
@@ -50,6 +59,7 @@ describe('Stocktake: the step machine', () => {
     await read(KNOWN);
     expect(await screen.findByText(SPREAD)).toBeTruthy();
     expect(screen.getByText(/Test spread 400 g/)).toBeTruthy(); // the remembered product name
+    expect(screen.getByText('Counts as Peanut butter')).toBeTruthy();
     expect(screen.getByText('2 DATE', { selector: '.camera-chip' })).toBeTruthy();
     chip('+1 y');
     ok();
@@ -156,6 +166,25 @@ describe('Stocktake: the step machine', () => {
     await open();
     expect(screen.queryByText(/Red line for the barcode, yellow box for the date/)).toBeNull();
   });
+  it('Undo after a scan that made a product leaves the product and barcode remembered', async () => {
+    fakeOff({ [UNKNOWN]: beans });
+    const s = await open();
+    await read(UNKNOWN);
+    await screen.findByRole('heading', { name: 'Counts as: Baked beans?' });
+    fireEvent.click(screen.getByRole('button', { name: 'Yes' }));
+    await screen.findByText(BEANS_PRODUCT);
+    chip('+1 y');
+    ok();
+    const pid = s.doc().barcodes[UNKNOWN]?.productId;
+    expect(pid).toBeDefined();
+    expect(s.doc().products[pid!]).toBeDefined();
+    fireEvent.click(
+      within(screen.getByTestId('stocktake-saved')).getByRole('button', { name: 'Undo' }),
+    );
+    expect(barcodeStock(s)).toHaveLength(0);
+    expect(s.doc().barcodes[UNKNOWN]?.productId).toBe(pid);
+    expect(s.doc().products[pid!]).toBeDefined();
+  });
 });
 
 describe('Not this item?', () => {
@@ -166,11 +195,11 @@ describe('Not this item?', () => {
     await screen.findByText(SPREAD);
     fireEvent.click(screen.getByRole('button', { name: 'Not this item?' }));
     expect(screen.getByText(/remembered as Test spread 400 g/)).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Pick what it is' }));
-    fireEvent.change(screen.getByLabelText('Search items'), {
+    fireEvent.change(screen.getByLabelText('What is it?'), {
       target: { value: 'soup' },
     });
     fireEvent.click(screen.getByRole('button', { name: /Tinned soup/ }));
+    fireEvent.click(screen.getByRole('button', { name: '400 g' }));
     expect(await screen.findByRole('heading', { name: /soup/i })).toBeTruthy();
     expect(s.doc().barcodes[KNOWN]?.productId).not.toBe('prod-spread');
     chip('+1 y');
@@ -273,8 +302,8 @@ describe('scans to sort', () => {
     const s = liveStore(withScan());
     render(s.wrap(<ScansToSort onClose={() => undefined} />));
     fireEvent.click(screen.getByRole('button', { name: `Sort scan ${UNKNOWN}` }));
-    await waitFor(() => expect(screen.getByText('Which of these is it?')).toBeTruthy());
-    fireEvent.click(await screen.findByRole('button', { name: /Baked beans/i }));
+    await waitFor(() => expect(screen.getByText(/Test beans 415 g/)).toBeTruthy());
+    fireEvent.click(await screen.findByRole('button', { name: 'Yes' }));
     await waitFor(() => expect(Object.keys(s.doc().scans)).toHaveLength(0));
     const made = Object.values(s.doc().stock).find((r) => r.source === 'barcode');
     expect(made).toMatchObject({

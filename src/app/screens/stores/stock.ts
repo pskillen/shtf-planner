@@ -122,6 +122,7 @@ export function monthChips(shelfLife: Item['shelfLife'], todayIso: string): Mont
 
 const LAST_LOCATION_KEY = 'shtf.lastLocationId';
 const RECENT_KEY = 'shtf.recentItems';
+const RECENT_PRODUCTS_KEY = 'shtf.recentProducts';
 const RECENT_MAX = 12;
 
 const read = (key: string): string | null => {
@@ -155,6 +156,25 @@ export function pushRecent(itemId: string): void {
   write(
     RECENT_KEY,
     JSON.stringify([itemId, ...readRecent().filter((t) => t !== itemId)].slice(0, RECENT_MAX)),
+  );
+}
+
+/** Product ids added lately on this device, newest first. */
+export function readRecentProducts(): string[] {
+  try {
+    const parsed: unknown = JSON.parse(read(RECENT_PRODUCTS_KEY) ?? '[]');
+    return Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+export function pushRecentProduct(productId: string): void {
+  write(
+    RECENT_PRODUCTS_KEY,
+    JSON.stringify(
+      [productId, ...readRecentProducts().filter((id) => id !== productId)].slice(0, RECENT_MAX),
+    ),
   );
 }
 
