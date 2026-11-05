@@ -118,3 +118,32 @@ and runs in CI. With `?debug=1`, `window.__shtf.scan.code('...')` injects a code
 - Reading the best-before date from the camera is not built (the date step is the month field).
 - A remembered barcode can be corrected with Not this item? but not forgotten.
 - iOS Safari is not a target.
+
+## Reading dates
+
+The date step reads the best-before month from the pack with the camera. The text-to-date step is
+`src/engine/datecode/parse.ts`, a pure parser: text in, month-years out, today passed in. Its rules:
+
+- **Normalising.** Upper case. Newlines, tabs, `|` and `_` become spaces; `,` and `;` become `.`.
+  Inside a run that already has a digit, `O` reads as 0 and `I`/`L` as 1, except a run glued to a
+  month name keeps its I and L (`SEP27L4` is a date then a code). Times such as `14:32` are dropped.
+- **Shapes.** `YYYY-MM(-DD)`; `DD MMM YY(YY)`, also glued (`14JUN27`); `MMM YY(YY)`; `DD/MM/YY(YY)`
+  with real separators; `DD MM YYYY` with spaces; `DD MM YY` with spaces only when a label claims
+  it; `MM/YY(YY)`; `DDMM YY` (day and month glued) only when labelled; `DD MMM` with no year; after
+  a label, glued `MMYYYY` (`BB 062027`) and `DDMMYY` (`BEST BEFORE 060227`).
+- **Labels**, tolerant of mangled reads: `BEST BEFORE (END)`, `BEFORE`, `USE BY (END)`, `BBE`, `BB`,
+  `BBD`, `EXP` and up to six letters (`Expirel`), `U/B`. A label claims only the first date after
+  it (within 22 characters) and only if no other label sits between. `BATCH (CODE)`, `LOT (NO)` and
+  `CODE` mark the next run as a code, not a date. Dates after `PROD`, `MFD`, `MFG`, `PKD`, `PACKED`,
+  `MADE` or `MANUFACTURED` are never expiry dates.
+- **Range.** This month to 120 months ahead. A date with no year ("11 NOV") takes its year at month
+  level: this month or later is this year, earlier months next year; it is "year assumed" and never
+  confident alone. Past dates up to 24 months back are read as expired, but only with a label or a
+  full day-month-year. A bare unlabelled `MM/YY` or `MM.YY`, an unlabelled spaced `DD MM YY` and a
+  glued `DDMM YY` are never a result: they become suggestions, at most three.
+- **Ranking.** Labelled first, then future before past, then later; year-assumed below real dates;
+  unlabelled past last. Confidence is capped at 0.45 for an assumed year and 0.6 for an expired date.
+
+`src/engine/datecode/tally.ts` turns passes into a frame verdict and frames into an answer; the
+numbers are named constants there. `parse.test.ts` holds 152 cases and `tally.test.ts` the agreement
+rules.
