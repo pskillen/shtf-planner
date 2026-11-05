@@ -117,5 +117,30 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    // src/scan is the browser's camera, barcode decoding and the Open Food Facts client: plain
+    // modules with no React. It may use packages (@zxing/*) and the model, util and engine; it
+    // never reaches the UI, the store, the packs, or anything Drive or Google.
+    files: ['src/scan/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: UI,
+          patterns: [
+            UI_SUBPATHS,
+            reach(
+              ['app', 'store', 'packs'],
+              'src/scan never imports src/app, src/store or src/packs',
+            ),
+            {
+              regex: '(^|/)(drive|google|gapi|gsi)([-_./]|$)|googleapis|google-auth',
+              message: 'src/scan never touches Drive or Google',
+            },
+          ],
+        },
+      ],
+    },
+  },
   // src/app may import everything.
 );
