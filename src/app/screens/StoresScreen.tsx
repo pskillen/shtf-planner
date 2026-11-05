@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { minimumKey, type Asset, type Item, type Location, type Stock } from '../../model';
 import { formatQty, today } from '../../util';
@@ -55,6 +55,12 @@ export function StoresScreen() {
   const [sorting, setSorting] = useState(false);
   useScanQueue();
 
+  useEffect(() => {
+    if (placeFilter !== 'all' && !doc.locations[placeFilter]) {
+      setPlaceFilter('all');
+    }
+  }, [placeFilter, doc.locations]);
+
   const remove = useDeferredDelete((id) =>
     change('delete stock', (d) => {
       delete d.stock[id];
@@ -104,7 +110,8 @@ export function StoresScreen() {
   const placeMatchesSearch =
     q === '' ||
     placeFilter === 'all' ||
-    matchesPlaceName(locations.find((l) => l.id === placeFilter)!);
+    (doc.locations[placeFilter] !== undefined &&
+      matchesPlaceName(doc.locations[placeFilter]!));
 
   const itemIds = itemIdsInView(doc, placeFilter);
   const orderedItems = orderedItemsInView(packs, itemIds).filter(matchesItem);
