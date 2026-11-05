@@ -131,12 +131,18 @@ describe('Quick add: the search step', () => {
   });
 
   it('adds a half pack when quantity is 0.5', () => {
-    const s = open();
-    pickFromSearch('tinned', /Tinned soup/);
+    const s = open(biggarDocument(), {
+      itemId: 'items-base:tinned-soup',
+      productId: 'prod-soup',
+    });
     const before = s.doc().stock['stock-soup']!.qty;
     fireEvent.click(screen.getByRole('radio', { name: '½' }));
+    fireEvent.click(screen.getByRole('button', { name: /^One fewer: / }));
     fireEvent.click(screen.getByRole('button', { name: 'Add' }));
-    expect(s.doc().stock['stock-soup']!.qty).toBe(before + 0.5);
+    const total = Object.values(s.doc().stock)
+      .filter((r) => r.productId === 'prod-soup')
+      .reduce((n, r) => n + r.qty, 0);
+    expect(total).toBe(before + 0.5);
   });
 
   it('merges stock when product, place and best-before month match', () => {
