@@ -4,7 +4,7 @@ import { parseDates, fmtMY } from './parse.ts';
 const NOW = new Date(2026, 10, 15); // 15 Nov 2026
 
 // [ocr text, expected "MM/YYYY" or null (must NOT produce a date)]
-export const CASES: [string, string | null][] = [
+export const CASES: [string, string | null, boolean?][] = [
   ['BB 06/2027', '06/2027'],
   ['L2314B 14:32 BB 06/2027', '06/2027'],
   ['BEST BEFORE END 03/2028', '03/2028'],
@@ -64,15 +64,58 @@ export const CASES: [string, string | null][] = [
   ['BB AUGUST 2029', '08/2029'],
   ['BB 2029/08', '08/2029'],
   ['L1234 5678 99', null],
+
+  // ---- round 2: strings printed on real Aldi/Lidl items (annotations.md), month-year only
+  ['066JEP6090 BBE MAR 2028', '03/2028'],
+  ['14:43 543018 BB 09/03/27', '03/2027'],
+  ['29.01.27 502932125', '01/2027'],
+  ['SEP27 L4 6272 19:10', '09/2027'],
+  ['BEST BEFORE 06 02 27 C 6145 5 07:26', '02/2027'],
+  ['11 NOV C121206L MD013', '11/2027', true], // no year: next 11 Nov after 15 Nov 2026
+  ['2214101225014133-2 Expire ???? 22.10.27', '10/2027'],
+  ['SEP 2028 Best Before End: Batch Code: 23 09 26 21:01', '09/2028'],
+  ['Best Before: 06 10 2028 12:29', '10/2028'],
+  // ---- round 2: raw strings the phone OCR returned (owner's first session)
+  ['best Bel 11 NOV Keep ef C12120AL MD013', '11/2027', true],
+  ['29,01.27', '01/2027'],
+  ['066JEP6090 BBE MAR 2028 ', '03/2028'],
+  ['SEP27 I 627219:13', '09/2027'],
+  ['A', null],
+  ['1 Best Befon 06 10 2028 12:29', '10/2028'],
+  ['Best Befo n: 202O Batch Code: 2309 26', null], // cut off year, then a batch code
+  ['2 BEN I', null],
+  ['BN EV.', null],
+  ['2', null],
+  ['FEED', null],
+  // ---- round 2: the new rules
+  ['06 10 2028', '10/2028'], // space-separated, 4-digit year
+  ['06 10 28', null], // 2-digit year with spaces needs a label
+  ['BEST BEFORE 06 10 28', '10/2028'],
+  ['Best Befo 06 10 28', '10/2028'],
+  ['BEST BEFORE END 06 10 28', '10/2028'],
+  ['EXPIRES 06 10 28', '10/2028'],
+  ['EXPIRY 06 10 2028', '10/2028'],
+  ['EXP. 06 10 28', '10/2028'],
+  ['BATCH 06 10 28', null],
+  ['LOT 06 10 2028', null],
+  ['CODE: 23 09 26', null],
+  ['BEST BEFORE 15 NOV', '11/2026', true], // today counts
+  ['BEST BEFORE 14 NOV', '11/2027', true],
+  ['03 JAN', '01/2027', true],
+  ['29 FEB', null], // next 29 Feb is 15 months away: past the 12-month cap
+  ['11 NOVEMBER', '11/2027', true],
+  ['11 NOVA', null],
+  ['BB 06/2027 11 NOV', '06/2027'], // a real date beats an assumed-year one
 ];
 
 let ok = 0;
 const fails: string[] = [];
-for (const [text, want] of CASES) {
+for (const [text, want, assumed] of CASES) {
   const r = parseDates(text, NOW);
   const got = r.best ? fmtMY(r.best) : null;
-  if (got === want) ok++;
-  else fails.push(`  "${text}" -> ${got} (want ${want})`);
+  const gotAssumed = !!r.best?.yearAssumed;
+  if (got === want && gotAssumed === !!assumed) ok++;
+  else fails.push(`  "${text}" -> ${got}${gotAssumed ? ' (year assumed)' : ''} (want ${want}${assumed ? ' (year assumed)' : ''})`);
 }
 console.log(`parser: ${ok}/${CASES.length} (${((100 * ok) / CASES.length).toFixed(1)}%)`);
 for (const f of fails) console.log(f);
