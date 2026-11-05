@@ -246,45 +246,53 @@ export function DateReader({
     );
   }
 
-  // The status and the month are drawn on the camera strip, at the centre where the eye is
-  // (`centre`); with no strip to draw on they sit here.
-  const onStrip = (
-    <div className="centre-stack">
-      <div
-        className="centre-pill"
-        role="status"
-        aria-live="polite"
-        data-testid="date-status"
-        data-phase={phase}
-      >
-        {shownLine}
-      </div>
-      {phase === 'got' && read ? (
-        <div className="centre-result" data-testid="date-result">
-          <strong className="date-month">{formatMonth(read.ym)}</strong>{' '}
-          <ExpiryBadge bestBefore={read.ym} />
-          {read.assumed ? <span className="bb bb-check"> · year assumed</span> : null}
-        </div>
+  // The button that fits (Stop while looking, Read again after) and the small crop that was read.
+  const actions = (
+    <div className={centre ? 'centre-actions' : 'date-head'}>
+      {phase === 'got' && read?.crop ? <Crop crop={read.crop} /> : <span />}
+      {phase === 'loading' || phase === 'running' ? (
+        <button type="button" className="secondary" onClick={() => loopRef.current?.stop()}>
+          Stop
+        </button>
+      ) : null}
+      {phase === 'got' || phase === 'none' ? (
+        <button type="button" className="secondary" onClick={again}>
+          Read again
+        </button>
       ) : null}
     </div>
+  );
+
+  // The status, the month and the button are drawn on the camera strip (`centre`), where the eye
+  // is and so that nothing below the strip is pushed down; with no strip they sit here.
+  const onStrip = (
+    <>
+      <div className="centre-stack">
+        <div
+          className="centre-pill"
+          role="status"
+          aria-live="polite"
+          data-testid="date-status"
+          data-phase={phase}
+        >
+          {shownLine}
+        </div>
+        {phase === 'got' && read ? (
+          <div className="centre-result" data-testid="date-result">
+            <strong className="date-month">{formatMonth(read.ym)}</strong>{' '}
+            <ExpiryBadge bestBefore={read.ym} />
+            {read.assumed ? <span className="bb bb-check"> · year assumed</span> : null}
+          </div>
+        ) : null}
+      </div>
+      {centre ? actions : null}
+    </>
   );
 
   return (
     <div className="date-reader">
       {centre ? createPortal(onStrip, centre) : onStrip}
-      <div className="date-head">
-        {phase === 'got' && read?.crop ? <Crop crop={read.crop} /> : <span />}
-        {phase === 'loading' || phase === 'running' ? (
-          <button type="button" className="secondary" onClick={() => loopRef.current?.stop()}>
-            Stop
-          </button>
-        ) : null}
-        {phase === 'got' || phase === 'none' ? (
-          <button type="button" className="secondary" onClick={again}>
-            Read again
-          </button>
-        ) : null}
-      </div>
+      {centre ? null : actions}
       {phase === 'none' && suggestions.length > 0 ? (
         <div className="chips" role="group" aria-label="Suggested dates">
           {suggestions.map((s) => {

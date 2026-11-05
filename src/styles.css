@@ -1406,3 +1406,25 @@ button.scans-note {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* Stop / Read again and the crop sit in the strip's bottom corner, so nothing below it is pushed down. */
+.centre-actions {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.centre-actions .date-crop {
+  max-height: 28px;
+  background: #fff;
+}
+
+.centre-actions button {
+  background: #fff;
+  color: #1a1a1a;
+  border-color: #fff;
+}

@@ -22,6 +22,8 @@ const peanut = async (page: Page) =>
   );
 const ok = (page: Page) => page.getByRole('button', { name: 'OK', exact: true }).click();
 /** Model load on first use, then a couple of frames: generous. */
+/** The month field ends at least this far above the OK bar at 360x740 and 412x915. */
+const MONTH_SLACK = 24;
 const READ = { timeout: 90_000 };
 
 async function setUp(page: Page): Promise<Set<string>> {
@@ -228,7 +230,7 @@ for (const size of [
         if (!hintShown) {
           const m = await box(month);
           expect(m.y).toBeGreaterThanOrEqual(0);
-          expect(m.y + m.height).toBeLessThanOrEqual((await barTop()) + 1);
+          expect(m.y + m.height).toBeLessThanOrEqual((await barTop()) - MONTH_SLACK);
         } else {
           const m = await box(month);
           monthState =
@@ -255,7 +257,7 @@ for (const size of [
         expect(c.y + c.height).toBeLessThanOrEqual(after.y + after.height);
         if (!hintShown) {
           const m = await box(month);
-          expect(m.y + m.height).toBeLessThanOrEqual((await barTop()) + 1);
+          expect(m.y + m.height).toBeLessThanOrEqual((await barTop()) - MONTH_SLACK);
         }
       });
     }
