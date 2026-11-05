@@ -18,7 +18,7 @@ import {
 import { SizeStep, type SizeStepDone } from './SizeStep';
 import { formatPackTotal, sumProductPacks } from './storesGrouping';
 
-type Mode = 'main' | 'countsAs' | 'size' | 'merge' | 'mergeConfirm';
+type Mode = 'main' | 'countsAs' | 'size' | 'merge' | 'mergeConfirm' | 'deleteConfirm';
 
 function mergePreview(
   doc: Pick<import('../../../model').Document, 'stock' | 'barcodes' | 'products'>,
@@ -229,6 +229,26 @@ export function ProductSheet({
     );
   }
 
+  if (mode === 'deleteConfirm') {
+    const bcWord = barcodes === 1 ? 'barcode' : 'barcodes';
+    return (
+      <Sheet title={product.name} onClose={() => setMode('main')}>
+        <div className="sheet-confirm" role="alert">
+          <p>
+            Delete {product.name}
+            {barcodes > 0 ? ` and forget ${barcodes} ${bcWord}` : ''}?
+          </p>
+          <button type="button" className="secondary" onClick={() => setMode('main')}>
+            Cancel
+          </button>
+          <button type="button" className="danger" onClick={fixDelete}>
+            Delete
+          </button>
+        </div>
+      </Sheet>
+    );
+  }
+
   const countsAsLabel = item ? item.name : 'Counts towards nothing';
 
   return (
@@ -283,7 +303,7 @@ export function ProductSheet({
       <button type="button" className="secondary" onClick={() => setMode('merge')}>
         Merge into…
       </button>
-      <button type="button" className="danger" disabled={hasStock} onClick={fixDelete}>
+      <button type="button" className="danger" disabled={hasStock} onClick={() => setMode('deleteConfirm')}>
         Delete
       </button>
       {hasStock ? (

@@ -131,6 +131,7 @@ describe('ProductsScreen', () => {
       </MemoryRouter>,
     );
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    fireEvent.click(within(screen.getByRole('alert')).getByRole('button', { name: 'Delete' }));
     expect(sEmpty.doc().products['prod-beans']).toBeUndefined();
   });
 });
