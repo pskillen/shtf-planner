@@ -14,11 +14,16 @@ const items = {
       id: 'items-t:water',
       name: 'Water',
       category: 'water',
-      unit: 'L',
-      gives: [{ resource: 'waterL', amount: 1 }],
+      measure: 'volume',
+      unit: 'bottle',
+      countsAs: 'Water, 1 L per litre',
+      gives: [{ resource: 'waterL', amount: 1, per: 1000 }],
+      sizes: [{ amount: 2, unit: 'L' }],
       suitability: ['frost'],
       shelfLife: 'years',
       tags: [],
+      source: 'assumption',
+      offCategories: ['en:waters'],
     },
   ],
 };
@@ -138,6 +143,79 @@ describe('loadPacks', () => {
     expect(() => loadPacks([file(dupe)])).toThrow(/duplicate id/);
 
     expect(() => loadPacks([file(items), file(items)])).toThrow(/duplicate pack id/);
+  });
+
+  describe('item checks', () => {
+    type Raw = typeof items;
+    const bad = (edit: (item: Record<string, unknown>) => void): Raw => {
+      const copy = structuredClone(items) as Raw;
+      edit(copy.items[0]! as unknown as Record<string, unknown>);
+      return copy;
+    };
+
+    it('accepts the good item', () => {
+      expect(() => loadPacks([file(items)])).not.toThrow();
+    });
+
+    it('a size that does not fit the measure fails', () => {
+      const raw = bad((i) => (i.sizes = [{ amount: 2, unit: 'kg' }]));
+      expect(() => loadPacks([file(raw)])).toThrow(/sizes\[0\]: kg does not fit a volume item/);
+    });
+
+    it('a stock item with no size fails', () => {
+      const raw = bad((i) => (i.sizes = []));
+      expect(() => loadPacks([file(raw)])).toThrow(/needs at least one size/);
+    });
+
+    it('an equipment entry with two sizes, or a size that is not 1 piece, fails', () => {
+      const two = bad((i) => {
+        i.assetTypeId = 'assets-t:pv';
+        i.measure = 'count';
+        i.gives = [];
+        i.sizes = [
+          { amount: 1, unit: 'pieces' },
+          { amount: 2, unit: 'pieces' },
+        ];
+      });
+      expect(() => loadPacks([file(two), file(assets)])).toThrow(/exactly one size, 1 piece/);
+      const wrong = bad((i) => {
+        i.assetTypeId = 'assets-t:pv';
+        i.measure = 'count';
+        i.gives = [];
+        i.sizes = [{ amount: 2, unit: 'pieces' }];
+      });
+      expect(() => loadPacks([file(wrong), file(assets)])).toThrow(/exactly one size, 1 piece/);
+      const ok = bad((i) => {
+        i.assetTypeId = 'assets-t:pv';
+        i.measure = 'count';
+        i.gives = [];
+        i.sizes = [{ amount: 1, unit: 'pieces' }];
+      });
+      expect(() => loadPacks([file(ok), file(assets)])).not.toThrow();
+    });
+
+    it('a number with no source fails', () => {
+      const raw = bad((i) => delete i.source);
+      expect(() => loadPacks([file(raw)])).toThrow(/needs a source/);
+    });
+
+    it('a URL source must be listed with its date', () => {
+      const raw = bad((i) => (i.source = 'https://example.org/unlisted'));
+      expect(() => loadPacks([file(raw)])).toThrow(/not listed in the pack's sources/);
+    });
+
+    it('an Open Food Facts tag on two items fails', () => {
+      const raw = structuredClone(items) as Raw;
+      const second = structuredClone(raw.items[0]!) as Raw['items'][number];
+      second.id = 'items-t:other';
+      raw.items.push(second);
+      expect(() => loadPacks([file(raw)])).toThrow(/en:waters is already on items-t:water/);
+    });
+
+    it('a malformed Open Food Facts tag fails', () => {
+      const raw = bad((i) => (i.offCategories = ['Waters']));
+      expect(() => parsePack(raw)).toThrow(/offCategories/);
+    });
   });
 
   it('rejects an item that gives medicationDays', () => {

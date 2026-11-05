@@ -2,39 +2,1756 @@
   "format": 1,
   "id": "items-base",
   "kind": "items",
-  "version": 8,
+  "version": 9,
   "name": "Base household items",
   "sources": [
     {
       "url": "https://beready.campaign.gov.uk/be-ready-for-emergencies/",
       "title": "Be Ready: be ready for emergencies (UK Government)",
       "checked": "2026-11-04"
+    },
+    {
+      "url": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid",
+      "title": "McCance and Widdowson's Composition of Foods Integrated Dataset (CoFID)",
+      "checked": "2026-11-05"
     }
   ],
   "items": [
     {
-      "id": "items-base:water-can",
-      "name": "Water can (10 L)",
-      "category": "water",
-      "unit": "can",
-      "unitSize": "10 L",
+      "id": "items-base:baked-beans",
+      "name": "Baked beans",
+      "category": "food",
+      "heading": "Tins",
+      "measure": "mass",
+      "unit": "tin",
+      "countsAs": "Food, the label's kcal, else about 84 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 84,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 415,
+          "unit": "g"
+        },
+        {
+          "amount": 220,
+          "unit": "g"
+        },
+        {
+          "count": 4,
+          "amount": 415,
+          "unit": "g"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
+      "typicalPricePence": 85,
+      "tags": ["food", "no-cook"],
+      "offCategories": ["en:baked-beans"],
+      "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
+    },
+    {
+      "id": "items-base:chopped-tomatoes",
+      "name": "Chopped tomatoes",
+      "category": "food",
+      "heading": "Tins",
+      "measure": "mass",
+      "unit": "tin",
+      "countsAs": "Food, the label's kcal, else about 20 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 20,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "count": 4,
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "amount": 227,
+          "unit": "g"
+        }
+      ],
+      "suitability": ["frost"],
+      "shelfLife": "years",
+      "typicalPricePence": 50,
+      "tags": ["food", "no-cook"],
+      "offCategories": ["en:canned-tomatoes", "en:chopped-tomatoes"],
+      "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
+    },
+    {
+      "id": "items-base:tinned-soup",
+      "name": "Tinned soup",
+      "category": "food",
+      "heading": "Tins",
+      "measure": "mass",
+      "unit": "tin",
+      "countsAs": "Food, the label's kcal, else about 45 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 45,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "count": 4,
+          "amount": 400,
+          "unit": "g"
+        }
+      ],
+      "suitability": ["frost"],
+      "shelfLife": "years",
+      "typicalPricePence": 90,
+      "tags": ["food", "no-cook"],
+      "offCategories": ["en:soups", "en:canned-soups"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:tinned-vegetables",
+      "name": "Tinned vegetables",
+      "category": "food",
+      "heading": "Tins",
+      "measure": "mass",
+      "unit": "tin",
+      "countsAs": "Food, the label's kcal, else about 50 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 50,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 300,
+          "unit": "g"
+        },
+        {
+          "count": 4,
+          "amount": 300,
+          "unit": "g"
+        },
+        {
+          "amount": 198,
+          "unit": "g"
+        }
+      ],
+      "suitability": ["frost"],
+      "shelfLife": "years",
+      "typicalPricePence": 55,
+      "tags": ["food", "no-cook"],
+      "offCategories": ["en:canned-vegetables"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:tinned-potatoes",
+      "name": "Tinned potatoes",
+      "category": "food",
+      "heading": "Tins",
+      "measure": "mass",
+      "unit": "tin",
+      "countsAs": "Food, the label's kcal, else about 60 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 60,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 300,
+          "unit": "g"
+        },
+        {
+          "amount": 560,
+          "unit": "g"
+        }
+      ],
+      "suitability": ["frost"],
+      "shelfLife": "years",
+      "typicalPricePence": 50,
+      "tags": ["food", "no-cook"],
+      "offCategories": ["en:canned-potatoes"],
+      "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
+    },
+    {
+      "id": "items-base:tinned-pulses",
+      "name": "Tinned beans and pulses",
+      "category": "food",
+      "heading": "Tins",
+      "measure": "mass",
+      "unit": "tin",
+      "countsAs": "Food, the label's kcal, else about 110 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 110,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "count": 4,
+          "amount": 400,
+          "unit": "g"
+        }
+      ],
+      "suitability": ["frost"],
+      "shelfLife": "years",
+      "typicalPricePence": 60,
+      "tags": ["food", "no-cook"],
+      "offCategories": ["en:canned-legumes", "en:canned-chickpeas", "en:canned-kidney-beans"],
+      "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
+    },
+    {
+      "id": "items-base:tinned-fish",
+      "name": "Tinned fish",
+      "category": "food",
+      "heading": "Tins",
+      "measure": "mass",
+      "unit": "tin",
+      "countsAs": "Food, the label's kcal, else about 150 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 150,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 145,
+          "unit": "g"
+        },
+        {
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "count": 4,
+          "amount": 145,
+          "unit": "g"
+        }
+      ],
+      "suitability": ["frost"],
+      "shelfLife": "years",
+      "typicalPricePence": 110,
+      "tags": ["food", "no-cook"],
+      "offCategories": [
+        "en:canned-fishes",
+        "en:canned-tunas",
+        "en:canned-sardines",
+        "en:canned-mackerels"
+      ],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:tinned-meat",
+      "name": "Tinned meat",
+      "category": "food",
+      "heading": "Tins",
+      "measure": "mass",
+      "unit": "tin",
+      "countsAs": "Food, the label's kcal, else about 200 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 200,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 340,
+          "unit": "g"
+        },
+        {
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "amount": 400,
+          "unit": "g"
+        }
+      ],
+      "suitability": ["frost"],
+      "shelfLife": "years",
+      "typicalPricePence": 250,
+      "tags": ["food", "no-cook"],
+      "offCategories": ["en:canned-meats", "en:corned-beef"],
+      "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
+    },
+    {
+      "id": "items-base:tinned-meals",
+      "name": "Tinned meals",
+      "category": "food",
+      "heading": "Tins",
+      "measure": "mass",
+      "unit": "tin",
+      "countsAs": "Food, the label's kcal, else about 100 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 100,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "count": 4,
+          "amount": 400,
+          "unit": "g"
+        }
+      ],
+      "suitability": ["frost"],
+      "shelfLife": "years",
+      "typicalPricePence": 120,
+      "tags": ["food", "no-cook"],
+      "offCategories": ["en:canned-meals"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:tinned-fruit",
+      "name": "Tinned fruit",
+      "category": "food",
+      "heading": "Tins",
+      "measure": "mass",
+      "unit": "tin",
+      "countsAs": "Food, the label's kcal, else about 50 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 50,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 410,
+          "unit": "g"
+        },
+        {
+          "amount": 227,
+          "unit": "g"
+        }
+      ],
+      "suitability": ["frost"],
+      "shelfLife": "years",
+      "typicalPricePence": 70,
+      "tags": ["food", "no-cook"],
+      "offCategories": ["en:canned-fruits"],
+      "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
+    },
+    {
+      "id": "items-base:tinned-puddings",
+      "name": "Tinned puddings",
+      "category": "food",
+      "heading": "Tins",
+      "measure": "mass",
+      "unit": "tin",
+      "countsAs": "Food, the label's kcal, else about 90 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 90,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "count": 4,
+          "amount": 400,
+          "unit": "g"
+        }
+      ],
+      "suitability": ["frost"],
+      "shelfLife": "years",
+      "typicalPricePence": 75,
+      "tags": ["food", "no-cook"],
+      "offCategories": ["en:rice-puddings", "en:custards"],
+      "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
+    },
+    {
+      "id": "items-base:other-tins",
+      "name": "Other tinned food",
+      "category": "food",
+      "heading": "Tins",
+      "measure": "mass",
+      "unit": "tin",
+      "countsAs": "Food, the label's kcal, else about 100 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 100,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 400,
+          "unit": "g"
+        }
+      ],
+      "suitability": ["frost"],
+      "shelfLife": "years",
+      "typicalPricePence": 100,
+      "tags": ["food", "no-cook"],
+      "offCategories": ["en:canned-foods"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:dried-pasta",
+      "name": "Dried pasta",
+      "category": "food",
+      "heading": "Dried and packets",
+      "measure": "mass",
+      "unit": "bag",
+      "countsAs": "Food once you can cook, the label's kcal, else about 342 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 342,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "amount": 1,
+          "unit": "kg"
+        },
+        {
+          "amount": 3,
+          "unit": "kg"
+        },
+        {
+          "amount": 5,
+          "unit": "kg"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
+      "typicalPricePence": 70,
+      "tags": ["food", "needs-cooking"],
+      "offCategories": ["en:pastas", "en:dry-pastas"],
+      "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
+    },
+    {
+      "id": "items-base:rice",
+      "name": "Rice",
+      "category": "food",
+      "heading": "Dried and packets",
+      "measure": "mass",
+      "unit": "bag",
+      "countsAs": "Food once you can cook, the label's kcal, else about 360 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 360,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "kg"
+        },
+        {
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "amount": 2,
+          "unit": "kg"
+        },
+        {
+          "amount": 5,
+          "unit": "kg"
+        },
+        {
+          "amount": 10,
+          "unit": "kg"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
+      "typicalPricePence": 180,
+      "tags": ["food", "needs-cooking"],
+      "offCategories": ["en:rices"],
+      "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
+    },
+    {
+      "id": "items-base:porridge-oats",
+      "name": "Porridge oats",
+      "category": "food",
+      "heading": "Dried and packets",
+      "measure": "mass",
+      "unit": "bag",
+      "countsAs": "Food, the label's kcal, else about 375 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 375,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "kg"
+        },
+        {
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "amount": 3,
+          "unit": "kg"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "year",
+      "typicalPricePence": 160,
+      "tags": ["food"],
+      "offCategories": ["en:porridge-oats", "en:rolled-oats", "en:oat-flakes"],
+      "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
+    },
+    {
+      "id": "items-base:breakfast-cereal",
+      "name": "Breakfast cereal",
+      "category": "food",
+      "heading": "Dried and packets",
+      "measure": "mass",
+      "unit": "box",
+      "countsAs": "Food, the label's kcal, else about 370 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 370,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "amount": 375,
+          "unit": "g"
+        },
+        {
+          "amount": 750,
+          "unit": "g"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "year",
+      "typicalPricePence": 200,
+      "tags": ["food", "no-cook"],
+      "offCategories": ["en:breakfast-cereals"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:flour",
+      "name": "Flour",
+      "category": "food",
+      "heading": "Dried and packets",
+      "measure": "mass",
+      "unit": "bag",
+      "countsAs": "Food once you can cook, the label's kcal, else about 341 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 341,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 1.5,
+          "unit": "kg"
+        },
+        {
+          "amount": 1,
+          "unit": "kg"
+        },
+        {
+          "amount": 16,
+          "unit": "kg"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "year",
+      "typicalPricePence": 100,
+      "tags": ["food", "needs-cooking", "no-suggest"],
+      "offCategories": ["en:flours", "en:wheat-flours"],
+      "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
+    },
+    {
+      "id": "items-base:sugar",
+      "name": "Sugar",
+      "category": "food",
+      "heading": "Dried and packets",
+      "measure": "mass",
+      "unit": "bag",
+      "countsAs": "Food, the label's kcal, else about 394 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 394,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "kg"
+        },
+        {
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "amount": 2,
+          "unit": "kg"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "none",
+      "typicalPricePence": 100,
+      "tags": ["food", "no-suggest"],
+      "offCategories": ["en:sugars", "en:white-sugars"],
+      "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
+    },
+    {
+      "id": "items-base:dried-pulses",
+      "name": "Dried lentils and beans",
+      "category": "food",
+      "heading": "Dried and packets",
+      "measure": "mass",
+      "unit": "bag",
+      "countsAs": "Food once you can cook, the label's kcal, else about 310 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 310,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "amount": 1,
+          "unit": "kg"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
+      "typicalPricePence": 120,
+      "tags": ["food", "needs-cooking"],
+      "offCategories": ["en:lentils", "en:dried-legumes"],
+      "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
+    },
+    {
+      "id": "items-base:noodles",
+      "name": "Noodles",
+      "category": "food",
+      "heading": "Dried and packets",
+      "measure": "mass",
+      "unit": "pack",
+      "countsAs": "Food once you can cook, the label's kcal, else about 440 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 440,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "count": 5,
+          "amount": 70,
+          "unit": "g"
+        },
+        {
+          "amount": 70,
+          "unit": "g"
+        },
+        {
+          "amount": 250,
+          "unit": "g"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "year",
+      "typicalPricePence": 150,
+      "tags": ["food", "needs-cooking"],
+      "offCategories": ["en:noodles", "en:instant-noodles"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:couscous-grains",
+      "name": "Couscous and other grains",
+      "category": "food",
+      "heading": "Dried and packets",
+      "measure": "mass",
+      "unit": "bag",
+      "countsAs": "Food once you can cook, the label's kcal, else about 360 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 360,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "amount": 1,
+          "unit": "kg"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
+      "typicalPricePence": 120,
+      "tags": ["food", "needs-cooking"],
+      "offCategories": ["en:couscous", "en:bulgur", "en:quinoa"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:instant-mash",
+      "name": "Instant mashed potato",
+      "category": "food",
+      "heading": "Dried and packets",
+      "measure": "mass",
+      "unit": "pack",
+      "countsAs": "Food once you can cook, the label's kcal, else about 350 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 350,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 176,
+          "unit": "g"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "year",
+      "typicalPricePence": 110,
+      "tags": ["food", "needs-cooking"],
+      "offCategories": ["en:mashed-potatoes"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:crackers",
+      "name": "Crackers and crispbread",
+      "category": "food",
+      "heading": "Dried and packets",
+      "measure": "mass",
+      "unit": "bag",
+      "countsAs": "Food, the label's kcal, else about 430 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 430,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "amount": 300,
+          "unit": "g"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "year",
+      "typicalPricePence": 100,
+      "tags": ["food", "no-cook"],
+      "offCategories": ["en:crackers", "en:crispbreads"],
+      "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
+    },
+    {
+      "id": "items-base:dried-fruit",
+      "name": "Dried fruit",
+      "category": "food",
+      "heading": "Dried and packets",
+      "measure": "mass",
+      "unit": "bag",
+      "countsAs": "Food, the label's kcal, else about 280 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 280,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "amount": 1,
+          "unit": "kg"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "year",
+      "typicalPricePence": 200,
+      "tags": ["food", "no-cook"],
+      "offCategories": ["en:dried-fruits"],
+      "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
+    },
+    {
+      "id": "items-base:nuts-seeds",
+      "name": "Nuts and seeds",
+      "category": "food",
+      "heading": "Dried and packets",
+      "measure": "mass",
+      "unit": "bag",
+      "countsAs": "Food, the label's kcal, else about 600 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 600,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "amount": 1,
+          "unit": "kg"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "months",
+      "typicalPricePence": 200,
+      "tags": ["food", "no-cook"],
+      "offCategories": ["en:nuts", "en:seeds"],
+      "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
+    },
+    {
+      "id": "items-base:milk-powder",
+      "name": "Milk powder",
+      "category": "food",
+      "heading": "Dried and packets",
+      "measure": "mass",
+      "unit": "bag",
+      "countsAs": "Food, the label's kcal, else about 350 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 350,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 400,
+          "unit": "g"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "year",
+      "typicalPricePence": 300,
+      "tags": ["food"],
+      "offCategories": ["en:milk-powders"],
+      "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
+    },
+    {
+      "id": "items-base:freeze-dried-meals",
+      "name": "Freeze-dried meals",
+      "category": "food",
+      "heading": "Dried and packets",
+      "measure": "mass",
+      "unit": "pack",
+      "countsAs": "Food once you can cook, the label's kcal, else about 450 kcal per 100 g (dry)",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 450,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "count": 12,
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "amount": 2,
+          "unit": "kg"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
+      "typicalPricePence": 700,
+      "tags": ["food", "needs-cooking", "portable"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:other-dried",
+      "name": "Other dried food",
+      "category": "food",
+      "heading": "Dried and packets",
+      "measure": "mass",
+      "unit": "bag",
+      "countsAs": "Food, the label's kcal, else about 350 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 350,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 500,
+          "unit": "g"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
+      "typicalPricePence": 150,
+      "tags": ["food"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:peanut-butter",
+      "name": "Peanut butter",
+      "category": "food",
+      "heading": "Jars and spreads",
+      "measure": "mass",
+      "unit": "jar",
+      "countsAs": "Food, the label's kcal, else about 600 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 600,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 340,
+          "unit": "g"
+        },
+        {
+          "amount": 1,
+          "unit": "kg"
+        },
+        {
+          "amount": 2,
+          "unit": "kg"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "year",
+      "typicalPricePence": 170,
+      "tags": ["food", "no-cook"],
+      "offCategories": ["en:peanut-butters"],
+      "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
+    },
+    {
+      "id": "items-base:jam-honey",
+      "name": "Jam, honey and syrup",
+      "category": "food",
+      "heading": "Jars and spreads",
+      "measure": "mass",
+      "unit": "jar",
+      "countsAs": "Food, the label's kcal, else about 270 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 270,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 454,
+          "unit": "g"
+        },
+        {
+          "amount": 340,
+          "unit": "g"
+        },
+        {
+          "amount": 680,
+          "unit": "g"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
+      "typicalPricePence": 120,
+      "tags": ["food", "no-cook"],
+      "offCategories": ["en:jams", "en:honeys", "en:syrups"],
+      "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
+    },
+    {
+      "id": "items-base:chocolate-spread",
+      "name": "Chocolate and nut spreads",
+      "category": "food",
+      "heading": "Jars and spreads",
+      "measure": "mass",
+      "unit": "jar",
+      "countsAs": "Food, the label's kcal, else about 540 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 540,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "amount": 750,
+          "unit": "g"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "year",
+      "typicalPricePence": 300,
+      "tags": ["food", "no-cook"],
+      "offCategories": [
+        "en:hazelnut-spreads",
+        "en:chocolate-spreads",
+        "en:cocoa-and-hazelnuts-spreads"
+      ],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:cooking-sauces",
+      "name": "Pasta and cooking sauces",
+      "category": "food",
+      "heading": "Jars and spreads",
+      "measure": "mass",
+      "unit": "jar",
+      "countsAs": "Food, the label's kcal, else about 70 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 70,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "amount": 350,
+          "unit": "g"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "year",
+      "typicalPricePence": 150,
+      "tags": ["food", "no-cook"],
+      "offCategories": ["en:pasta-sauces", "en:cooking-sauces"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:condiments",
+      "name": "Pickles and condiments",
+      "category": "food",
+      "heading": "Jars and spreads",
+      "measure": "mass",
+      "unit": "jar",
+      "countsAs": "Food, the label's kcal, else about 120 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 120,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 450,
+          "unit": "g"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "year",
+      "typicalPricePence": 120,
+      "tags": ["food", "no-cook", "no-suggest"],
+      "offCategories": ["en:condiments", "en:pickles", "en:ketchup", "en:mayonnaises"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:cooking-oil",
+      "name": "Cooking oil",
+      "category": "food",
+      "heading": "Jars and spreads",
+      "measure": "volume",
+      "unit": "bottle",
+      "countsAs": "Food, the label's kcal, else about 830 kcal per 100 ml",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 830,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "L"
+        },
+        {
+          "amount": 500,
+          "unit": "ml"
+        },
+        {
+          "amount": 3,
+          "unit": "L"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "year",
+      "typicalPricePence": 200,
+      "tags": ["food", "no-cook", "no-suggest"],
+      "offCategories": ["en:vegetable-oils", "en:olive-oils"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:other-jars",
+      "name": "Other jars",
+      "category": "food",
+      "heading": "Jars and spreads",
+      "measure": "mass",
+      "unit": "jar",
+      "countsAs": "Food, the label's kcal, else about 200 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 200,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 400,
+          "unit": "g"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "year",
+      "typicalPricePence": 150,
+      "tags": ["food", "no-cook"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:uht-milk",
+      "name": "UHT milk",
+      "category": "food",
+      "heading": "Long-life",
+      "measure": "volume",
+      "unit": "carton",
+      "countsAs": "Food, the label's kcal, else about 46 kcal per 100 ml",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 46,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "L"
+        },
+        {
+          "count": 6,
+          "amount": 1,
+          "unit": "L"
+        },
+        {
+          "amount": 500,
+          "unit": "ml"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "months",
+      "typicalPricePence": 110,
+      "tags": ["food", "no-cook"],
+      "offCategories": ["en:uht-milks"],
+      "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
+    },
+    {
+      "id": "items-base:plant-milk",
+      "name": "Plant milk (long-life)",
+      "category": "food",
+      "heading": "Long-life",
+      "measure": "volume",
+      "unit": "carton",
+      "countsAs": "Food, the label's kcal, else about 35 kcal per 100 ml",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 35,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "L"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "months",
+      "typicalPricePence": 150,
+      "tags": ["food", "no-cook"],
+      "offCategories": ["en:plant-milks"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:pouch-rice",
+      "name": "Rice and grain pouches",
+      "category": "food",
+      "heading": "Long-life",
+      "measure": "mass",
+      "unit": "pouch",
+      "countsAs": "Food, the label's kcal, else about 170 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 170,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 250,
+          "unit": "g"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "months",
+      "typicalPricePence": 100,
+      "tags": ["food", "no-cook"],
+      "offCategories": ["en:microwave-rices"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:pouch-meals",
+      "name": "Ready meals (pouches and pots)",
+      "category": "food",
+      "heading": "Long-life",
+      "measure": "mass",
+      "unit": "pouch",
+      "countsAs": "Food, the label's kcal, else about 110 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 110,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 400,
+          "unit": "g"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "months",
+      "typicalPricePence": 250,
+      "tags": ["food", "no-cook"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:wraps-bread",
+      "name": "Wraps and long-life bread",
+      "category": "food",
+      "heading": "Long-life",
+      "measure": "mass",
+      "unit": "pack",
+      "countsAs": "Food, the label's kcal, else about 290 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 290,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 500,
+          "unit": "g"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "months",
+      "typicalPricePence": 150,
+      "tags": ["food", "no-cook"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:other-long-life",
+      "name": "Other long-life food",
+      "category": "food",
+      "heading": "Long-life",
+      "measure": "mass",
+      "unit": "pack",
+      "countsAs": "Food, the label's kcal, else about 150 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 150,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 400,
+          "unit": "g"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "months",
+      "typicalPricePence": 200,
+      "tags": ["food", "no-cook"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:soft-drinks",
+      "name": "Soft drinks",
+      "category": "food",
+      "heading": "Drinks",
+      "measure": "volume",
+      "unit": "bottle",
+      "countsAs": "Water, 1 L per litre, and food, the label's kcal (diet drinks 0)",
       "gives": [
         {
           "resource": "waterL",
-          "amount": 10
+          "amount": 1,
+          "per": 1000
+        },
+        {
+          "resource": "foodKcal",
+          "amount": 0,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 2,
+          "unit": "L"
+        },
+        {
+          "amount": 330,
+          "unit": "ml"
+        },
+        {
+          "amount": 500,
+          "unit": "ml"
+        },
+        {
+          "count": 24,
+          "amount": 330,
+          "unit": "ml"
+        },
+        {
+          "count": 6,
+          "amount": 330,
+          "unit": "ml"
+        }
+      ],
+      "suitability": ["frost"],
+      "shelfLife": "year",
+      "typicalPricePence": 150,
+      "tags": ["food", "no-cook"],
+      "offCategories": ["en:sodas", "en:soft-drinks", "en:carbonated-drinks", "en:colas"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:fruit-juice",
+      "name": "Fruit juice (long-life)",
+      "category": "food",
+      "heading": "Drinks",
+      "measure": "volume",
+      "unit": "carton",
+      "countsAs": "Water, 1 L per litre, and food, the label's kcal, else about 40 kcal per 100 ml",
+      "gives": [
+        {
+          "resource": "waterL",
+          "amount": 1,
+          "per": 1000
+        },
+        {
+          "resource": "foodKcal",
+          "amount": 40,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "L"
+        },
+        {
+          "count": 6,
+          "amount": 200,
+          "unit": "ml"
         }
       ],
       "suitability": ["frost"],
       "shelfLife": "months",
+      "typicalPricePence": 120,
+      "tags": ["food", "no-cook"],
+      "offCategories": ["en:fruit-juices"],
+      "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
+    },
+    {
+      "id": "items-base:squash",
+      "name": "Squash and cordial",
+      "category": "food",
+      "heading": "Drinks",
+      "measure": "volume",
+      "unit": "bottle",
+      "countsAs": "Food, the label's kcal only (it is made up with your own water)",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 0,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "L"
+        },
+        {
+          "amount": 750,
+          "unit": "ml"
+        }
+      ],
+      "suitability": ["frost"],
+      "shelfLife": "year",
+      "typicalPricePence": 120,
+      "tags": ["food", "no-cook"],
+      "offCategories": ["en:fruit-squashes"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:other-drinks",
+      "name": "Other drinks",
+      "category": "food",
+      "heading": "Drinks",
+      "measure": "volume",
+      "unit": "bottle",
+      "countsAs": "Food, the label's kcal only",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 0,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "L"
+        }
+      ],
+      "suitability": ["frost"],
+      "shelfLife": "year",
+      "typicalPricePence": 150,
+      "tags": ["food", "no-cook"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:biscuits",
+      "name": "Biscuits",
+      "category": "food",
+      "heading": "Snacks and treats",
+      "measure": "mass",
+      "unit": "pack",
+      "countsAs": "Food, the label's kcal, else about 470 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 470,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "amount": 300,
+          "unit": "g"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "months",
+      "typicalPricePence": 100,
+      "tags": ["food", "no-cook"],
+      "offCategories": ["en:biscuits"],
+      "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
+    },
+    {
+      "id": "items-base:chocolate-sweets",
+      "name": "Chocolate and sweets",
+      "category": "food",
+      "heading": "Snacks and treats",
+      "measure": "mass",
+      "unit": "pack",
+      "countsAs": "Food, the label's kcal, else about 520 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 520,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "amount": 100,
+          "unit": "g"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "year",
+      "typicalPricePence": 200,
+      "tags": ["food", "morale", "no-cook"],
+      "offCategories": ["en:chocolates", "en:candies"],
+      "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
+    },
+    {
+      "id": "items-base:crisps-snacks",
+      "name": "Crisps and savoury snacks",
+      "category": "food",
+      "heading": "Snacks and treats",
+      "measure": "mass",
+      "unit": "pack",
+      "countsAs": "Food, the label's kcal, else about 530 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 530,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "count": 6,
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "amount": 150,
+          "unit": "g"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "months",
+      "typicalPricePence": 150,
+      "tags": ["food", "no-cook"],
+      "offCategories": ["en:crisps", "en:salty-snacks"],
+      "source": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
+    },
+    {
+      "id": "items-base:cereal-bars",
+      "name": "Cereal and energy bars",
+      "category": "food",
+      "heading": "Snacks and treats",
+      "measure": "mass",
+      "unit": "pack",
+      "countsAs": "Food, the label's kcal, else about 400 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 400,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "count": 6,
+          "amount": 35,
+          "unit": "g"
+        },
+        {
+          "count": 24,
+          "amount": 60,
+          "unit": "g"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "year",
+      "typicalPricePence": 150,
+      "tags": ["food", "portable", "no-cook"],
+      "offCategories": ["en:cereal-bars", "en:energy-bars"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:other-snacks",
+      "name": "Other snacks",
+      "category": "food",
+      "heading": "Snacks and treats",
+      "measure": "mass",
+      "unit": "pack",
+      "countsAs": "Food, the label's kcal, else about 450 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "foodKcal",
+          "amount": 450,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 200,
+          "unit": "g"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "months",
+      "typicalPricePence": 150,
+      "tags": ["food", "no-cook"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:vegetable-seeds",
+      "name": "Vegetable seeds",
+      "category": "food",
+      "heading": "Growing",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Counts towards nothing",
+      "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
       "typicalPricePence": 1200,
-      "tags": ["water", "refillable"]
+      "tags": ["growing", "needs-garden"]
+    },
+    {
+      "id": "items-base:cold-frame",
+      "name": "Cold frame",
+      "category": "food",
+      "heading": "Growing",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Counts towards nothing",
+      "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": ["frost", "heat", "damp"],
+      "shelfLife": "none",
+      "typicalPricePence": 4500,
+      "tags": ["growing", "outdoor", "needs-garden"]
     },
     {
       "id": "items-base:camping-stove",
       "name": "Camping stove",
       "category": "food",
+      "heading": "Cooking equipment",
+      "measure": "count",
       "unit": "each",
+      "countsAs": "Equipment, add it under Home › Equipment",
       "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
       "suitability": ["frost", "heat", "damp"],
       "shelfLife": "none",
       "typicalPricePence": 3500,
@@ -42,332 +1759,163 @@
       "assetTypeId": "assets-base:camping-stove"
     },
     {
-      "id": "items-base:gas-canisters",
-      "name": "Gas canisters (×4)",
-      "category": "fuel",
-      "unit": "pack",
-      "gives": [
-        {
-          "resource": "gasCanister",
-          "amount": 4
-        }
-      ],
-      "suitability": ["frost", "damp"],
-      "shelfLife": "years",
-      "typicalPricePence": 1000,
-      "tags": ["fuel"]
-    },
-    {
-      "id": "items-base:paraffin-heater",
-      "name": "Paraffin heater (2.5 kW)",
-      "category": "heat",
-      "unit": "each",
-      "gives": [],
-      "suitability": ["frost", "heat"],
-      "shelfLife": "none",
-      "typicalPricePence": 6000,
-      "tags": ["heat"],
-      "assetTypeId": "assets-base:paraffin-heater"
-    },
-    {
-      "id": "items-base:paraffin",
-      "name": "Paraffin (10 L)",
-      "category": "fuel",
-      "unit": "can",
-      "unitSize": "10 L",
-      "gives": [
-        {
-          "resource": "paraffinL",
-          "amount": 10
-        }
-      ],
-      "suitability": ["frost", "damp"],
-      "shelfLife": "year",
-      "typicalPricePence": 2000,
-      "tags": ["fuel"]
-    },
-    {
-      "id": "items-base:sleeping-bag",
-      "name": "Sleeping bag (3-season)",
-      "category": "heat",
-      "unit": "each",
-      "gives": [],
-      "suitability": ["frost", "heat"],
-      "shelfLife": "none",
-      "typicalPricePence": 3000,
-      "tags": ["warmth"]
-    },
-    {
-      "id": "items-base:food-store",
-      "name": "Food store (2 weeks)",
+      "id": "items-base:rocket-stove",
+      "name": "Rocket stove",
       "category": "food",
-      "unit": "fortnight-store",
-      "gives": [
+      "heading": "Cooking equipment",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Equipment, add it under Home › Equipment",
+      "gives": [],
+      "sizes": [
         {
-          "resource": "foodKcal",
-          "amount": 56000
+          "amount": 1,
+          "unit": "pieces"
         }
       ],
-      "suitability": [],
-      "shelfLife": "years",
-      "typicalPricePence": 6000,
-      "tags": ["food"]
-    },
-    {
-      "id": "items-base:led-lantern",
-      "name": "LED lantern",
-      "category": "light",
-      "unit": "lantern",
-      "gives": [
-        {
-          "resource": "batteryWh",
-          "amount": 20
-        },
-        {
-          "resource": "lumenHours",
-          "amount": 6000
-        }
-      ],
-      "suitability": ["frost"],
-      "shelfLife": "none",
-      "typicalPricePence": 1500,
-      "tags": ["light"]
-    },
-    {
-      "id": "items-base:power-bank",
-      "name": "Power bank (100 Wh)",
-      "category": "power",
-      "unit": "bank",
-      "gives": [
-        {
-          "resource": "batteryWh",
-          "amount": 100
-        }
-      ],
-      "suitability": [],
-      "shelfLife": "years",
-      "typicalPricePence": 4000,
-      "tags": ["power", "phone"]
-    },
-    {
-      "id": "items-base:solar-panel",
-      "name": "Folding solar panel (60 W)",
-      "category": "power",
-      "unit": "each",
-      "gives": [],
-      "suitability": [],
-      "shelfLife": "none",
-      "typicalPricePence": 7000,
-      "tags": ["power"],
-      "assetTypeId": "assets-base:solar-pv"
-    },
-    {
-      "id": "items-base:generator",
-      "name": "Petrol generator (800 W)",
-      "category": "power",
-      "unit": "each",
-      "gives": [],
-      "suitability": [],
-      "shelfLife": "none",
-      "typicalPricePence": 15000,
-      "tags": ["power", "noise"],
-      "assetTypeId": "assets-base:generator"
-    },
-    {
-      "id": "items-base:petrol-can",
-      "name": "Petrol (20 L can)",
-      "category": "fuel",
-      "unit": "can",
-      "unitSize": "20 L",
-      "gives": [
-        {
-          "resource": "petrolL",
-          "amount": 20
-        }
-      ],
-      "suitability": ["frost", "damp"],
-      "shelfLife": "months",
-      "typicalPricePence": 3500,
-      "tags": ["fuel"]
-    },
-    {
-      "id": "items-base:water-filter",
-      "name": "Gravity filter and rain sheet",
-      "category": "water",
-      "unit": "each",
-      "gives": [],
-      "suitability": ["frost", "heat", "damp"],
-      "shelfLife": "none",
-      "typicalPricePence": 4500,
-      "tags": ["water"]
-    },
-    {
-      "id": "items-base:first-aid-kit",
-      "name": "First aid kit",
-      "category": "medical",
-      "unit": "kit",
-      "gives": [
-        {
-          "resource": "firstAid",
-          "amount": 3
-        }
-      ],
-      "suitability": [],
-      "shelfLife": "years",
-      "typicalPricePence": 2000,
-      "tags": ["medical"]
-    },
-    {
-      "id": "items-base:wind-up-radio",
-      "name": "Wind-up radio",
-      "category": "comms",
-      "unit": "each",
-      "gives": [],
-      "suitability": [],
-      "shelfLife": "none",
-      "typicalPricePence": 2500,
-      "tags": ["radio-rx", "light"],
-      "assetTypeId": "assets-base:wind-up-radio"
-    },
-    {
-      "id": "items-base:blackout-curtains",
-      "name": "Blackout curtains",
-      "category": "security",
-      "unit": "each",
-      "gives": [],
       "suitability": ["frost", "heat", "damp"],
       "shelfLife": "none",
       "typicalPricePence": 4000,
-      "tags": ["light-discipline"]
+      "tags": ["cooking", "outdoor-use"],
+      "assetTypeId": "assets-base:rocket-stove"
     },
     {
       "id": "items-base:bottled-water",
-      "name": "Bottled water (24 × 500 ml)",
+      "name": "Bottled water",
       "category": "water",
-      "unit": "case",
-      "unitSize": "24 x 500 ml",
+      "heading": "Bottled water",
+      "measure": "volume",
+      "unit": "bottle",
+      "countsAs": "Water, 1 L per litre",
       "gives": [
         {
           "resource": "waterL",
-          "amount": 12
+          "amount": 1,
+          "per": 1000
         }
       ],
-      "suitability": ["frost"],
-      "shelfLife": "year",
-      "typicalPricePence": 400,
-      "tags": ["water", "sells-out-first"]
-    },
-    {
-      "id": "items-base:bottled-water-6x2l",
-      "name": "Bottled water (6 × 2 L)",
-      "category": "water",
-      "unit": "pack",
-      "unitSize": "6 x 2 L",
-      "gives": [
+      "sizes": [
         {
-          "resource": "waterL",
-          "amount": 12
+          "count": 6,
+          "amount": 2,
+          "unit": "L"
+        },
+        {
+          "amount": 500,
+          "unit": "ml"
+        },
+        {
+          "amount": 2,
+          "unit": "L"
+        },
+        {
+          "amount": 5,
+          "unit": "L"
+        },
+        {
+          "count": 24,
+          "amount": 500,
+          "unit": "ml"
+        },
+        {
+          "count": 6,
+          "amount": 5,
+          "unit": "L"
         }
       ],
       "suitability": ["frost"],
       "shelfLife": "year",
       "typicalPricePence": 300,
       "tags": ["water", "sells-out-first"],
+      "offCategories": ["en:waters", "en:spring-waters", "en:mineral-waters"],
       "source": "assumption"
     },
     {
-      "id": "items-base:bottled-water-5l",
-      "name": "Bottled water (5 L bottle)",
+      "id": "items-base:water-container",
+      "name": "Water containers, kept filled",
       "category": "water",
-      "unit": "bottle",
-      "unitSize": "5 L",
+      "heading": "Containers",
+      "measure": "volume",
+      "unit": "container",
+      "countsAs": "Water, 1 L per litre it holds (fill it from the tap)",
       "gives": [
         {
           "resource": "waterL",
-          "amount": 5
+          "amount": 1,
+          "per": 1000
         }
       ],
-      "suitability": ["frost"],
-      "shelfLife": "year",
-      "typicalPricePence": 140,
-      "tags": ["water", "sells-out-first"],
-      "source": "assumption"
-    },
-    {
-      "id": "items-base:bottled-water-6x5l",
-      "name": "Bottled water (6 × 5 L)",
-      "category": "water",
-      "unit": "case",
-      "unitSize": "6 x 5 L",
-      "gives": [
+      "sizes": [
         {
-          "resource": "waterL",
-          "amount": 30
-        }
-      ],
-      "suitability": ["frost"],
-      "shelfLife": "year",
-      "typicalPricePence": 800,
-      "tags": ["water", "sells-out-first"],
-      "source": "assumption"
-    },
-    {
-      "id": "items-base:bottled-water-2l",
-      "name": "Bottled water (2 L bottle)",
-      "category": "water",
-      "unit": "bottle",
-      "unitSize": "2 L",
-      "gives": [
+          "amount": 10,
+          "unit": "L"
+        },
         {
-          "resource": "waterL",
-          "amount": 2
+          "amount": 5,
+          "unit": "L"
+        },
+        {
+          "amount": 20,
+          "unit": "L"
+        },
+        {
+          "amount": 25,
+          "unit": "L"
+        },
+        {
+          "count": 2,
+          "amount": 20,
+          "unit": "L"
         }
       ],
       "suitability": ["frost"],
-      "shelfLife": "year",
-      "typicalPricePence": 70,
-      "tags": ["water", "sells-out-first"],
+      "shelfLife": "months",
+      "typicalPricePence": 1200,
+      "tags": ["water", "refillable"],
       "source": "assumption"
     },
     {
       "id": "items-base:bath-bladder",
-      "name": "Bath water bladder (150 L)",
+      "name": "Bath water bladder",
       "category": "water",
-      "unit": "bladder",
+      "heading": "Containers",
+      "measure": "volume",
+      "unit": "each",
+      "countsAs": "Water, 1 L per litre, once filled when trouble is coming",
       "gives": [
         {
           "resource": "waterL",
-          "amount": 150
+          "amount": 1,
+          "per": 1000
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 150,
+          "unit": "L"
         }
       ],
       "suitability": ["frost", "heat", "damp"],
       "shelfLife": "weeks",
       "typicalPricePence": 3000,
-      "tags": ["water", "no-suggest"]
-    },
-    {
-      "id": "items-base:water-carriers",
-      "name": "Collapsible water carriers (2 × 20 L)",
-      "category": "water",
-      "unit": "pair",
-      "unitSize": "2 x 20 L",
-      "gives": [
-        {
-          "resource": "waterL",
-          "amount": 40
-        }
-      ],
-      "suitability": ["frost"],
-      "shelfLife": "months",
-      "typicalPricePence": 1500,
-      "tags": ["water", "refillable"]
+      "tags": ["water", "no-suggest"],
+      "source": "assumption"
     },
     {
       "id": "items-base:water-butt",
-      "name": "Water butt (200 L)",
+      "name": "Water butt",
       "category": "water",
+      "heading": "Containers",
+      "measure": "count",
       "unit": "each",
+      "countsAs": "Equipment, add it under Home › Equipment",
       "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
       "suitability": ["frost", "heat", "damp"],
       "shelfLife": "none",
       "typicalPricePence": 5000,
@@ -376,544 +1924,193 @@
     },
     {
       "id": "items-base:purification-tablets",
-      "name": "Water purification tablets (50)",
+      "name": "Water purification tablets",
       "category": "water",
+      "heading": "Treatment",
+      "measure": "count",
       "unit": "pack",
+      "countsAs": "1 tablet treats 1 L (water treatment)",
       "gives": [
         {
           "resource": "purificationTabs",
-          "amount": 50
+          "amount": 1,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 50,
+          "unit": "pieces"
+        },
+        {
+          "amount": 100,
+          "unit": "pieces"
         }
       ],
       "suitability": ["frost", "heat", "damp"],
       "shelfLife": "years",
       "typicalPricePence": 600,
-      "tags": ["water", "treatment"]
+      "tags": ["water", "treatment"],
+      "source": "assumption"
     },
     {
       "id": "items-base:bleach",
-      "name": "Unscented thin bleach (2 L)",
-      "category": "medical",
+      "name": "Unscented thin bleach",
+      "category": "water",
+      "heading": "Treatment",
+      "measure": "volume",
       "unit": "bottle",
-      "unitSize": "2 L",
+      "countsAs": "Water treatment, 1 ml per ml, and 2 hand cleans per 100 ml (hygiene)",
       "gives": [
         {
           "resource": "bleachMl",
-          "amount": 2000
+          "amount": 1,
+          "per": 1
         },
         {
           "resource": "hygieneUses",
-          "amount": 40
+          "amount": 2,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 2,
+          "unit": "L"
+        },
+        {
+          "amount": 750,
+          "unit": "ml"
+        },
+        {
+          "amount": 1,
+          "unit": "L"
         }
       ],
       "suitability": [],
       "shelfLife": "year",
       "typicalPricePence": 200,
-      "tags": ["sanitation", "water", "treatment"]
+      "tags": ["sanitation", "water", "treatment"],
+      "source": "assumption"
     },
     {
-      "id": "items-base:tinned-food",
-      "name": "Tinned food (1 week, 1 person)",
-      "category": "food",
-      "unit": "pack",
-      "unitSize": "one person, one week",
-      "gives": [
+      "id": "items-base:water-filter",
+      "name": "Water filter",
+      "category": "water",
+      "heading": "Treatment",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Makes raw water safe to drink (treatment)",
+      "gives": [],
+      "sizes": [
         {
-          "resource": "foodKcal",
-          "amount": 14000
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": ["frost", "heat", "damp"],
+      "shelfLife": "none",
+      "typicalPricePence": 4000,
+      "tags": ["water", "treatment"]
+    },
+    {
+      "id": "items-base:other-water-kit",
+      "name": "Other water kit",
+      "category": "water",
+      "heading": "Treatment",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Counts towards nothing",
+      "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
         }
       ],
       "suitability": ["frost"],
-      "shelfLife": "years",
-      "typicalPricePence": 2000,
-      "tags": ["food", "no-cook"]
-    },
-    {
-      "id": "items-base:tinned-food-tin",
-      "name": "Tinned food (400 g tin)",
-      "category": "food",
-      "unit": "tin",
-      "unitSize": "400 g",
-      "gives": [
-        {
-          "resource": "foodKcal",
-          "amount": 400
-        }
-      ],
-      "suitability": [],
-      "shelfLife": "years",
-      "typicalPricePence": 80,
-      "tags": ["food", "no-cook"],
-      "source": "assumption"
-    },
-    {
-      "id": "items-base:dried-pasta-500g",
-      "name": "Dried pasta (500 g)",
-      "category": "food",
-      "unit": "bag",
-      "unitSize": "500 g",
-      "gives": [
-        {
-          "resource": "foodKcal",
-          "amount": 1750
-        }
-      ],
-      "suitability": [],
-      "shelfLife": "years",
-      "typicalPricePence": 85,
-      "tags": ["food", "needs-cooking"],
-      "source": "assumption"
-    },
-    {
-      "id": "items-base:dried-pasta-1kg",
-      "name": "Dried pasta (1 kg)",
-      "category": "food",
-      "unit": "bag",
-      "unitSize": "1 kg",
-      "gives": [
-        {
-          "resource": "foodKcal",
-          "amount": 3500
-        }
-      ],
-      "suitability": [],
-      "shelfLife": "years",
-      "typicalPricePence": 150,
-      "tags": ["food", "needs-cooking"],
-      "source": "assumption"
-    },
-    {
-      "id": "items-base:rice-1kg",
-      "name": "Rice (1 kg bag)",
-      "category": "food",
-      "unit": "bag",
-      "unitSize": "1 kg",
-      "gives": [
-        {
-          "resource": "foodKcal",
-          "amount": 3600
-        }
-      ],
-      "suitability": [],
-      "shelfLife": "years",
-      "typicalPricePence": 180,
-      "tags": ["food", "needs-cooking"],
-      "source": "assumption"
-    },
-    {
-      "id": "items-base:rice-sack",
-      "name": "Rice (10 kg sack)",
-      "category": "food",
-      "unit": "sack",
-      "unitSize": "10 kg",
-      "gives": [
-        {
-          "resource": "foodKcal",
-          "amount": 36000
-        }
-      ],
-      "suitability": [],
-      "shelfLife": "years",
-      "typicalPricePence": 1500,
-      "tags": ["food", "needs-cooking"]
-    },
-    {
-      "id": "items-base:dried-pasta",
-      "name": "Dried pasta (5 kg)",
-      "category": "food",
-      "unit": "pack",
-      "unitSize": "5 kg",
-      "gives": [
-        {
-          "resource": "foodKcal",
-          "amount": 17500
-        }
-      ],
-      "suitability": [],
-      "shelfLife": "years",
-      "typicalPricePence": 600,
-      "tags": ["food", "needs-cooking"]
-    },
-    {
-      "id": "items-base:porridge-oats",
-      "name": "Porridge oats (3 kg)",
-      "category": "food",
-      "unit": "pack",
-      "unitSize": "3 kg",
-      "gives": [
-        {
-          "resource": "foodKcal",
-          "amount": 11400
-        }
-      ],
-      "suitability": [],
-      "shelfLife": "year",
-      "typicalPricePence": 450,
-      "tags": ["food"]
-    },
-    {
-      "id": "items-base:porridge-oats-1kg",
-      "name": "Porridge oats (1 kg)",
-      "category": "food",
-      "unit": "bag",
-      "unitSize": "1 kg",
-      "gives": [
-        {
-          "resource": "foodKcal",
-          "amount": 3800
-        }
-      ],
-      "suitability": [],
-      "shelfLife": "year",
-      "typicalPricePence": 160,
-      "tags": ["food"],
-      "source": "assumption"
-    },
-    {
-      "id": "items-base:porridge-oats-10kg",
-      "name": "Porridge oats (10 kg sack)",
-      "category": "food",
-      "unit": "sack",
-      "unitSize": "10 kg",
-      "gives": [
-        {
-          "resource": "foodKcal",
-          "amount": 38000
-        }
-      ],
-      "suitability": [],
-      "shelfLife": "year",
-      "typicalPricePence": 1300,
-      "tags": ["food"],
-      "source": "assumption"
-    },
-    {
-      "id": "items-base:freeze-dried-meals",
-      "name": "Freeze-dried meals (12)",
-      "category": "food",
-      "unit": "pack",
-      "gives": [
-        {
-          "resource": "foodKcal",
-          "amount": 7200
-        }
-      ],
-      "suitability": [],
-      "shelfLife": "years",
-      "typicalPricePence": 6000,
-      "tags": ["food", "needs-cooking", "portable"]
-    },
-    {
-      "id": "items-base:peanut-butter",
-      "name": "Peanut butter (2 kg tub)",
-      "category": "food",
-      "unit": "tub",
-      "unitSize": "2 kg",
-      "gives": [
-        {
-          "resource": "foodKcal",
-          "amount": 12000
-        }
-      ],
-      "suitability": [],
-      "shelfLife": "year",
-      "typicalPricePence": 800,
-      "tags": ["food", "no-cook"]
-    },
-    {
-      "id": "items-base:peanut-butter-340g",
-      "name": "Peanut butter (340 g jar)",
-      "category": "food",
-      "unit": "jar",
-      "unitSize": "340 g",
-      "gives": [
-        {
-          "resource": "foodKcal",
-          "amount": 2040
-        }
-      ],
-      "suitability": [],
-      "shelfLife": "year",
-      "typicalPricePence": 150,
-      "tags": ["food", "no-cook"],
-      "source": "assumption"
-    },
-    {
-      "id": "items-base:energy-bars",
-      "name": "Energy bars (24)",
-      "category": "food",
-      "unit": "box",
-      "gives": [
-        {
-          "resource": "foodKcal",
-          "amount": 5300
-        }
-      ],
-      "suitability": [],
-      "shelfLife": "year",
-      "typicalPricePence": 1500,
-      "tags": ["food", "no-cook", "portable"]
-    },
-    {
-      "id": "items-base:tea-and-sugar",
-      "name": "Tea, coffee and sugar",
-      "category": "comfort",
-      "unit": "set",
-      "gives": [
-        {
-          "resource": "foodKcal",
-          "amount": 8000
-        }
-      ],
-      "suitability": [],
-      "shelfLife": "years",
-      "typicalPricePence": 1000,
-      "tags": ["food", "morale"]
-    },
-    {
-      "id": "items-base:rocket-stove",
-      "name": "Rocket stove",
-      "category": "food",
-      "unit": "each",
-      "gives": [],
-      "suitability": ["frost", "heat", "damp"],
       "shelfLife": "none",
-      "typicalPricePence": 4000,
-      "tags": ["cooking", "outdoor-use"],
-      "assetTypeId": "assets-base:rocket-stove"
+      "tags": ["water"]
     },
     {
-      "id": "items-base:logs-and-kindling",
-      "name": "Logs and kindling (20 kg)",
-      "category": "fuel",
-      "unit": "bag",
-      "unitSize": "20 kg",
-      "gives": [
-        {
-          "resource": "woodKg",
-          "amount": 20
-        }
-      ],
-      "suitability": ["frost", "heat"],
-      "shelfLife": "none",
-      "typicalPricePence": 1200,
-      "tags": ["fuel"]
-    },
-    {
-      "id": "items-base:matches-lighters",
-      "name": "Matches and lighters",
-      "category": "fuel",
-      "unit": "each",
-      "gives": [],
-      "suitability": ["frost", "heat", "damp"],
-      "shelfLife": "none",
-      "typicalPricePence": 500,
-      "tags": ["fire"]
-    },
-    {
-      "id": "items-base:vegetable-seeds",
-      "name": "Vegetable seed collection",
-      "category": "food",
-      "unit": "each",
-      "gives": [],
-      "suitability": [],
-      "shelfLife": "none",
-      "typicalPricePence": 1200,
-      "tags": ["growing", "needs-garden"]
-    },
-    {
-      "id": "items-base:cold-frame",
-      "name": "Cold frame",
-      "category": "food",
-      "unit": "each",
-      "gives": [],
-      "suitability": ["frost", "heat", "damp"],
-      "shelfLife": "none",
-      "typicalPricePence": 4500,
-      "tags": ["growing", "outdoor", "needs-garden"]
-    },
-    {
-      "id": "items-base:power-station",
-      "name": "Portable power station (500 Wh)",
-      "category": "power",
-      "unit": "each",
-      "gives": [
-        {
-          "resource": "batteryWh",
-          "amount": 500
-        }
-      ],
-      "suitability": [],
-      "shelfLife": "years",
-      "typicalPricePence": 35000,
-      "tags": ["power", "portable-power"],
-      "assetTypeId": "assets-base:power-station"
-    },
-    {
-      "id": "items-base:solar-kit",
-      "name": "Solar panel kit (200 W)",
-      "category": "power",
-      "unit": "each",
-      "gives": [],
-      "suitability": [],
-      "shelfLife": "none",
-      "typicalPricePence": 25000,
-      "tags": ["power", "outdoor"],
-      "assetTypeId": "assets-base:solar-pv"
-    },
-    {
-      "id": "items-base:leisure-battery",
-      "name": "Leisure battery (110 Ah)",
-      "category": "power",
-      "unit": "each",
-      "gives": [
-        {
-          "resource": "batteryWh",
-          "amount": 660
-        }
-      ],
-      "suitability": [],
-      "shelfLife": "years",
-      "typicalPricePence": 10000,
-      "tags": ["power", "12v"],
-      "assetTypeId": "assets-base:leisure-battery"
-    },
-    {
-      "id": "items-base:inverter",
-      "name": "Inverter (300 W)",
-      "category": "power",
-      "unit": "each",
-      "gives": [],
-      "suitability": [],
-      "shelfLife": "none",
-      "typicalPricePence": 4000,
-      "tags": ["power", "12v"]
-    },
-    {
-      "id": "items-base:inverter-generator",
-      "name": "Inverter generator (2 kW)",
-      "category": "power",
-      "unit": "each",
-      "gives": [],
-      "suitability": [],
-      "shelfLife": "none",
-      "typicalPricePence": 55000,
-      "tags": ["power", "noise"],
-      "assetTypeId": "assets-base:generator"
-    },
-    {
-      "id": "items-base:petrol-jerrycan",
-      "name": "Petrol (5 L can)",
-      "category": "fuel",
-      "unit": "can",
-      "unitSize": "5 L",
-      "gives": [
-        {
-          "resource": "petrolL",
-          "amount": 5
-        }
-      ],
-      "suitability": ["frost", "damp"],
-      "shelfLife": "months",
-      "typicalPricePence": 1200,
-      "tags": ["fuel"]
-    },
-    {
-      "id": "items-base:aa-batteries",
-      "name": "AA batteries (24)",
-      "category": "power",
-      "unit": "pack",
-      "gives": [
-        {
-          "resource": "batteryWh",
-          "amount": 80
-        }
-      ],
-      "suitability": [],
-      "shelfLife": "years",
-      "typicalPricePence": 1200,
-      "tags": ["power", "no-suggest"]
-    },
-    {
-      "id": "items-base:crank-charger",
-      "name": "Hand-crank USB charger",
-      "category": "power",
-      "unit": "each",
-      "gives": [],
-      "suitability": [],
-      "shelfLife": "none",
-      "typicalPricePence": 2000,
-      "tags": ["power", "manual"]
-    },
-    {
-      "id": "items-base:cabinet-heater",
-      "name": "Cabinet gas heater (2 kW setting)",
+      "id": "items-base:sleeping-bag",
+      "name": "Sleeping bag (3-season)",
       "category": "heat",
+      "heading": "Bedding and clothing",
+      "measure": "count",
       "unit": "each",
+      "countsAs": "Counts towards nothing yet (warmth)",
       "gives": [],
-      "suitability": ["frost", "heat"],
-      "shelfLife": "none",
-      "typicalPricePence": 9000,
-      "tags": ["heat"],
-      "assetTypeId": "assets-base:cabinet-heater"
-    },
-    {
-      "id": "items-base:gas-bottle",
-      "name": "Butane bottle (15 kg)",
-      "category": "fuel",
-      "unit": "bottle",
-      "unitSize": "15 kg",
-      "gives": [
+      "sizes": [
         {
-          "resource": "lpgKg",
-          "amount": 15
+          "amount": 1,
+          "unit": "pieces"
         }
       ],
-      "suitability": ["frost", "damp"],
-      "shelfLife": "years",
-      "typicalPricePence": 6000,
-      "tags": ["fuel"]
-    },
-    {
-      "id": "items-base:catalytic-heater",
-      "name": "Portable catalytic heater (1.3 kW)",
-      "category": "heat",
-      "unit": "each",
-      "gives": [],
       "suitability": ["frost", "heat"],
       "shelfLife": "none",
-      "typicalPricePence": 5000,
-      "tags": ["heat"],
-      "assetTypeId": "assets-base:catalytic-heater"
+      "typicalPricePence": 3000,
+      "tags": ["warmth"]
     },
     {
       "id": "items-base:winter-sleeping-bag",
       "name": "Sleeping bag (4-season)",
       "category": "heat",
+      "heading": "Bedding and clothing",
+      "measure": "count",
       "unit": "each",
+      "countsAs": "Counts towards nothing yet (warmth)",
       "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
       "suitability": ["frost", "heat"],
       "shelfLife": "none",
       "typicalPricePence": 9000,
       "tags": ["warmth"]
     },
     {
-      "id": "items-base:wool-blankets",
-      "name": "Wool blankets (pair)",
+      "id": "items-base:blankets",
+      "name": "Blankets",
       "category": "heat",
+      "heading": "Bedding and clothing",
+      "measure": "count",
       "unit": "each",
+      "countsAs": "Counts towards nothing yet (warmth)",
       "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        },
+        {
+          "amount": 2,
+          "unit": "pieces"
+        }
+      ],
       "suitability": ["frost", "heat"],
       "shelfLife": "none",
-      "typicalPricePence": 4000,
+      "typicalPricePence": 2000,
       "tags": ["warmth"]
     },
     {
       "id": "items-base:thermal-layers",
       "name": "Thermal base layers",
       "category": "heat",
+      "heading": "Bedding and clothing",
+      "measure": "count",
       "unit": "each",
+      "countsAs": "Counts towards nothing yet (warmth)",
       "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
       "suitability": ["frost", "heat"],
       "shelfLife": "none",
       "typicalPricePence": 2500,
@@ -923,10 +2120,47 @@
       "id": "items-base:foil-blankets",
       "name": "Foil emergency blankets",
       "category": "heat",
-      "unit": "each",
+      "heading": "Bedding and clothing",
+      "measure": "count",
+      "unit": "pack",
+      "countsAs": "Counts towards nothing yet (warmth)",
       "gives": [],
+      "sizes": [
+        {
+          "amount": 4,
+          "unit": "pieces"
+        },
+        {
+          "amount": 10,
+          "unit": "pieces"
+        }
+      ],
       "suitability": ["frost", "heat"],
       "shelfLife": "years",
+      "typicalPricePence": 500,
+      "tags": ["warmth"]
+    },
+    {
+      "id": "items-base:hot-water-bottles",
+      "name": "Hot water bottles",
+      "category": "heat",
+      "heading": "Bedding and clothing",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Counts towards nothing yet (warmth)",
+      "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        },
+        {
+          "amount": 2,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": ["frost", "heat"],
+      "shelfLife": "none",
       "typicalPricePence": 500,
       "tags": ["warmth"]
     },
@@ -934,8 +2168,17 @@
       "id": "items-base:indoor-tent",
       "name": "Indoor tent",
       "category": "heat",
+      "heading": "The home",
+      "measure": "count",
       "unit": "each",
+      "countsAs": "Counts towards nothing yet (warmth)",
       "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
       "suitability": ["frost", "heat"],
       "shelfLife": "none",
       "typicalPricePence": 6000,
@@ -945,172 +2188,1301 @@
       "id": "items-base:draught-proofing",
       "name": "Draught strip and window film",
       "category": "heat",
+      "heading": "The home",
+      "measure": "count",
       "unit": "each",
+      "countsAs": "Counts towards nothing yet (keeps heat in)",
       "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
       "suitability": ["frost", "heat"],
       "shelfLife": "none",
       "typicalPricePence": 3000,
       "tags": ["insulation"]
     },
     {
-      "id": "items-base:hot-water-bottles",
-      "name": "Hot water bottles (2)",
+      "id": "items-base:paraffin-heater",
+      "name": "Paraffin heater (2.5 kW)",
       "category": "heat",
+      "heading": "Heaters",
+      "measure": "count",
       "unit": "each",
+      "countsAs": "Equipment, add it under Home › Equipment",
       "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
       "suitability": ["frost", "heat"],
       "shelfLife": "none",
-      "typicalPricePence": 1000,
+      "typicalPricePence": 6000,
+      "tags": ["heat"],
+      "assetTypeId": "assets-base:paraffin-heater"
+    },
+    {
+      "id": "items-base:cabinet-heater",
+      "name": "Cabinet gas heater",
+      "category": "heat",
+      "heading": "Heaters",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Equipment, add it under Home › Equipment",
+      "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": ["frost", "heat"],
+      "shelfLife": "none",
+      "typicalPricePence": 9000,
+      "tags": ["heat"],
+      "assetTypeId": "assets-base:cabinet-heater"
+    },
+    {
+      "id": "items-base:catalytic-heater",
+      "name": "Portable catalytic heater",
+      "category": "heat",
+      "heading": "Heaters",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Equipment, add it under Home › Equipment",
+      "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": ["frost", "heat"],
+      "shelfLife": "none",
+      "typicalPricePence": 5000,
+      "tags": ["heat"],
+      "assetTypeId": "assets-base:catalytic-heater"
+    },
+    {
+      "id": "items-base:other-warmth",
+      "name": "Other warmth kit",
+      "category": "heat",
+      "heading": "Other",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Counts towards nothing",
+      "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": ["frost", "heat"],
+      "shelfLife": "none",
       "tags": ["warmth"]
+    },
+    {
+      "id": "items-base:gas-canisters",
+      "name": "Camping gas canisters",
+      "category": "fuel",
+      "heading": "Gas",
+      "measure": "count",
+      "unit": "canister",
+      "countsAs": "1 canister each (fuel for a camping stove or heater)",
+      "gives": [
+        {
+          "resource": "gasCanister",
+          "amount": 1,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 4,
+          "unit": "pieces"
+        },
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": ["frost", "damp"],
+      "shelfLife": "years",
+      "typicalPricePence": 1000,
+      "tags": ["fuel"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:butane-bottle",
+      "name": "Butane bottle",
+      "category": "fuel",
+      "heading": "Gas",
+      "measure": "mass",
+      "unit": "bottle",
+      "countsAs": "Bottled gas, 1 kg per kg of gas",
+      "gives": [
+        {
+          "resource": "lpgKg",
+          "amount": 1,
+          "per": 1000
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 15,
+          "unit": "kg"
+        },
+        {
+          "amount": 4.5,
+          "unit": "kg"
+        },
+        {
+          "amount": 7,
+          "unit": "kg"
+        },
+        {
+          "amount": 12,
+          "unit": "kg"
+        }
+      ],
+      "suitability": ["frost", "damp"],
+      "shelfLife": "years",
+      "typicalPricePence": 6000,
+      "tags": ["fuel"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:propane-bottle",
+      "name": "Propane bottle",
+      "category": "fuel",
+      "heading": "Gas",
+      "measure": "mass",
+      "unit": "bottle",
+      "countsAs": "Bottled gas, 1 kg per kg of gas",
+      "gives": [
+        {
+          "resource": "lpgKg",
+          "amount": 1,
+          "per": 1000
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 13,
+          "unit": "kg"
+        },
+        {
+          "amount": 3.9,
+          "unit": "kg"
+        },
+        {
+          "amount": 6,
+          "unit": "kg"
+        },
+        {
+          "amount": 19,
+          "unit": "kg"
+        },
+        {
+          "amount": 47,
+          "unit": "kg"
+        }
+      ],
+      "suitability": ["frost", "damp"],
+      "shelfLife": "years",
+      "typicalPricePence": 3500,
+      "tags": ["fuel", "lpg"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:paraffin",
+      "name": "Paraffin",
+      "category": "fuel",
+      "heading": "Liquid fuel",
+      "measure": "volume",
+      "unit": "can",
+      "countsAs": "Paraffin, 1 L per litre",
+      "gives": [
+        {
+          "resource": "paraffinL",
+          "amount": 1,
+          "per": 1000
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 10,
+          "unit": "L"
+        },
+        {
+          "amount": 4,
+          "unit": "L"
+        },
+        {
+          "amount": 20,
+          "unit": "L"
+        }
+      ],
+      "suitability": ["frost", "damp"],
+      "shelfLife": "year",
+      "typicalPricePence": 2000,
+      "tags": ["fuel"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:petrol",
+      "name": "Petrol",
+      "category": "fuel",
+      "heading": "Liquid fuel",
+      "measure": "volume",
+      "unit": "can",
+      "countsAs": "Petrol, 1 L per litre (also counts as driving range)",
+      "gives": [
+        {
+          "resource": "petrolL",
+          "amount": 1,
+          "per": 1000
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 20,
+          "unit": "L"
+        },
+        {
+          "amount": 5,
+          "unit": "L"
+        },
+        {
+          "amount": 10,
+          "unit": "L"
+        }
+      ],
+      "suitability": ["frost", "damp"],
+      "shelfLife": "months",
+      "typicalPricePence": 3500,
+      "tags": ["fuel"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:logs-kindling",
+      "name": "Logs and kindling",
+      "category": "fuel",
+      "heading": "Solid fuel",
+      "measure": "mass",
+      "unit": "bag",
+      "countsAs": "Firewood, 1 kg per kg",
+      "gives": [
+        {
+          "resource": "woodKg",
+          "amount": 1,
+          "per": 1000
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 20,
+          "unit": "kg"
+        },
+        {
+          "amount": 10,
+          "unit": "kg"
+        },
+        {
+          "amount": 40,
+          "unit": "kg"
+        }
+      ],
+      "suitability": ["frost", "heat"],
+      "shelfLife": "none",
+      "typicalPricePence": 1200,
+      "tags": ["fuel"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:matches-lighters",
+      "name": "Matches and lighters",
+      "category": "fuel",
+      "heading": "Fire lighting",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Counts towards nothing",
+      "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": ["frost", "heat", "damp"],
+      "shelfLife": "none",
+      "typicalPricePence": 500,
+      "tags": ["fire"]
+    },
+    {
+      "id": "items-base:other-fuel",
+      "name": "Other fuel",
+      "category": "fuel",
+      "heading": "Other",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Counts towards nothing (diesel, coal: the app has no resource for them yet)",
+      "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": ["frost", "damp"],
+      "shelfLife": "none",
+      "tags": ["fuel"]
+    },
+    {
+      "id": "items-base:power-bank-10k",
+      "name": "Power bank, 10,000 mAh",
+      "category": "power",
+      "heading": "Power banks",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Battery charge, 37 Wh a bank (about 2 phone charges)",
+      "gives": [
+        {
+          "resource": "batteryWh",
+          "amount": 37,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
+      "typicalPricePence": 1500,
+      "tags": ["power", "phone"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:power-bank-20k",
+      "name": "Power bank, 20,000 mAh",
+      "category": "power",
+      "heading": "Power banks",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Battery charge, 74 Wh a bank (about 4 phone charges)",
+      "gives": [
+        {
+          "resource": "batteryWh",
+          "amount": 74,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
+      "typicalPricePence": 2500,
+      "tags": ["power", "phone"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:power-bank-27k",
+      "name": "Power bank, 26,800 mAh (99 Wh)",
+      "category": "power",
+      "heading": "Power banks",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Battery charge, 99 Wh a bank",
+      "gives": [
+        {
+          "resource": "batteryWh",
+          "amount": 99,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
+      "typicalPricePence": 4000,
+      "tags": ["power", "phone"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:aa-cells",
+      "name": "AA cells",
+      "category": "power",
+      "heading": "Cells",
+      "measure": "count",
+      "unit": "pack",
+      "countsAs": "Battery charge, 3.3 Wh a cell",
+      "gives": [
+        {
+          "resource": "batteryWh",
+          "amount": 3.3,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 8,
+          "unit": "pieces"
+        },
+        {
+          "amount": 4,
+          "unit": "pieces"
+        },
+        {
+          "amount": 24,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
+      "typicalPricePence": 500,
+      "tags": ["power", "cells", "no-suggest"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:aaa-cells",
+      "name": "AAA cells",
+      "category": "power",
+      "heading": "Cells",
+      "measure": "count",
+      "unit": "pack",
+      "countsAs": "Battery charge, 1.5 Wh a cell",
+      "gives": [
+        {
+          "resource": "batteryWh",
+          "amount": 1.5,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 8,
+          "unit": "pieces"
+        },
+        {
+          "amount": 4,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
+      "typicalPricePence": 500,
+      "tags": ["power", "cells", "no-suggest"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:c-cells",
+      "name": "C cells",
+      "category": "power",
+      "heading": "Cells",
+      "measure": "count",
+      "unit": "pack",
+      "countsAs": "Battery charge, 8 Wh a cell",
+      "gives": [
+        {
+          "resource": "batteryWh",
+          "amount": 8,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 4,
+          "unit": "pieces"
+        },
+        {
+          "amount": 2,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
+      "typicalPricePence": 600,
+      "tags": ["power", "cells", "no-suggest"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:d-cells",
+      "name": "D cells",
+      "category": "power",
+      "heading": "Cells",
+      "measure": "count",
+      "unit": "pack",
+      "countsAs": "Battery charge, 15 Wh a cell",
+      "gives": [
+        {
+          "resource": "batteryWh",
+          "amount": 15,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 4,
+          "unit": "pieces"
+        },
+        {
+          "amount": 2,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
+      "typicalPricePence": 800,
+      "tags": ["power", "cells", "no-suggest"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:9v-cells",
+      "name": "9 V batteries",
+      "category": "power",
+      "heading": "Cells",
+      "measure": "count",
+      "unit": "pack",
+      "countsAs": "Battery charge, 4.5 Wh each",
+      "gives": [
+        {
+          "resource": "batteryWh",
+          "amount": 4.5,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        },
+        {
+          "amount": 2,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
+      "typicalPricePence": 300,
+      "tags": ["power", "cells", "no-suggest"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:crank-charger",
+      "name": "Hand-crank USB charger",
+      "category": "power",
+      "heading": "Chargers",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Counts towards nothing yet",
+      "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "none",
+      "typicalPricePence": 2000,
+      "tags": ["power", "manual"]
+    },
+    {
+      "id": "items-base:inverter",
+      "name": "Inverter (300 W)",
+      "category": "power",
+      "heading": "Chargers",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Counts towards nothing yet",
+      "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "none",
+      "typicalPricePence": 4000,
+      "tags": ["power", "12v"]
+    },
+    {
+      "id": "items-base:solar-panel",
+      "name": "Folding solar panel (60 W)",
+      "category": "power",
+      "heading": "Power equipment",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Equipment, add it under Home › Equipment",
+      "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "none",
+      "typicalPricePence": 7000,
+      "tags": ["power"],
+      "assetTypeId": "assets-base:solar-pv"
+    },
+    {
+      "id": "items-base:solar-kit",
+      "name": "Solar panel kit (200 W)",
+      "category": "power",
+      "heading": "Power equipment",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Equipment, add it under Home › Equipment",
+      "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "none",
+      "typicalPricePence": 25000,
+      "tags": ["power", "outdoor"],
+      "assetTypeId": "assets-base:solar-pv"
+    },
+    {
+      "id": "items-base:generator",
+      "name": "Petrol generator (800 W)",
+      "category": "power",
+      "heading": "Power equipment",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Equipment, add it under Home › Equipment",
+      "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "none",
+      "typicalPricePence": 15000,
+      "tags": ["power", "noise"],
+      "assetTypeId": "assets-base:generator"
+    },
+    {
+      "id": "items-base:inverter-generator",
+      "name": "Inverter generator (2 kW)",
+      "category": "power",
+      "heading": "Power equipment",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Equipment, add it under Home › Equipment",
+      "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "none",
+      "typicalPricePence": 55000,
+      "tags": ["power", "noise"],
+      "assetTypeId": "assets-base:generator"
+    },
+    {
+      "id": "items-base:power-station",
+      "name": "Portable power station (500 Wh)",
+      "category": "power",
+      "heading": "Power equipment",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Equipment, add it under Home › Equipment",
+      "gives": [
+        {
+          "resource": "batteryWh",
+          "amount": 500,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
+      "typicalPricePence": 35000,
+      "tags": ["power", "portable-power"],
+      "assetTypeId": "assets-base:power-station",
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:leisure-battery",
+      "name": "Leisure battery (110 Ah)",
+      "category": "power",
+      "heading": "Power equipment",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Equipment, add it under Home › Equipment",
+      "gives": [
+        {
+          "resource": "batteryWh",
+          "amount": 660,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
+      "typicalPricePence": 10000,
+      "tags": ["power", "12v"],
+      "assetTypeId": "assets-base:leisure-battery",
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:other-power",
+      "name": "Other power kit",
+      "category": "power",
+      "heading": "Other",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Counts towards nothing",
+      "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "none",
+      "tags": ["power"]
     },
     {
       "id": "items-base:head-torch",
       "name": "Head torch",
       "category": "light",
-      "unit": "torch",
+      "heading": "Torches and lanterns",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Light, 1,500 lumen-hours a torch, and 4 Wh of battery charge",
       "gives": [
         {
           "resource": "batteryWh",
-          "amount": 4
+          "amount": 4,
+          "per": 1
         },
         {
           "resource": "lumenHours",
-          "amount": 1500
+          "amount": 1500,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
         }
       ],
       "suitability": ["frost"],
       "shelfLife": "none",
       "typicalPricePence": 1500,
-      "tags": ["light", "portable"]
+      "tags": ["light", "portable"],
+      "source": "assumption"
     },
     {
-      "id": "items-base:candles",
-      "name": "Dinner candles (20)",
+      "id": "items-base:torch-aa",
+      "name": "LED torch (AA)",
       "category": "light",
-      "unit": "pack",
+      "heading": "Torches and lanterns",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Light, 2,000 lumen-hours a torch",
       "gives": [
         {
-          "resource": "candleHours",
-          "amount": 80
+          "resource": "lumenHours",
+          "amount": 2000,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
         }
       ],
       "suitability": ["frost"],
-      "shelfLife": "years",
-      "typicalPricePence": 800,
-      "tags": ["light", "fire-risk"]
+      "shelfLife": "none",
+      "typicalPricePence": 1200,
+      "tags": ["light", "uses-aa"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:lantern-d",
+      "name": "LED lantern (D cells)",
+      "category": "light",
+      "heading": "Torches and lanterns",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Light, 6,000 lumen-hours a lantern",
+      "gives": [
+        {
+          "resource": "lumenHours",
+          "amount": 6000,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": ["frost"],
+      "shelfLife": "none",
+      "typicalPricePence": 1800,
+      "tags": ["light", "uses-d"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:led-lantern",
+      "name": "Rechargeable LED lantern",
+      "category": "light",
+      "heading": "Torches and lanterns",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Light, 6,000 lumen-hours, and 20 Wh of battery charge",
+      "gives": [
+        {
+          "resource": "batteryWh",
+          "amount": 20,
+          "per": 1
+        },
+        {
+          "resource": "lumenHours",
+          "amount": 6000,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": ["frost"],
+      "shelfLife": "none",
+      "typicalPricePence": 1500,
+      "tags": ["light"],
+      "source": "assumption"
     },
     {
       "id": "items-base:solar-lantern",
       "name": "Solar lantern",
       "category": "light",
-      "unit": "lantern",
+      "heading": "Torches and lanterns",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Light, 3,000 lumen-hours, and 10 Wh of battery charge",
       "gives": [
         {
           "resource": "batteryWh",
-          "amount": 10
+          "amount": 10,
+          "per": 1
         },
         {
           "resource": "lumenHours",
-          "amount": 3000
+          "amount": 3000,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
         }
       ],
       "suitability": ["frost"],
       "shelfLife": "none",
       "typicalPricePence": 2500,
+      "tags": ["light"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:window-candles",
+      "name": "LED window candles",
+      "category": "light",
+      "heading": "Torches and lanterns",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Light, 500 lumen-hours a candle",
+      "gives": [
+        {
+          "resource": "lumenHours",
+          "amount": 500,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 4,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": ["frost"],
+      "shelfLife": "none",
+      "typicalPricePence": 1000,
+      "tags": ["light", "no-fire", "uses-aaa"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:candles",
+      "name": "Candles",
+      "category": "light",
+      "heading": "Candles",
+      "measure": "count",
+      "unit": "pack",
+      "countsAs": "Candles, 4 hours a candle",
+      "gives": [
+        {
+          "resource": "candleHours",
+          "amount": 4,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 20,
+          "unit": "pieces"
+        },
+        {
+          "amount": 10,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": ["frost"],
+      "shelfLife": "years",
+      "typicalPricePence": 800,
+      "tags": ["light", "fire-risk"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:tealights",
+      "name": "Tealights",
+      "category": "light",
+      "heading": "Candles",
+      "measure": "count",
+      "unit": "pack",
+      "countsAs": "Candles, 4 hours a tealight",
+      "gives": [
+        {
+          "resource": "candleHours",
+          "amount": 4,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 100,
+          "unit": "pieces"
+        },
+        {
+          "amount": 50,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": ["frost"],
+      "shelfLife": "years",
+      "typicalPricePence": 500,
+      "tags": ["light", "fire-risk"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:other-light",
+      "name": "Other light",
+      "category": "light",
+      "heading": "Other",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Counts towards nothing",
+      "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": ["frost"],
+      "shelfLife": "none",
       "tags": ["light"]
+    },
+    {
+      "id": "items-base:first-aid-kit",
+      "name": "First aid kit",
+      "category": "medical",
+      "heading": "First aid",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "First-aid supplies, 3 uses a kit",
+      "gives": [
+        {
+          "resource": "firstAid",
+          "amount": 3,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
+      "typicalPricePence": 2000,
+      "tags": ["medical"],
+      "source": "assumption"
     },
     {
       "id": "items-base:large-first-aid-kit",
       "name": "Workplace first aid kit (large)",
       "category": "medical",
-      "unit": "kit",
+      "heading": "First aid",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "First-aid supplies, 10 uses a kit",
       "gives": [
         {
           "resource": "firstAid",
-          "amount": 10
+          "amount": 10,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
         }
       ],
       "suitability": [],
       "shelfLife": "years",
       "typicalPricePence": 4500,
-      "tags": ["medical"]
+      "tags": ["medical"],
+      "source": "assumption"
     },
     {
       "id": "items-base:trauma-kit",
       "name": "Trauma kit",
       "category": "medical",
-      "unit": "kit",
+      "heading": "First aid",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "First-aid supplies, 4 uses a kit",
       "gives": [
         {
           "resource": "firstAid",
-          "amount": 4
+          "amount": 4,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
         }
       ],
       "suitability": [],
       "shelfLife": "years",
       "typicalPricePence": 6000,
-      "tags": ["medical", "trauma"]
+      "tags": ["medical", "trauma"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:other-first-aid",
+      "name": "Plasters, dressings and other first aid",
+      "category": "medical",
+      "heading": "First aid",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Counts towards nothing",
+      "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
+      "tags": ["medical"]
     },
     {
       "id": "items-base:spare-prescriptions",
       "name": "Spare month of prescriptions",
       "category": "medical",
+      "heading": "Medicines",
+      "measure": "count",
       "unit": "each",
+      "countsAs": "Counts towards nothing (medication is tracked per person under People)",
       "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
       "suitability": [],
       "shelfLife": "months",
-      "typicalPricePence": 1000,
       "tags": ["medical", "prescription"]
     },
     {
-      "id": "items-base:hygiene-kit",
-      "name": "Soap, sanitiser and wipes",
+      "id": "items-base:painkillers",
+      "name": "Painkillers and cold remedies",
       "category": "medical",
-      "unit": "kit",
-      "gives": [
+      "heading": "Medicines",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Counts towards nothing",
+      "gives": [],
+      "sizes": [
         {
-          "resource": "hygieneUses",
-          "amount": 30
+          "amount": 1,
+          "unit": "pieces"
         }
       ],
       "suitability": [],
       "shelfLife": "years",
-      "typicalPricePence": 1500,
-      "tags": ["hygiene"]
+      "typicalPricePence": 300,
+      "tags": ["medical"]
     },
     {
       "id": "items-base:ffp3-masks",
-      "name": "FFP3 masks (20)",
+      "name": "FFP3 masks",
       "category": "medical",
-      "unit": "box",
+      "heading": "Protection",
+      "measure": "count",
+      "unit": "pack",
+      "countsAs": "Counts towards nothing",
       "gives": [],
+      "sizes": [
+        {
+          "amount": 20,
+          "unit": "pieces"
+        }
+      ],
       "suitability": [],
       "shelfLife": "years",
       "typicalPricePence": 3000,
       "tags": ["ppe"]
     },
     {
-      "id": "items-base:bucket-toilet",
-      "name": "Bucket toilet and bags",
-      "category": "medical",
-      "unit": "kit",
-      "gives": [
+      "id": "items-base:wind-up-radio",
+      "name": "Wind-up radio",
+      "category": "comms",
+      "heading": "Radios",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Equipment, add it under Home › Equipment",
+      "gives": [],
+      "sizes": [
         {
-          "resource": "sanitationUses",
-          "amount": 30
+          "amount": 1,
+          "unit": "pieces"
         }
       ],
       "suitability": [],
       "shelfLife": "none",
       "typicalPricePence": 2500,
-      "tags": ["sanitation"]
+      "tags": ["radio-rx", "light"],
+      "assetTypeId": "assets-base:wind-up-radio"
+    },
+    {
+      "id": "items-base:wind-up-radio-fm",
+      "name": "Wind-up FM radio with torch",
+      "category": "comms",
+      "heading": "Radios",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Equipment, add it under Home › Equipment",
+      "gives": [
+        {
+          "resource": "lumenHours",
+          "amount": 300,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": ["frost"],
+      "shelfLife": "none",
+      "typicalPricePence": 2500,
+      "tags": ["radio-rx", "light", "manual"],
+      "assetTypeId": "assets-base:wind-up-radio",
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:shortwave-receiver",
+      "name": "Shortwave receiver",
+      "category": "comms",
+      "heading": "Radios",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Counts as a radio that works without mains or a phone signal",
+      "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "none",
+      "typicalPricePence": 6000,
+      "tags": ["radio-rx"]
     },
     {
       "id": "items-base:pmr446-pair",
       "name": "PMR446 walkie-talkies (pair)",
       "category": "comms",
+      "heading": "Radios",
+      "measure": "count",
       "unit": "each",
+      "countsAs": "Equipment, add it under Home › Equipment",
       "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
       "suitability": [],
       "shelfLife": "none",
       "typicalPricePence": 5000,
@@ -1121,8 +3493,17 @@
       "id": "items-base:cb-rig",
       "name": "CB radio and magmount aerial",
       "category": "comms",
+      "heading": "Radios",
+      "measure": "count",
       "unit": "each",
+      "countsAs": "Equipment, add it under Home › Equipment",
       "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
       "suitability": [],
       "shelfLife": "none",
       "typicalPricePence": 12000,
@@ -1133,8 +3514,17 @@
       "id": "items-base:dual-band-handheld",
       "name": "2 m/70 cm handheld",
       "category": "comms",
+      "heading": "Radios",
+      "measure": "count",
       "unit": "each",
+      "countsAs": "Equipment, add it under Home › Equipment",
       "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
       "suitability": [],
       "shelfLife": "none",
       "typicalPricePence": 6000,
@@ -1145,8 +3535,17 @@
       "id": "items-base:mobile-rig",
       "name": "Dual-band mobile rig and roof antenna",
       "category": "comms",
+      "heading": "Radios",
+      "measure": "count",
       "unit": "each",
+      "countsAs": "Equipment, add it under Home › Equipment",
       "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
       "suitability": [],
       "shelfLife": "none",
       "typicalPricePence": 35000,
@@ -1157,8 +3556,17 @@
       "id": "items-base:hf-station",
       "name": "HF transceiver, tuner and wire antenna",
       "category": "comms",
+      "heading": "Radios",
+      "measure": "count",
       "unit": "each",
+      "countsAs": "Equipment, add it under Home › Equipment",
       "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
       "suitability": [],
       "shelfLife": "none",
       "typicalPricePence": 90000,
@@ -1169,52 +3577,96 @@
       "id": "items-base:garden-mast",
       "name": "Telescopic garden mast (10 m)",
       "category": "comms",
+      "heading": "Aerials",
+      "measure": "count",
       "unit": "each",
+      "countsAs": "Counts towards nothing",
       "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
       "suitability": [],
       "shelfLife": "none",
       "typicalPricePence": 15000,
       "tags": ["radio", "outdoor", "needs-garden"]
     },
     {
-      "id": "items-base:shortwave-receiver",
-      "name": "Shortwave receiver",
+      "id": "items-base:other-comms",
+      "name": "Other radio kit",
       "category": "comms",
+      "heading": "Other",
+      "measure": "count",
       "unit": "each",
+      "countsAs": "Counts towards nothing",
       "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
       "suitability": [],
       "shelfLife": "none",
-      "typicalPricePence": 6000,
-      "tags": ["radio-rx"]
+      "tags": ["radio"]
     },
     {
       "id": "items-base:hand-tools",
       "name": "Hand tool kit",
       "category": "tools",
+      "heading": "Tools",
+      "measure": "count",
       "unit": "each",
+      "countsAs": "Counts towards nothing",
       "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
       "suitability": ["frost", "heat", "damp"],
       "shelfLife": "none",
       "typicalPricePence": 6000,
       "tags": ["building", "mechanics"]
     },
     {
-      "id": "items-base:tarps-and-rope",
+      "id": "items-base:tarps-rope",
       "name": "Tarps, rope and duct tape",
       "category": "tools",
+      "heading": "Tools",
+      "measure": "count",
       "unit": "each",
+      "countsAs": "Counts towards nothing",
       "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
       "suitability": ["frost", "heat", "damp"],
       "shelfLife": "none",
       "typicalPricePence": 3000,
       "tags": ["building", "shelter"]
     },
     {
-      "id": "items-base:saw-and-hatchet",
+      "id": "items-base:saw-hatchet",
       "name": "Bow saw and hatchet",
       "category": "tools",
+      "heading": "Tools",
+      "measure": "count",
       "unit": "each",
+      "countsAs": "Counts towards nothing",
       "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
       "suitability": ["frost", "heat", "damp"],
       "shelfLife": "none",
       "typicalPricePence": 3500,
@@ -1224,19 +3676,37 @@
       "id": "items-base:siphon-pump",
       "name": "Fuel siphon pump",
       "category": "tools",
+      "heading": "Tools",
+      "measure": "count",
       "unit": "each",
+      "countsAs": "Counts towards nothing",
       "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
       "suitability": ["frost", "heat", "damp"],
       "shelfLife": "none",
       "typicalPricePence": 1000,
       "tags": ["fuel", "mechanics"]
     },
     {
-      "id": "items-base:map-and-compass",
+      "id": "items-base:map-compass",
       "name": "Paper map and compass",
       "category": "tools",
+      "heading": "Getting about",
+      "measure": "count",
       "unit": "each",
+      "countsAs": "Counts towards nothing",
       "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
       "suitability": ["frost", "heat", "damp"],
       "shelfLife": "none",
       "typicalPricePence": 2000,
@@ -1246,19 +3716,56 @@
       "id": "items-base:bicycle",
       "name": "Bicycle and repair kit",
       "category": "tools",
+      "heading": "Getting about",
+      "measure": "count",
       "unit": "each",
+      "countsAs": "Counts towards nothing",
       "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
       "suitability": ["frost", "heat", "damp"],
       "shelfLife": "none",
       "typicalPricePence": 25000,
       "tags": ["transport", "outdoor"]
     },
     {
+      "id": "items-base:other-tools",
+      "name": "Other tools",
+      "category": "tools",
+      "heading": "Other",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Counts towards nothing",
+      "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": ["frost", "heat", "damp"],
+      "shelfLife": "none",
+      "tags": ["tools"]
+    },
+    {
       "id": "items-base:door-bar",
       "name": "Door bar and window locks",
       "category": "security",
+      "heading": "Home security",
+      "measure": "count",
       "unit": "each",
+      "countsAs": "Counts towards nothing",
       "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
       "suitability": ["frost", "heat", "damp"],
       "shelfLife": "none",
       "typicalPricePence": 4500,
@@ -1266,10 +3773,19 @@
     },
     {
       "id": "items-base:plywood-sheets",
-      "name": "Plywood sheets (2 × 8 ft by 4 ft)",
+      "name": "Plywood sheets (8 ft by 4 ft)",
       "category": "security",
+      "heading": "Home security",
+      "measure": "count",
       "unit": "each",
+      "countsAs": "Counts towards nothing",
       "gives": [],
+      "sizes": [
+        {
+          "amount": 2,
+          "unit": "pieces"
+        }
+      ],
       "suitability": ["frost", "heat", "damp"],
       "shelfLife": "none",
       "typicalPricePence": 8000,
@@ -1277,21 +3793,59 @@
     },
     {
       "id": "items-base:motion-lights",
-      "name": "Battery motion-sensor lights (3)",
+      "name": "Battery motion-sensor lights",
       "category": "security",
+      "heading": "Home security",
+      "measure": "count",
       "unit": "each",
+      "countsAs": "Counts towards nothing",
       "gives": [],
+      "sizes": [
+        {
+          "amount": 3,
+          "unit": "pieces"
+        }
+      ],
       "suitability": ["frost", "heat", "damp"],
       "shelfLife": "none",
       "typicalPricePence": 2500,
       "tags": ["security", "deterrent", "outdoor"]
     },
     {
+      "id": "items-base:blackout-curtains",
+      "name": "Blackout curtains",
+      "category": "security",
+      "heading": "Home security",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Counts towards nothing",
+      "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": ["frost", "heat", "damp"],
+      "shelfLife": "none",
+      "typicalPricePence": 4000,
+      "tags": ["light-discipline"]
+    },
+    {
       "id": "items-base:fire-extinguisher",
       "name": "Fire extinguisher and fire blanket",
       "category": "security",
+      "heading": "Safety",
+      "measure": "count",
       "unit": "each",
+      "countsAs": "Equipment, add it under Home › Equipment",
       "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
       "suitability": ["frost", "heat", "damp"],
       "shelfLife": "none",
       "typicalPricePence": 4500,
@@ -1302,8 +3856,17 @@
       "id": "items-base:co-alarm",
       "name": "Carbon monoxide alarm",
       "category": "security",
+      "heading": "Safety",
+      "measure": "count",
       "unit": "each",
+      "countsAs": "Equipment, add it under Home › Equipment",
       "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
       "suitability": ["frost", "heat", "damp"],
       "shelfLife": "none",
       "typicalPricePence": 2000,
@@ -1311,147 +3874,164 @@
       "assetTypeId": "assets-base:co-alarm"
     },
     {
-      "id": "items-base:games-and-books",
+      "id": "items-base:other-security",
+      "name": "Other safety kit",
+      "category": "security",
+      "heading": "Other",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Counts towards nothing",
+      "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": ["frost", "heat", "damp"],
+      "shelfLife": "none",
+      "tags": ["security"]
+    },
+    {
+      "id": "items-base:games-books",
       "name": "Cards, board games and paperbacks",
       "category": "comfort",
+      "heading": "Morale",
+      "measure": "count",
       "unit": "each",
+      "countsAs": "Counts towards nothing (morale)",
       "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
       "suitability": ["frost", "heat", "damp"],
       "shelfLife": "none",
       "typicalPricePence": 2000,
       "tags": ["morale"]
     },
     {
-      "id": "items-base:comfort-box",
-      "name": "Chocolate, crisps and biscuits",
+      "id": "items-base:tea",
+      "name": "Tea",
       "category": "comfort",
+      "heading": "Hot drinks",
+      "measure": "count",
       "unit": "box",
-      "gives": [
+      "countsAs": "Counts towards nothing (morale)",
+      "gives": [],
+      "sizes": [
         {
-          "resource": "foodKcal",
-          "amount": 10000
+          "amount": 80,
+          "unit": "pieces"
+        },
+        {
+          "amount": 240,
+          "unit": "pieces"
         }
       ],
       "suitability": [],
-      "shelfLife": "months",
-      "typicalPricePence": 1500,
-      "tags": ["food", "morale"]
+      "shelfLife": "years",
+      "typicalPricePence": 250,
+      "tags": ["morale"],
+      "offCategories": ["en:teas"]
     },
     {
-      "id": "items-base:nappies-size-1",
-      "name": "Nappies, size 1 (newborn)",
-      "category": "baby",
-      "unit": "pack",
-      "unitSize": "pack of 50",
-      "gives": [
+      "id": "items-base:coffee",
+      "name": "Coffee",
+      "category": "comfort",
+      "heading": "Hot drinks",
+      "measure": "mass",
+      "unit": "jar",
+      "countsAs": "Counts towards nothing (morale)",
+      "gives": [],
+      "sizes": [
         {
-          "resource": "nappies",
-          "amount": 50
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "amount": 100,
+          "unit": "g"
         }
       ],
-      "suitability": ["frost", "heat"],
-      "shelfLife": "none",
-      "ageBand": {
-        "fromMonths": 0,
-        "toMonths": 3
-      },
-      "typicalPricePence": 600,
-      "tags": ["baby", "nappies"]
+      "suitability": ["frost", "heat", "damp"],
+      "shelfLife": "years",
+      "typicalPricePence": 400,
+      "tags": ["morale"],
+      "offCategories": ["en:coffees"]
     },
     {
-      "id": "items-base:nappies-size-2",
-      "name": "Nappies, size 2",
-      "category": "baby",
-      "unit": "pack",
-      "unitSize": "pack of 50",
+      "id": "items-base:hot-chocolate",
+      "name": "Hot chocolate",
+      "category": "comfort",
+      "heading": "Hot drinks",
+      "measure": "mass",
+      "unit": "tub",
+      "countsAs": "Food, the label's kcal, else about 400 kcal per 100 g",
       "gives": [
         {
-          "resource": "nappies",
-          "amount": 50
+          "resource": "foodKcal",
+          "amount": 400,
+          "per": 100
         }
       ],
-      "suitability": ["frost", "heat"],
-      "shelfLife": "none",
-      "ageBand": {
-        "fromMonths": 3,
-        "toMonths": 6
-      },
-      "typicalPricePence": 600,
-      "tags": ["baby", "nappies"]
+      "sizes": [
+        {
+          "amount": 400,
+          "unit": "g"
+        }
+      ],
+      "suitability": ["frost", "heat", "damp"],
+      "shelfLife": "year",
+      "typicalPricePence": 300,
+      "tags": ["food", "morale"],
+      "offCategories": ["en:hot-chocolate-powders"],
+      "source": "assumption"
     },
     {
-      "id": "items-base:nappies-size-3",
-      "name": "Nappies, size 3",
-      "category": "baby",
-      "unit": "pack",
-      "unitSize": "pack of 50",
-      "gives": [
+      "id": "items-base:other-comfort",
+      "name": "Other comforts",
+      "category": "comfort",
+      "heading": "Other",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Counts towards nothing",
+      "gives": [],
+      "sizes": [
         {
-          "resource": "nappies",
-          "amount": 50
+          "amount": 1,
+          "unit": "pieces"
         }
       ],
-      "suitability": ["frost", "heat"],
+      "suitability": ["frost", "heat", "damp"],
       "shelfLife": "none",
-      "ageBand": {
-        "fromMonths": 5,
-        "toMonths": 11
-      },
-      "typicalPricePence": 600,
-      "tags": ["baby", "nappies"]
-    },
-    {
-      "id": "items-base:nappies-size-4",
-      "name": "Nappies, size 4",
-      "category": "baby",
-      "unit": "pack",
-      "unitSize": "pack of 50",
-      "gives": [
-        {
-          "resource": "nappies",
-          "amount": 50
-        }
-      ],
-      "suitability": ["frost", "heat"],
-      "shelfLife": "none",
-      "ageBand": {
-        "fromMonths": 10,
-        "toMonths": 24
-      },
-      "typicalPricePence": 600,
-      "tags": ["baby", "nappies"]
-    },
-    {
-      "id": "items-base:nappies-size-5",
-      "name": "Nappies, size 5",
-      "category": "baby",
-      "unit": "pack",
-      "unitSize": "pack of 50",
-      "gives": [
-        {
-          "resource": "nappies",
-          "amount": 50
-        }
-      ],
-      "suitability": ["frost", "heat"],
-      "shelfLife": "none",
-      "ageBand": {
-        "fromMonths": 22,
-        "toMonths": 36
-      },
-      "typicalPricePence": 650,
-      "tags": ["baby", "nappies"]
+      "tags": ["morale"]
     },
     {
       "id": "items-base:formula-powder",
-      "name": "Infant formula powder (800 g)",
+      "name": "Infant formula powder",
       "category": "baby",
+      "heading": "Feeding",
+      "measure": "mass",
       "unit": "tin",
-      "unitSize": "800 g",
+      "countsAs": "Infant formula, 1 g per g (for babies under 12 months)",
       "gives": [
         {
           "resource": "formulaG",
-          "amount": 800
+          "amount": 1,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 800,
+          "unit": "g"
+        },
+        {
+          "amount": 400,
+          "unit": "g"
         }
       ],
       "suitability": [],
@@ -1461,18 +4041,34 @@
         "toMonths": 12
       },
       "typicalPricePence": 1500,
-      "tags": ["baby", "formula", "needs-clean-water"]
+      "tags": ["baby", "formula", "needs-clean-water"],
+      "offCategories": ["en:infant-formulas"],
+      "source": "assumption"
     },
     {
-      "id": "items-base:formula-ready-to-feed",
-      "name": "Ready-to-feed infant formula (6 x 200 ml)",
+      "id": "items-base:formula-ready",
+      "name": "Ready-to-feed infant formula",
       "category": "baby",
+      "heading": "Feeding",
+      "measure": "volume",
       "unit": "pack",
-      "unitSize": "6 x 200 ml",
+      "countsAs": "Infant formula, 13 g of powder per 100 ml (under 12 months)",
       "gives": [
         {
           "resource": "formulaG",
-          "amount": 156
+          "amount": 13,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "count": 6,
+          "amount": 200,
+          "unit": "ml"
+        },
+        {
+          "amount": 1,
+          "unit": "L"
         }
       ],
       "suitability": [],
@@ -1482,18 +4078,33 @@
         "toMonths": 12
       },
       "typicalPricePence": 900,
-      "tags": ["baby", "formula", "no-prep"]
+      "tags": ["baby", "formula", "no-prep"],
+      "source": "assumption"
     },
     {
-      "id": "items-base:baby-food-pouches",
-      "name": "Baby food pouches (12)",
+      "id": "items-base:baby-food",
+      "name": "Baby food pouches",
       "category": "baby",
+      "heading": "Feeding",
+      "measure": "mass",
       "unit": "pack",
-      "unitSize": "12 pouches",
+      "countsAs": "Food, the label's kcal, else about 60 kcal per 100 g (6 to 24 months)",
       "gives": [
         {
           "resource": "foodKcal",
-          "amount": 720
+          "amount": 60,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "count": 12,
+          "amount": 120,
+          "unit": "g"
         }
       ],
       "suitability": [],
@@ -1502,336 +4113,662 @@
         "fromMonths": 6,
         "toMonths": 24
       },
-      "typicalPricePence": 1200,
-      "tags": ["baby", "food", "no-cook"]
+      "typicalPricePence": 100,
+      "tags": ["baby", "food", "no-cook"],
+      "offCategories": ["en:baby-foods"],
+      "source": "assumption"
     },
     {
-      "id": "items-base:pet-food-dry-2kg",
-      "name": "Dry pet food (2 kg)",
+      "id": "items-base:nappies-size-1",
+      "name": "Nappies, size 1 (newborn)",
+      "category": "baby",
+      "heading": "Nappies",
+      "measure": "count",
+      "unit": "pack",
+      "countsAs": "Nappies, 1 each (0 to 3 months)",
+      "gives": [
+        {
+          "resource": "nappies",
+          "amount": 1,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 50,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": ["frost", "heat"],
+      "shelfLife": "none",
+      "ageBand": {
+        "fromMonths": 0,
+        "toMonths": 3
+      },
+      "typicalPricePence": 600,
+      "tags": ["baby", "nappies"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:nappies-size-2",
+      "name": "Nappies, size 2",
+      "category": "baby",
+      "heading": "Nappies",
+      "measure": "count",
+      "unit": "pack",
+      "countsAs": "Nappies, 1 each (3 to 6 months)",
+      "gives": [
+        {
+          "resource": "nappies",
+          "amount": 1,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 50,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": ["frost", "heat"],
+      "shelfLife": "none",
+      "ageBand": {
+        "fromMonths": 3,
+        "toMonths": 6
+      },
+      "typicalPricePence": 600,
+      "tags": ["baby", "nappies"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:nappies-size-3",
+      "name": "Nappies, size 3",
+      "category": "baby",
+      "heading": "Nappies",
+      "measure": "count",
+      "unit": "pack",
+      "countsAs": "Nappies, 1 each (5 to 11 months)",
+      "gives": [
+        {
+          "resource": "nappies",
+          "amount": 1,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 50,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": ["frost", "heat"],
+      "shelfLife": "none",
+      "ageBand": {
+        "fromMonths": 5,
+        "toMonths": 11
+      },
+      "typicalPricePence": 600,
+      "tags": ["baby", "nappies"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:nappies-size-4",
+      "name": "Nappies, size 4",
+      "category": "baby",
+      "heading": "Nappies",
+      "measure": "count",
+      "unit": "pack",
+      "countsAs": "Nappies, 1 each (10 to 24 months)",
+      "gives": [
+        {
+          "resource": "nappies",
+          "amount": 1,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 50,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": ["frost", "heat"],
+      "shelfLife": "none",
+      "ageBand": {
+        "fromMonths": 10,
+        "toMonths": 24
+      },
+      "typicalPricePence": 600,
+      "tags": ["baby", "nappies"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:nappies-size-5",
+      "name": "Nappies, size 5",
+      "category": "baby",
+      "heading": "Nappies",
+      "measure": "count",
+      "unit": "pack",
+      "countsAs": "Nappies, 1 each (22 to 36 months)",
+      "gives": [
+        {
+          "resource": "nappies",
+          "amount": 1,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 50,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": ["frost", "heat"],
+      "shelfLife": "none",
+      "ageBand": {
+        "fromMonths": 22,
+        "toMonths": 36
+      },
+      "typicalPricePence": 650,
+      "tags": ["baby", "nappies"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:baby-wipes",
+      "name": "Baby wipes",
+      "category": "baby",
+      "heading": "Changing",
+      "measure": "count",
+      "unit": "pack",
+      "countsAs": "1 wipe = 1 hand clean (hygiene)",
+      "gives": [
+        {
+          "resource": "hygieneUses",
+          "amount": 1,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 80,
+          "unit": "pieces"
+        },
+        {
+          "count": 4,
+          "amount": 80,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": ["frost", "heat"],
+      "shelfLife": "years",
+      "typicalPricePence": 150,
+      "tags": ["baby", "hygiene"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:other-baby",
+      "name": "Other baby kit",
+      "category": "baby",
+      "heading": "Other",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Counts towards nothing",
+      "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": ["frost", "heat"],
+      "shelfLife": "none",
+      "tags": ["baby"]
+    },
+    {
+      "id": "items-base:dry-dog-food",
+      "name": "Dry dog food",
       "category": "pets",
+      "heading": "Dog",
+      "measure": "mass",
       "unit": "bag",
-      "unitSize": "2 kg",
+      "countsAs": "Pet food, about 350 kcal per 100 g",
       "gives": [
         {
           "resource": "petFoodKcal",
-          "amount": 7000
+          "amount": 350,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 2,
+          "unit": "kg"
+        },
+        {
+          "amount": 12,
+          "unit": "kg"
         }
       ],
       "suitability": [],
       "shelfLife": "months",
       "typicalPricePence": 800,
-      "tags": ["pet", "food"]
+      "tags": ["pet", "food"],
+      "offCategories": ["en:dog-foods"],
+      "source": "assumption"
     },
     {
-      "id": "items-base:pet-food-dry-12kg",
-      "name": "Dry pet food (12 kg)",
+      "id": "items-base:wet-dog-food",
+      "name": "Wet dog food",
       "category": "pets",
-      "unit": "bag",
-      "unitSize": "12 kg",
+      "heading": "Dog",
+      "measure": "mass",
+      "unit": "tin",
+      "countsAs": "Pet food, about 100 kcal per 100 g",
       "gives": [
         {
           "resource": "petFoodKcal",
-          "amount": 42000
+          "amount": 100,
+          "per": 100
         }
       ],
-      "suitability": [],
-      "shelfLife": "months",
-      "typicalPricePence": 3500,
-      "tags": ["pet", "food"]
-    },
-    {
-      "id": "items-base:pet-food-tins-12",
-      "name": "Wet pet food tins (12 x 400 g)",
-      "category": "pets",
-      "unit": "case",
-      "unitSize": "12 x 400 g",
-      "gives": [
+      "sizes": [
         {
-          "resource": "petFoodKcal",
-          "amount": 4800
+          "count": 12,
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "amount": 400,
+          "unit": "g"
         }
       ],
       "suitability": ["frost"],
       "shelfLife": "years",
       "typicalPricePence": 1800,
-      "tags": ["pet", "food", "no-cook"]
+      "tags": ["pet", "food", "no-cook"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:dry-cat-food",
+      "name": "Dry cat food",
+      "category": "pets",
+      "heading": "Cat",
+      "measure": "mass",
+      "unit": "bag",
+      "countsAs": "Pet food, about 380 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "petFoodKcal",
+          "amount": 380,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 2,
+          "unit": "kg"
+        },
+        {
+          "amount": 800,
+          "unit": "g"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "months",
+      "typicalPricePence": 900,
+      "tags": ["pet", "food"],
+      "offCategories": ["en:cat-foods"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:wet-cat-food",
+      "name": "Wet cat food",
+      "category": "pets",
+      "heading": "Cat",
+      "measure": "mass",
+      "unit": "tin",
+      "countsAs": "Pet food, about 85 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "petFoodKcal",
+          "amount": 85,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "count": 12,
+          "amount": 85,
+          "unit": "g"
+        }
+      ],
+      "suitability": ["frost"],
+      "shelfLife": "years",
+      "typicalPricePence": 600,
+      "tags": ["pet", "food", "no-cook"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:other-pet-food",
+      "name": "Other pet food",
+      "category": "pets",
+      "heading": "Other pets",
+      "measure": "mass",
+      "unit": "bag",
+      "countsAs": "Pet food, about 300 kcal per 100 g",
+      "gives": [
+        {
+          "resource": "petFoodKcal",
+          "amount": 300,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "kg"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "months",
+      "typicalPricePence": 500,
+      "tags": ["pet", "food"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:cat-litter",
+      "name": "Cat litter",
+      "category": "pets",
+      "heading": "Other pets",
+      "measure": "volume",
+      "unit": "bag",
+      "countsAs": "Counts towards nothing",
+      "gives": [],
+      "sizes": [
+        {
+          "amount": 10,
+          "unit": "L"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "none",
+      "typicalPricePence": 500,
+      "tags": ["pet", "food"]
     },
     {
       "id": "items-base:toilet-bags",
-      "name": "Toilet waste bags with absorbent (30)",
+      "name": "Toilet waste bags with absorbent",
       "category": "sanitation",
+      "heading": "Toilet",
+      "measure": "count",
       "unit": "pack",
-      "unitSize": "30 bags",
+      "countsAs": "Toilet uses, 1 a bag",
       "gives": [
         {
           "resource": "sanitationUses",
-          "amount": 30
+          "amount": 1,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 30,
+          "unit": "pieces"
+        },
+        {
+          "amount": 100,
+          "unit": "pieces"
         }
       ],
       "suitability": ["frost", "heat", "damp"],
       "shelfLife": "years",
       "typicalPricePence": 1200,
-      "tags": ["sanitation"]
-    },
-    {
-      "id": "items-base:toilet-bags-100",
-      "name": "Toilet waste bags with absorbent (100)",
-      "category": "sanitation",
-      "unit": "pack",
-      "unitSize": "100 bags",
-      "gives": [
-        {
-          "resource": "sanitationUses",
-          "amount": 100
-        }
-      ],
-      "suitability": [],
-      "shelfLife": "years",
-      "typicalPricePence": 3000,
       "tags": ["sanitation"],
       "source": "assumption"
     },
     {
-      "id": "items-base:hand-sanitiser",
-      "name": "Hand sanitiser (500 ml)",
+      "id": "items-base:bucket-toilet",
+      "name": "Bucket toilet and bags",
       "category": "sanitation",
+      "heading": "Toilet",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Toilet uses, 30 a kit",
+      "gives": [
+        {
+          "resource": "sanitationUses",
+          "amount": 30,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "none",
+      "typicalPricePence": 2500,
+      "tags": ["sanitation"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:toilet-roll",
+      "name": "Toilet roll",
+      "category": "sanitation",
+      "heading": "Toilet",
+      "measure": "count",
+      "unit": "pack",
+      "countsAs": "Counts towards nothing",
+      "gives": [],
+      "sizes": [
+        {
+          "amount": 9,
+          "unit": "pieces"
+        },
+        {
+          "amount": 24,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "none",
+      "typicalPricePence": 400,
+      "tags": ["sanitation"]
+    },
+    {
+      "id": "items-base:hand-sanitiser",
+      "name": "Hand sanitiser",
+      "category": "sanitation",
+      "heading": "Hygiene",
+      "measure": "volume",
       "unit": "bottle",
-      "unitSize": "500 ml",
+      "countsAs": "1 hand clean per 5 ml (hygiene)",
       "gives": [
         {
           "resource": "hygieneUses",
-          "amount": 100
+          "amount": 20,
+          "per": 100
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 500,
+          "unit": "ml"
+        },
+        {
+          "amount": 50,
+          "unit": "ml"
+        },
+        {
+          "amount": 1,
+          "unit": "L"
         }
       ],
       "suitability": ["frost"],
       "shelfLife": "years",
       "typicalPricePence": 400,
-      "tags": ["hygiene"]
+      "tags": ["hygiene"],
+      "source": "assumption"
     },
     {
       "id": "items-base:wet-wipes",
-      "name": "Wet wipes (3 x 80)",
+      "name": "Wet wipes",
       "category": "sanitation",
+      "heading": "Hygiene",
+      "measure": "count",
       "unit": "pack",
-      "unitSize": "240 wipes",
+      "countsAs": "1 wipe = 1 hand clean (hygiene)",
       "gives": [
         {
           "resource": "hygieneUses",
-          "amount": 60
+          "amount": 1,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 80,
+          "unit": "pieces"
+        },
+        {
+          "count": 3,
+          "amount": 80,
+          "unit": "pieces"
         }
       ],
       "suitability": ["frost", "heat"],
       "shelfLife": "years",
-      "typicalPricePence": 500,
+      "typicalPricePence": 150,
+      "tags": ["hygiene"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:hygiene-kit",
+      "name": "Soap, sanitiser and wipes kit",
+      "category": "sanitation",
+      "heading": "Hygiene",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Hygiene, 30 hand cleans a kit",
+      "gives": [
+        {
+          "resource": "hygieneUses",
+          "amount": 30,
+          "per": 1
+        }
+      ],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
+      "typicalPricePence": 1500,
+      "tags": ["hygiene"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:soap",
+      "name": "Soap",
+      "category": "sanitation",
+      "heading": "Hygiene",
+      "measure": "count",
+      "unit": "pack",
+      "countsAs": "Counts towards nothing (it needs water)",
+      "gives": [],
+      "sizes": [
+        {
+          "amount": 4,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "none",
+      "typicalPricePence": 200,
       "tags": ["hygiene"]
     },
     {
-      "id": "items-base:uht-milk",
-      "name": "UHT milk (1 L)",
-      "category": "food",
-      "unit": "carton",
-      "unitSize": "1 L",
-      "gives": [
-        {
-          "resource": "foodKcal",
-          "amount": 640
-        }
-      ],
-      "suitability": [],
-      "shelfLife": "months",
-      "typicalPricePence": 110,
-      "tags": ["food", "no-cook"]
-    },
-    {
-      "id": "items-base:lpg-bottle-13kg",
-      "name": "LPG bottle (13 kg propane)",
-      "category": "fuel",
-      "unit": "bottle",
-      "unitSize": "13 kg",
-      "gives": [
-        {
-          "resource": "lpgKg",
-          "amount": 13
-        }
-      ],
-      "suitability": ["frost", "damp"],
-      "shelfLife": "years",
-      "typicalPricePence": 3500,
-      "tags": ["fuel", "lpg"]
-    },
-    {
-      "id": "items-base:torch-led-200lm",
-      "name": "LED torch (200 lumens, AA)",
-      "category": "light",
-      "unit": "torch",
-      "gives": [
-        {
-          "resource": "lumenHours",
-          "amount": 2000
-        }
-      ],
-      "suitability": ["frost"],
-      "shelfLife": "years",
-      "typicalPricePence": 1200,
-      "tags": ["light", "uses-aa"]
-    },
-    {
-      "id": "items-base:lantern-led-300lm",
-      "name": "LED lantern (300 lumens, D cells)",
-      "category": "light",
-      "unit": "lantern",
-      "gives": [
-        {
-          "resource": "lumenHours",
-          "amount": 6000
-        }
-      ],
-      "suitability": ["frost"],
-      "shelfLife": "years",
-      "typicalPricePence": 1800,
-      "tags": ["light", "uses-d"]
-    },
-    {
-      "id": "items-base:window-candles",
-      "name": "Battery LED window candles (4)",
-      "category": "light",
-      "unit": "set",
-      "gives": [
-        {
-          "resource": "lumenHours",
-          "amount": 2000
-        }
-      ],
-      "suitability": ["frost"],
-      "shelfLife": "years",
-      "typicalPricePence": 1000,
-      "tags": ["light", "no-fire", "uses-aaa"]
-    },
-    {
-      "id": "items-base:aa-cells-8",
-      "name": "AA cells (8)",
-      "category": "power",
-      "unit": "pack",
-      "gives": [
-        {
-          "resource": "batteryWh",
-          "amount": 26
-        }
-      ],
-      "suitability": [],
-      "shelfLife": "years",
-      "typicalPricePence": 500,
-      "tags": ["power", "cells", "no-suggest"]
-    },
-    {
-      "id": "items-base:aaa-cells-8",
-      "name": "AAA cells (8)",
-      "category": "power",
-      "unit": "pack",
-      "gives": [
-        {
-          "resource": "batteryWh",
-          "amount": 12
-        }
-      ],
-      "suitability": [],
-      "shelfLife": "years",
-      "typicalPricePence": 500,
-      "tags": ["power", "cells", "no-suggest"]
-    },
-    {
-      "id": "items-base:d-cells-4",
-      "name": "D cells (4)",
-      "category": "power",
-      "unit": "pack",
-      "gives": [
-        {
-          "resource": "batteryWh",
-          "amount": 60
-        }
-      ],
-      "suitability": [],
-      "shelfLife": "years",
-      "typicalPricePence": 800,
-      "tags": ["power", "cells", "no-suggest"]
-    },
-    {
-      "id": "items-base:power-bank-20000mah",
-      "name": "Phone power bank (20,000 mAh)",
-      "category": "power",
-      "unit": "bank",
-      "gives": [
-        {
-          "resource": "batteryWh",
-          "amount": 74
-        }
-      ],
-      "suitability": [],
-      "shelfLife": "years",
-      "typicalPricePence": 2500,
-      "tags": ["power", "phone"]
-    },
-    {
-      "id": "items-base:water-container-5l",
-      "name": "Water container (5 L)",
-      "category": "water",
-      "unit": "container",
-      "unitSize": "5 L",
-      "gives": [
-        {
-          "resource": "waterL",
-          "amount": 5
-        }
-      ],
-      "suitability": ["frost"],
-      "shelfLife": "months",
-      "typicalPricePence": 600,
-      "tags": ["water", "refillable"]
-    },
-    {
-      "id": "items-base:water-container-25l",
-      "name": "Water container (25 L)",
-      "category": "water",
-      "unit": "container",
-      "unitSize": "25 L",
-      "gives": [
-        {
-          "resource": "waterL",
-          "amount": 25
-        }
-      ],
-      "suitability": ["frost"],
-      "shelfLife": "months",
-      "typicalPricePence": 1800,
-      "tags": ["water", "refillable"]
-    },
-    {
-      "id": "items-base:gravity-filter",
-      "name": "Gravity water filter (10 L)",
-      "category": "water",
-      "unit": "filter",
+      "id": "items-base:toothpaste",
+      "name": "Toothpaste and toothbrushes",
+      "category": "sanitation",
+      "heading": "Hygiene",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Counts towards nothing",
       "gives": [],
-      "suitability": ["frost", "heat", "damp"],
-      "shelfLife": "none",
-      "typicalPricePence": 4000,
-      "tags": ["water", "treatment"]
-    },
-    {
-      "id": "items-base:wind-up-radio-fm",
-      "name": "Wind-up FM radio with torch",
-      "category": "comms",
-      "unit": "radio",
-      "gives": [
+      "sizes": [
         {
-          "resource": "lumenHours",
-          "amount": 300
+          "amount": 1,
+          "unit": "pieces"
         }
       ],
-      "suitability": ["frost"],
+      "suitability": [],
+      "shelfLife": "years",
+      "typicalPricePence": 200,
+      "tags": ["hygiene"]
+    },
+    {
+      "id": "items-base:period-products",
+      "name": "Period products",
+      "category": "sanitation",
+      "heading": "Hygiene",
+      "measure": "count",
+      "unit": "pack",
+      "countsAs": "Counts towards nothing",
+      "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": [],
       "shelfLife": "none",
-      "typicalPricePence": 2500,
-      "tags": ["radio-rx", "light", "manual"],
-      "assetTypeId": "assets-base:wind-up-radio"
+      "typicalPricePence": 300,
+      "tags": ["hygiene"]
+    },
+    {
+      "id": "items-base:bin-bags",
+      "name": "Bin bags",
+      "category": "sanitation",
+      "heading": "Cleaning",
+      "measure": "count",
+      "unit": "pack",
+      "countsAs": "Counts towards nothing",
+      "gives": [],
+      "sizes": [
+        {
+          "amount": 20,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "none",
+      "typicalPricePence": 200,
+      "tags": ["sanitation"]
+    },
+    {
+      "id": "items-base:other-sanitation",
+      "name": "Other hygiene and cleaning",
+      "category": "sanitation",
+      "heading": "Cleaning",
+      "measure": "count",
+      "unit": "each",
+      "countsAs": "Counts towards nothing",
+      "gives": [],
+      "sizes": [
+        {
+          "amount": 1,
+          "unit": "pieces"
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "none",
+      "tags": ["sanitation"]
     }
   ]
 }

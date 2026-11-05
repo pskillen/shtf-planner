@@ -5,8 +5,10 @@ import {
   InsulationSchema,
   IsoDateSchema,
   LocalRiskSchema,
+  MEASURES,
   RegionSchema,
   RiskTagSchema,
+  SizeSchema,
   type Region,
 } from './primitives';
 
@@ -125,44 +127,63 @@ const packBase = {
 
 // ---- items ----
 
-export const ItemTypeSchema = z.strictObject({
+/**
+ * What one item gives of a resource: `amount` for every `per` base units (g, ml or pieces) of a
+ * product's size. 0 is allowed for food kcal that only a label can say (a soft drink's water).
+ */
+export const GiveSchema = z.strictObject({
+  resource: ResourceIdSchema,
+  amount: z.number().min(0),
+  per: z.number().positive(),
+});
+export type Give = z.infer<typeof GiveSchema>;
+
+/**
+ * An item: the generic thing ("Baked beans"), from the pack only. It says what it counts towards
+ * per unit of size; the household's products (a name, a size, barcodes) count through it.
+ */
+export const ItemSchema = z.strictObject({
   id: NamespacedId,
   name: Text,
   category: CategorySchema,
-  /** What one counted piece is: "tin", "L", "kg", "pack". */
+  /** The group inside the category ("Tins"); headings and items are listed in aisle order. */
+  heading: Text.optional(),
+  /** What its sizes are measured in: mass (g, kg), volume (ml, L) or a count of pieces. */
+  measure: z.enum(MEASURES),
+  /** The word for one pack: "tin", "jar", "bag", "bottle", "pack", "each". */
   unit: Text,
-  unitSize: z.string().optional(),
-  gives: z.array(
-    z.strictObject({
-      resource: ResourceIdSchema,
-      amount: z.number().positive(),
-    }),
-  ),
+  /** The one line the app shows for it: what it counts towards. */
+  countsAs: Text,
+  gives: z.array(GiveSchema),
+  /** Quick sizes, the usual one first; each in a unit of `measure`. */
+  sizes: z.array(SizeSchema),
   /** Conditions it tolerates. `indoor-stable` is always fine. */
   suitability: z.array(ConditionSchema),
   shelfLife: z.enum(['none', 'years', 'year', 'months', 'weeks']),
   ageBand: AgeBand.optional(),
+  /** A rough UK price for `sizes[0]`. */
   typicalPricePence: z.number().int().min(0).optional(),
   tags: z.array(z.string()),
-  barcodes: z.array(z.string()).optional(),
   /**
    * Set on a buy-only entry for a piece of equipment: the asset type it is. Equipment is kept
    * under Home, Equipment, never as stock, so the entry is for suggestions ("buy a stove") and
-   * its add action opens the equipment form for this type. Stock of such a type counts nothing.
+   * its add action opens the equipment form for this type. Stock of such an item counts nothing.
    */
   assetTypeId: NamespacedId.optional(),
+  /** Open Food Facts category tags that mean this item (each tag on one item only). */
+  offCategories: z.array(z.string().regex(/^[a-z]{2}:[a-z0-9-]+$/)).optional(),
   /**
-   * Where a number on this type comes from (its `gives`): an https URL listed in the pack's
-   * `sources`, or `"assumption"`. Optional on older types; new ones carry it.
+   * Where a number on this item comes from (its `gives`): an https URL listed in the pack's
+   * `sources`, or `"assumption"`.
    */
   source: z.union([Url, z.literal('assumption')]).optional(),
 });
-export type ItemType = z.infer<typeof ItemTypeSchema>;
+export type Item = z.infer<typeof ItemSchema>;
 
 export const ItemsPackSchema = z.strictObject({
   ...packBase,
   kind: z.literal('items'),
-  items: z.array(ItemTypeSchema),
+  items: z.array(ItemSchema),
 });
 
 // ---- assets ----
@@ -435,7 +456,7 @@ export type RegionsPack = z.infer<typeof RegionsPackSchema>;
 export interface Packs {
   all: readonly Pack[];
   byId: Readonly<Record<string, Pack>>;
-  items: Readonly<Record<string, ItemType>>;
+  items: Readonly<Record<string, Item>>;
   assets: Readonly<Record<string, AssetType>>;
   rules: Readonly<Record<string, Rule>>;
   plans: Readonly<Record<string, PlanDef>>;
