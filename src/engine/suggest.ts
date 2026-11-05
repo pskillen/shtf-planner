@@ -69,17 +69,25 @@ export function closeStore(
   const sensible = candidates.filter((c) => c.total <= shortfall * MAX_OVERSHOOT + EPS);
   const pool = sensible.length > 0 ? sensible : candidates;
   const perUnitPrice = (c: Candidate) => (c.type.typicalPricePence ?? 0) / c.per;
+  // Those within `NEAR_PRICE` of the best price per unit are on a par: the one that costs least
+  // in total leads (so a trade-size sack never leads a small shortfall), then the one that
+  // overshoots least. Dearer per unit than that come after, cheapest per unit first. The tier is
+  // measured from the single best price, so the order is the same however the packs are listed.
+  const priced = pool.filter((c) => c.price !== undefined).map(perUnitPrice);
+  const best = priced.length > 0 ? Math.min(...priced) : 0;
+  const onPar = (c: Candidate) =>
+    c.price !== undefined && perUnitPrice(c) <= best * (1 + NEAR_PRICE) + EPS;
   pool.sort((a, b) => {
     const pa = a.price !== undefined;
     const pb = b.price !== undefined;
     if (pa !== pb) return pa ? -1 : 1;
     if (!pa) return b.per - a.per;
-    // Prices per unit within about 20% are a tie, and the bigger pack (fewer units to carry and
-    // count) wins it: not "52 x Porridge oats (1 kg)" for a few pence a kcal.
-    const [pa1, pb1] = [perUnitPrice(a), perUnitPrice(b)];
-    if (Math.abs(pa1 - pb1) > NEAR_PRICE * Math.min(pa1, pb1) || pa1 === 0)
-      return pa1 - pb1 || a.price! - b.price! || compareText(a.type.id, b.type.id);
-    return a.units - b.units || a.price! - b.price! || compareText(a.type.id, b.type.id);
+    const [ta, tb] = [onPar(a), onPar(b)];
+    if (ta !== tb) return ta ? -1 : 1;
+    if (ta) return a.price! - b.price! || a.total - b.total || compareText(a.type.id, b.type.id);
+    return (
+      perUnitPrice(a) - perUnitPrice(b) || a.price! - b.price! || compareText(a.type.id, b.type.id)
+    );
   });
   // One size of a product: "Porridge oats (10 kg)" does not also come as (3 kg) and (1 kg).
   const seen = new Set<string>();

@@ -44,9 +44,9 @@ describe('gaps', () => {
     const water = find(gaps(doc, packs, NOW, 3), 'water:waterL')!;
     expect(water.shortfall).toBe(9);
     const [first] = water.suggestions;
-    expect(first).toMatchObject({ itemTypeId: 'items-base:bottled-water-6x2l', qty: 1 });
-    expect(first!.label).toBe('1 × Bottled water (6 × 2 L)');
-    expect(first!.pricePence).toBe(300);
+    expect(first).toMatchObject({ itemTypeId: 'items-base:bottled-water-5l', qty: 2 });
+    expect(first!.label).toBe('2 × Bottled water (5 L bottle)');
+    expect(first!.pricePence).toBe(280);
     for (const s of water.suggestions) {
       // every suggestion on its own closes the shortfall, in whole units
       expect(Number.isInteger(s.qty)).toBe(true);
@@ -105,6 +105,28 @@ describe('gaps', () => {
       expect(new Set(families).size, `${days} days: ${food.suggestions.map((x) => x.label)}`).toBe(
         families.length,
       );
+    }
+  });
+
+  it('does not lead a small shortfall with an oversized, dearer trade pack', () => {
+    const doc = empty(); // one adult
+    const food = find(gaps(doc, packs, NOW, 7), 'food:foodKcal')!;
+    const first = food.suggestions[0]!;
+    expect(first.itemTypeId).not.toBe('items-base:porridge-oats-10kg');
+    // 14,000 kcal: two 3 kg packs (900 p), not one 10 kg sack (1300 p, nearly three times the need)
+    expect(first.itemTypeId).toBe('items-base:porridge-oats');
+    expect(first.pricePence!).toBeLessThanOrEqual(900);
+  });
+
+  it('ranks the same however the packs are listed', () => {
+    const shuffled = {
+      ...packs,
+      items: Object.fromEntries(Object.entries(packs.items).reverse()),
+    };
+    for (const days of [3, 7, 28]) {
+      const a = find(gaps(biggarDocument(), packs, NOW, days), 'food:foodKcal')!;
+      const b = find(gaps(biggarDocument(), shuffled, NOW, days), 'food:foodKcal')!;
+      expect(b.suggestions.map((s) => s.label)).toEqual(a.suggestions.map((s) => s.label));
     }
   });
 
