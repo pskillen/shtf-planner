@@ -122,6 +122,26 @@ describe('the Stores minimum sheet', () => {
   });
 });
 
+describe('stock in a missing place', () => {
+  it('shows Unknown place without crashing', () => {
+    const doc = biggarDocument();
+    doc.stock['stock-lost'] = {
+      id: 'stock-lost',
+      productId: 'prod-can',
+      qty: 1,
+      locationId: 'loc-deleted',
+      added: '2026-09-01',
+      source: 'manual',
+    };
+    const s = liveStore(doc);
+    render(s.wrap(<StoresScreen />));
+    expect(screen.getByRole('heading', { name: 'Unknown place' })).toBeTruthy();
+    expect(
+      screen.getByRole('button', { name: 'Edit 1 Water can 10 L in Unknown place' }),
+    ).toBeTruthy();
+  });
+});
+
 describe('the Stores search', () => {
   it('finds stock whose type is not in the packs whatever the case', () => {
     const doc = biggarDocument();

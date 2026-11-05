@@ -201,7 +201,8 @@ export function StoresScreen() {
   const renderBatch = (stock: Stock, item: Item | undefined) => {
     const product = doc.products[stock.productId];
     const where = locationName(doc, stock.locationId);
-    const warning = item ? suitabilityWarning(item, doc.locations[stock.locationId]!) : undefined;
+    const loc = doc.locations[stock.locationId];
+    const warning = item && loc ? suitabilityWarning(item, loc) : undefined;
     const first =
       product?.itemId && useFirst.get(product.itemId) === stock.id ? (
         <strong className="use-first">Use first</strong>
