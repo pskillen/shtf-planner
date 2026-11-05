@@ -11,7 +11,7 @@ prepped; this is the tool for actually prepping.
 
 - Works offline, installable as a PWA. Your data is a file you own (YAML/JSON), synced via Google Drive.
 - Guidance comes from real sources (UK Gov, FEMA/Ready.gov, …), imported and kept current.
-- Quick to maintain: fast entry, periodic review modes, and a preparedness score that makes it a game.
+- Quick to maintain: fast entry (barcode scanning and a stocktake mode), periodic review modes, and a preparedness score that makes it a game.
 
 ## Run
 

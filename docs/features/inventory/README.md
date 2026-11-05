@@ -7,14 +7,15 @@ The Stores tab: what the household has, by where it is kept, and the quick way t
 
 ## Map
 
-| Piece           | Where                                                | What                                                                                                |
-| --------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| Stores tab      | `/app/stores`, `StoresScreen.tsx`                    | Stock grouped by place (collapsible), search across places, a floating + for Quick add.             |
-| Quick add       | `screens/stores/QuickAdd.tsx`                        | Search, pick, Add; then Same again or Next item. Also opened from the Gaps tab.                     |
-| Edit and floors | `screens/stores/ItemSheet.tsx`, `FloorSheet.tsx`     | Quantity stepper, place, best-before, delete with undo; the floor of each type in a rotating place. |
-| Month field     | `screens/stores/MonthField.tsx`                      | A month box and one-tap chips for the best-before.                                                  |
-| Pure helpers    | `screens/stores/stock.ts`, `customType.ts`           | Suitability warning, month parsing, search, adding stock, custom item types.                        |
-| Custom types    | `customTypes` in the document, `src/packs/custom.ts` | `withCustomTypes` merges them into the packs as a pseudo-pack `custom`; `usePacks()` in screens.    |
+| Piece           | Where                                                                    | What                                                                                                |
+| --------------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| Stores tab      | `/app/stores`, `StoresScreen.tsx`                                        | Stock grouped by place (collapsible), search across places, a floating + for Quick add.             |
+| Quick add       | `screens/stores/QuickAdd.tsx`                                            | Search, pick, Add; then Same again or Next item. Also opened from the Gaps tab.                     |
+| Edit and floors | `screens/stores/ItemSheet.tsx`, `FloorSheet.tsx`                         | Quantity stepper, place, best-before, delete with undo; the floor of each type in a rotating place. |
+| Month field     | `screens/stores/MonthField.tsx`                                          | A month box and one-tap chips for the best-before.                                                  |
+| Scanning        | `screens/stores/ScanSheet.tsx`, `StocktakeScreen.tsx`, `ScansToSort.tsx` | Scan a barcode in Quick add, stocktake mode, scans to sort. See [Scanning](../scanning/README.md).  |
+| Pure helpers    | `screens/stores/stock.ts`, `customType.ts`                               | Suitability warning, month parsing, search, adding stock, custom item types.                        |
+| Custom types    | `customTypes` in the document, `src/packs/custom.ts`                     | `withCustomTypes` merges them into the packs as a pseudo-pack `custom`; `usePacks()` in screens.    |
 
 ## Behaviour worth knowing
 
@@ -50,6 +51,10 @@ The Stores tab: what the household has, by where it is kept, and the quick way t
   lives, else the last place used, else the fullest place. Stock of the same type, place and best-before is added to rather than listed twice. The
   best-before is optional; the chips follow how long the type keeps (+1 y, +2 y, +5 y for things that
   keep for years). A counter shows what was added this session.
+- **Scanning.** Quick add's search step starts with **Scan a barcode** (above the search box) and
+  **Stocktake a pile**. A scanned item lands on the form with its type picked and is saved with
+  `source: 'barcode'`; Next item goes back to the scanner. Stores shows "3 scans to sort ›" when
+  scans are waiting. See [Scanning](../scanning/README.md).
 - **Custom items.** "Add as a custom item" asks for a name, a category and, for food and water, what
   one piece gives (kcal, litres). Other categories may give a store or nothing. The type is saved in
   `customTypes` as `custom:<uuid>` and counts like any pack item. It suits every place and has no
@@ -58,7 +63,6 @@ The Stores tab: what the household has, by where it is kept, and the quick way t
 
 ## Not done
 
-- Barcode scanning (`source: 'barcode'` is unused).
 - Review of items that are about to expire: the colouring and words are display only.
 - Editing or deleting a custom type.
 - Adding a type to a place's floors without stock in it.

@@ -27,6 +27,7 @@ project of the SHTF game (`shtf-game`). Working title.
 | `src/engine/`    | Pure functions over the document and packs (targets, coverage, gaps, score)         |
 | `src/model/`     | TypeScript types and Zod schemas of the document and the packs                      |
 | `src/packs/`     | JSON content packs and their loader                                                 |
+| `src/scan/`      | Camera stream, barcode loop, Open Food Facts client (no React); `tunables.ts`       |
 | `src/store/`     | The document store (CRDT + IndexedDB) and Drive sync (`sync.ts`, `drive/`)          |
 | `src/util/`      | Small pure helpers                                                                  |
 | `src/generated/` | Build output of `scripts/releases.mjs` (gitignored)                                 |
@@ -43,6 +44,9 @@ project of the SHTF game (`shtf-game`). Working title.
   - `src/engine` imports only `src/model`, `src/util` and `src/engine`; never React, `src/app`,
     `src/store`, `src/packs`, `idb`, or anything Drive or Google.
   - `src/store` never imports `src/app` or React.
+  - `src/scan` (camera, barcode decoding, the Open Food Facts client) imports `src/model`,
+    `src/util`, `src/engine`, itself and packages (`@zxing/*`); never React, `src/app`,
+    `src/store`, `src/packs`, or anything Drive or Google.
   - `src/app` may import everything, but reaches the store only through `DocumentProvider` and the
     `useDocument()` / `useChange()` hooks (`src/app/state/`); it never calls `openStore` itself.
 - **Screens never compute targets.** How much a household needs is the engine's job; screens
@@ -59,10 +63,11 @@ project of the SHTF game (`shtf-game`). Working title.
   migration step in `src/model/migrate.ts`; the container layout of a new document is frozen per
   schema. See `docs/features/data-model/`.
 - **Privacy.** Nothing leaves the browser except the user's own document to the user's own Google
-  Drive: only Drive, only the user's own, never anything else. The only scope is `drive.file` (files
-  the app created). The only third-party script is Google Identity Services, loaded when the user
-  connects Drive and at start-up once connected. No analytics, no server, no other third-party
-  calls at runtime. The changelog is baked at build time from GitHub Releases, never fetched at runtime.
+  Drive, and the digits of a barcode the person scans to Open Food Facts (only while online, only
+  for a barcode the household has not met before, nothing else with it). Camera frames never leave
+  the phone and are never stored. The only scope is `drive.file` (files the app created). The only
+  third-party script is Google Identity Services, loaded when the user connects Drive and at
+  start-up once connected. No analytics, no server, no other third-party calls at runtime. The changelog is baked at build time from GitHub Releases, never fetched at runtime.
 - **Google client id.** `VITE_GOOGLE_CLIENT_ID` (`.env.local`, the Actions variable) is never
   committed; `.env.example` names it. Tests fake Drive (`src/store/fakeDrive.ts`, `e2e/fakeGoogle.ts`)
   and never call Google.
