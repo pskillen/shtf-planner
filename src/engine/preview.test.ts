@@ -45,8 +45,9 @@ describe('preview examples on the Biggar household', () => {
       expect(power, `${days} days`).toMatch(/power (bank|station)/i);
       expect(power).not.toMatch(/leisure|lead|12 ?v|\d Ah\)/i);
     }
-    expect(at(3, 'power').example).toMatch(/power bank/i);
-    expect(at(7, 'power').example).toMatch(/power bank/i);
+    // banks up to a dozen; a month of charging names a power station beside them, in words
+    for (const days of [3, 7, 14]) expect(at(days, 'power').example).not.toMatch(/station/i);
+    expect(at(28, 'power').example).toMatch(/power bank.*, or .*power station/i);
   });
 
   it('uses everyday pack sizes with a count a household can picture', () => {
@@ -57,8 +58,8 @@ describe('preview examples on the Biggar household', () => {
     );
     for (const { h, r, n } of counted) {
       if (Number.isNaN(n)) continue;
-      // a month of drinking water is the one need that stays a pile: cases of 6 x 5 L
-      if (r.title === 'Drinking water' && h === 28) continue;
+      // a month of drinking water or phone charging stays a pile (cases of 6 x 5 L; banks, or a station)
+      if ((r.title === 'Drinking water' || r.title === 'Power for phones') && h === 28) continue;
       expect(n, `${h} days ${r.title}: ${r.example}`).toBeLessThanOrEqual(EXAMPLE_MAX_UNITS);
     }
     expect(at(3, 'water').example).toBe('e.g. 4 × Bottled water (6 × 2 L)');

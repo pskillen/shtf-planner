@@ -147,7 +147,7 @@ and over the packs it is given:
   "4 × Bottled water (6 × 2 L)", not "37 × 500 ml cases".
 - **Food** is never one item for all the calories: a fixed split of the kcal across staples,
   `FOOD_MIX` in `examples.ts` (25 % tins, 20 % pasta, 20 % rice, 15 % porridge oats, 20 % peanut
-  butter), each in the smallest pack size that gives a sane count (tins up to 70; the weekly tinned pack reads "N weeks of tinned food for one person"), shown as "e.g.
+  butter), each in the smallest pack size that gives a sane count (tins up to 70; the weekly tinned pack reads "N packs of tinned food (each one person's week)"), shown as "e.g.
   15 tins, 4 kg of pasta and rice, 1 kg of porridge oats and 3 jars of peanut butter". The shares
   are an assumption chosen for variety, not a diet.
 - **Power for phones** is power banks; when that would be more than eight, a portable

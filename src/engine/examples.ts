@@ -154,7 +154,7 @@ export function foodMixExample(ctx: SuggestContext, kcal: number): string | unde
         // A tin, a jar or a tub reads as "3 jars of peanut butter"; anything else by its name.
         const unit = p.type.unit;
         if (unit === 'pack' && name === 'tins')
-          return `${p.units} ${plural(p.units, 'week')} of tinned food for one person`;
+          return `${p.units} ${plural(p.units, 'pack')} of tinned food (each one person's week)`;
         if (unit !== 'tin' && unit !== 'jar' && unit !== 'tub') return label(p);
         return `${p.units} ${plural(p.units, unit)}${unit === 'tin' ? '' : ` of ${name}`}`;
       })
@@ -168,21 +168,21 @@ export function foodMixExample(ctx: SuggestContext, kcal: number): string | unde
 // ---- other stores ----------------------------------------------------------------------------
 
 /**
- * Power for phones: power banks, which people own for this. When even they would be a pile (a
- * month of charging), a portable power station, which is what people buy at that scale.
+ * Power for phones: power banks, which people own for this. When even they would be a pile (more
+ * than a dozen: a month of charging), the banks are still the example and a portable power
+ * station is named beside them in words, "or" the other way to get the same Wh. (A station costs
+ * two to two and a half times as much for the same Wh, so it is never swapped in silently.)
  */
-/** More power banks than this and a power station is the example (a pile of banks reads oddly). */
-const PHONE_BANKS_MAX = 8;
-
 function phonePower(ctx: SuggestContext, wh: number): string | undefined {
   const banks = everyday(ctx, 'batteryWh').filter((t) => t.tags.includes('phone'));
-  const bank = pickSize(banks, 'batteryWh', wh, PHONE_BANKS_MAX);
-  if (bank && bank.units <= PHONE_BANKS_MAX) return label(bank);
+  const bank = pickSize(banks, 'batteryWh', wh);
   const stations = Object.values(ctx.packs.items).filter(
     (t) => t.assetTypeId !== undefined && t.tags.includes('portable-power'),
   );
   const station = pickSize(stations, 'batteryWh', wh);
-  return station ? label(station) : bank ? label(bank) : undefined;
+  if (bank && bank.units <= EXAMPLE_MAX_UNITS) return label(bank);
+  if (bank && station) return `${label(bank)}, or ${label(station)}`;
+  return bank ? label(bank) : station ? label(station) : undefined;
 }
 
 /**
