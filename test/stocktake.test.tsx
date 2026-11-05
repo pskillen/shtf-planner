@@ -224,7 +224,9 @@ describe('Undo and Sort later edge cases', () => {
     const doc = biggarDocument();
     doc.locations = {};
     render(liveStore(doc).wrap(<StocktakeScreen />)); // no place, so nothing scans: the number is typed
-    fireEvent.change(screen.getByLabelText('Barcode number'), { target: { value: UNKNOWN } });
+    fireEvent.change(screen.getByLabelText('Or type the barcode number'), {
+      target: { value: UNKNOWN },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Use this number' }));
     const later = await screen.findByRole('button', { name: 'Decide later' });
     expect((later as HTMLButtonElement).disabled).toBe(true);

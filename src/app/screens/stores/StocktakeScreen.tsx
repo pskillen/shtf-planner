@@ -361,7 +361,6 @@ export function StocktakeScreen() {
       {phase === 'barcode' ? (
         code === null ? (
           <>
-            <h3 className="type-title">Type the barcode number</h3>
             <form
               className="number-row"
               onSubmit={(e) => {
@@ -373,7 +372,7 @@ export function StocktakeScreen() {
                 got(r.code);
               }}
             >
-              <Field label="Barcode number">
+              <Field label="Or type the barcode number">
                 <input
                   type="text"
                   inputMode="numeric"

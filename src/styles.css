@@ -1316,6 +1316,22 @@ button.scans-note {
   margin: 0;
 }
 
+/* The label takes the whole first line; the box and its button share the second. */
+.number-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 8px;
+  align-items: end;
+}
+
+.number-row .field {
+  display: contents;
+}
+
+.number-row .field-label {
+  grid-column: 1 / -1;
+}
+
 .scan-choices {
   display: grid;
   gap: 10px;

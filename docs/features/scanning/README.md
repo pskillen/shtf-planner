@@ -43,8 +43,8 @@ cleanly in Firefox on Android.
 2. **1 BARCODE.** The camera looks continuously. The strip is one size for the whole stocktake: it
    never grows or shrinks between steps. A **red line** across the middle is the barcode target (a
    faint wide box shows what is read). Under the strip: torch, zoom (slider with minus and plus) and
-   tap to focus where the browser has them, else one line saying so. **Type the barcode number**
-   (a field labelled "Barcode number" with **Use this number** beside it), **Find it by name**, **Done**.
+   tap to focus where the browser has them, else one line saying so. A field labelled **Or type the barcode number**
+   (with **Use this number** beside it), **Find it by name**, **Done**.
 3. On a barcode there is one buzz and a brief green tick in the centre of the strip. A **known**
    barcode (remembered by the household) goes straight to the date. An **unknown** one asks Open
    Food Facts (at most four seconds) and shows what it said with up to three likely pack types,
