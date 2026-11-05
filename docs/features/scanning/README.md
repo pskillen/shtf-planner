@@ -180,7 +180,7 @@ It is part of the household document, so it syncs. A number that fails its check
 misread and is ignored.
 
 **Not this item?** If a remembered barcode points at the wrong product or item, the flow can
-re-ask and re-point the barcode (PR B rewrites the card wording). Choosing anew updates what the
+re-ask and re-point the barcode. Choosing anew updates what the
 household remembers on all devices and keeps the first-seen date.
 
 ## Scans to sort

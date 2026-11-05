@@ -11,7 +11,7 @@ The Stores tab: what the household has, by where it is kept, and the quick way t
 | ----------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
 | Stores tab        | `/app/stores`, `StoresScreen.tsx`                                        | Stock grouped by place (collapsible), search across places, a floating + for Quick add.               |
 | Quick add         | `screens/stores/QuickAdd.tsx`                                            | Search, pick, Add; then Add another or Next item. Also opened from the Gaps tab.                      |
-| Edit and minimums | `screens/stores/ItemSheet.tsx`, `FloorSheet.tsx`                         | Quantity stepper, place, best-before, delete with undo; the minimum of each type in a rotating place. |
+| Edit and minimums | `screens/stores/StockSheet.tsx`, `MinimumSheet.tsx`                      | Quantity stepper, place, best-before, delete with undo; the minimum of each item in a rotating place. |
 | Month field       | `screens/stores/MonthField.tsx`                                          | A month box and one-tap chips for the best-before.                                                    |
 | Scanning          | `screens/stores/ScanSheet.tsx`, `StocktakeScreen.tsx`, `ScansToSort.tsx` | Scan a barcode in Quick add, stocktake mode, scans to sort. See [Scanning](../scanning/README.md).    |
 | Pure helpers      | `screens/stores/stock.ts`                                                | Suitability warning, month parsing, search, adding stock.                                             |
@@ -32,27 +32,27 @@ The Stores tab: what the household has, by where it is kept, and the quick way t
   kept?" answer) is listed read-only with an Equipment badge, its name, type and key answer
   ("110 Ah"); tapping it opens its edit form on the Equipment screen. Equipment with no place, or whose place no longer exists, is listed after the places under "Equipment, no place", with the same rows. Search matches equipment names too.
 - **Rotating places.** "The minimum counts, not today's stock": the engine counts the lower of what is
-  on the shelf and the minimum. "Set minimums" opens "Always keep at least", which lists the types in that place with a stepper each; 0
+  on the shelf and the minimum. "Set minimums" opens "Always keep at least", which lists the items in that place with a stepper each; 0
   removes the minimum. A minimum with nothing on the shelf is still listed, at 0.
-- **Suitability.** An item whose type does not tolerate every condition of its place (frost, heat,
+- **Suitability.** An item that does not tolerate every condition of its place (frost, heat,
   damp; indoor and stable asks for nothing) shows a warning such as "Water can (10 L) may freeze in
   the Shed", on the row and in Quick add. Quick add still allows it.
 - **Quick add** remembers the last place and recent items in `localStorage` (per device, never in the
   document); the recent list is read again after each add. With nothing typed it shows up to eight
-  recent types (on a fresh device, sixteen common ones instead), then "Browse everything by
+  recent items (on a fresh device, sixteen common ones instead), then "Browse everything by
   category", closed and not built until opened; a search lists matches flat. Equipment is never
   stock: a search that matches a stove, generator or battery lists it under "Equipment: add to
   your home", which opens the equipment form with that type chosen, and with nothing typed there is
   one such route to the equipment screen. The
   equipment matches sit under the search box so a stove is not saved as stock by mistake. Items
-  come only from the pack (no custom items). The place starts as where that type already
-  lives, else the last place used, else the fullest place. Stock of the same type, place and best-before is added to rather than listed twice. The
-  best-before is optional; the chips follow how long the type keeps (+1 y, +2 y, +5 y for things that
+  come only from the pack (no custom items). The place starts as where that item already
+  lives, else the last place used, else the fullest place. Stock of the same item, place and best-before is added to rather than listed twice. The
+  best-before is optional; the chips follow how long the item keeps (+1 y, +2 y, +5 y for things that
   keep for years). A counter shows what was added this session. After an add the sheet offers
   **Next item** (primary, on the right) and **Add another**: the form stays filled and editable
   (change the date, place or quantity) and adds only when Add another is tapped.
 - **Scanning.** Quick add's search step starts with **Scan a barcode** (above the search box) and
-  **Stocktake a pile**. A scanned item lands on the form with its type picked and is saved with
+  **Stocktake a pile**. A scanned item lands on the form with its item picked and is saved with
   `source: 'barcode'`; Next item goes back to the scanner. Stores shows "3 scans to sort ›" when
   scans are waiting. The form's **Read the date** (where the browser has a camera) opens a sheet that
   reads the best-before month off the pack (it ignores the stocktake's "Read dates with the camera"
@@ -64,4 +64,4 @@ The Stores tab: what the household has, by where it is kept, and the quick way t
 ## Not done
 
 - Review of items that are about to expire: the colouring and words are display only.
-- Adding a type to a place's minimums without stock in it.
+- Adding an item to a place's minimums without stock in it.
