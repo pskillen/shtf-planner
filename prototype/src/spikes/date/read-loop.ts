@@ -1,11 +1,11 @@
 import type { Cam } from './camera.ts';
 import type { Engine } from './engines.ts';
-import { type Gray, frameDiff, sharpness, thumb } from './image.ts';
+import { type Gray, frameDiff, saturatedShare, sharpness, thumb } from './image.ts';
 import { type MonthYear, fmtMY } from './parse.ts';
 import { type ReadResult, readDate } from './reader.ts';
 
 /** What the one status line says. Exactly one at a time. */
-export type ScanStatus = 'ready' | 'looking' | 'reading' | 'hold' | 'checking' | 'got' | 'none';
+export type ScanStatus = 'ready' | 'looking' | 'reading' | 'hold' | 'glare' | 'checking' | 'got' | 'none';
 /** `seen` is the date read once and waiting for a second frame to agree ("10/2028"). */
 export type StatusInfo = { frames: number; skipped: number; seen?: string };
 
@@ -18,6 +18,7 @@ export type LoopOut = {
   crop: Gray | null; // the exact frame that produced the result (or the last one read)
   frames: number; // frames actually read (OCR run)
   skipped: number; // frames skipped as blurred or moving
+  glare: number; // frames not read because the box was washed out by a reflection
   totalMs: number; // from the READ tap to the end
   aimMs: number; // from the READ tap to the start of the first frame that went into the answer
   computeMs: number; // OCR + parse of the frames from there to the answer (all of them, so agreement shows as compute)
@@ -41,6 +42,17 @@ export type ScanOpts = {
  * and still lets about a third of the right Paddle frames through alone. Year-assumed reads never pass alone.
  */
 export const CONFIDENT_ALONE = 0.85;
+
+/**
+ * Glare: when at least GLARE_MIN and at most GLARE_MAX of the box is blown out (250+ grey levels) the status line says to
+ * tilt the phone, and the frame is not read. From the bench: none of the 27 photo crops as shot has more than 0.7% (the
+ * milk and curry labels 0.0%); a label washed out to ~90% (the synthetic white backgrounds) is paper, not a reflection,
+ * so above the upper bound a frame is read as usual. A reflection over a fifth to two thirds of the box is what hides print.
+ */
+export const GLARE_MIN = 0.2;
+export const GLARE_MAX = 0.65;
+/** Read a frame anyway after this many glare frames in a row, so a label that really is that bright can't lock the loop. */
+const MAX_GLARE_RUN = 25;
 
 /** A frame is "moving" when its thumbnail differs this much from the last one (mean grey levels, 0..255). */
 export const MOVING_DIFF = 12;
@@ -68,7 +80,7 @@ export async function scanUntil(
   const t0 = performance.now();
   const needAgree = (opts.needAgree ?? false) && timeoutMs > 0; // one tapped read (auto off) is one frame: nothing to agree with
   const readOpts = opts.rotations ? { rotations: opts.rotations } : {};
-  let frames = 0, skipped = 0, skipRun = 0, best = 0, prev: Gray | null = null;
+  let frames = 0, skipped = 0, glare = 0, glareRun = 0, skipRun = 0, best = 0, prev: Gray | null = null;
   let last: Gray | null = null, lastRes: ReadResult | null = null;
   // month-year -> the frames that read it, so the second one can complete the answer
   const seen = new Map<number, { v: MonthYear; n: number; firstStart: number; computeMs: number; text: string }>();
@@ -87,13 +99,19 @@ export async function scanUntil(
     const blurred = sharp < best * BLUR_RATIO;
     const flat = sharp < FLAT_SHARPNESS; // nothing with edges in view: a wall, a table, the lens cap
     prev = th;
-    if (gate && flat) {
+    const sat = saturatedShare(crop);
+    if (gate && sat >= GLARE_MIN && sat <= GLARE_MAX && glareRun < MAX_GLARE_RUN) {
+      glare++; glareRun++;
+      say('glare');
+    } else if (gate && flat) {
+      glareRun = 0;
       waiting();
     } else if (gate && (first || moving || blurred) && skipRun < MAX_SKIPS) {
+      glareRun = 0;
       skipped++; skipRun++;
       say('hold');
     } else {
-      skipRun = 0;
+      skipRun = 0; glareRun = 0;
       say('reading');
       await paint(); // OCR runs on the main thread: let "Reading frame" reach the screen before it blocks
       const tFrame = performance.now();
@@ -104,7 +122,7 @@ export async function scanUntil(
       if (res.value) {
         const now = performance.now();
         const done = (stop: StopReason, agreed: number, aim: number, compute: number): LoopOut =>
-          ({ outcome: 'got', res, crop, frames, skipped, totalMs: now - t0, aimMs: aim - t0, computeMs: compute, ms: now - t0, aborted: false, agreed, stop, lone: null });
+          ({ outcome: 'got', res, crop, frames, skipped, glare, totalMs: now - t0, aimMs: aim - t0, computeMs: compute, ms: now - t0, aborted: false, agreed, stop, lone: null });
         if (!needAgree) return done('single', 1, tFrame, res.ms);
         const k = res.value.year * 12 + res.value.month;
         const e = seen.get(k) ?? { v: res.value, n: 0, firstStart: tFrame, computeMs: 0, text: res.text };
@@ -126,7 +144,7 @@ export async function scanUntil(
   const lone = [...seen.values()].sort((a, b) => b.n - a.n)[0];
   const rest = lastRes ? { ...lastRes, value: null, yearAssumed: false } : null;
   return {
-    outcome: aborted ? 'stopped' : 'none', res: rest, crop: last, frames, skipped, totalMs: total, aimMs: total, computeMs: lastRes?.ms ?? 0, ms: total, aborted,
+    outcome: aborted ? 'stopped' : 'none', res: rest, crop: last, frames, skipped, glare, totalMs: total, aimMs: total, computeMs: lastRes?.ms ?? 0, ms: total, aborted,
     agreed: 0, stop: null, lone: lone ? { value: lone.v, text: lone.text } : null,
   };
 }

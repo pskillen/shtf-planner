@@ -11,6 +11,7 @@ const LOOK: Record<ScanStatus, { text: string; bg: string; fg: string }> = {
   looking: { text: 'Looking for a date…', bg: '#f6d56b', fg: '#321' },
   reading: { text: 'Reading frame…', bg: '#6aa7e8', fg: '#012' },
   hold: { text: 'Hold still', bg: '#f0a35a', fg: '#310' },
+  glare: { text: 'Glare: tilt the phone a little', bg: '#d9b8f2', fg: '#210' },
   checking: { text: 'Checking…', bg: '#8fd0f2', fg: '#012' },
   got: { text: 'Got it', bg: '#3bb273', fg: '#021' },
   none: { text: 'No date found', bg: '#e46a6a', fg: '#200' },

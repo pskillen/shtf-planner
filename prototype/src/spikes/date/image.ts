@@ -87,6 +87,42 @@ export function adaptive(g: Gray, win = 0, c = 8): Gray {
   return o;
 }
 
+/**
+ * Sauvola adaptive threshold: ink where the pixel is darker than m * (1 + k * (s / R - 1)), with m and s the mean and
+ * standard deviation in a `win` x `win` window (integral images of the grey and of its square), R = 128.
+ * Output is 0 (ink) / 255 (paper). Assumes dark ink; use invert() first otherwise.
+ */
+export function sauvola(g: Gray, win: number, k = 0.3, R = 128): Gray {
+  const { w, h } = g;
+  win = Math.max(3, Math.round(win) | 1);
+  const W1 = w + 1;
+  const I = new Float64Array(W1 * (h + 1)), Q = new Float64Array(W1 * (h + 1));
+  for (let y = 0; y < h; y++) {
+    let row = 0, rowQ = 0;
+    for (let x = 0; x < w; x++) {
+      const v = g.d[y * w + x];
+      row += v; rowQ += v * v;
+      I[(y + 1) * W1 + x + 1] = I[y * W1 + x + 1] + row;
+      Q[(y + 1) * W1 + x + 1] = Q[y * W1 + x + 1] + rowQ;
+    }
+  }
+  const o = gray(w, h);
+  const r = win >> 1;
+  for (let y = 0; y < h; y++) {
+    const y0 = Math.max(0, y - r), y1 = Math.min(h, y + r + 1);
+    for (let x = 0; x < w; x++) {
+      const x0 = Math.max(0, x - r), x1 = Math.min(w, x + r + 1);
+      const n = (x1 - x0) * (y1 - y0);
+      const s1 = I[y1 * W1 + x1] - I[y0 * W1 + x1] - I[y1 * W1 + x0] + I[y0 * W1 + x0];
+      const s2 = Q[y1 * W1 + x1] - Q[y0 * W1 + x1] - Q[y1 * W1 + x0] + Q[y0 * W1 + x0];
+      const m = s1 / n;
+      const sd = Math.sqrt(Math.max(0, s2 / n - m * m));
+      o.d[y * w + x] = g.d[y * w + x] < m * (1 + k * (sd / R - 1)) ? 0 : 255;
+    }
+  }
+  return o;
+}
+
 export function invert(g: Gray): Gray {
   const o = gray(g.w, g.h);
   for (let i = 0; i < g.d.length; i++) o.d[i] = 255 - g.d[i];
@@ -136,6 +172,13 @@ export function rotate(g: Gray, deg: 0 | 90 | 180 | 270): Gray {
   return o;
 }
 
+/** Fraction of pixels at or above `level` (blown out to white). */
+export function saturatedShare(g: Gray, level = 250): number {
+  let n = 0;
+  for (const v of g.d) if (v >= level) n++;
+  return n / g.d.length;
+}
+
 /** Fraction of pixels darker than 128. */
 export function darkFraction(g: Gray) {
   let n = 0;
@@ -170,7 +213,7 @@ export type Variant = {
 /** Height used for the small OCR variant; dots need enough pixels, but the whole label does not need more. */
 export const OCR_H = 64;
 /** The crop at the resolution the camera gave us, but never smaller than OCR_H high. */
-const fit = (g: Gray) => (g.h < OCR_H ? resizeToHeight(g, OCR_H) : g);
+export const fit = (g: Gray) => (g.h < OCR_H ? resizeToHeight(g, OCR_H) : g);
 const small = (g: Gray) => g.h <= OCR_H * 1.25;
 
 /**

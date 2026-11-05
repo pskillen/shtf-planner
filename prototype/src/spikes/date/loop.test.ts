@@ -1,5 +1,5 @@
 // Run: npm run test:loop   (node --experimental-strip-types)
-// The scan loop with a scripted camera and engine: frame agreement, one confident read, assumed years.
+// The scan loop with a scripted camera and engine: frame agreement, one confident read, assumed years, and the glare hint.
 import { type Gray, gray } from './image.ts';
 import { scanUntil, type LoopOut, type ScanStatus } from './read-loop.ts';
 import type { Engine } from './engines.ts';
@@ -66,6 +66,20 @@ const Y = String(NOW_YEAR + 2); // a printed year clear of the parser's limits
   const { out } = await run(['BB 06/' + Y], { needAgree: true, conf: 0.8, timeoutMs: 0 });
   check('one tapped read stands alone', out.outcome === 'got' && out.stop === 'single', brief(out));
 }
+{ // glare: while the box is blown out the frame is not read; it reads once the glare is gone
+  const { out, statuses } = await run(['BEST BEFORE 06 10 ' + Y], { needAgree: false, sat: [0.5, 0.5, 0.5, 0] });
+  check('glare: hint shown, then read', statuses.includes('glare') && out.outcome === 'got' && out.glare >= 1, `${statuses.join(',')} ${brief(out)} glare ${out.glare}`);
+}
+{ // a bright white label with dark print: not glare
+  const { out, statuses } = await run(['BEST BEFORE 06 10 ' + Y], { needAgree: false, sat: [0.04] });
+  check('glare: small bright patch is not glare', !statuses.includes('glare') && out.outcome === 'got' && out.glare === 0, `${statuses.join(',')} glare ${out.glare}`);
+}
+
+{ // a white label washed out to 90%: paper with dark print, read as usual
+  const { out, statuses } = await run(['BEST BEFORE 06 10 ' + Y], { needAgree: false, sat: [0.9] });
+  check('glare: white label is not glare', !statuses.includes('glare') && out.outcome === 'got' && out.glare === 0, `${statuses.join(',')} glare ${out.glare}`);
+}
+
 console.log(`loop: ${fails.length ? 'FAILED' : 'ok'}`);
 for (const f of fails) console.log(f);
 if (fails.length) throw new Error('loop cases failed');

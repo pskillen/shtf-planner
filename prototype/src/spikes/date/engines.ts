@@ -44,7 +44,8 @@ export function tesseractEngine(importTess: () => Promise<any>, opts: TessOpts =
 }
 
 // ---------------------------------------------------------------- PaddleOCR (PP-OCR mobile) via onnxruntime-web
-export type PaddleOpts = { mode: 'det+rec' | 'rec'; threads?: number };
+/** `det`, `rec` and `dict` name files in the paddle folder (defaults: det.onnx, rec.onnx, dict.txt); `label` is the engine's name in logs. */
+export type PaddleOpts = { mode: 'det+rec' | 'rec'; threads?: number; det?: string; rec?: string; dict?: string; label?: string };
 export type Ort = any;
 
 export function paddleEngine(ort: Ort, assets: Assets, opts: PaddleOpts): Engine {
@@ -52,13 +53,13 @@ export function paddleEngine(ort: Ort, assets: Assets, opts: PaddleOpts): Engine
   let dict: string[] = [];
   const dir = assets.base + '/paddle';
   return {
-    name: opts.mode === 'rec' ? 'paddle-rec' : 'paddle',
+    name: opts.label ?? (opts.mode === 'rec' ? 'paddle-rec' : 'paddle'),
     async init() {
       const so = { executionProviders: ['wasm'], graphOptimizationLevel: 'all' };
-      const [recB, dictB] = await Promise.all([assets.bytes(`${dir}/rec.onnx`), assets.bytes(`${dir}/dict.txt`)]);
+      const [recB, dictB] = await Promise.all([assets.bytes(`${dir}/${opts.rec ?? 'rec.onnx'}`), assets.bytes(`${dir}/${opts.dict ?? 'dict.txt'}`)]);
       rec = await ort.InferenceSession.create(recB, so);
       dict = ['', ...new TextDecoder().decode(dictB).split('\n').filter((l) => l.length > 0), ' '];
-      if (opts.mode === 'det+rec') det = await ort.InferenceSession.create(await assets.bytes(`${dir}/det.onnx`), so);
+      if (opts.mode === 'det+rec') det = await ort.InferenceSession.create(await assets.bytes(`${dir}/${opts.det ?? 'det.onnx'}`), so);
     },
     async read(g) {
       let boxes: Box[];
