@@ -15,12 +15,15 @@ export function MonthField({
   shelfLife,
   today,
   label = 'Best before',
+  quiet = false,
 }: {
   value: string | undefined;
   onChange: (next: string | undefined) => void;
   shelfLife: ItemType['shelfLife'];
   today: string;
   label?: string;
+  /** No hint line unless the text is not a month: for a screen short of room. */
+  quiet?: boolean;
 }) {
   const native = supportsMonthInput();
   const [text, setText] = useState(value ?? '');
@@ -39,9 +42,11 @@ export function MonthField({
         hint={
           bad
             ? 'Read as a month and year, like Mar 2027 or 03/2027.'
-            : value
-              ? formatMonth(value)
-              : 'Optional.'
+            : quiet
+              ? undefined
+              : value
+                ? formatMonth(value)
+                : 'Optional.'
         }
       >
         {native ? (

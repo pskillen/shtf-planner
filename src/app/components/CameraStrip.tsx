@@ -187,19 +187,8 @@ export function CameraStrip({
           </span>
         ) : null}
         <div className="camera-centre" ref={onCentre} />
-        {state === 'none' ? (
-          <p className="camera-none" role="status">
-            No camera. Allow it in the browser’s site settings, or type the number / find it by
-            name.{' '}
-            <button type="button" className="secondary" onClick={() => setAttempt((n) => n + 1)}>
-              Try again
-            </button>
-          </p>
-        ) : null}
-      </div>
-      {state === 'live' ? (
-        known ? (
-          <div className="camera-controls">
+        {state === 'live' && known ? (
+          <div className="camera-controls" onPointerDown={(e) => e.stopPropagation()}>
             {caps.torch ? (
               <button
                 type="button"
@@ -242,15 +231,22 @@ export function CameraStrip({
                 </button>
               </div>
             ) : null}
-            {caps.pointsOfInterest && mode === 'barcode' ? (
-              <span className="muted">Tap the picture to focus.</span>
-            ) : null}
           </div>
-        ) : (
-          <p className="muted camera-fallback">
-            Zoom, focus and torch aren’t available in this browser. Chrome has them.
+        ) : null}
+        {state === 'none' ? (
+          <p className="camera-none" role="status">
+            No camera. Allow it in the browser’s site settings, or type the number / find it by
+            name.{' '}
+            <button type="button" className="secondary" onClick={() => setAttempt((n) => n + 1)}>
+              Try again
+            </button>
           </p>
-        )
+        ) : null}
+      </div>
+      {state === 'live' && !known ? (
+        <p className="muted camera-fallback">
+          Zoom, focus and torch aren’t available in this browser. Chrome has them.
+        </p>
       ) : null}
     </div>
   );

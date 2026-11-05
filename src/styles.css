@@ -1087,19 +1087,26 @@ a.row-main {
   background: rgba(0, 0, 0, 0.8);
 }
 
+/* Torch and zoom sit on the strip's bottom edge, so they take no room below it. */
 .camera-controls {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: 6px;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 6px;
+  padding: 2px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.45);
 }
 
 .camera-zoom {
   display: flex;
   align-items: center;
   gap: 6px;
-  flex: 1 1 200px;
+  flex: 1;
+  min-width: 0;
 }
 
 .camera-zoom input[type='range'] {
@@ -1411,7 +1418,7 @@ button.scans-note {
 .centre-actions {
   position: absolute;
   right: 6px;
-  bottom: 6px;
+  top: 6px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1424,6 +1431,12 @@ button.scans-note {
 }
 
 .centre-actions button {
+  background: #fff;
+  color: #1a1a1a;
+  border-color: #fff;
+}
+
+.camera-controls .secondary {
   background: #fff;
   color: #1a1a1a;
   border-color: #fff;

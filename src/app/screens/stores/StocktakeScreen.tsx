@@ -470,6 +470,7 @@ export function StocktakeScreen() {
                 </p>
               ) : null}
               <MonthField
+                quiet
                 value={bestBefore}
                 onChange={changeDate}
                 shelfLife={counting.type.shelfLife}

@@ -181,10 +181,28 @@ for (const size of [
   test.describe(`layout at ${size.width}x${size.height}`, () => {
     test.use({ viewport: size });
 
-    for (const hintShown of [false, true]) {
-      test(`one strip size; status and month on the strip; month field above OK (hint ${hintShown ? 'showing' : 'dismissed'})`, async ({
+    // Chrome has a month picker; Firefox (and any browser without one) gets a text box with a hint.
+    for (const [hintShown, monthBox] of [
+      [false, 'picker'],
+      [false, 'text box'],
+      [true, 'picker'],
+    ] as const) {
+      test(`one strip size; status and month on the strip; month field above OK (hint ${hintShown ? 'showing' : 'dismissed'}, month ${monthBox})`, async ({
         page,
       }) => {
+        if (monthBox === 'text box') {
+          // The page's own probe sets type=month and reads it back: make that read say "text".
+          await page.addInitScript(() => {
+            const desc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'type')!;
+            Object.defineProperty(HTMLInputElement.prototype, 'type', {
+              ...desc,
+              get() {
+                const t = desc.get!.call(this) as string;
+                return t === 'month' ? 'text' : t;
+              },
+            });
+          });
+        }
         if (!hintShown) {
           await page.addInitScript(() => localStorage.setItem('shtf.stocktake.hintSeen', '1'));
         }
@@ -220,10 +238,10 @@ for (const size of [
           description: `${size.width}x${size.height}: pill y ${Math.round(s.y - stripAiming.y)}..${Math.round(s.y + s.height - stripAiming.y)} of a ${Math.round(stripAiming.height)} px strip; date box ${Math.round(boxTop - stripAiming.y)}..${Math.round(stripAiming.y + stripAiming.height * 0.78 - stripAiming.y)}`,
         });
         await page.screenshot({
-          path: `test-results/p9b-aiming-${size.width}x${size.height}-hint-${hintShown ? 'on' : 'off'}.png`,
+          path: `test-results/p9b-aiming-${size.width}x${size.height}-hint-${hintShown ? 'on' : 'off'}-${monthBox === 'picker' ? 'picker' : 'text'}.png`,
         });
 
-        const month = page.locator('input[type="month"]');
+        const month = page.locator('input[type="month"], input[placeholder="Mar 2027"]');
         const okBtn = page.getByRole('button', { name: 'OK', exact: true });
         const barTop = async () => (await box(okBtn)).y - 8;
         let monthState = 'above the OK bar';
@@ -250,7 +268,7 @@ for (const size of [
         const after = await box(strip);
         expect(after.height).toBeCloseTo(stripBarcode.height, 0);
         await page.screenshot({
-          path: `test-results/p9b-got-${size.width}x${size.height}-hint-${hintShown ? 'on' : 'off'}.png`,
+          path: `test-results/p9b-got-${size.width}x${size.height}-hint-${hintShown ? 'on' : 'off'}-${monthBox === 'picker' ? 'picker' : 'text'}.png`,
         });
         const c = await box(card);
         expect(c.y).toBeGreaterThanOrEqual(after.y);
@@ -259,6 +277,15 @@ for (const size of [
           const m = await box(month);
           expect(m.y + m.height).toBeLessThanOrEqual((await barTop()) - MONTH_SLACK);
         }
+        const chips = page.getByRole('group', { name: /quick choices/ });
+        const cb2 = await box(chips);
+        const m2 = await box(month);
+        // With the hint dismissed the quick-choice chips clear the bar too, in both renderings.
+        if (!hintShown) expect(cb2.y + cb2.height).toBeLessThanOrEqual((await barTop()) - 8);
+        test.info().annotations.push({
+          type: 'slack',
+          description: `${size.width}x${size.height} hint ${hintShown ? 'on' : 'off'} month ${monthBox}: month field ${Math.round((await barTop()) - (m2.y + m2.height))} px clear of the OK bar, chips ${Math.round((await barTop()) - (cb2.y + cb2.height))} px`,
+        });
       });
     }
   });
