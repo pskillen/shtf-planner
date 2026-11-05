@@ -71,15 +71,9 @@ function scan(t: string): Raw[] {
   return out;
 }
 
-/** The next occurrence of day/month on or after today, so at most 12 months ahead. */
-function nextYear(day: number, month: number, now: Date): number {
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  for (let y = now.getFullYear(); y <= now.getFullYear() + 5; y++) {
-    if (day > dim(month, y)) continue;
-    const d = new Date(y, month - 1, day);
-    if (d >= today) return d <= new Date(today.getFullYear(), today.getMonth() + 12, today.getDate()) ? y : 0;
-  }
-  return 0;
+/** Year for a date printed without one, at month level: this month or later is this year, earlier months next year. */
+function nextYear(_day: number, month: number, now: Date): number {
+  return month >= now.getMonth() + 1 ? now.getFullYear() : now.getFullYear() + 1;
 }
 
 export function parseDates(raw: string, now: Date = new Date()): ParseResult {

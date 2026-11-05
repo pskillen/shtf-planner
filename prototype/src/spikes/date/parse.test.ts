@@ -71,12 +71,12 @@ export const CASES: [string, string | null, boolean?][] = [
   ['29.01.27 502932125', '01/2027'],
   ['SEP27 L4 6272 19:10', '09/2027'],
   ['BEST BEFORE 06 02 27 C 6145 5 07:26', '02/2027'],
-  ['11 NOV C121206L MD013', '11/2027', true], // no year: next 11 Nov after 15 Nov 2026
+  ['11 NOV C121206L MD013', '11/2026', true], // no year, month level: Nov is this month, so this year even though the 11th has passed
   ['2214101225014133-2 Expire ???? 22.10.27', '10/2027'],
   ['SEP 2028 Best Before End: Batch Code: 23 09 26 21:01', '09/2028'],
   ['Best Before: 06 10 2028 12:29', '10/2028'],
   // ---- round 2: raw strings the phone OCR returned (owner's first session)
-  ['best Bel 11 NOV Keep ef C12120AL MD013', '11/2027', true],
+  ['best Bel 11 NOV Keep ef C12120AL MD013', '11/2026', true],
   ['29,01.27', '01/2027'],
   ['066JEP6090 BBE MAR 2028 ', '03/2028'],
   ['SEP27 I 627219:13', '09/2027'],
@@ -103,14 +103,21 @@ export const CASES: [string, string | null, boolean?][] = [
   ['LOT 06 10 2028', null],
   ['CODE: 23 09 26', null],
   ['BEST BEFORE 15 NOV', '11/2026', true], // today counts
-  ['BEST BEFORE 14 NOV', '11/2027', true],
+  ['BEST BEFORE 14 NOV', '11/2026', true], // day already past this month: still this year
+  ['BEST BEFORE 14 OCT', '10/2027', true], // earlier month: next year
   ['03 JAN', '01/2027', true],
-  ['29 FEB', null], // next 29 Feb is 15 months away: past the 12-month cap
-  ['11 NOVEMBER', '11/2027', true],
+  ['29 FEB', '02/2027', true],
+  ['11 NOVEMBER', '11/2026', true],
   ['11 NOVA', null],
   ['BB 06/2027 11 NOV', '06/2027'], // a real date beats an assumed-year one
 ];
 
+// month-level year with a different today: the wide-crop milk read `1 NOV` on 5 Nov 2026 is 11/2026
+const EXTRA: [string, Date, string | null][] = [
+  ['MILK / JC FAT / 1 NOV', new Date(2026, 10, 5), '11/2026'],
+  ['11 NOV', new Date(2026, 10, 20), '11/2026'],
+  ['11 NOV', new Date(2026, 11, 1), '11/2027'],
+];
 let ok = 0;
 const fails: string[] = [];
 for (const [text, want, assumed] of CASES) {
@@ -120,6 +127,11 @@ for (const [text, want, assumed] of CASES) {
   if (got === want && gotAssumed === !!assumed) ok++;
   else fails.push(`  "${text}" -> ${got}${gotAssumed ? ' (year assumed)' : ''} (want ${want}${assumed ? ' (year assumed)' : ''})`);
 }
-console.log(`parser: ${ok}/${CASES.length} (${((100 * ok) / CASES.length).toFixed(1)}%)`);
+for (const [text, now, want] of EXTRA) {
+  const r = parseDates(text, now);
+  const got = r.best ? fmtMY(r.best) : null;
+  if (got === want && r.best?.yearAssumed) ok++; else fails.push(`  "${text}" @${now.toDateString()} -> ${got} (want ${want})`);
+}
+console.log(`parser: ${ok}/${CASES.length + EXTRA.length} (${((100 * ok) / (CASES.length + EXTRA.length)).toFixed(1)}%)`);
 for (const f of fails) console.log(f);
 if (fails.length) throw new Error("parser cases failed");
