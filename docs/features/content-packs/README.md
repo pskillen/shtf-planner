@@ -8,23 +8,23 @@ What to have, and how much, ships as versioned JSON packs validated with Zod. Th
 
 ## Map
 
-| Piece   | Where                                     | What                                                              |
-| ------- | ----------------------------------------- | ----------------------------------------------------------------- |
-| Schemas | `src/model/packs.ts`                      | `Pack`, `Packs`, `ItemType`, `AssetType`, `Rule`, `PlanDef`, ids. |
-| Loader  | `src/packs/loader.ts`                     | `loadPacks`, `parsePack`, `enabledPacks`, `PackError`.            |
-| Bundled | `src/packs/bundled.ts`, `src/packs/data/` | `bundledPacks()` loads the shipped packs once.                    |
+| Piece   | Where                                     | What                                                          |
+| ------- | ----------------------------------------- | ------------------------------------------------------------- |
+| Schemas | `src/model/packs.ts`                      | `Pack`, `Packs`, `Item`, `AssetType`, `Rule`, `PlanDef`, ids. |
+| Loader  | `src/packs/loader.ts`                     | `loadPacks`, `parsePack`, `enabledPacks`, `PackError`.        |
+| Bundled | `src/packs/bundled.ts`, `src/packs/data/` | `bundledPacks()` loads the shipped packs once.                |
 
 ## The packs
 
-| Pack file                  | Kind       | Holds                                                                                                                                                               |
-| -------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `items-base.json`          | `items`    | The game's 82 item types plus nappies by size, formula, baby food, pet food, toilet and hygiene supplies, lumen-rated lights, cells, power banks, water containers. |
-| `assets-base.json`         | `assets`   | Heaters, stoves, power sources (solar, home battery, EV, generator), water butt, alarms, radios, with questions, contributions and maintenance.                     |
-| `guidance-uk-prepare.json` | `guidance` | UK Government "Be Ready": 3 days, 3 litres of water per person per day.                                                                                             |
-| `guidance-us-ready.json`   | `guidance` | Ready.gov: one gallon of water per person per day.                                                                                                                  |
-| `guidance-grid-free.json`  | `guidance` | Region-less rules: heat, cooking, light, phone power, sanitation, medication, mobility, babies, pets.                                                               |
-| `plans-base.json`          | `plans`    | Meeting point, shut-offs, documents, grab bags, first aid course, EPS, neighbours, pets.                                                                            |
-| `regions.json`             | `regions`  | UK and US units, currency, risk links (flood, weather), suggested packs.                                                                                            |
+| Pack file                  | Kind       | Holds                                                                                                                                                |
+| -------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `items-base.json`          | `items`    | About 170 generic items (shopping-list level: baked beans, chopped tomatoes, soft drinks…), with headings, size chips, and what each counts towards. |
+| `assets-base.json`         | `assets`   | Heaters, stoves, power sources (solar, home battery, EV, generator), water butt, alarms, radios, with questions, contributions and maintenance.      |
+| `guidance-uk-prepare.json` | `guidance` | UK Government "Be Ready": 3 days, 3 litres of water per person per day.                                                                              |
+| `guidance-us-ready.json`   | `guidance` | Ready.gov: one gallon of water per person per day.                                                                                                   |
+| `guidance-grid-free.json`  | `guidance` | Region-less rules: heat, cooking, light, phone power, sanitation, medication, mobility, babies, pets.                                                |
+| `plans-base.json`          | `plans`    | Meeting point, shut-offs, documents, grab bags, first aid course, EPS, neighbours, pets.                                                             |
+| `regions.json`             | `regions`  | UK and US units, currency, risk links (flood, weather), suggested packs.                                                                             |
 
 ## Format
 
@@ -34,48 +34,43 @@ are strict: an unknown key is an error. Ids inside a pack are written in full as
 Questions and maintenance items have ids local to their asset type (`answers` and `maintenance` in
 the document are keyed by them).
 
-- **`items`**: `ItemType { id, name, category, unit, gives: [{ store, amount }], suitability,
-shelfLife, ageBand?, typicalPricePence?, tags, barcodes?, assetTypeId?, source? }`. `gives` may not name
-  `medicationDays` (computed from the document). Tags the engine reads: `needs-cooking` (counts
-  only while cooking is covered), `radio-rx` (receives broadcasts: meets the comms radio and is suggested for it; PMR446
-  walkie-talkies are `radio-tx` only),
-  `treatment` (makes raw water safe) and `no-suggest` (never a first suggestion: the engine offers
-  it only when nothing else gives the store). `phone` marks the power banks the horizon preview
-  names for phone power, and `portable-power` the power station it falls back to for a month.
-  **One home per thing.** An item type that is really equipment has `assetTypeId` (an asset type
-  of the assets pack; the loader checks it exists). It is a buy-only entry: it keeps its price and
-  what one unit gives so the shopping list can suggest it, but it is never stock. Quick add does
-  not offer it (it offers the equipment form for that asset type instead), the shopping list's
-  tick opens the equipment form, and a stock row of such a type (a document made before the split)
-  counts nothing, with a note saying so. The linked entries are the camping, rocket, paraffin,
-  catalytic and cabinet gas stoves and heaters, the power station, leisure battery, generators,
-  solar panel and kit, wind-up radios, handheld radios (2 m/70 cm and CB: the `handheld-radio` asset; PMR446 walkie-talkies
-  are their own `pmr446-radio` asset, which gives no comms because they cannot receive broadcasts), mobile and HF stations (the `radio-station` asset), water butt, CO alarm and fire
-  extinguisher. Power banks,
-  fuels, gas bottles, cells, candles, food, water and hygiene are stock. `source` is where the
-  numbers on a type come from: an `https` URL listed in the pack's `sources`, or `"assumption"`.
-  The sizes added for everyday shopping (bottled water, pasta, rice, oats, peanut butter, tins, toilet
-  bags) are all marked `"assumption"`: the staples reuse the kcal per 100 g of the bulk entries
-  (pasta 350, rice 360, oats 380, peanut butter 600), the tin's 400 kcal and every price are
-  estimates. They have not been checked against the UK Government's Composition of Foods
-  Integrated Dataset (CoFID); doing so, and citing it, is open.
+- **`items`**: `Item { id, name, category, heading?, measure, unit, countsAs, gives: [{ resource,
+amount, per }], sizes, suitability, shelfLife, ageBand?, typicalPricePence?, tags,
+assetTypeId?, offCategories?, source? }`. **`measure`** is `mass`, `volume` or `count`; sizes use
+  g, kg, ml, L or pieces, and a multipack is `count × size` ("24 × 500 ml"). **`gives`** says what
+  one item gives per **`per`** base units of a product's size (g, ml or pieces); `amount` may be 0
+  when only a label can say (soft drinks: water from the item, kcal from the product label).
+  **`countsAs`** is the one line screens show ("Wet wipes: 1 wipe = 1 hand clean (hygiene)").
+  **`heading`** groups items inside a category in rough supermarket-aisle order (Food: Tins, Dried…).
+  **`sizes`** are quick-add chips, usual size first. **`offCategories`** lists Open Food Facts
+  category tags that mean this item (each tag on one item only); the scan flow uses them to suggest
+  "Counts as …". `gives` may not name `medicationDays` (computed from the document). Tags the
+  engine reads: `needs-cooking`, `radio-rx`, `treatment`, `no-suggest`, `phone`, `portable-power`.
+  **One home per thing.** An item that is really equipment has `assetTypeId`; it is buy-only (price
+  and gives for suggestions), never stock. Quick add routes to the equipment form; a stock row of
+  such an item counts nothing. Stoves, heaters, generators, radios, water butt, alarms and similar
+  are equipment entries; food, water, fuels, cells and hygiene are stock items. **`source`** on an
+  item is where its **`gives`** figures come from: an `https` URL listed in the pack's `sources`,
+  or `"assumption"`. Figures are being checked against sources (including the UK Government's
+  Composition of Foods Integrated Dataset, CoFID, where it applies); `"assumption"` marks what is
+  still an estimate.
 - **`assets`**: `AssetType { id, name, category, questions, contributes, maintenance }`. A
   `Contribution` says what the asset adds to a capability, optionally only `when` a question has an
-  answer: `converts` (burns a store per running hour), `outputPerHour`, `providesPerDay` or
-  `providesPerDayFrom` (fuel-free supply, e.g. solar), `storesWh` (a battery), `holds` (a stock,
+  answer: `converts` (burns a resource per running hour), `outputPerHour`, `providesPerDay` or
+  `providesPerDayFrom` (fuel-free supply, e.g. solar), `storesWh` (a battery), `holds` (held stock,
   e.g. a water butt). Solar and a home battery contribute power **only** when `hasEps` is true; an
   EV only when `v2l`. A contribution with a number carries a `source` (an `https` URL listed in
   the pack's `sources`, or `"assumption"`), as a rule does; the loader requires it.
 - **`guidance`**: `horizonBands` and `rules`. A `Rule` states a quantity (`perPersonDay`,
   `perPetDay`, `perHouseholdDay`, `perHousehold`, `hoursPerDay`, `mealsPerPersonDay` or `rangeKm`), optional
   `appliesTo`, `requires`, `multipliers`, `minHorizonDays`, and a `source`. With `ageBands`, a
-  person in no band needs none.
+  person in no band needs none. Each quantity names a **`resource`** (`ResourceId`), not a "store".
 - **`plans`**: `items: PlanDef[]`; `requires` may name a risk, asset types (any of) or `pets`.
 - **`regions`**: units, currency, `riskLinks`, `subregions`, `suggestedPacks`.
 
 `CapabilityId`: `water food heat cooking light power comms sanitation medical mobility plans`.
-`StoreId`: the game's thirteen stores plus `nappies formulaG petFoodKcal sanitationUses hygieneUses
-medicationDays lumenHours` (`STORE_INFO` has names and units).
+`ResourceId`: the game's thirteen resources plus `nappies formulaG petFoodKcal sanitationUses
+hygieneUses medicationDays lumenHours` (`RESOURCE_INFO` has names and units).
 
 ## How the engine reads these
 
@@ -85,7 +80,8 @@ The numbers mean exactly this; the schema comments in `src/model/packs.ts` say t
   next band. A rule's `ageBands` are a partition (the schema refuses empty or overlapping bands):
   `0-6, 6-12, 12-36` puts a 6-month-old in the second band, and an age in no band needs none. An
   item's `ageBand` says which ages it suits and may overlap its neighbours', because sizes overlap
-  (nappy sizes 2 and 3 both fit a five-month-old).
+  (nappy sizes 2 and 3 both fit a five-month-old). The household's **products** carry sizes; the
+  engine counts stock through them (label kcal when present).
 - **`storesWh.perUnitWh` has no default.** It is what one unit of the answer is worth in Wh:
   `1` for an answer in Wh (power station), `12` for Ah at 12 V (leisure battery), `1000` for kWh
   (home battery, EV). Stored Wh = answer x `perUnitWh` x `usableFraction`.
@@ -133,7 +129,7 @@ no number of days. The 14-day US band is therefore this planner's choice, not Re
 ## Known gaps
 
 - No screens read the packs yet; the engine (`docs/features/engine`) does.
-- `perHousehold` expresses a one-off amount of a store (the first aid kit). A one-off that has no
-  store (a radio, a torch as a thing rather than as light) cannot be a rule: the radio is the
+- `perHousehold` expresses a one-off amount of a resource (the first aid kit). A one-off that has no
+  resource (a radio, a torch as a thing rather than as light) cannot be a rule: the radio is the
   engine's own comms target, and torches count as light.
-- No diesel store: diesel generators and oil heating are not modelled.
+- No diesel resource: diesel generators and oil heating are not modelled.

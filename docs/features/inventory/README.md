@@ -14,8 +14,7 @@ The Stores tab: what the household has, by where it is kept, and the quick way t
 | Edit and minimums | `screens/stores/ItemSheet.tsx`, `FloorSheet.tsx`                         | Quantity stepper, place, best-before, delete with undo; the minimum of each type in a rotating place. |
 | Month field       | `screens/stores/MonthField.tsx`                                          | A month box and one-tap chips for the best-before.                                                    |
 | Scanning          | `screens/stores/ScanSheet.tsx`, `StocktakeScreen.tsx`, `ScansToSort.tsx` | Scan a barcode in Quick add, stocktake mode, scans to sort. See [Scanning](../scanning/README.md).    |
-| Pure helpers      | `screens/stores/stock.ts`, `customType.ts`                               | Suitability warning, month parsing, search, adding stock, custom item types.                          |
-| Custom types      | `customTypes` in the document, `src/packs/custom.ts`                     | `withCustomTypes` merges them into the packs as a pseudo-pack `custom`; `usePacks()` in screens.      |
+| Pure helpers      | `screens/stores/stock.ts`                                                | Suitability warning, month parsing, search, adding stock.                                             |
 
 ## Behaviour worth knowing
 
@@ -45,9 +44,8 @@ The Stores tab: what the household has, by where it is kept, and the quick way t
   stock: a search that matches a stove, generator or battery lists it under "Equipment: add to
   your home", which opens the equipment form with that type chosen, and with nothing typed there is
   one such route to the equipment screen. The
-  equipment matches sit between the search box and "Add as a custom item", so a stove is not saved
-  as a custom stock item by mistake.
-  "Add as a custom item" is under the search box. The place starts as where that type already
+  equipment matches sit under the search box so a stove is not saved as stock by mistake. Items
+  come only from the pack (no custom items). The place starts as where that type already
   lives, else the last place used, else the fullest place. Stock of the same type, place and best-before is added to rather than listed twice. The
   best-before is optional; the chips follow how long the type keeps (+1 y, +2 y, +5 y for things that
   keep for years). A counter shows what was added this session. After an add the sheet offers
@@ -60,14 +58,10 @@ The Stores tab: what the household has, by where it is kept, and the quick way t
   reads the best-before month off the pack (it ignores the stocktake's "Read dates with the camera"
   switch); **Use this date** fills the field and you still tap Add.
   See [Scanning](../scanning/README.md).
-- **Custom items.** "Add as a custom item" asks for a name, a category and, for food and water, what
-  one piece gives (kcal, litres). Other categories may give a store or nothing. The type is saved in
-  `customTypes` as `custom:<uuid>` and counts like any pack item. It suits every place and has no
-  shelf life; editing or deleting a custom type is not built.
-- **Read-only.** When the document is read-only the controls that write are disabled.
+- **Read-only.** When the document is read-only (`too-new` or `too-old` on the store) the controls
+  that write are disabled.
 
 ## Not done
 
 - Review of items that are about to expire: the colouring and words are display only.
-- Editing or deleting a custom type.
 - Adding a type to a place's minimums without stock in it.

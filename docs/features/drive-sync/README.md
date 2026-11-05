@@ -54,7 +54,7 @@ Automatic. The pill says where things stand.
 - **Merge** is the CRDT's: concurrent edits to different records, or different fields of one
   record, never conflict. The app keeps the bytes of the document **as of the last successful
   push or pull** and compares base to local and base to remote record by record. A record is an
-  item, custom item type, location, asset, plan item, review, member, pet, the home or the settings.
+  stock row, product, location, asset, plan item, review, member, pet, the home or the settings.
   - The last-synced state, the Drive ids and the pending questions are shared by the tabs of one
     browser: every pass reloads them first, so a question answered in one tab is not asked again
     in another.
@@ -96,6 +96,14 @@ Edits made offline stay marked as unsent across reloads and are sent when the ne
 - **Newer schema.** If `meta.schemaVersion` on Drive (read from the small `household.json` first,
   then from the CRDT itself) is newer than this build, nothing is merged and the status is `error`:
   "Your other device runs a newer version; update this one".
+- **Older household (before schema 4).** If Drive's file has `meta.schemaVersion` below
+  `OLDEST_SCHEMA_VERSION` (4), nothing is merged. Sync records that an **older remote** is waiting
+  and shows a dialog: "Google Drive has a household from an older version of the app, which this
+  version cannot open. Replace it with the household on this device?" **Replace it** pushes this
+  device's schema-4 household over Drive's file; **Not now** leaves sync off until the app is
+  reopened (same pattern as the other-build dialog). A device that still has a schema-1–3 household
+  locally hits the full-screen **too-old** gate instead (`TooOld.tsx`): start a new household there
+  (Drive sign-in kept) or download a copy first. Import refuses an older export with the same rule.
 - **Another build's file.** Each push stamps `meta.env`. There is no standing banner: the file's
   environment is shown where files come in or go out. "This household file was last written by
   {env}; you are on {env}" appears in the **first-connect dialog**, in the **import preview**, and

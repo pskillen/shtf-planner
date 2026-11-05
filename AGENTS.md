@@ -55,16 +55,21 @@ project of the SHTF game (`shtf-game`). Working title.
 - **Screens never compute targets.** How much a household needs is the engine's job; screens
   collect facts (`useChange`) and show what the engine returns. Screens live in
   `src/app/screens/`, sheets and form controls in `src/app/components/`.
-- **Packs for screens.** Screens call the engine and look up item types through `usePacks()`
-  (`src/app/usePacks.ts`): the bundled packs with the household's own `customTypes` merged in
-  (`withCustomTypes`, `src/packs/custom.ts`).
+- **Packs for screens.** Screens call the engine and look up **items** through `usePacks()`
+  (`src/app/usePacks.ts`): the bundled packs only. **Products**, **stock** and **minimums** live in
+  the document; there are no custom items.
+- **Words.** **Item** (generic, from the pack), **product** (household-specific), **stock** (a
+  quantity in a place), **resource** (a named quantity targets count: water litres, food kcal…; not
+  "store"), **category** (Food, Water…), **capability** (water, food, heat…). **`src/store`** is the
+  document store, not a resource.
 - **Packs.** Content (items, assets, guidance, plans, regions) is JSON in `src/packs/data/`,
   validated by `src/packs/loader.ts`. Every guidance rule has a `source` URL (listed in the pack's
   `sources` with the date checked) or `"assumption"`; never invent an official number. Bump a
   pack's `version` when its content changes. See `docs/features/content-packs/`.
 - **The document shape is a schema.** Changing it means a `SCHEMA_VERSION` bump and an idempotent
   migration step in `src/model/migrate.ts`; the container layout of a new document is frozen per
-  schema. See `docs/features/data-model/`.
+  schema. Schema 4 started afresh (items, products, stock, minimums): older documents are refused,
+  not migrated. See `docs/features/data-model/`.
 - **Privacy.** Nothing leaves the browser except the user's own document to the user's own Google
   Drive, and the digits of a barcode the person scans to Open Food Facts (only while online, only
   for a barcode the household has not met, or asks to identify again, or is sorting from the queue;
