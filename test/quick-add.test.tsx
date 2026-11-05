@@ -130,6 +130,15 @@ describe('Quick add: the search step', () => {
     expect(screen.queryByRole('region', { name: 'Suggested sizes' })).toBeNull();
   });
 
+  it('adds a half pack when quantity is 0.5', () => {
+    const s = open();
+    pickFromSearch('tinned', /Tinned soup/);
+    const before = s.doc().stock['stock-soup']!.qty;
+    fireEvent.click(screen.getByRole('radio', { name: '½' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+    expect(s.doc().stock['stock-soup']!.qty).toBe(before + 0.5);
+  });
+
   it('merges stock when product, place and best-before month match', () => {
     const s = open();
     pickFromSearch('water container', /Water containers/i);

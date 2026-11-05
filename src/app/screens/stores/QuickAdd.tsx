@@ -92,7 +92,7 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
     };
 
   function put(): void {
-    if (!location || qty < 1) return;
+    if (!location || qty <= 0) return;
     let ensured: string | undefined;
     let savedId: string | undefined;
     change('add stock', (d) => {
@@ -210,7 +210,7 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
   }
 
   const formTitle = product?.name ?? activeItem?.name ?? '';
-  const canAdd = Boolean(location && qty >= 1 && (productId || pendingNew));
+  const canAdd = Boolean(location && qty > 0 && (productId || pendingNew));
   const counter =
     added > 0 ? (
       <p className="muted" role="status" data-testid="added-count">
