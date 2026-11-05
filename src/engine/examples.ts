@@ -89,9 +89,9 @@ const label = (p: Pick): string =>
 /**
  * The split of a food target across everyday staples, as shares of the kcal. It is fixed and
  * only illustrates the variety (tins, grains, a spread), it is not a diet: the shares add to 1.
- * Each part names an item (a local id in the items pack); the smallest of its sizes with at most
- * `EXAMPLE_MAX_UNITS` packs (70 for tins, which are counted in dozens) is used. Parts whose item
- * is missing are left out and the rest share the kcal.
+ * Each part names an item (a local id in the items pack); its usual size (`sizes[0]`) is tried
+ * first, then larger sizes only if that count would exceed `EXAMPLE_MAX_UNITS` (70 for tins,
+ * which are counted in dozens). Parts whose item is missing are left out and the rest share the kcal.
  */
 export const FOOD_MIX: ReadonlyArray<{
   share: number;
@@ -131,15 +131,20 @@ export function foodMixExample(ctx: SuggestContext, kcal: number): string | unde
   const order: string[] = [];
   const groups = new Map<string, { show: 'kg' | 'count'; picks: Pick[] }>();
   for (const part of parts) {
-    // Sizes are tried smallest first, so the first that gives a sane count wins.
     const share = (kcal * part.share) / total;
-    const sizes = [...part.itemDef.sizes].sort((a, b) => baseAmount(a) - baseAmount(b));
-    const picks = sizes.map((size) => {
+    const usual = part.itemDef.sizes[0]!;
+    const larger = [...part.itemDef.sizes]
+      .slice(1)
+      .filter((s) => baseAmount(s) > baseAmount(usual))
+      .sort((a, b) => baseAmount(a) - baseAmount(b));
+    const sizes = [usual, ...larger];
+    const max = part.maxUnits ?? EXAMPLE_MAX_UNITS;
+    let pick!: Pick;
+    for (const size of sizes) {
       const per = packGives({ size }, part.itemDef).find((g) => g.resource === 'foodKcal')!.amount;
-      return { item: part.itemDef, size, per, units: unitsFor(share, per) } satisfies Pick;
-    });
-    const pick =
-      picks.find((p) => p.units <= (part.maxUnits ?? EXAMPLE_MAX_UNITS)) ?? picks.at(-1)!;
+      pick = { item: part.itemDef, size, per, units: unitsFor(share, per) };
+      if (pick.units <= max) break;
+    }
     const group = groups.get(part.group);
     if (!group) order.push(part.group);
     groups.set(part.group, { show: part.show, picks: [...(group?.picks ?? []), pick] });

@@ -35,7 +35,7 @@ describe('preview examples on the Biggar household', () => {
       expect(food).not.toMatch(/Dried pasta \(5 kg\)/);
     }
     expect(at(3, 'food').example).toBe(
-      'e.g. 33 tins, 3 kg of pasta and rice, 1 kg of porridge oats and 3 jars of peanut butter',
+      'e.g. 18 tins, 3.5 kg of pasta and rice, 1 kg of porridge oats and 3 jars of peanut butter',
     );
   });
 
