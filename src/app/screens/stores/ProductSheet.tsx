@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { Item } from '../../../model';
-import { formatSize } from '../../../util';
+import { formatSize, sizeFits } from '../../../util';
 import { Field } from '../../components/controls';
 import { isDirty } from '../../components/isDirty';
 import { Sheet } from '../../components/Sheet';
@@ -50,6 +50,7 @@ export function ProductSheet({
   const [mode, setMode] = useState<Mode>('main');
   const [name, setName] = useState(product?.name ?? '');
   const [mergeKeepId, setMergeKeepId] = useState<string | null>(null);
+  const [repickItem, setRepickItem] = useState<Item | undefined>(undefined);
 
   const stockPacks = useMemo(
     () => (product ? sumProductPacks(doc, productId, 'all', new Set()) : 0),
@@ -81,24 +82,47 @@ export function ProductSheet({
   };
 
   const applyItem = (next: Item | undefined) => {
-    change('set product item', (d) => setProductItem(d, productId, next?.id));
-    setMode('main');
+    if (next === undefined) {
+      change('set product item', (d) => setProductItem(d, productId, undefined));
+      setRepickItem(undefined);
+      setMode('main');
+      return;
+    }
+    if (sizeFits(product.size, next.measure)) {
+      change('set product item', (d) => setProductItem(d, productId, next.id));
+      setRepickItem(undefined);
+      setMode('main');
+      return;
+    }
+    setRepickItem(next);
+    setMode('size');
   };
 
   const applySize = (done: SizeStepDone) => {
+    const itemToSet = repickItem;
     if ('productId' in done) {
-      if (done.productId === productId) setMode('main');
-      else {
-        const other = doc.products[done.productId];
-        if (other) {
-          change('set product size', (d) => setProductSize(d, productId, other.size));
+      if (done.productId === productId) {
+        if (itemToSet) {
+          change('set product item', (d) => setProductItem(d, productId, itemToSet.id));
         }
+        setRepickItem(undefined);
         setMode('main');
+        return;
       }
+      const other = doc.products[done.productId];
+      if (other) {
+        change('set product size', (d) => {
+          setProductSize(d, productId, other.size);
+          if (itemToSet) setProductItem(d, productId, itemToSet.id);
+        });
+      }
+      setRepickItem(undefined);
+      setMode('main');
       return;
     }
     change('set product size', (d) => {
       setProductSize(d, productId, done.size);
+      if (itemToSet) setProductItem(d, productId, itemToSet.id);
       if (done.name) renameProduct(d, productId, done.name);
       if (done.labelKcalPer100 !== undefined && d.products[productId]) {
         d.products[productId] = {
@@ -107,6 +131,7 @@ export function ProductSheet({
         };
       }
     });
+    setRepickItem(undefined);
     setMode('main');
   };
 
@@ -140,11 +165,12 @@ export function ProductSheet({
     );
   }
 
-  if (mode === 'size' && item) {
+  if (mode === 'size' && (repickItem ?? item)) {
+    const sizeItem = repickItem ?? item!;
     return (
       <Sheet title="Size" onClose={() => setMode('main')}>
         <SizeStep
-          item={item}
+          item={sizeItem}
           labelKcalPer100={product.labelKcalPer100}
           initialName={product.name}
           onDone={applySize}

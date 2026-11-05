@@ -39,7 +39,7 @@ describe('ProductsScreen', () => {
     expect(s.doc().products['prod-beans']!.name).toBe('Heinz Beanz 415 g');
   });
 
-  it('re-points what a product counts as', () => {
+  it('re-points what a product counts as when the size still fits', () => {
     const s = renderProducts();
     fireEvent.click(screen.getByRole('button', { name: /Test beans 415 g/i }));
     fireEvent.click(screen.getByRole('button', { name: 'Change counts as' }));
@@ -49,6 +49,17 @@ describe('ProductsScreen', () => {
     });
     fireEvent.click(within(counts).getByRole('button', { name: /Tinned soup/i }));
     expect(s.doc().products['prod-beans']!.itemId).toBe('items-base:tinned-soup');
+  });
+
+  it('opens the size step before saving when the size does not fit the new item', () => {
+    const s = renderProducts('/app/stores/products?open=prod-can');
+    fireEvent.click(screen.getByRole('button', { name: 'Change counts as' }));
+    fireEvent.change(screen.getByLabelText('What is it?'), { target: { value: 'baked' } });
+    fireEvent.click(screen.getByRole('button', { name: /Baked beans/i }));
+    expect(screen.getByRole('region', { name: 'Suggested sizes' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: '415 g' }));
+    expect(s.doc().products['prod-can']!.itemId).toBe('items-base:baked-beans');
+    expect(s.doc().products['prod-can']!.size).toEqual({ amount: 415, unit: 'g' });
   });
 
   it('resizes a product', () => {
