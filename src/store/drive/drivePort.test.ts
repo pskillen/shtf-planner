@@ -185,7 +185,7 @@ describe('drivePort', () => {
   });
 
   it('a token about to run out is renewed inside a tap, and left alone without one', async () => {
-    const soon = { accessToken: 'soon', expiresAt: NOW + 3 * 60_000 };
+    const soon = { accessToken: 'soon', expiresAt: NOW + 12 * 60_000 };
     saveDriveSession(soon);
     const a = auth();
     const api = fakeApi();
@@ -203,6 +203,16 @@ describe('drivePort', () => {
     await vi.waitFor(() => expect(loadDriveSession()?.accessToken).toBe('fresh'));
     await p.listFiles('f');
     expect(api.listChildren).toHaveBeenLastCalledWith('f', 'fresh');
+  });
+
+  it('a token with more than 15 minutes left is not renewed early, even inside a tap', async () => {
+    saveDriveSession({ accessToken: 'plenty', expiresAt: NOW + 16 * 60_000 });
+    const a = auth();
+    const api = fakeApi();
+    tapped = true;
+    await port(api, a).listFiles('f');
+    expect(a.authorize).not.toHaveBeenCalled();
+    expect(api.listChildren).toHaveBeenLastCalledWith('f', 'plenty');
   });
 
   it('a Google window nobody answers does not hold the sync up', async () => {
