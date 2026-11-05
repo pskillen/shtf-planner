@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { AssetType, Item, OffFacts } from '../../../model';
-import type { OffResult } from '../../../scan/openFoodFacts';
+import type { OffProduct, OffResult } from '../../../scan/openFoodFacts';
 import { isValidGtin, normaliseGtin } from '../../../util';
 import { useDocument } from '../../state';
 import { usePacks } from '../../usePacks';
@@ -12,6 +12,31 @@ export function productLine(p: { name?: string; brand?: string; quantity?: strin
   return p.quantity && !base.toLowerCase().includes(p.quantity.toLowerCase())
     ? `${base} ${p.quantity}`
     : base;
+}
+
+/** kcal line for a scan preview: the label when known, else the item's typical figure. */
+export function previewKcalLine(
+  item: Item | undefined,
+  labelKcalPer100?: number,
+): string | undefined {
+  if (labelKcalPer100 !== undefined && item && item.measure !== 'count') {
+    const per = item.measure === 'volume' ? 'ml' : 'g';
+    return `${labelKcalPer100} kcal per 100 ${per} (from the label)`;
+  }
+  const food = item?.gives.find((g) => g.resource === 'foodKcal');
+  if (!food || !item || item.measure === 'count') return undefined;
+  const per = item.measure === 'volume' ? 'ml' : 'g';
+  return `about ${food.amount} kcal per 100 ${per}`;
+}
+
+/** One line for what Open Food Facts found: name and size, then kcal when there is one. */
+export function offPreviewText(off: OffProduct, suggestItem?: Item): string {
+  const line = productLine(off) || 'a product with no name';
+  const kcal = previewKcalLine(
+    suggestItem,
+    off.kcalPer100 !== undefined ? off.kcalPer100 : undefined,
+  );
+  return kcal ? `${line} · ${kcal}` : line;
 }
 
 /** Stock items the household can use: those of the enabled packs, never equipment, in pack order. */

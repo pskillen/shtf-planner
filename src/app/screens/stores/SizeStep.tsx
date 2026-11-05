@@ -17,10 +17,13 @@ export type SizeStepDone = { productId: string } | NewProduct;
 export function SizeStep({
   item,
   labelKcalPer100,
+  initialName,
   onDone,
 }: {
   item: Item;
   labelKcalPer100?: number;
+  /** Prefill the optional name field (e.g. from Open Food Facts on a scan). */
+  initialName?: string;
   onDone: (result: SizeStepDone) => void;
 }) {
   const doc = useDocument();
@@ -32,7 +35,7 @@ export function SizeStep({
   const [amount, setAmount] = useState(item.sizes[0]?.amount ?? 1);
   const [unit, setUnit] = useState<SizeUnit>(units[0]!);
   const [multipack, setMultipack] = useState<number | undefined>(undefined);
-  const [name, setName] = useState('');
+  const [name, setName] = useState(initialName ?? '');
 
   useLayoutEffect(() => {
     if (!shouldSkipSizeStep(doc, item) || skipped.current) return;

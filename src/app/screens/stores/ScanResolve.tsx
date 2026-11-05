@@ -1,21 +1,39 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { suggestItems } from '../../../engine';
 import type { Item, OffFacts } from '../../../model';
 import type { OffProduct, OffResult } from '../../../scan/openFoodFacts';
 import { sizeFits, today } from '../../../util';
-import { Field } from '../../components/controls';
 import { getOff } from '../../off';
 import { useChange, useDocument } from '../../state';
 import { usePacks } from '../../usePacks';
-import { equipmentAddPath } from '../assets/route';
-import { defaultProductName, ensureProduct, matchItems, rememberBarcode, usualSize } from './stock';
-import { offFactsOf, productLine, useEquipmentMatches, useStockItems } from './scanHelpers';
+import { ItemPicker } from './ItemPicker';
+import { SizeStep, type SizeStepDone } from './SizeStep';
+import { defaultProductName, ensureProduct, rememberBarcode, type NewProduct } from './stock';
+import { offFactsOf, offPreviewText, productLine, useStockItems } from './scanHelpers';
+
+type Phase = 'countsAs' | 'pickItem' | 'size';
+
+function seedToOff(seed: OffFacts): OffProduct {
+  return {
+    found: true,
+    ...(seed.name ? { name: seed.name } : {}),
+    ...(seed.brand ? { brand: seed.brand } : {}),
+    ...(seed.quantity ? { quantity: seed.quantity } : {}),
+    ...(seed.size ? { size: seed.size } : {}),
+    ...(seed.kcalPer100 !== undefined ? { kcalPer100: seed.kcalPer100 } : {}),
+    categories: seed.categories ?? [],
+  };
+}
+
+function seedToResult(seed: OffFacts): OffResult {
+  if (seed.found) return seedToOff(seed);
+  return { found: false, categories: seed.categories ?? [] };
+}
 
 /**
  * The card for a barcode just read. A barcode the household has met before is resolved at once
- * (`onProduct`, no card). Otherwise Open Food Facts is asked (only while online), and the person
- * picks from likely items, searches all items, counts towards nothing, or sorts it later.
+ * (`onProduct`, no card). Open Food Facts makes the product; the person confirms what it counts as,
+ * picks an item, or sorts it later.
  */
 export function ScanResolve({
   code,
@@ -44,9 +62,12 @@ export function ScanResolve({
     knownProduct && (!knownItem || knownItem.assetTypeId === undefined) ? knownProduct : undefined;
   const known = reidentify ? undefined : knownStock;
 
-  const [result, setResult] = useState<OffResult | 'looking'>('looking');
-  const [searching, setSearching] = useState(false);
-  const [query, setQuery] = useState('');
+  const [result, setResult] = useState<OffResult | 'looking'>(() =>
+    seed ? seedToResult(seed) : reidentify ? { found: false, categories: [] } : 'looking',
+  );
+  const [phase, setPhase] = useState<Phase>(() => (reidentify ? 'pickItem' : 'countsAs'));
+  const [sizeItem, setSizeItem] = useState<Item | undefined>(undefined);
+  const [sizeName, setSizeName] = useState<string | undefined>(undefined);
 
   const resolved = useRef<string | null>(null);
   useEffect(() => {
@@ -56,7 +77,7 @@ export function ScanResolve({
   }, [known, code, onProduct]);
 
   useEffect(() => {
-    if (known) return;
+    if (known || seed || reidentify) return;
     let cancelled = false;
     void getOff()
       .lookup(code)
@@ -66,57 +87,77 @@ export function ScanResolve({
     return () => {
       cancelled = true;
     };
-  }, [code, known]);
+  }, [code, known, seed, reidentify]);
 
   const product: OffProduct | undefined = typeof result === 'object' ? result : undefined;
   const found = product?.found ? product : undefined;
   const seeded = !found && seed?.found ? seedToOff(seed) : undefined;
   const off = found ?? seeded;
-  const line = off ? productLine(off) : '';
-
-  const guesses = useMemo(
-    () => (found ? suggestItems({ categories: found.categories, size: found.size }, items) : []),
-    [found, items],
+  const suggest = useMemo(
+    () =>
+      off ? suggestItems({ categories: off.categories, size: off.size }, items)[0] : undefined,
+    [off, items],
   );
-  const shown = useMemo(
-    () => (searching ? matchItems(items, query) : []),
-    [searching, items, query],
-  );
-  const equipmentShown = useEquipmentMatches(query, searching);
 
   if (known) return null;
 
-  function rememberAndFinish(item: Item): void {
-    let productId = '';
+  const labelKcal = off?.kcalPer100 !== undefined ? off.kcalPer100 : undefined;
+  const offName = off ? productLine(off) : undefined;
+
+  function rememberProduct(productId: string): void {
     change('remember barcode', (d) => {
-      const size = off?.size && sizeFits(off.size, item.measure) ? off.size : usualSize(item);
-      const label =
-        off?.kcalPer100 !== undefined && item.measure !== 'count' ? off.kcalPer100 : undefined;
-      const name = off ? productLine(off) : undefined;
-      ({ id: productId } = ensureProduct(
-        d,
-        { itemId: item.id, size, labelKcalPer100: label, name },
-        packs,
-        today(),
-      ));
       rememberBarcode(d, code, productId, today());
     });
     onProduct(productId);
+  }
+
+  function finishNew(p: NewProduct): void {
+    let productId = '';
+    change('remember barcode', (d) => {
+      ({ id: productId } = ensureProduct(d, p, packs, today()));
+      rememberBarcode(d, code, productId, today());
+    });
+    onProduct(productId);
+  }
+
+  function finishItem(item: Item): void {
+    const size = off?.size && sizeFits(off.size, item.measure) ? off.size : undefined;
+    if (size) {
+      const label = labelKcal !== undefined && item.measure !== 'count' ? labelKcal : undefined;
+      finishNew({
+        itemId: item.id,
+        size,
+        labelKcalPer100: label,
+        name: offName,
+      });
+      return;
+    }
+    setSizeItem(item);
+    setSizeName(offName);
+    setPhase('size');
+  }
+
+  function onSizeDone(done: SizeStepDone): void {
+    if ('productId' in done) {
+      rememberProduct(done.productId);
+      return;
+    }
+    finishNew(done);
   }
 
   function countsTowardsNothing(): void {
-    let productId = '';
-    change('remember barcode', (d) => {
-      const size = off?.size ?? { amount: 1, unit: 'pieces' as const };
-      const name = off ? productLine(off) : defaultProductName(undefined, size);
-      ({ id: productId } = ensureProduct(d, { size, name }, packs, today()));
-      rememberBarcode(d, code, productId, today());
-    });
-    onProduct(productId);
+    const size = off?.size ?? { amount: 1, unit: 'pieces' as const };
+    const name = off ? productLine(off) : defaultProductName(undefined, size);
+    finishNew({ size, name });
   }
 
-  const why =
-    result === 'offline'
+  function onPickedProduct(productId: string): void {
+    rememberProduct(productId);
+  }
+
+  const why = reidentify
+    ? null
+    : result === 'offline'
       ? 'Not known yet. You are offline, so Open Food Facts could not be asked.'
       : result === 'busy'
         ? 'Not known yet. Open Food Facts is busy; try again in a minute.'
@@ -126,133 +167,153 @@ export function ScanResolve({
             ? null
             : 'Not known yet. Open Food Facts does not have this one.';
 
+  const showCountsAs = Boolean(off && phase === 'countsAs' && suggest);
+  const showPicker =
+    result !== 'looking' &&
+    (phase === 'pickItem' || !off || (Boolean(off) && !suggest && phase === 'countsAs'));
+  const preview = off ? offPreviewText(off, suggest) : '';
+
   return (
     <div className="scan-card" aria-label={`Barcode ${code}`}>
       <p className="muted" data-testid="scan-code">
         Barcode {code}
         {reidentify && knownStock ? ` · remembered as ${knownStock.name}` : ''}
       </p>
-      {result === 'looking' && !seeded ? <p role="status">Looking it up…</p> : null}
-      {off ? (
+      {result === 'looking' && !seed ? <p role="status">Looking it up…</p> : null}
+      {off && phase !== 'size' ? (
         <p role="status">
-          Open Food Facts says: <strong>{line || 'a product with no name'}</strong>
+          <strong>{preview}</strong>
         </p>
       ) : null}
       {why ? <p role="status">{why}</p> : null}
-      {guesses.length > 0 ? (
+      {showCountsAs && suggest ? (
         <>
-          <h3>Which of these is it?</h3>
-          <ul className="row-list">
-            {guesses.map((t) => (
-              <li className="row-item" key={t.id}>
-                <button type="button" className="row-main" onClick={() => rememberAndFinish(t)}>
-                  <strong>{t.name}</strong>
-                  <span className="muted">{t.countsAs}</span>
+          <h3>Counts as: {suggest.name}?</h3>
+          <div className="scan-choices">
+            <div className="scan-choice">
+              <button
+                type="button"
+                aria-describedby="choice-yes"
+                onClick={() => finishItem(suggest)}
+              >
+                Yes
+              </button>
+              <p className="muted" id="choice-yes">
+                Make this product and remember the barcode
+              </p>
+            </div>
+            <div className="scan-choice">
+              <button
+                type="button"
+                className="secondary"
+                aria-describedby="choice-other"
+                onClick={() => setPhase('pickItem')}
+              >
+                Something else
+              </button>
+              <p className="muted" id="choice-other">
+                Choose a different item from the list
+              </p>
+            </div>
+            <div className="scan-choice">
+              <button
+                type="button"
+                className="secondary"
+                aria-describedby="choice-nothing"
+                onClick={() => countsTowardsNothing()}
+              >
+                Counts towards nothing
+              </button>
+              <p className="muted" id="choice-nothing">
+                Keep it listed; it scores nothing towards the plan
+              </p>
+            </div>
+            {onSortLater ? (
+              <div className="scan-choice">
+                <button
+                  type="button"
+                  className="secondary"
+                  aria-describedby="choice-later"
+                  disabled={sortLaterBlocked !== undefined}
+                  onClick={() =>
+                    onSortLater(
+                      found
+                        ? offFactsOf(found)
+                        : seeded
+                          ? offFactsOf(seeded as OffProduct)
+                          : undefined,
+                    )
+                  }
+                >
+                  Decide later
                 </button>
-              </li>
-            ))}
-          </ul>
+                <p className="muted" id="choice-later">
+                  Keep the scan; sort it on Stores
+                </p>
+              </div>
+            ) : null}
+          </div>
         </>
       ) : null}
-      {searching ? (
+      {showPicker && phase !== 'size' ? (
         <>
-          <Field label="Search items">
-            <input
-              type="search"
-              autoComplete="off"
-              autoFocus
-              value={query}
-              placeholder="Water, tinned soup, torch…"
-              onChange={(e) => setQuery(e.target.value)}
-            />
-          </Field>
-          {equipmentShown.length > 0 ? (
-            <ul className="row-list" aria-label="Equipment: add to your home">
-              {equipmentShown.map((t) => (
-                <li className="row-item" key={t.id}>
-                  <Link className="row-main" to={equipmentAddPath(t.id)}>
-                    <strong>{t.name}</strong>
-                    <span className="muted">Opens the equipment form, not stock</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+          <ItemPicker
+            searchLabel="What is it?"
+            onItem={(item) => finishItem(item)}
+            onProduct={onPickedProduct}
+          />
+          {!showCountsAs ? (
+            <div className="scan-choices">
+              <div className="scan-choice">
+                <button
+                  type="button"
+                  className="secondary"
+                  aria-describedby="choice-nothing-unknown"
+                  onClick={() => countsTowardsNothing()}
+                >
+                  Counts towards nothing
+                </button>
+                <p className="muted" id="choice-nothing-unknown">
+                  Keep it listed; it scores nothing towards the plan
+                </p>
+              </div>
+              {onSortLater ? (
+                <div className="scan-choice">
+                  <button
+                    type="button"
+                    className="secondary"
+                    aria-describedby="choice-later-unknown"
+                    disabled={sortLaterBlocked !== undefined}
+                    onClick={() =>
+                      onSortLater(
+                        found
+                          ? offFactsOf(found)
+                          : seeded
+                            ? offFactsOf(seeded as OffProduct)
+                            : undefined,
+                      )
+                    }
+                  >
+                    Decide later
+                  </button>
+                  <p className="muted" id="choice-later-unknown">
+                    Keep the scan; sort it on Stores
+                  </p>
+                </div>
+              ) : null}
+            </div>
           ) : null}
-          <ul className="row-list">
-            {shown.slice(0, 30).map((t) => (
-              <li className="row-item" key={t.id}>
-                <button type="button" className="row-main" onClick={() => rememberAndFinish(t)}>
-                  <strong>{t.name}</strong>
-                  <span className="muted">{t.countsAs}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
         </>
       ) : null}
-      <div className="scan-choices">
-        {searching ? null : (
-          <div className="scan-choice">
-            <button
-              type="button"
-              className="secondary"
-              aria-describedby="choice-pick"
-              onClick={() => setSearching(true)}
-            >
-              Pick what it is
-            </button>
-            <p className="muted" id="choice-pick">
-              Choose from the list of items
-            </p>
-          </div>
-        )}
-        <div className="scan-choice">
-          <button
-            type="button"
-            className="secondary"
-            aria-describedby="choice-nothing"
-            onClick={() => countsTowardsNothing()}
-          >
-            Counts towards nothing
-          </button>
-          <p className="muted" id="choice-nothing">
-            Keep it listed; it scores nothing towards the plan
-          </p>
-        </div>
-        {onSortLater ? (
-          <div className="scan-choice">
-            <button
-              type="button"
-              className="secondary"
-              aria-describedby="choice-later"
-              disabled={sortLaterBlocked !== undefined}
-              onClick={() =>
-                onSortLater(
-                  found ? offFactsOf(found) : seeded ? offFactsOf(seeded as OffProduct) : undefined,
-                )
-              }
-            >
-              Decide later
-            </button>
-            <p className="muted" id="choice-later">
-              Keep the scan; sort it on Stores
-            </p>
-          </div>
-        ) : null}
-      </div>
+      {phase === 'size' && sizeItem ? (
+        <SizeStep
+          item={sizeItem}
+          labelKcalPer100={labelKcal}
+          initialName={sizeName}
+          onDone={onSizeDone}
+        />
+      ) : null}
       {onSortLater && sortLaterBlocked ? <p className="muted">{sortLaterBlocked}</p> : null}
     </div>
   );
-}
-
-function seedToOff(seed: OffFacts): OffProduct {
-  return {
-    found: true,
-    ...(seed.name ? { name: seed.name } : {}),
-    ...(seed.brand ? { brand: seed.brand } : {}),
-    ...(seed.quantity ? { quantity: seed.quantity } : {}),
-    ...(seed.size ? { size: seed.size } : {}),
-    ...(seed.kcalPer100 !== undefined ? { kcalPer100: seed.kcalPer100 } : {}),
-    categories: seed.categories ?? [],
-  };
 }

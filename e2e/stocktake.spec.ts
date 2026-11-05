@@ -134,12 +134,12 @@ test.describe('stocktake with a fake camera', () => {
     await countTin(page, KNOWN, SPREAD);
     expect(net.offUrls).toHaveLength(0);
 
-    // 2. A new one: Open Food Facts says what it is, the person picks, the app remembers.
+    // 2. A new one: Open Food Facts says what it is, the person confirms counts-as, the app remembers.
     await show(page, BEANS);
-    await expect(page.getByText('Open Food Facts says:')).toBeVisible();
     await expect(page.getByText('Test beans 415 g')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Counts as: Baked beans?' })).toBeVisible();
     await cam(page, 'clear');
-    await page.getByRole('button', { name: /Baked beans/ }).click();
+    await page.getByRole('button', { name: 'Yes' }).click();
     await expect(dateCard(page, BEANS_PRODUCT)).toBeVisible();
     await firstChip(page);
     await ok(page);
@@ -212,7 +212,7 @@ test.describe('stocktake with a fake camera', () => {
     await expect(
       page.getByRole('dialog', { name: 'Sort this scan' }).getByText('Test beans 415 g'),
     ).toBeVisible({ timeout: 15_000 });
-    await page.getByRole('button', { name: /Baked beans/ }).click();
+    await page.getByRole('button', { name: 'Yes' }).click();
     const d = await doc(page);
     expect(Object.keys(d.scans)).toHaveLength(0);
     expect(Object.values(d.stock).filter((i) => i.source === 'barcode')).toHaveLength(1);
@@ -234,9 +234,9 @@ test.describe('stocktake with a fake camera', () => {
 
     // A code held sideways: the turned attempts find it.
     await show(page, BEANS, true);
-    await expect(page.getByText('Open Food Facts says:')).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('Test beans 415 g')).toBeVisible({ timeout: 15_000 });
     await cam(page, 'clear');
-    await page.getByRole('button', { name: /Baked beans/ }).click();
+    await page.getByRole('button', { name: 'Yes' }).click();
     await firstChip(page);
     await ok(page);
     await page.getByRole('button', { name: 'Done' }).click();
@@ -302,7 +302,7 @@ test.describe('stocktake with a fake camera', () => {
     const net = await setUp(page, context);
     await open(page, '/app/stores/stocktake');
     await show(page, BEANS);
-    await expect(page.getByText('Open Food Facts says:')).toBeVisible();
+    await expect(page.getByText('Test beans 415 g')).toBeVisible();
     await cam(page, 'clear');
     await page.getByRole('button', { name: 'Scan another' }).click();
     await show(page, NOT_FOUND);

@@ -30,9 +30,9 @@ function scanLine(scan: Scan): string {
 }
 
 /**
- * The scans waiting to be sorted. Tap one for the same "Which of these is it?" card as when
- * scanning; choosing makes it stock (`source: 'barcode'`) and takes it off the list. Each row can
- * be deleted, with undo.
+ * The scans waiting to be sorted. Tap one for the same scan card as when scanning (using stored
+ * Open Food Facts facts, no new lookup); choosing makes it stock (`source: 'barcode'`) and takes
+ * it off the list. Each row can be deleted, with undo.
  */
 export function ScansToSort({ onClose }: { onClose: () => void }) {
   const doc = useDocument();

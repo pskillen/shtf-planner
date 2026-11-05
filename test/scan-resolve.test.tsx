@@ -69,25 +69,25 @@ describe('Quick add: Scan a barcode', () => {
     await read(KNOWN);
     await screen.findByText('Add Test spread 400 g');
     fireEvent.click(screen.getByRole('button', { name: 'Not this item?' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Pick what it is' }));
-    fireEvent.change(screen.getByLabelText('Search items'), {
+    fireEvent.change(await screen.findByLabelText('What is it?'), {
       target: { value: 'soup' },
     });
     fireEvent.click(screen.getByRole('button', { name: /Tinned soup/ }));
+    fireEvent.click(screen.getByRole('button', { name: '400 g' }));
     expect(await screen.findByText(/Add .*soup/i)).toBeTruthy();
     expect(s.doc().barcodes[KNOWN]?.productId).not.toBe('prod-spread');
     fireEvent.click(screen.getByRole('button', { name: 'Add' }));
     expect(barcodeStock(s).some((r) => r.productId !== 'prod-spread')).toBe(true);
   });
 
-  it('an unknown barcode asks Open Food Facts, offers likely items, and remembers the product', async () => {
+  it('an unknown barcode asks Open Food Facts, counts-as Yes, and remembers the product', async () => {
     const lookup = fakeOff({ [UNKNOWN]: beans });
     const s = await openScanner();
     await read(UNKNOWN);
-    expect(await screen.findByText('Test beans 415 g')).toBeTruthy();
+    expect(await screen.findByText(/Test beans 415 g/)).toBeTruthy();
     expect(lookup).toHaveBeenCalledWith(UNKNOWN);
-    expect(screen.getByText('Which of these is it?')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: /Baked beans/ }));
+    expect(screen.getByRole('heading', { name: 'Counts as: Baked beans?' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Yes' }));
     expect(s.doc().barcodes[UNKNOWN]?.productId).toBeDefined();
     expect(await screen.findByText(/Add /)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Add' }));
@@ -100,7 +100,7 @@ describe('Quick add: Scan a barcode', () => {
     const s = await openScanner();
     await read(UNKNOWN);
     expect(await screen.findByText(/You are offline/)).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Pick what it is' })).toBeTruthy();
+    expect(screen.getByLabelText('What is it?')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Counts towards nothing' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Decide later' }));
     const scans = Object.values(s.doc().scans);
@@ -115,9 +115,10 @@ describe('Quick add: Scan a barcode', () => {
     const s = await openScanner();
     const before = Object.keys(s.doc().stock).length;
     await read(UNKNOWN);
-    fireEvent.click(await screen.findByRole('button', { name: 'Pick what it is' }));
-    fireEvent.change(screen.getByLabelText('Search items'), { target: { value: 'camping stove' } });
-    const route = screen.getByRole('list', { name: 'Equipment: add to your home' });
+    fireEvent.change(await screen.findByLabelText('What is it?'), {
+      target: { value: 'camping stove' },
+    });
+    const route = screen.getByRole('region', { name: 'Equipment: add to your home' });
     expect(route.querySelector('a')?.getAttribute('href')).toMatch(/^\/app\/assets\?add=/);
     expect(Object.keys(s.doc().stock)).toHaveLength(before);
   });
