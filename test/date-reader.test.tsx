@@ -26,9 +26,9 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-const KNOWN = '3017620422003'; // in the fixture: Peanut butter (340 g jar)
-const barcodeItems = (s: ReturnType<typeof liveStore>) =>
-  Object.values(s.doc().items).filter((i) => i.source === 'barcode');
+const KNOWN = '3017620422003'; // fixture: prod-spread
+const barcodeStock = (s: ReturnType<typeof liveStore>) =>
+  Object.values(s.doc().stock).filter((r) => r.source === 'barcode');
 const monthBox = () =>
   document.querySelector('input[type="month"], input[placeholder="Mar 2027"]') as HTMLInputElement;
 const ok = () => fireEvent.click(screen.getByRole('button', { name: 'OK' }));
@@ -38,7 +38,7 @@ async function toDateStep() {
   render(s.wrap(<StocktakeScreen />));
   await waitFor(() => expect(scanState.onCode).toBeDefined());
   await act(async () => scanState.onCode!(KNOWN));
-  await screen.findByText('Peanut butter (340 g jar)');
+  await screen.findByText('Test spread 400 g');
   await waitFor(() => expect(dateState.starts).toBe(1));
   return s;
 }
@@ -56,9 +56,9 @@ describe('Stocktake: reading the date with the camera', () => {
     expect(screen.getByText('Jun 2028', { selector: '.date-month' })).toBeTruthy();
     expect(screen.getByTestId('date-status').textContent).toBe('Got it');
     expect(monthBox().value).toBe('2028-06');
-    expect(barcodeItems(s)).toHaveLength(0);
+    expect(barcodeStock(s)).toHaveLength(0);
     ok();
-    expect(barcodeItems(s)[0]).toMatchObject({ bestBefore: '2028-06', source: 'barcode' });
+    expect(barcodeStock(s)[0]).toMatchObject({ bestBefore: '2028-06', source: 'barcode' });
     expect(screen.getByText('1 BARCODE')).toBeTruthy();
   });
 
@@ -75,7 +75,7 @@ describe('Stocktake: reading the date with the camera', () => {
     fireEvent.click(screen.getByRole('button', { name: '+1 y' }));
     expect(monthBox().value).not.toBe('2028-06');
     ok();
-    expect(barcodeItems(s)[0]!.bestBefore).not.toBe('2028-06');
+    expect(barcodeStock(s)[0]!.bestBefore).not.toBe('2028-06');
     fireEvent.click(screen.getByRole('button', { name: 'Done' }));
     expect(screen.getByTestId('stocktake-date-summary').textContent).toMatch(
       /dates by camera 0 · picked 1 · from a suggestion 0/,
@@ -113,9 +113,9 @@ describe('Stocktake: reading the date with the camera', () => {
     expect(screen.getByTestId('date-status').textContent).toBe('No date found');
     const group = screen.getByRole('group', { name: 'Suggested dates' });
     expect(within(group).getAllByRole('button')).toHaveLength(2);
-    expect(barcodeItems(s)).toHaveLength(0);
+    expect(barcodeStock(s)).toHaveLength(0);
     fireEvent.click(within(group).getByRole('button', { name: /^Dec 2026/ }));
-    expect(barcodeItems(s)[0]).toMatchObject({ bestBefore: '2026-12' });
+    expect(barcodeStock(s)[0]).toMatchObject({ bestBefore: '2026-12' });
     expect(screen.getByText('1 BARCODE')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Done' }));
     expect(screen.getByTestId('stocktake-date-summary').textContent).toMatch(/from a suggestion 1/);
@@ -136,13 +136,13 @@ describe('Stocktake: reading the date with the camera', () => {
     render(s.wrap(<StocktakeScreen />));
     await waitFor(() => expect(scanState.onCode).toBeDefined());
     await act(async () => scanState.onCode!(KNOWN));
-    await screen.findByText('Peanut butter (340 g jar)');
+    await screen.findByText('Test spread 400 g');
     expect(
       await screen.findByText('The date reader isn’t available here; pick the date.'),
     ).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: '+1 y' }));
     ok();
-    expect(barcodeItems(s)).toHaveLength(1);
+    expect(barcodeStock(s)).toHaveLength(1);
   });
 
   it('with "Read dates with the camera" off there is no camera read at all', async () => {
@@ -151,12 +151,12 @@ describe('Stocktake: reading the date with the camera', () => {
     render(s.wrap(<StocktakeScreen />));
     await waitFor(() => expect(scanState.onCode).toBeDefined());
     await act(async () => scanState.onCode!(KNOWN));
-    await screen.findByText('Peanut butter (340 g jar)');
+    await screen.findByText('Test spread 400 g');
     expect(dateState.starts).toBe(0);
     expect(screen.queryByTestId('date-status')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: '+1 y' }));
     ok();
-    expect(barcodeItems(s)).toHaveLength(1);
+    expect(barcodeStock(s)).toHaveLength(1);
   });
 
   it('turning the switch off frees the reader and is remembered', () => {
@@ -189,14 +189,12 @@ describe('Quick add: Read the date', () => {
   const openForm = () => {
     const s = liveStore(biggarDocument());
     render(
-      s.wrap(
-        <QuickAdd onClose={() => undefined} prefill={{ typeId: 'items-base:tinned-food-tin' }} />,
-      ),
+      s.wrap(<QuickAdd onClose={() => undefined} prefill={{ itemId: 'items-base:tinned-soup' }} />),
     );
     return s;
   };
   const withDate = (s: ReturnType<typeof liveStore>, ym: string) =>
-    Object.values(s.doc().items).filter((i) => i.bestBefore === ym);
+    Object.values(s.doc().stock).filter((r) => r.bestBefore === ym);
 
   afterEach(() => {
     Object.defineProperty(navigator, 'mediaDevices', { value: undefined, configurable: true });
@@ -229,7 +227,7 @@ describe('Quick add: Read the date', () => {
   it('a suggestion sets the field and does not save', async () => {
     withCamera();
     const s = openForm();
-    const before = Object.keys(s.doc().items).length;
+    const before = Object.keys(s.doc().stock).length;
     fireEvent.click(screen.getByRole('button', { name: 'Read the date' }));
     await waitFor(() => expect(dateState.starts).toBe(1));
     await act(async () =>
@@ -239,7 +237,7 @@ describe('Quick add: Read the date', () => {
     );
     fireEvent.click(await screen.findByRole('button', { name: /^Dec 2026/ }));
     expect(monthBox().value).toBe('2026-12');
-    expect(Object.keys(s.doc().items).length).toBe(before);
+    expect(Object.keys(s.doc().stock).length).toBe(before);
   });
 });
 
@@ -310,7 +308,7 @@ describe('Stocktake: the date step stays what the person sees', () => {
     expect(strip()).not.toMatch(/compact/);
     expect(screen.queryByText('Barcode caught')).toBeNull();
     await act(async () => scanState.onCode!(KNOWN));
-    await screen.findByText('Peanut butter (340 g jar)');
+    await screen.findByText('Test spread 400 g');
     expect(document.querySelector('.camera-flash')).not.toBeNull(); // the catch tick
     await waitFor(() => expect(dateState.starts).toBe(1));
     expect(strip()).not.toMatch(/compact/);

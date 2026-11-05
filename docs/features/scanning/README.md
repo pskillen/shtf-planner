@@ -27,8 +27,8 @@ cleanly in Firefox on Android.
 | Quick add's scanner | `screens/stores/ScanSheet.tsx`                                                                      | The strip, type the barcode number, find it by name                                                      |
 | Stocktake           | `screens/stores/StocktakeScreen.tsx`, route `/app/stores/stocktake`                                 | Step 1 BARCODE, step 2 DATE, OK, Undo, Done summary                                                      |
 | Scans to sort       | `screens/stores/ScansToSort.tsx`, `useScanQueue.ts`                                                 | The queue note on Stores, its sheet, and the lookup of queued codes when online                          |
-| Pure pieces         | `src/util/gtin.ts`, `src/engine/productMatch.ts`                                                    | Check digit and normalising; Open Food Facts categories to likely item types                             |
-| Document            | `barcodes`, `scans` (schema 3)                                                                      | See [Data model](../data-model/README.md)                                                                |
+| Pure pieces         | `src/util/gtin.ts`, `src/engine/itemMatch.ts`                                                       | Check digit and normalising; Open Food Facts categories to likely items                                  |
+| Document            | `barcodes`, `scans`, `products` (schema 4)                                                          | See [Data model](../data-model/README.md)                                                                |
 | Test support        | `e2e/fakeCamera.ts`, `test/helpers/fakeScan.ts`, `test/helpers/fakeDates.ts`                        | A canvas as the camera; a fake Open Food Facts; a fake date reader                                       |
 
 ## The stocktake
@@ -175,25 +175,24 @@ numbers are named constants there.
 
 ## Barcode memory
 
-`barcodes` maps the normalised GTIN (a UPC-A and its EAN-13 form are one key) to an item type, with
-the name Open Food Facts gave it. It is part of the household document, so it syncs. A number that
-fails its check digit is a misread and is ignored.
+`barcodes` maps the normalised GTIN (a UPC-A and its EAN-13 form are one key) to a **product** id.
+It is part of the household document, so it syncs. A number that fails its check digit is a
+misread and is ignored.
 
-**Not this item?** If a remembered barcode turns out to be the wrong type, the date card of the
-stocktake and Quick add's form both have **Not this item?**. It reopens "Which of these is it?"
-(and the full list) for that barcode; choosing a type replaces what the household remembers, for all
-its devices, and keeps the first-seen date and the product name. **Keep** (stocktake) or **Keep as
-it was** (Quick add) leaves it alone.
+**Not this item?** If a remembered barcode points at the wrong product or item, the flow can
+re-ask and re-point the barcode. Choosing anew updates what the
+household remembers on all devices and keeps the first-seen date.
 
 ## Scans to sort
 
 Offline, or when Open Food Facts does not know a code, **Decide later** keeps the scan (`scans`):
-code, quantity and place (nothing sets a best-before on a scan today; a row shows one if it has
-one). It counts towards nothing until sorted. Stores shows "3 scans to sort ›". When the device is
-online the app looks queued codes up by itself, oldest first, within its rate limit, so the names
-are there. Tapping a row shows the same card; choosing a type makes stock with `source: 'barcode'`,
-remembers the barcode and removes the scan. A scan sorted on another device just disappears. Delete
-has an undo.
+code, quantity and place (optional best-before). It counts towards nothing until sorted. Stores
+shows "3 scans to sort ›". When the device is online the app looks queued codes up by itself,
+oldest first, within its rate limit, and stores the answer on the scan as **`off`** (Open Food Facts
+facts: name, size, kcal, categories…). Sorting from the queue uses that cached `off` without a
+fresh lookup. Tapping a row shows the same card; resolving it makes a product and stock with
+`source: 'barcode'`, remembers the barcode and removes the scan. A scan sorted on another device
+just disappears. Delete has an undo.
 
 ## Open Food Facts
 

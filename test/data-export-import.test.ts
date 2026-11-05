@@ -27,57 +27,37 @@ describe('export', () => {
   it('writes the same document as YAML', () => {
     const file = yamlExport(json());
     expect(file.mime).toBe('application/yaml');
-    expect(file.text).toContain('schemaVersion: 3');
+    expect(file.text).toContain('schemaVersion: 4');
     expect(file.text).toContain('Alex');
   });
 });
 
-describe('custom types in export and import', () => {
-  const withType = () => {
-    const doc = biggarDocument();
-    doc.customTypes['custom:soup'] = {
-      id: 'custom:soup',
-      name: 'Soup',
-      category: 'food',
-      unit: 'tin',
-      gives: [{ store: 'foodKcal', amount: 300 }],
-      suitability: ['frost'],
-      shelfLife: 'none',
-      tags: [],
-    };
-    return doc;
-  };
-
+describe('products and stock in export and import', () => {
   it('round-trips through the JSON and the YAML export', () => {
-    const doc = withType();
+    const doc = biggarDocument();
     const text = JSON.stringify(doc, null, 2);
     for (const source of [text, yamlExport(text).text]) {
       const p = previewImport(source);
       if (!p.ok) throw new Error(p.error);
-      expect(JSON.parse(p.json).customTypes).toEqual(doc.customTypes);
+      expect(JSON.parse(p.json).products).toEqual(doc.products);
+      expect(JSON.parse(p.json).stock).toEqual(doc.stock);
     }
   });
 
   it('counts them in the preview like the other record sets', () => {
-    const p = previewImport(JSON.stringify(withType()));
+    const p = previewImport(json());
     if (!p.ok) throw new Error(p.error);
-    expect(p.summary.customTypes).toBe(1);
-    expect(p.summary.items).toBeGreaterThan(0);
+    expect(p.summary.products).toBeGreaterThan(0);
+    expect(p.summary.stock).toBeGreaterThan(0);
   });
 
-  it('a schema-1 export imports with no custom types', () => {
-    const v1: Record<string, unknown> = JSON.parse(json());
-    delete v1.customTypes;
-    (v1.meta as Record<string, unknown>).schemaVersion = 1;
-    const p = previewImport(JSON.stringify(v1));
-    if (!p.ok) throw new Error(p.error);
-    expect(JSON.parse(p.json).customTypes).toEqual({});
-  });
-
-  it('refuses a schema-4 export', () => {
-    const v4: Record<string, unknown> = JSON.parse(json());
-    (v4.meta as Record<string, unknown>).schemaVersion = 4;
-    expect(previewImport(JSON.stringify(v4))).toMatchObject({ ok: false });
+  it('refuses a schema-3 export', () => {
+    const v3: Record<string, unknown> = JSON.parse(json());
+    (v3.meta as Record<string, unknown>).schemaVersion = 3;
+    expect(previewImport(JSON.stringify(v3))).toMatchObject({
+      ok: false,
+      error: 'This file is from an older version of the app and cannot be imported.',
+    });
   });
 });
 
@@ -93,7 +73,8 @@ describe('import preview', () => {
     if (!fromJson.ok || !fromYaml.ok) throw new Error('expected both to parse');
     expect(fromYaml.json).toBe(fromJson.json);
     expect(fromJson.summary.members).toBe(5);
-    expect(fromJson.summary.items).toBeGreaterThan(0);
+    expect(fromJson.summary.products).toBeGreaterThan(0);
+    expect(fromJson.summary.stock).toBeGreaterThan(0);
     expect(JSON.parse(fromJson.json)).toEqual(JSON.parse(JSON.stringify(biggarDocument())));
   });
 
@@ -126,7 +107,7 @@ describe('barcodes and scans in export and import', () => {
       locationId: Object.keys(doc.locations)[0]!,
       bestBefore: '2027-06',
       scanned: '2026-11-04T10:00:00.000Z',
-      product: {
+      off: {
         found: true,
         name: 'Test beans',
         quantity: '415 g',
@@ -154,16 +135,5 @@ describe('barcodes and scans in export and import', () => {
     if (!p.ok) throw new Error(p.error);
     expect(p.summary.barcodes).toBe(1);
     expect(p.summary.scans).toBe(1);
-  });
-
-  it('a schema-2 export imports with empty barcodes and scans', () => {
-    const v2: Record<string, unknown> = JSON.parse(json());
-    delete v2.barcodes;
-    delete v2.scans;
-    (v2.meta as Record<string, unknown>).schemaVersion = 2;
-    const p = previewImport(JSON.stringify(v2));
-    if (!p.ok) throw new Error(p.error);
-    expect(JSON.parse(p.json).barcodes).toEqual({});
-    expect(JSON.parse(p.json).scans).toEqual({});
   });
 });

@@ -2,7 +2,7 @@
   "format": 1,
   "id": "guidance-us-ready",
   "kind": "guidance",
-  "version": 3,
+  "version": 4,
   "name": "US Government: Ready.gov",
   "region": "US",
   "sources": [
@@ -29,7 +29,7 @@
       "capability": "water",
       "text": "One gallon of water per person per day (3.785 litres), for drinking and sanitation. Needs vary and can double in heat.",
       "perPersonDay": {
-        "store": "waterL",
+        "resource": "waterL",
         "amount": 3.785
       },
       "multipliers": [
@@ -45,7 +45,7 @@
       "capability": "food",
       "text": "Non-perishable food, a several-day supply at least. The site gives no calorie figure; 2,000 kcal per person per day is an assumption.",
       "perPersonDay": {
-        "store": "foodKcal",
+        "resource": "foodKcal",
         "amount": 2000
       },
       "source": "assumption"

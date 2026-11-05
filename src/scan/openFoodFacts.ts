@@ -1,3 +1,5 @@
+import type { Size } from '../model';
+import { parseSize } from '../util';
 import { OFF_MAX_LOOKUPS, OFF_TIMEOUT_MS, OFF_WINDOW_MS } from './tunables';
 
 /**
@@ -10,11 +12,12 @@ export interface OffProduct {
   found: boolean;
   name?: string;
   brand?: string;
-  /** OFF's own text, e.g. "415 g". */
+  /** OFF's own text, e.g. "24 x 330 ml". */
   quantity?: string;
-  grams?: number;
-  ml?: number;
-  kcalPer100g?: number;
+  /** The pack size, read from the text (a multipack) or `product_quantity` and its unit. */
+  size?: Size;
+  /** kcal per 100 g, or per 100 ml for a drink (OFF reports both under the same key). */
+  kcalPer100?: number;
   /** OFF `categories_tags`, e.g. `en:canned-foods`. */
   categories: string[];
 }
@@ -49,19 +52,11 @@ const num = (v: unknown): number | undefined => {
   return Number.isFinite(n) && n > 0 ? n : undefined;
 };
 
-/** OFF's `product_quantity` and its unit as grams or millilitres. */
-function size(p: Record<string, unknown>): { grams?: number; ml?: number } {
-  const n = num(p.product_quantity);
-  if (n === undefined) return {};
-  const unit =
-    typeof p.product_quantity_unit === 'string' ? p.product_quantity_unit.toLowerCase() : 'g';
-  if (unit === 'g') return { grams: n };
-  if (unit === 'kg') return { grams: n * 1000 };
-  if (unit === 'ml') return { ml: n };
-  if (unit === 'cl') return { ml: n * 10 };
-  if (unit === 'l') return { ml: n * 1000 };
-  return {};
-}
+/** Zero or more: a diet drink really is 0 kcal. */
+const nonNegative = (v: unknown): number | undefined => {
+  const n = typeof v === 'string' ? parseFloat(v) : typeof v === 'number' ? v : NaN;
+  return Number.isFinite(n) && n >= 0 ? n : undefined;
+};
 
 function parse(body: unknown): OffProduct {
   const b = (body ?? {}) as { status?: unknown; product?: unknown };
@@ -72,15 +67,21 @@ function parse(body: unknown): OffProduct {
   const text = (v: unknown): string | undefined =>
     typeof v === 'string' && v.trim() !== '' ? v.trim() : undefined;
   const nutriments = (p.nutriments ?? {}) as Record<string, unknown>;
-  const kcal = num(nutriments['energy-kcal_100g']);
+  const kcal = nonNegative(nutriments['energy-kcal_100g']);
+  const quantity = text(p.quantity);
+  const size = parseSize(
+    quantity,
+    num(p.product_quantity),
+    typeof p.product_quantity_unit === 'string' ? p.product_quantity_unit : undefined,
+  );
   const brand = text(p.brands)?.split(',')[0]?.trim();
   return {
     found: true,
     ...(text(p.product_name) ? { name: text(p.product_name)! } : {}),
     ...(brand ? { brand } : {}),
-    ...(text(p.quantity) ? { quantity: text(p.quantity)! } : {}),
-    ...size(p),
-    ...(kcal !== undefined ? { kcalPer100g: kcal } : {}),
+    ...(quantity ? { quantity } : {}),
+    ...(size ? { size } : {}),
+    ...(kcal !== undefined ? { kcalPer100: kcal } : {}),
     categories: Array.isArray(p.categories_tags)
       ? p.categories_tags.filter((t): t is string => typeof t === 'string')
       : [],

@@ -1,8 +1,8 @@
-import type { CapabilityId, Document, Packs, StoreId } from '../model';
+import type { CapabilityId, Document, Packs, ResourceId } from '../model';
 import { HORIZONS } from './assumptions';
 import { analyse } from './coverage';
 import { suggestContext } from './gaps';
-import { storeExample } from './examples';
+import { resourceExample } from './examples';
 import { closeHours } from './suggest';
 import { fmt } from './context';
 import type { Target, TargetKind } from './targets';
@@ -27,7 +27,7 @@ export interface PreviewHorizon {
   rows: PreviewRow[];
 }
 
-const STORE_TITLES: Partial<Record<StoreId, string>> = {
+const RESOURCE_TITLES: Partial<Record<ResourceId, string>> = {
   waterL: 'Drinking water',
   foodKcal: 'Food',
   formulaG: 'Infant formula',
@@ -53,7 +53,7 @@ const CAPABILITY_TITLES: Partial<Record<CapabilityId, string>> = {
 /** The sentence-case name a screen shows for a target (a medication is shown by its own name). */
 function titleOf(t: Target): string {
   if (t.kind === 'medication') return t.label;
-  if (t.kind === 'store') return STORE_TITLES[t.store as StoreId] ?? sentence(t.label);
+  if (t.kind === 'resource') return RESOURCE_TITLES[t.resource as ResourceId] ?? sentence(t.label);
   return KIND_TITLES[t.kind] ?? CAPABILITY_TITLES[t.capability] ?? sentence(t.label);
 }
 
@@ -67,14 +67,14 @@ export function preview(doc: Document, packs: Packs, asOf: string): PreviewHoriz
   return HORIZONS.map((horizonDays) => {
     const a = analyse(doc, packs, asOf, horizonDays);
     // Examples assume cooking works, so food is not steered away from rice and pasta.
-    const ctx = { ...suggestContext(packs, a), cookingMet: true };
+    const ctx = { ...suggestContext(doc, packs, a), cookingMet: true };
     const rows: PreviewRow[] = [];
     for (const t of a.targets) {
       if (t.kind === 'plan') continue;
       let example: string;
       switch (t.kind) {
-        case 'store': {
-          const text = storeExample(ctx, t.store as string, t.amount);
+        case 'resource': {
+          const text = resourceExample(ctx, t.resource as string, t.amount);
           example = text ? `e.g. ${text}` : `about ${fmt(t.amount)} ${t.unit}`;
           break;
         }

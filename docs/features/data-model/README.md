@@ -8,37 +8,41 @@ household. The screens read and write it through the store hooks.
 
 ## Map
 
-| Piece          | Where                                                 | What                                                                                                  |
-| -------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| The document   | `src/model/document.ts`                               | Zod schemas and types: `Document`, `Meta`, `Member`, `Home`, `Location`, `Asset`, `ItemInstance`, ... |
-| Migrations     | `src/model/migrate.ts`                                | `migrate`, `reconcile`, `SchemaTooNewError`, the step list `MIGRATIONS`.                              |
-| The store      | `src/store/documentStore.ts`                          | `openStore()` returns a `DocumentStore`.                                                              |
-| Open and sync  | `src/store/migrateOnOpen.ts`, `src/store/yconvert.ts` | Bring-forward on open, device id and env stamp; plain JSON to and from the CRDT.                      |
-| React side     | `src/app/state/`                                      | `DocumentProvider`, `useDocument()`, `useChange()`, `useStoreStatus()`.                               |
-| Test household | `src/fixtures/household-biggar.{ts,json}`             | The invented family in Biggar, also the e2e seed.                                                     |
+| Piece          | Where                                                 | What                                                                                                      |
+| -------------- | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| The document   | `src/model/document.ts`                               | Zod schemas and types: `Document`, `Meta`, `Member`, `Home`, `Location`, `Asset`, `Product`, `Stock`, ... |
+| Migrations     | `src/model/migrate.ts`                                | `migrate`, `reconcile`, `SchemaTooNewError`, the step list `MIGRATIONS`.                                  |
+| The store      | `src/store/documentStore.ts`                          | `openStore()` returns a `DocumentStore`.                                                                  |
+| Open and sync  | `src/store/migrateOnOpen.ts`, `src/store/yconvert.ts` | Bring-forward on open, device id and env stamp; plain JSON to and from the CRDT.                          |
+| React side     | `src/app/state/`                                      | `DocumentProvider`, `useDocument()`, `useChange()`, `useStoreStatus()`.                                   |
+| Test household | `src/fixtures/household-biggar.{ts,json}`             | The invented family in Biggar, also the e2e seed.                                                         |
 
 ## The document
 
 One `Document` per browser profile: `meta`, `household` (members and pets), `home`, and the keyed
-records `locations`, `assets`, `items`, `customTypes`, `floors`, `plans`, `reviews`, then `settings`. Ids are
-strings (`crypto.randomUUID()` for things the user makes, `"<packId>:<localId>"` for things a pack
-defines). Dates are `YYYY-MM-DD`, best-before dates `YYYY-MM`, timestamps ISO.
+records `locations`, `assets`, `products`, `barcodes`, `stock`, `scans`, `minimums`, `plans`,
+`reviews`, then `settings`. Ids are strings (`crypto.randomUUID()` for things the user makes,
+`"<packId>:<localId>"` for pack-defined ids). Dates are `YYYY-MM-DD`, best-before dates `YYYY-MM`,
+timestamps ISO.
 
 Records that devices add at the same time are **keyed objects**, not arrays, so merges never fight
 over an index. `household.members`, `household.pets` and a member's `medication` are small arrays
 of records with ids. `meta.packVersions` records the version of each pack when the document first
 used it; a later mismatch is reported (`packVersionReport`), not fatal.
 
-`customTypes` (schema 2) holds the item types the household made itself, keyed `custom:<uuid>`, in
-the same shape as a pack's item type. `withCustomTypes` / `packsFor` (`src/packs/custom.ts`) merge
-them into the packs as a pseudo-pack `custom`, so the engine and the screens find them like any
-other item type. The pseudo-pack is not in `packs.all` and not a Settings toggle.
+**Schema 4** separates the generic **item** (from the pack) from the household's **products** and
+**stock**. `products` holds each product's name, size, optional `itemId` (absent means it counts
+towards nothing), optional label kcal per 100 g or 100 ml, and when it was added. `stock` is a
+quantity of one product in one place: `qty` is a positive number of whole packs or quarters (½ and
+¼ for part-used packs), with optional best-before month and `source` `manual` or `barcode`.
+`minimums` is keyed `minimumKey(locationId, itemId)` (`"<place>|<pack-item-id>"`): the least kept
+of that item in a rotating place, in packs of any of its products.
 
-`barcodes` and `scans` (schema 3) belong to scanning (`docs/features/scanning/`). `barcodes` is the
-household's memory of which item type a barcode is, keyed by the normalised GTIN (a UPC-A and its
-EAN-13 form are one key), with the name Open Food Facts gave it and the date first remembered.
-`scans` holds scans saved for later ("sort later"): a code, quantity, place, an optional best-before (nothing sets one yet), and what
-Open Food Facts said once looked up. A scan counts towards nothing until it is sorted into stock.
+`barcodes` and `scans` belong to scanning (`docs/features/scanning/`). `barcodes` maps the
+normalised GTIN (a UPC-A and its EAN-13 form are one key) to the **product** it is, with the date
+first remembered (not updated on every scan). `scans` holds scans saved for later: a code, quantity,
+place, optional best-before, and optional `off` (what Open Food Facts said once looked up: name,
+size, kcal, categories…). A scan counts towards nothing until it is sorted into stock.
 `settings.expirySoonMonths` (0 to 3) and `settings.expiryCheckMonths` (1 to 12) are optional: absent
 means 1 and 3, so no step writes them.
 
@@ -66,49 +70,35 @@ one member never clobbers another.
 
 ## Migrations and old clients
 
-`SCHEMA_VERSION` is 3 (schema 2 added `customTypes`: the step `custom item types` creates the empty
-container; schema 3 added `barcodes` and `scans`: the step `barcodes and scans` creates both empty,
-each under its fixed step client id, so two devices that migrate before they sync share one map of
-each). A device still on a schema-2 build that receives a schema-3 document goes read-only with
-"update this device", so take the update toast on every phone. A change to the document's shape adds a `v(n)` to `v(n+1)` step to
-`MIGRATIONS` and bumps `SCHEMA_VERSION`. Rules:
+`SCHEMA_VERSION` is **4**. Schema 4 is a deliberate break: there is **no migration** from older
+households. `MIGRATIONS` is empty; the step machinery (`migrate`, `reconcile`, `stepContainers`,
+`SchemaTooNewError`, `SchemaTooOldError`) stays for schema 5 onward. `OLDEST_SCHEMA_VERSION` is 4:
+anything with `meta.schemaVersion` below 4 is refused.
 
-- **Steps are idempotent per record**: running one on a record already in the new shape changes
-  nothing. A device on an older build can keep editing offline after another device migrated the
-  document, and its old-shaped records then merge in. After every merge and every tab update the
-  store re-runs the steps (`reconcile`) and writes the brought-forward records back.
-- **Every step must tolerate every later shape.** `reconcile` replays _all_ steps from the oldest
-  on every merge and tab update, not just the ones a document is missing, so step 2 runs on a
-  document that is already at schema 5. Write each step to test for the old shape and leave
-  anything already in a newer shape alone (a field that was renamed, a record that was split).
-- **A step that creates a container gets each one written under its own fixed client id.** Two
-  replicas that both run a step adding `contacts: {}` and then each add a record would otherwise
-  create rival `contacts` maps, and after the merge only one map, and one record, would survive. The
-  store finds the containers a step creates (the paths in its output that its input lacked) and
-  writes each empty container in its own transaction under a client id hashed from the step's name
-  and versions plus that container's path and initial shape (`src/store/stepContainers.ts`); the
-  records inside are written normally. Because the id depends on nothing else the replica holds,
-  replicas with different record sets still agree on a container they share, including one inside
-  a record (`assets.<id>.maintenance`). So a step names and versions itself once and never changes afterwards, and it creates containers
-  empty: put default records in under a key the user can edit, not as the container's content.
-- **A newer schema makes the store read-only**: if a merge brings `meta.schemaVersion` above this
-  build's, `change` throws `SchemaTooNewError` and subscribers get the `too-new` status, so the app
-  can say "update this device". Nothing is written until the app is updated.
+- **Too old on this device.** Opening or importing a schema-1–3 document sets store status
+  `too-old`. The app shows a full-screen gate (`TooOld.tsx`): download a copy, then **Start a new
+  household**, which clears local data but **keeps the Google Drive sign-in** (`startFreshHousehold`,
+  `forgetDeviceData` with `keepDrive: true`). Nothing is edited until the person starts fresh.
+- **Too new on this device.** If a merge brings `meta.schemaVersion` above this build's,
+  `change` throws `SchemaTooNewError` and subscribers get `too-new` ("update this device").
+- **Future steps.** When schema 5 adds a shape change, add a step to `MIGRATIONS` and bump
+  `SCHEMA_VERSION`. Then the usual rules apply again:
+  - **Steps are idempotent per record**: running one on a record already in the new shape changes
+    nothing. After every merge and tab update the store re-runs the steps (`reconcile`) and writes
+    the brought-forward records back.
+  - **Every step must tolerate every later shape.** `reconcile` replays _all_ steps from the oldest
+    on every merge and tab update, not just the ones a document is missing.
+  - **A step that creates a container gets each one written under its own fixed client id**
+    (`src/store/stepContainers.ts`).
 - **The content of a new document is frozen** (`src/store/init.ts`). Yjs breaks ties between
   concurrent sets of one key by client id, not by time, so two devices that start from nothing must
-  not write rival copies. Every first-run device writes the containers and every default value
-  (`home.type`, `settings.horizonDays`, `home.risks`, ...) as identical operations under one fixed
-  client id, a hash of that content. They merge as one, and a real edit on either device descends
-  from those shared items, so it always wins over a default. Only what legitimately differs per
-  device (`meta.createdAt`, `meta.env`, `meta.devices`) is written under the device's own id.
-  The content is a literal in `initContent()` (the schema-1 shape; it no longer follows
-  `emptyDocument`, which is the current schema's). Editing it, or the pack list it names, changes
-  the hash: a golden test fails and says so. Schemas after 1 add containers in their migration
-  step instead, so a fresh schema-2 device writes the schema-1 content, then runs the step that
-  adds `customTypes` and shares that container with every other device.
-- A first-run device opens and writes its defaults before Drive's copy arrives. That is safe
-  because of the rule above: when the copy is merged in, edits made on either side win over
-  defaults, and two devices' records and list entries union.
+  not write rival copies. Every first-run device writes the containers and every default value as
+  identical operations under one fixed client id, a hash of that content. Schema 4 **replaced**
+  `initContent()` on purpose (products, stock, minimums instead of items, customTypes, floors); the
+  golden test in `init.test.ts` guards that literal. Later schemas add containers in a migration step
+  instead of editing the init literal.
+- A first-run device opens and writes its defaults before Drive's copy arrives. When the copy is
+  merged in, edits made on either side win over defaults, and two devices' records union.
 
 ## The fixture rule
 
@@ -121,10 +111,13 @@ them. With `?debug=1`, `window.__shtf.loadFixture()` replaces the document with 
 lives under `src/` because the debug hook loads it (as its own lazily fetched chunk); nothing in
 `src/` imports from `test/`, and a test enforces that.
 
-Its dates assume "today" is 2026-11-04: the document is created and items are added from
-2026-09-01, best-before dates are in the future except one deliberately expired item (UHT milk),
-and it is set in Scotland (`home.subregion: 'scotland'`). The fixture never reads the clock; a test
-that depends on dates passes `now` in.
+Its dates assume "today" is 2026-11-04: the document is created and stock is added from
+2026-09-01, best-before dates are in the future except one deliberately expired batch (UHT milk on
+`prod-uht`), and it is set in Scotland (`home.subregion: 'scotland'`). Stock goes through
+**products** (beans, soup, pasta, rice, oats, UHT, peanut butter, bottled water, a water can, first
+aid, torch, AA cells, nappies, propane, and `prod-twine` which counts towards nothing). Minimums sit
+on baked beans, pasta, rice and UHT in the Pantry. One barcode remembers `prod-spread`. The fixture
+never reads the clock; a test that depends on dates passes `now` in.
 
 `home.subregion` is optional and picks the regional risk links; it must be one of the `subregions`
 the home's region lists in `regions.json` (for the UK: `scotland`, `england`, `wales`,
@@ -136,4 +129,4 @@ With `?debug=1`: `window.__shtf.doc()`, `.change(fn)` and `.loadFixture()` (all 
 
 ## Known gaps
 
-- No diesel store, so a diesel generator cannot be modelled.
+- No diesel resource, so a diesel generator cannot be modelled.

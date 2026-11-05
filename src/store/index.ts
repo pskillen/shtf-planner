@@ -1,6 +1,6 @@
 export * from './documentStore';
 export { bringForward, getDeviceId, stampOpen, type Loaded } from './migrateOnOpen';
-export { SchemaTooNewError } from '../model';
+export { SchemaTooNewError, SchemaTooOldError } from '../model';
 export {
   JSON_FILE_NAME,
   YJS_FILE_NAME,
@@ -10,6 +10,7 @@ export {
 } from './drive';
 export {
   NEWER_VERSION_MESSAGE,
+  OLDER_REMOTE_MESSAGE,
   RECONNECT_MESSAGE,
   browserHost,
   createSync,

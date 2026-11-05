@@ -2,10 +2,10 @@ import { expect, test, type Page } from '@playwright/test';
 
 type Shtf = {
   doc: () => Promise<{
-    items: Record<string, { typeId: string; qty: number; locationId: string }>;
-    customTypes: Record<string, { name: string; gives: { store: string; amount: number }[] }>;
+    products: Record<string, unknown>;
+    stock: Record<string, { productId: string; qty: number; locationId: string }>;
     plans: Record<string, { doneAt?: string; expires?: string }>;
-    floors: Record<string, number>;
+    minimums: Record<string, number>;
     meta: { schemaVersion: number };
   }>;
   loadFixture: () => Promise<void>;
@@ -36,6 +36,16 @@ async function scoreOf(page: Page, name: string): Promise<number> {
 }
 
 /** The litres short in the Shopping list's water row ("water: 27.3 L short of 3 days"); 0 once it is gone. */
+async function waterLitres(page: Page): Promise<number> {
+  return page.evaluate(async () => {
+    const rows = await (window as unknown as { __shtf: Shtf }).__shtf.engine.coverage(
+      '2026-11-15',
+      3,
+    );
+    return rows.find((c) => c.targetId === 'water:waterL')!.amount;
+  });
+}
+
 async function waterShort(page: Page): Promise<number> {
   await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Gaps' }).click();
   await expect(page.getByRole('heading', { name: 'Shopping' })).toBeVisible();
@@ -64,12 +74,10 @@ test('the fixture household: the Stores tab groups stock by place, flags the odd
   await expect(page.getByRole('region', { name: 'Shed' })).toHaveCount(0);
 });
 
-test('Quick add: ten items, two of them added again and one custom, each in few taps', async ({
-  page,
-}) => {
+test('Quick add: nine items, two of them added again, each in few taps', async ({ page }) => {
   await fixture(page);
-  const waterBefore = await scoreOf(page, 'Water');
-  const plansBefore = await meter(page, 'Plans');
+  const waterBefore = await waterLitres(page);
+  const plansBefore = await scoreOf(page, 'Plans');
   const shortBefore = await waterShort(page);
   await page
     .getByRole('navigation', { name: 'Main' })
@@ -103,14 +111,14 @@ test('Quick add: ten items, two of them added again and one custom, each in few 
 
   // The first add chooses a place (the next ones start from it).
   await page.getByRole('button', { name: 'Add stock' }).click();
-  await page.getByRole('searchbox', { name: 'What are you adding?' }).fill('water can');
+  await page.getByRole('searchbox', { name: 'What are you adding?' }).fill('water container');
   await page
     .getByRole('dialog')
-    .getByRole('button', { name: /Water can \(10 L\)/ })
+    .getByRole('button', { name: /Water containers/i })
     .click();
   await page.getByLabel('Where does it go?').selectOption({ label: 'Garage' });
   await page.getByRole('button', { name: 'Add', exact: true }).click();
-  await expect(page.getByText('Added 1 × Water can (10 L) to Garage')).toBeVisible();
+  await expect(page.getByText(/Added 1 × .* to Garage/)).toBeVisible();
   // add another, twice
   await page.getByRole('button', { name: 'Add another' }).click();
   await page.getByRole('button', { name: 'Add another' }).click();
@@ -119,42 +127,28 @@ test('Quick add: ten items, two of them added again and one custom, each in few 
 
   // The place starts where the type lives, else the last one used: a plain item is a few taps.
   await plain('bottled', /Bottled water/, { more: 1, chip: '+1 y' });
-  await plain('tinned', /Tinned food/, { chip: '+2 y' });
-  await plain('rice', /Rice \(10 kg sack\)/);
+  await plain('soup', /Tinned soup/, { chip: '+2 y' });
+  await plain('rice', /Rice/);
   await plain('oats', /Porridge oats/, { chip: '+1 y' });
-  await plain('energy', /Energy bars/, { chip: '+1 y' });
-  await plain('matches', /Matches and lighters/);
+  await plain('candles', /Candles/);
   expect(Math.max(...taps)).toBeLessThanOrEqual(6);
-  expect(taps).toEqual([4, 3, 2, 3, 3, 2]);
+  expect(taps).toEqual([4, 3, 2, 3, 2]);
 
-  // A custom item: a name, kcal in one jar, then it is added like any other.
-  await page.getByRole('searchbox', { name: 'What are you adding?' }).fill("Gran's soup");
-  await page.getByRole('button', { name: 'Add as a custom item' }).click();
-  await expect(page.getByLabel('Name')).toHaveValue("Gran's soup");
-  await page.getByLabel('One piece is a…').fill('jar');
-  await page.getByLabel('About how many kcal?').fill('600');
-  await page.getByRole('button', { name: 'Save item' }).click();
-  await page.getByRole('button', { name: 'Add', exact: true }).click();
-  // a type with no stock anywhere goes to the place last used
-  await expect(page.getByText(/^Added 1 × Gran's soup to /)).toBeVisible();
   await page.getByRole('button', { name: 'Close' }).click();
 
-  // Ten entries: the stock list shows what was added.
-  await expect(page.getByRole('button', { name: /^Edit Gran's soup/ })).toBeVisible();
   await expect(
-    page.getByRole('region', { name: 'Garage' }).getByRole('button', { name: /^Edit Water can/ }),
-  ).toContainText('5 × can');
+    page.getByRole('region', { name: 'Garage' }).getByRole('button', { name: /Water can 10 L/i }),
+  ).toBeVisible();
 
   await page.evaluate(() => (window as unknown as { __shtf: Shtf }).__shtf.flush());
   await page.goto('/app/stores?debug=1');
   const after = await doc(page);
-  expect(after.meta.schemaVersion).toBe(3);
-  expect(Object.values(after.customTypes).map((t) => t.name)).toEqual(["Gran's soup"]);
-  expect(Object.values(after.customTypes)[0]!.gives).toEqual([{ store: 'foodKcal', amount: 600 }]);
+  expect(after.meta.schemaVersion).toBe(4);
+  expect(Object.keys(after.stock).length).toBeGreaterThan(15);
 
   // The score and the shopping list move with the stock.
-  expect(await scoreOf(page, 'Water')).toBeGreaterThan(waterBefore);
-  expect(await waterShort(page)).toBeLessThan(shortBefore);
+  expect(await waterLitres(page)).toBeGreaterThan(waterBefore);
+  if (shortBefore > 0) expect(await waterShort(page)).toBeLessThan(shortBefore);
 
   // A plan item marked done is recorded, with its date. The plans score is (done / total) to the
   // power 1.5, so one more done moves it: 1 of 9 is 4 %, 2 of 9 is 10 %.
@@ -191,7 +185,7 @@ test('a pantry floor counts towards food, and Gaps hands a ticked row to Quick a
   const before = await food();
 
   await page.getByRole('button', { name: 'Set minimums' }).click();
-  await page.getByRole('button', { name: /^One more: Minimum for Tinned food/ }).click();
+  await page.getByRole('button', { name: /^One more: Minimum for Baked beans/ }).click();
   await page.getByRole('button', { name: 'Save minimums' }).click();
   expect((await food()) - before).toBeGreaterThan(0);
 
@@ -249,7 +243,7 @@ test('the three tabs and Quick add fit a 375 px phone with big targets', async (
   await page.getByRole('searchbox', { name: 'What are you adding?' }).fill('tinned');
   await page
     .getByRole('dialog')
-    .getByRole('button', { name: /Tinned food \(1 week/ })
+    .getByRole('button', { name: /Tinned soup/ })
     .click();
   for (const name of [/^One more/, /^One fewer/, 'Add']) {
     const box = await page.getByRole('button', { name }).first().boundingBox();

@@ -2,7 +2,7 @@
   "format": 1,
   "id": "guidance-uk-prepare",
   "kind": "guidance",
-  "version": 2,
+  "version": 3,
   "name": "UK Government: Be Ready",
   "region": "UK",
   "sources": [
@@ -24,7 +24,7 @@
       "capability": "water",
       "text": "Bottled water for drinking: 3 litres per person per day. Add more for cooking and washing.",
       "perPersonDay": {
-        "store": "waterL",
+        "resource": "waterL",
         "amount": 3
       },
       "source": "https://beready.campaign.gov.uk/be-ready-for-emergencies/"
@@ -34,7 +34,7 @@
       "capability": "food",
       "text": "Non-perishable food that needs no fridge or cooking, such as tinned meat, fish or vegetables, dried fruit and nuts. The site gives no calorie figure; 2,000 kcal per person per day is an assumption.",
       "perPersonDay": {
-        "store": "foodKcal",
+        "resource": "foodKcal",
         "amount": 2000
       },
       "source": "assumption"

@@ -7,7 +7,9 @@ export {
   type ExpiryLevel,
   type ExpiryWindows,
 } from './expiry';
-export { likelyTypes, type ProductHints } from './productMatch';
+export { suggestItems, type OffHints } from './itemMatch';
+export { useFirst } from './rotation';
+export { itemOfStock, kcalSource, packGives, usualPack, usualProduct } from './products';
 export { CAPABILITY_ORDER } from './context';
 export {
   targets,
@@ -22,7 +24,7 @@ export {
   coverage,
   analyse,
   type Analysis,
-  type BelowFloor,
+  type BelowMinimum,
   type BlockedAsset,
   type Coverage,
   type CoverageSource,

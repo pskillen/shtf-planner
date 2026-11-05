@@ -20,9 +20,8 @@ import { sortKeys, syncMap } from './yconvert';
  * so its fresh devices still share these; `meta.schemaVersion` has its own id (below). The
  * consequence is that this content is frozen: editing the content below or the lists it uses
  * changes the id, and a golden test (`init.test.ts`) fails to say so. A schema change adds
- * containers in its migration step instead (see `docs/features/data-model/`); schema 2 was the
- * first such change, so the schema-1 content below is a literal and no longer follows
- * `emptyDocument`.
+ * containers in its migration step instead (see `docs/features/data-model/`); schema 4 is the one
+ * deliberate break, where the content was replaced and older documents are refused.
  */
 
 const SCHEMA_CLIENT_BASE = 0x53480000;
@@ -38,11 +37,11 @@ export function hash32(text: string): number {
 }
 
 /**
- * The values and containers of a new document that are the same on every device: the schema-1
- * content, frozen as a literal. It is deliberately not `emptyDocument()`: that follows the current
- * schema (schema 2 adds `customTypes`), and a fresh device must keep writing exactly these
- * operations so it shares its containers with devices that started on schema 1. The containers a
- * later schema adds are created by the migration step that adds them.
+ * The values and containers of a new document that are the same on every device: the schema-4
+ * content, frozen as a literal (it equals `emptyDocument()` apart from the per-device `meta`, and a
+ * test checks that). Schema 4 started afresh: households from before it are refused, not migrated,
+ * so the frozen schema-1 content was replaced once, on purpose. The containers a later schema adds
+ * are created by the migration step that adds them.
  */
 export function initContent(): Record<string, unknown> {
   return {
@@ -64,8 +63,11 @@ export function initContent(): Record<string, unknown> {
     },
     locations: {},
     assets: {},
-    items: {},
-    floors: {},
+    products: {},
+    barcodes: {},
+    stock: {},
+    scans: {},
+    minimums: {},
     plans: {},
     reviews: {},
     settings: {

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Field } from '../../components/controls';
 import { formatMonth, monthChips, parseMonth } from './stock';
-import type { ItemType } from '../../../model';
+import type { Item } from '../../../model';
 
 /**
  * A best-before month. A `type="month"` box where the browser has one (Android Chrome opens a
@@ -19,7 +19,7 @@ export function MonthField({
 }: {
   value: string | undefined;
   onChange: (next: string | undefined) => void;
-  shelfLife: ItemType['shelfLife'];
+  shelfLife: Item['shelfLife'];
   today: string;
   label?: string;
   /** No hint line unless the text is not a month: for a screen short of room. */

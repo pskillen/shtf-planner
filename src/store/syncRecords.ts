@@ -62,13 +62,13 @@ export function isBlank(doc: Document): boolean {
   return (
     Object.keys(doc.locations).length === 0 &&
     Object.keys(doc.assets).length === 0 &&
-    Object.keys(doc.items).length === 0 &&
-    Object.keys(doc.floors).length === 0 &&
+    Object.keys(doc.products).length === 0 &&
+    Object.keys(doc.barcodes).length === 0 &&
+    Object.keys(doc.stock).length === 0 &&
+    Object.keys(doc.scans).length === 0 &&
+    Object.keys(doc.minimums).length === 0 &&
     Object.keys(doc.plans).length === 0 &&
     Object.keys(doc.reviews).length === 0 &&
-    Object.keys(doc.customTypes).length === 0 &&
-    Object.keys(doc.barcodes).length === 0 &&
-    Object.keys(doc.scans).length === 0 &&
     doc.household.members.length === 0 &&
     doc.household.pets.length === 0
   );
@@ -77,13 +77,13 @@ export function isBlank(doc: Document): boolean {
 const COLLECTIONS = [
   'locations',
   'assets',
-  'items',
-  'floors',
+  'products',
+  'barcodes',
+  'stock',
+  'scans',
+  'minimums',
   'plans',
   'reviews',
-  'customTypes',
-  'barcodes',
-  'scans',
 ] as const;
 const LISTS = ['members', 'pets'] as const;
 
@@ -119,7 +119,7 @@ export interface FieldChange {
 }
 
 export interface Conflict {
-  /** `items/<id>`, `household.members/<id>`, `home`, ... */
+  /** `stock/<id>`, `household.members/<id>`, `home`, ... */
   key: string;
   /** A name the person recognises. */
   title: string;
@@ -143,11 +143,11 @@ export interface Classified {
 const NOUNS: Record<string, string> = {
   locations: 'Location',
   assets: 'Asset',
-  items: 'Item',
-  floors: 'Minimum level',
+  products: 'Product',
+  stock: 'Stock',
+  minimums: 'Minimum',
   plans: 'Plan item',
   reviews: 'Review',
-  customTypes: 'Custom item',
   barcodes: 'Barcode',
   scans: 'Scan to sort',
   'household.members': 'Member',
@@ -156,7 +156,14 @@ const NOUNS: Record<string, string> = {
   settings: 'Settings',
 };
 
-function describe(key: string, record: unknown): { noun: string; title: string } {
+/** Product id to name, from the records of the documents being compared. */
+type ProductNames = ReadonlyMap<string, string>;
+
+function describe(
+  key: string,
+  record: unknown,
+  products: ProductNames = new Map(),
+): { noun: string; title: string } {
   const slash = key.indexOf('/');
   const collection = slash < 0 ? key : key.slice(0, slash);
   const id = slash < 0 ? '' : key.slice(slash + 1);
@@ -165,10 +172,14 @@ function describe(key: string, record: unknown): { noun: string; title: string }
   if (collection === 'settings') return { noun, title: 'Your settings' };
   const r = isObj(record) ? record : {};
   const name = typeof r.name === 'string' && r.name ? r.name : undefined;
-  if (collection === 'barcodes') return { noun, title: name ?? id };
+  if (collection === 'barcodes') return { noun, title: id };
   if (collection === 'scans') return { noun, title: typeof r.code === 'string' ? r.code : id };
-  const typeId = typeof r.typeId === 'string' ? r.typeId : undefined;
-  return { noun, title: name ?? typeId ?? id };
+  if (collection === 'minimums') return { noun, title: id };
+  if (collection === 'stock') {
+    const productId = typeof r.productId === 'string' ? r.productId : undefined;
+    return { noun, title: (productId && products.get(productId)) || id };
+  }
+  return { noun, title: name ?? id };
 }
 
 const fieldsOf = (...records: unknown[]): string[] => {
@@ -184,6 +195,14 @@ export function classify(base: Obj, local: Obj, remote: Obj): Classified {
   const l = recordsOf(local);
   const r = recordsOf(remote);
   const keys = new Set<string>([...b.keys(), ...l.keys(), ...r.keys()]);
+  const products = new Map<string, string>();
+  for (const side of [b, r, l]) {
+    for (const [k, v] of side) {
+      if (k.startsWith('products/') && isObj(v) && typeof v.name === 'string') {
+        products.set(k.slice('products/'.length), v.name);
+      }
+    }
+  }
   const conflicts: Conflict[] = [];
   let remoteOnly = 0;
 
@@ -225,7 +244,7 @@ export function classify(base: Obj, local: Obj, remote: Obj): Classified {
     } else {
       fields = [{ field: 'value', mine: lv, theirs: rv }];
     }
-    const { noun, title } = describe(key, lv ?? rv);
+    const { noun, title } = describe(key, lv ?? rv, products);
     conflicts.push({
       key,
       title,

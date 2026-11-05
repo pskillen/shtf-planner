@@ -13,9 +13,9 @@ import {
 } from './syncRecords';
 
 const base = (): Document => emptyDocument('local', '2026-01-01T00:00:00.000Z');
-const item = (id: string, qty: number, over: Partial<Document['items'][string]> = {}) => ({
+const item = (id: string, qty: number, over: Partial<Document['stock'][string]> = {}) => ({
   id,
-  typeId: 'items-base:water-can',
+  productId: 'prod-water',
   qty,
   locationId: 'loc',
   added: '2026-01-01',
@@ -32,12 +32,12 @@ const withDoc = (fn: (d: Document) => void): Document => {
 describe('classify', () => {
   it('counts records only the other device changed, and asks about none', () => {
     const b = withDoc((d) => {
-      d.items.a = item('a', 1);
+      d.stock.a = item('a', 1);
     });
     const l = b;
     const r = withDoc((d) => {
-      d.items.a = item('a', 5);
-      d.items.b = item('b', 2);
+      d.stock.a = item('a', 5);
+      d.stock.b = item('b', 2);
     });
     const out = classify(plain(b), plain(l), plain(r));
     expect(out.conflicts).toEqual([]);
@@ -47,27 +47,27 @@ describe('classify', () => {
   it('ignores changes both devices made the same way', () => {
     const b = base();
     const both = withDoc((d) => {
-      d.items.a = item('a', 3);
+      d.stock.a = item('a', 3);
     });
     expect(classify(plain(b), plain(both), plain(both))).toEqual({ conflicts: [], remoteOnly: 0 });
   });
 
   it('asks when both devices set the same field to different values', () => {
     const b = withDoc((d) => {
-      d.items.a = item('a', 1);
+      d.stock.a = item('a', 1);
     });
     const l = withDoc((d) => {
-      d.items.a = item('a', 4);
+      d.stock.a = item('a', 4);
     });
     const r = withDoc((d) => {
-      d.items.a = item('a', 9);
+      d.stock.a = item('a', 9);
     });
     const { conflicts, remoteOnly } = classify(plain(b), plain(l), plain(r));
     expect(remoteOnly).toBe(0);
     expect(conflicts).toHaveLength(1);
     expect(conflicts[0]).toMatchObject({
-      key: 'items/a',
-      noun: 'Item',
+      key: 'stock/a',
+      noun: 'Stock',
       minePresent: true,
       theirsPresent: true,
       fields: [{ field: 'qty', mine: 4, theirs: 9 }],
@@ -76,13 +76,13 @@ describe('classify', () => {
 
   it('does not ask when the devices changed different fields of one record', () => {
     const b = withDoc((d) => {
-      d.items.a = item('a', 1);
+      d.stock.a = item('a', 1);
     });
     const l = withDoc((d) => {
-      d.items.a = item('a', 4);
+      d.stock.a = item('a', 4);
     });
     const r = withDoc((d) => {
-      d.items.a = item('a', 1, { bestBefore: '2027-01' });
+      d.stock.a = item('a', 1, { bestBefore: '2027-01' });
     });
     const out = classify(plain(b), plain(l), plain(r));
     expect(out.conflicts).toEqual([]);
@@ -91,20 +91,20 @@ describe('classify', () => {
 
   it('asks when one device deleted a record the other edited', () => {
     const b = withDoc((d) => {
-      d.items.a = item('a', 1);
+      d.stock.a = item('a', 1);
     });
     const l = base(); // deleted here
     const r = withDoc((d) => {
-      d.items.a = item('a', 7);
+      d.stock.a = item('a', 7);
     });
     const { conflicts } = classify(plain(b), plain(l), plain(r));
     expect(conflicts).toHaveLength(1);
-    expect(conflicts[0]).toMatchObject({ key: 'items/a', minePresent: false, theirsPresent: true });
+    expect(conflicts[0]).toMatchObject({ key: 'stock/a', minePresent: false, theirsPresent: true });
   });
 
   it('treats a delete on one side with no edit on the other as the other not having changed', () => {
     const b = withDoc((d) => {
-      d.items.a = item('a', 1);
+      d.stock.a = item('a', 1);
     });
     const l = base();
     expect(classify(plain(b), plain(l), plain(b))).toEqual({ conflicts: [], remoteOnly: 0 });
@@ -140,50 +140,50 @@ describe('classify', () => {
 
   it('lists the records of a document under stable keys', () => {
     const d = withDoc((x) => {
-      x.items.a = item('a', 1);
+      x.stock.a = item('a', 1);
     });
-    expect(Array.from(recordsOf(plain(d)).keys())).toEqual(['items/a', 'home', 'settings']);
+    expect(Array.from(recordsOf(plain(d)).keys())).toEqual(['stock/a', 'home', 'settings']);
   });
 });
 
 describe('applyChoice', () => {
   const conflict = () => {
     const b = withDoc((d) => {
-      d.items.a = item('a', 1);
+      d.stock.a = item('a', 1);
     });
     const l = withDoc((d) => {
-      d.items.a = item('a', 4, { bestBefore: '2027-01' });
+      d.stock.a = item('a', 4, { bestBefore: '2027-01' });
     });
     const r = withDoc((d) => {
-      d.items.a = item('a', 9);
+      d.stock.a = item('a', 9);
     });
     return classify(plain(b), plain(l), plain(r)).conflicts[0]!;
   };
 
   it('writes only the conflicting fields from the chosen side', () => {
     const draft = withDoc((d) => {
-      d.items.a = item('a', 9, { bestBefore: '2027-01' }); // the merge kept their qty, our date
+      d.stock.a = item('a', 9, { bestBefore: '2027-01' }); // the merge kept their qty, our date
     });
     applyChoice(draft, conflict(), 'mine');
-    expect(draft.items.a).toMatchObject({ qty: 4, bestBefore: '2027-01' });
+    expect(draft.stock.a).toMatchObject({ qty: 4, bestBefore: '2027-01' });
     applyChoice(draft, conflict(), 'theirs');
-    expect(draft.items.a!.qty).toBe(9);
-    expect(draft.items.a!.bestBefore).toBe('2027-01'); // not a conflicting field: untouched
+    expect(draft.stock.a!.qty).toBe(9);
+    expect(draft.stock.a!.bestBefore).toBe('2027-01'); // not a conflicting field: untouched
   });
 
   it('restores a record deleted by the merge, and removes one the chosen side deleted', () => {
     const b = withDoc((d) => {
-      d.items.a = item('a', 1);
+      d.stock.a = item('a', 1);
     });
     const edited = withDoc((d) => {
-      d.items.a = item('a', 7);
+      d.stock.a = item('a', 7);
     });
     const c = classify(plain(b), plain(base()), plain(edited)).conflicts[0]!;
     const draft = base();
     applyChoice(draft, c, 'theirs');
-    expect(draft.items.a!.qty).toBe(7);
+    expect(draft.stock.a!.qty).toBe(7);
     applyChoice(draft, c, 'mine'); // mine = deleted
-    expect(draft.items.a).toBeUndefined();
+    expect(draft.stock.a).toBeUndefined();
   });
 });
 
@@ -196,7 +196,7 @@ describe('bytes helpers', () => {
       channel: false,
     });
     store.change('x', (d) => {
-      d.items.a = item('a', 2);
+      d.stock.a = item('a', 2);
     });
     expect(plainFromBytes(store.bytes())).toEqual(plain(store.get()));
     await store.close();
@@ -207,10 +207,10 @@ describe('bytes helpers', () => {
       openStore({ name: `rec-${n}-${Math.random()}`, env: 'local', deviceId: n, channel: false });
     const a = await open('a');
     expect(isBlank(a.get())).toBe(true);
-    expect(freshPlain(SCHEMA_VERSION).items).toEqual({});
+    expect(freshPlain(SCHEMA_VERSION).stock).toEqual({});
     const before = a.bytes();
     a.change('x', (d) => {
-      d.items.a = item('a', 2);
+      d.stock.a = item('a', 2);
     });
     expect(isBlank(a.get())).toBe(false);
     expect(hasUnseenChanges(a.bytes(), before)).toBe(true);
@@ -226,16 +226,81 @@ describe('bytes helpers', () => {
       channel: false,
     });
     a.change('add', (d) => {
-      d.items.a = item('a', 2);
+      d.stock.a = item('a', 2);
     });
     const withItem = a.bytes();
     a.change('delete', (d) => {
-      delete d.items.a;
+      delete d.stock.a;
     });
     // no new structure, only a delete set entry
     expect(hasUnseenChanges(a.bytes(), withItem)).toBe(true);
     expect(hasUnseenChanges(withItem, a.bytes())).toBe(false);
     expect(hasUnseenChanges(a.bytes(), a.bytes())).toBe(false);
     await a.close();
+  });
+});
+
+describe('naming records the person recognises', () => {
+  const product = (name: string) => ({
+    id: 'p1',
+    name,
+    itemId: 'items-base:baked-beans',
+    size: { amount: 415, unit: 'g' as const },
+    added: '2026-01-01',
+  });
+
+  it('nouns and titles: a product by its name, stock by its product, a barcode by its code', () => {
+    const b = withDoc((d) => {
+      d.products.p1 = product('Beans');
+      d.stock.s1 = item('s1', 1, { productId: 'p1' });
+      d.barcodes['5000169005743'] = { productId: 'p1', seen: '2026-01-01' };
+      d.minimums['loc|items-base:baked-beans'] = 2;
+    });
+    const l = withDoc((d) => {
+      d.products.p1 = product('Heinz Beanz');
+      d.stock.s1 = item('s1', 2, { productId: 'p1' });
+      d.barcodes['5000169005743'] = { productId: 'p2', seen: '2026-01-01' };
+      d.minimums['loc|items-base:baked-beans'] = 3;
+    });
+    const r = withDoc((d) => {
+      d.products.p1 = product('Tesco beans');
+      d.stock.s1 = item('s1', 3, { productId: 'p1' });
+      d.barcodes['5000169005743'] = { productId: 'p3', seen: '2026-01-01' };
+      d.minimums['loc|items-base:baked-beans'] = 4;
+    });
+    const { conflicts } = classify(plain(b), plain(l), plain(r));
+    const by = Object.fromEntries(conflicts.map((c) => [c.key, [c.noun, c.title]]));
+    expect(by['products/p1']).toEqual(['Product', 'Heinz Beanz']);
+    expect(by['stock/s1']).toEqual(['Stock', 'Heinz Beanz']);
+    expect(by['barcodes/5000169005743']).toEqual(['Barcode', '5000169005743']);
+    expect(by['minimums/loc|items-base:baked-beans']).toEqual([
+      'Minimum',
+      'loc|items-base:baked-beans',
+    ]);
+  });
+
+  it('a stock row whose product is not in the snapshots is titled by its id', () => {
+    const b = withDoc((d) => {
+      d.stock.s1 = item('s1', 1, { productId: 'gone' });
+    });
+    const l = withDoc((d) => {
+      d.stock.s1 = item('s1', 2, { productId: 'gone' });
+    });
+    const r = withDoc((d) => {
+      d.stock.s1 = item('s1', 3, { productId: 'gone' });
+    });
+    expect(classify(plain(b), plain(l), plain(r)).conflicts[0]).toMatchObject({ title: 's1' });
+  });
+
+  it('a household with only products, barcodes, minimums or scans is not blank', () => {
+    expect(isBlank(base())).toBe(true);
+    for (const fill of [
+      (d: Document) => void (d.products.p = product('x')),
+      (d: Document) => void (d.barcodes['1'] = { productId: 'p', seen: '2026-01-01' }),
+      (d: Document) => void (d.minimums['l|i'] = 1),
+      (d: Document) => void (d.stock.s = item('s', 1)),
+    ]) {
+      expect(isBlank(withDoc(fill))).toBe(false);
+    }
   });
 });

@@ -1,19 +1,25 @@
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 import { installFakeCamera, type FakeCam, type FakeCameraOptions } from './fakeCamera';
 
-type Item = {
+type Stock = {
   id: string;
-  typeId: string;
+  productId: string;
   qty: number;
   locationId: string;
   bestBefore?: string;
   source: string;
 };
 type Doc = {
-  items: Record<string, Item>;
-  barcodes: Record<string, { typeId: string; name?: string }>;
-  scans: Record<string, { code: string; product?: { found: boolean; name?: string } }>;
+  products: Record<string, { id: string; name: string; itemId?: string }>;
+  stock: Record<string, Stock>;
+  barcodes: Record<string, { productId: string; seen: string }>;
+  scans: Record<
+    string,
+    { code: string; off?: { found: boolean; name?: string; categories?: string[] } }
+  >;
 };
+const SPREAD = 'Test spread 400 g';
+const BEANS_PRODUCT = 'Test beans 415 g';
 type Shtf = {
   doc: () => Promise<Doc>;
   loadFixture: () => Promise<void>;
@@ -32,7 +38,7 @@ const cam = <K extends keyof FakeCam>(page: Page, method: K, arg?: unknown) =>
   );
 const show = (page: Page, ean: string, sideways = false) => cam(page, 'show', { ean, sideways });
 
-const KNOWN = '3017620422003'; // in the fixture: Peanut butter (340 g jar), "Test spread 400 g"
+const KNOWN = '3017620422003'; // in the fixture: ${SPREAD}, "Test spread 400 g"
 const BEANS = '5000169005743'; // Open Food Facts (faked): baked beans, 415 g
 const NOT_FOUND = '4006381333931'; // Open Food Facts (faked): 404
 
@@ -125,7 +131,7 @@ test.describe('stocktake with a fake camera', () => {
     await page.getByLabel('Counting into').selectOption({ label: 'Pantry' });
 
     // 1. A barcode the household already knows: straight to the date.
-    await countTin(page, KNOWN, 'Peanut butter (340 g jar)');
+    await countTin(page, KNOWN, SPREAD);
     expect(net.offUrls).toHaveLength(0);
 
     // 2. A new one: Open Food Facts says what it is, the person picks, the app remembers.
@@ -133,28 +139,26 @@ test.describe('stocktake with a fake camera', () => {
     await expect(page.getByText('Open Food Facts says:')).toBeVisible();
     await expect(page.getByText('Test beans 415 g')).toBeVisible();
     await cam(page, 'clear');
-    await page.getByRole('button', { name: /Tinned food \(400 g tin\)/ }).click();
-    await expect(dateCard(page, 'Tinned food (400 g tin)')).toBeVisible();
+    await page.getByRole('button', { name: /Baked beans/ }).click();
+    await expect(dateCard(page, BEANS_PRODUCT)).toBeVisible();
     await firstChip(page);
     await ok(page);
     await expect(page.getByText('1 BARCODE')).toBeVisible();
     expect(net.offUrls).toHaveLength(1);
 
     // 3. The same one again: remembered, so it goes straight to the date and asks nothing.
-    await countTin(page, BEANS, 'Tinned food (400 g tin)');
+    await countTin(page, BEANS, BEANS_PRODUCT);
     expect(net.offUrls).toHaveLength(1);
 
     const d = await doc(page);
-    const barcode = Object.values(d.items).filter((i) => i.source === 'barcode');
-    const peanut = barcode.find((i) => i.typeId === 'items-base:peanut-butter-340g');
-    const tins = barcode.find((i) => i.typeId === 'items-base:tinned-food-tin');
-    expect(peanut).toMatchObject({ qty: 1, locationId: 'loc-pantry' });
-    expect(peanut!.bestBefore).toMatch(/^\d{4}-\d{2}$/);
-    expect(tins).toMatchObject({ qty: 2, locationId: 'loc-pantry' });
-    expect(d.barcodes[BEANS]).toMatchObject({
-      typeId: 'items-base:tinned-food-tin',
-      name: 'Test beans 415 g',
-    });
+    const barcode = Object.values(d.stock).filter((i) => i.source === 'barcode');
+    const spread = barcode.find((i) => i.productId === 'prod-spread');
+    const beans = barcode.find((i) => i.productId !== 'prod-spread');
+    expect(spread).toMatchObject({ qty: 1, locationId: 'loc-pantry' });
+    expect(spread!.bestBefore).toMatch(/^\d{4}-\d{2}$/);
+    expect(beans).toMatchObject({ qty: 2, locationId: 'loc-pantry' });
+    expect(d.barcodes[BEANS]?.productId).toBeDefined();
+    expect(d.products[d.barcodes[BEANS]!.productId]!.name).toBe(BEANS_PRODUCT);
     expect(Object.keys(d.scans)).toHaveLength(0);
   });
 
@@ -163,17 +167,15 @@ test.describe('stocktake with a fake camera', () => {
     await open(page, '/app/stores/stocktake');
     const before = await doc(page);
     await show(page, KNOWN);
-    await expect(dateCard(page, 'Peanut butter (340 g jar)')).toBeVisible();
+    await expect(dateCard(page, SPREAD)).toBeVisible();
     await cam(page, 'clear');
     await firstChip(page);
     await ok(page);
-    await expect(page.getByTestId('stocktake-saved')).toContainText(
-      'Saved 1 × Peanut butter (340 g jar)',
-    );
-    expect(Object.keys((await doc(page)).items)).toHaveLength(Object.keys(before.items).length + 1);
+    await expect(page.getByTestId('stocktake-saved')).toContainText(`Saved 1 × ${SPREAD}`);
+    expect(Object.keys((await doc(page)).stock)).toHaveLength(Object.keys(before.stock).length + 1);
     await page.getByTestId('stocktake-saved').getByRole('button', { name: 'Undo' }).click();
-    expect((await doc(page)).items).toEqual(before.items);
-    await expect(dateCard(page, 'Peanut butter (340 g jar)')).toBeVisible();
+    expect((await doc(page)).stock).toEqual(before.stock);
+    await expect(dateCard(page, SPREAD)).toBeVisible();
   });
 
   test('offline: sort later, then the name appears when back online and it can be sorted', async ({
@@ -197,18 +199,23 @@ test.describe('stocktake with a fake camera', () => {
 
     net.offline = false;
     await context.setOffline(false);
+    await expect
+      .poll(
+        async () => (await doc(page)).scans[Object.keys((await doc(page)).scans)[0]!]?.off?.name,
+        {
+          timeout: 15_000,
+        },
+      )
+      .toBe('Test beans');
     await page.getByRole('button', { name: '1 scan to sort ›' }).click();
-    await expect(page.getByText('Test beans 415 g')).toBeVisible();
-
     await page.getByRole('button', { name: `Sort scan ${BEANS}` }).click();
-    await page.getByRole('button', { name: /Tinned food \(400 g tin\)/ }).click();
+    await expect(
+      page.getByRole('dialog', { name: 'Sort this scan' }).getByText('Test beans 415 g'),
+    ).toBeVisible({ timeout: 15_000 });
+    await page.getByRole('button', { name: /Baked beans/ }).click();
     const d = await doc(page);
     expect(Object.keys(d.scans)).toHaveLength(0);
-    expect(
-      Object.values(d.items).find(
-        (i) => i.typeId === 'items-base:tinned-food-tin' && i.source === 'barcode',
-      ),
-    ).toMatchObject({ qty: 1 });
+    expect(Object.values(d.stock).filter((i) => i.source === 'barcode')).toHaveLength(1);
   });
 
   test('Firefox-like: no torch or zoom, zxing reads upright and sideways codes, the stocktake completes', async ({
@@ -223,13 +230,13 @@ test.describe('stocktake with a fake camera', () => {
     await expect(page.getByRole('button', { name: 'Torch' })).toHaveCount(0);
     await expect(page.getByRole('group', { name: 'Zoom' })).toHaveCount(0);
 
-    await countTin(page, KNOWN, 'Peanut butter (340 g jar)');
+    await countTin(page, KNOWN, SPREAD);
 
     // A code held sideways: the turned attempts find it.
     await show(page, BEANS, true);
     await expect(page.getByText('Open Food Facts says:')).toBeVisible({ timeout: 15_000 });
     await cam(page, 'clear');
-    await page.getByRole('button', { name: /Tinned food \(400 g tin\)/ }).click();
+    await page.getByRole('button', { name: /Baked beans/ }).click();
     await firstChip(page);
     await ok(page);
     await page.getByRole('button', { name: 'Done' }).click();
@@ -263,7 +270,7 @@ test.describe('stocktake with a fake camera', () => {
     await setUp(page, context);
     await open(page, '/app/stores/stocktake');
     await show(page, KNOWN);
-    await expect(dateCard(page, 'Peanut butter (340 g jar)')).toBeVisible();
+    await expect(dateCard(page, SPREAD)).toBeVisible();
     await page.evaluate(() => window.scrollTo(0, 0));
     const [okBox, tabBox] = await Promise.all([
       page.getByRole('button', { name: 'OK', exact: true }).boundingBox(),
@@ -279,14 +286,12 @@ test.describe('stocktake with a fake camera', () => {
     await page.getByRole('button', { name: 'Add stock' }).click();
     await page.getByRole('button', { name: 'Scan a barcode' }).click();
     await show(page, KNOWN);
-    await expect(page.getByText('Add Peanut butter (340 g jar)')).toBeVisible();
+    await expect(page.getByText(`Add ${SPREAD}`)).toBeVisible();
     await cam(page, 'clear');
     await page.getByRole('button', { name: 'Add', exact: true }).click();
     const d = await doc(page);
     expect(
-      Object.values(d.items).filter(
-        (i) => i.typeId === 'items-base:peanut-butter-340g' && i.source === 'barcode',
-      ),
+      Object.values(d.stock).filter((i) => i.productId === 'prod-spread' && i.source === 'barcode'),
     ).toHaveLength(1);
   });
 

@@ -21,8 +21,11 @@ export interface ShoppingRow {
    */
   closes: string;
   pricePence?: number;
+  /** Shown under the label when the engine named a product ("10 × Tesco fusilli 500 g"). */
+  detail?: string;
   /** What Quick add opens with when the row is ticked; absent for advice with nothing to add. */
-  itemTypeId?: string;
+  itemId?: string;
+  productId?: string;
   /** Set when the row is a piece of equipment: ticking it opens the equipment form, not stock. */
   assetTypeId?: string;
   qty?: number;
@@ -79,17 +82,17 @@ export function closesText(gap: Gap, horizonDays: number, region: 'UK' | 'US'): 
 
 /** "Pantry: UHT milk is 3 below its minimum of 6", or, with none in date, "... has none in date (minimum 3)". */
 function restockText(r: NonNullable<Gap['restock']>): string {
-  const lead = `${r.place}: ${r.typeName}`;
+  const lead = `${r.place}: ${r.itemName}`;
   return r.actual <= 0
-    ? `${lead} has none in date (minimum ${round1(r.floor)})`
-    : `${lead} is ${round1(r.floor - r.actual)} below its minimum of ${round1(r.floor)}`;
+    ? `${lead} has none in date (minimum ${round1(r.minimum)})`
+    : `${lead} is ${round1(r.minimum - r.actual)} below its minimum of ${round1(r.minimum)}`;
 }
 
 /**
  * Store and device gaps list alternatives (any one will do); a gap for running hours lists what
  * works together (the heater and its fuel); a floor to restock or a medicine is one line.
  */
-const ALTERNATIVES = new Set<Gap['target']['kind']>(['store', 'device']);
+const ALTERNATIVES = new Set<Gap['target']['kind']>(['resource', 'device']);
 
 function shoppingRowsFor(gap: Gap, horizonDays: number, region: 'UK' | 'US', at: number) {
   if (gap.kind !== 'acquire' && gap.kind !== 'replenish') return [];
@@ -109,10 +112,11 @@ function shoppingRowsFor(gap: Gap, horizonDays: number, region: 'UK' | 'US', at:
     key: `${gap.target.id}|${gap.kind}|${at}|${i}`,
     label: s.label,
     ...(s.pricePence !== undefined ? { pricePence: s.pricePence } : {}),
+    ...(s.detail ? { detail: s.detail } : {}),
     ...(s.assetTypeId
       ? { assetTypeId: s.assetTypeId }
-      : s.itemTypeId
-        ? { itemTypeId: s.itemTypeId }
+      : s.itemId
+        ? { itemId: s.itemId, ...(s.productId ? { productId: s.productId } : {}) }
         : {}),
     ...(s.qty ? { qty: s.qty } : {}),
     alternatives,
@@ -223,7 +227,7 @@ export function buildGapsView(input: {
       const lead = t.fixed ? `${name}: covered` : `${name}: enough for ${horizonDays} days`;
       // Only an amount of something is worth saying; hours, doses and ranges are not "more than needed".
       const more =
-        t.kind === 'store' && spare > 0.05 * t.amount && spare >= 0.1
+        t.kind === 'resource' && spare > 0.05 * t.amount && spare >= 0.1
           ? `; ${formatAmount(spare, t.unit, region)} more than needed`
           : '';
       return { capability: c.capability, text: lead + more };

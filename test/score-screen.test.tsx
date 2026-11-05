@@ -107,12 +107,14 @@ describe('the Score screen', () => {
 
   it('follows the document: more water, a higher water bar', () => {
     const doc = structuredClone(biggarDocument());
+    doc.stock['stock-water']!.qty = 1;
+    delete doc.stock['stock-can'];
     show(doc);
     const before = Number(
       screen.getByRole('meter', { name: 'Water' }).getAttribute('aria-valuenow'),
     );
     cleanup();
-    doc.items['item-water']!.qty = 3;
+    doc.stock['stock-water']!.qty = 8;
     show(doc);
     const after = Number(
       screen.getByRole('meter', { name: 'Water' }).getAttribute('aria-valuenow'),

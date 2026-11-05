@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { AssetType, ItemType, ProductInfo } from '../../../model';
+import type { AssetType, Item, OffFacts } from '../../../model';
 import type { OffResult } from '../../../scan/openFoodFacts';
 import { isValidGtin, normaliseGtin } from '../../../util';
 import { useDocument } from '../../state';
@@ -14,25 +14,29 @@ export function productLine(p: { name?: string; brand?: string; quantity?: strin
     : base;
 }
 
-/** Stock item types the household can use: enabled packs and its own, never equipment. */
-export function useStockTypes(): ItemType[] {
+/** Stock items the household can use: those of the enabled packs, never equipment, in pack order. */
+export function useStockItems(): Item[] {
   const doc = useDocument();
   const packs = usePacks();
   return useMemo(() => {
-    const enabled = new Set(['custom', ...packs.enabledPacks(doc.settings).map((p) => p.id)]);
+    const enabled = new Set(packs.enabledPacks(doc.settings).map((p) => p.id));
     return Object.values(packs.items).filter(
       (t) => enabled.has(t.id.split(':')[0]!) && t.assetTypeId === undefined,
     );
   }, [packs, doc.settings]);
 }
 
-/** What to keep of a lookup on a queued scan. */
-export function productInfoOf(result: OffResult | 'looking'): ProductInfo | undefined {
+/** What to keep of a lookup on a queued scan: enough to make the product later. */
+export function offFactsOf(result: OffResult | 'looking'): OffFacts | undefined {
   if (typeof result !== 'object') return undefined;
   return {
     found: result.found,
     ...(result.name ? { name: result.name } : {}),
+    ...(result.brand ? { brand: result.brand } : {}),
     ...(result.quantity ? { quantity: result.quantity } : {}),
+    ...(result.size ? { size: result.size } : {}),
+    ...(result.kcalPer100 !== undefined ? { kcalPer100: result.kcalPer100 } : {}),
+    categories: result.categories.slice(0, 20),
     checked: new Date().toISOString(),
   };
 }
@@ -66,7 +70,7 @@ export function useEquipmentMatches(query: string, active = true): AssetType[] {
   }, [active, query, packs]);
 }
 
-/** "Saved 1 × Tinned food (400 g tin) to Pantry". */
+/** "Saved 1 × Test beans 415 g to Pantry". */
 export const savedText = (qty: number, name: string, place: string): string =>
   `Saved ${qty} × ${name} to ${place}`;
 

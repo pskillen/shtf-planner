@@ -6,6 +6,7 @@ import { DriveAuthError, DrivePopupBlockedError, JSON_FILE_NAME, YJS_FILE_NAME }
 import { createFakeCloud, type FakeCloud, type FakePort } from './fakeDrive';
 import {
   NEWER_VERSION_MESSAGE,
+  OLDER_REMOTE_MESSAGE,
   RECONNECT_MESSAGE,
   createSync,
   type Sync,
@@ -83,9 +84,9 @@ async function device(
   return { store, sync, port, host, persistence };
 }
 
-const item = (id: string, qty: number, over: Partial<Document['items'][string]> = {}) => ({
+const item = (id: string, qty: number, over: Partial<Document['stock'][string]> = {}) => ({
   id,
-  typeId: 'items-base:water-can',
+  productId: 'prod-water-can',
   qty,
   locationId: 'loc',
   added: '2026-01-01',
@@ -94,7 +95,7 @@ const item = (id: string, qty: number, over: Partial<Document['items'][string]> 
 });
 const setItem = (d: Device, id: string, qty: number, over = {}) =>
   d.store.change(`set ${id}`, (doc) => {
-    doc.items[id] = item(id, qty, over);
+    doc.stock[id] = item(id, qty, over);
   });
 const kind = (d: Device) => d.sync.state().status.kind;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -125,14 +126,14 @@ describe('connecting', () => {
 
     const b = await device(cloud);
     await b.sync.connect();
-    expect(b.store.get().items.a).toMatchObject({ qty: 3 });
+    expect(b.store.get().stock.a).toMatchObject({ qty: 3 });
     expect(b.sync.state().firstConnect).toBe(false);
     expect(b.sync.state().notice?.text).toBe('Loaded your household from Google Drive');
     expect(kind(b)).toBe('synced');
     // its only news for Drive is that this device now exists (meta.devices)
     await b.sync.whenIdle();
     const onDrive = JSON.parse(cloud.text(JSON_FILE_NAME)!);
-    expect(onDrive.items.a.qty).toBe(3);
+    expect(onDrive.stock.a.qty).toBe(3);
     expect(onDrive.meta.devices).toHaveLength(2);
   });
 
@@ -147,14 +148,14 @@ describe('connecting', () => {
     await b.sync.connect();
     expect(b.sync.state().firstConnect).toBe(true);
     expect(kind(b)).toBe('remoteNewer');
-    expect(b.store.get().items.a).toBeUndefined();
+    expect(b.store.get().stock.a).toBeUndefined();
 
     await b.sync.resolveFirstConnect('merge');
-    expect(Object.keys(b.store.get().items).sort()).toEqual(['a', 'b']);
+    expect(Object.keys(b.store.get().stock).sort()).toEqual(['a', 'b']);
     expect(kind(b)).toBe('synced');
     // and Drive now has both, for the first device
     await a.sync.checkDrive();
-    expect(Object.keys(a.store.get().items).sort()).toEqual(['a', 'b']);
+    expect(Object.keys(a.store.get().stock).sort()).toEqual(['a', 'b']);
   });
 
   it('declining the first-connect question disconnects and leaves both alone', async () => {
@@ -167,7 +168,7 @@ describe('connecting', () => {
     await b.sync.connect();
     await b.sync.resolveFirstConnect('cancel');
     expect(kind(b)).toBe('disconnected');
-    expect(b.store.get().items.a).toBeUndefined();
+    expect(b.store.get().stock.a).toBeUndefined();
     expect(b.sync.state().firstConnect).toBe(false);
   });
 
@@ -188,7 +189,7 @@ describe('connecting', () => {
     await a.sync.connect();
     await a.sync.disconnect();
     expect(kind(a)).toBe('disconnected');
-    expect(a.store.get().items.a).toBeDefined();
+    expect(a.store.get().stock.a).toBeDefined();
     expect(cloud.files.size).toBe(2);
   });
 });
@@ -210,97 +211,92 @@ async function pairWithConflict() {
   return { cloud, a, b };
 }
 
-const soup = (id: string, name = `Soup ${id}`) => ({
-  id: `custom:${id}`,
+const product = (id: string, name = `Beans ${id}`) => ({
+  id: `prod-${id}`,
   name,
-  category: 'food' as const,
-  unit: 'tin',
-  gives: [{ store: 'foodKcal' as const, amount: 300 }],
-  suitability: ['frost' as const],
-  shelfLife: 'none' as const,
-  tags: [],
+  itemId: 'items-base:baked-beans',
+  size: { amount: 415, unit: 'g' as const },
+  added: '2026-01-01',
 });
-const setType = (d: Device, id: string, name?: string) =>
-  d.store.change(`type ${id}`, (doc) => {
-    doc.customTypes[`custom:${id}`] = soup(id, name);
+const setProduct = (d: Device, id: string, name?: string) =>
+  d.store.change(`product ${id}`, (doc) => {
+    doc.products[`prod-${id}`] = product(id, name);
   });
 
-describe('custom item types (schema 2)', () => {
-  it('a custom type goes through push and pull, and into the readable sidecar', async () => {
+describe('products (schema 4)', () => {
+  it('a product goes through push and pull, and into the readable sidecar', async () => {
     const cloud = createFakeCloud();
     const a = await device(cloud);
     const b = await device(cloud);
-    setType(a, 'one');
+    setProduct(a, 'one');
     await a.sync.connect();
-    expect(Object.keys(JSON.parse(cloud.text(JSON_FILE_NAME)!).customTypes)).toEqual([
-      'custom:one',
-    ]);
+    expect(Object.keys(JSON.parse(cloud.text(JSON_FILE_NAME)!).products)).toEqual(['prod-one']);
     await b.sync.connect();
-    expect(b.store.get().customTypes['custom:one']).toMatchObject({ name: 'Soup one' });
+    expect(b.store.get().products['prod-one']).toMatchObject({ name: 'Beans one' });
 
-    setType(b, 'two');
+    setProduct(b, 'two');
     await b.sync.flush();
     await a.sync.checkDrive();
-    expect(Object.keys(a.store.get().customTypes).sort()).toEqual(['custom:one', 'custom:two']);
+    expect(Object.keys(a.store.get().products).sort()).toEqual(['prod-one', 'prod-two']);
     expect(a.sync.state().conflicts).toEqual([]);
   });
 
-  it('two devices adding different custom types merge without a question', async () => {
+  it('two devices adding different products merge without a question', async () => {
     const cloud = createFakeCloud();
     const a = await device(cloud);
     const b = await device(cloud);
     await a.sync.connect();
     await b.sync.connect();
     a.port.offline = true;
-    setType(a, 'a');
+    setProduct(a, 'a');
     await settle(a);
-    setType(b, 'b');
+    setProduct(b, 'b');
     await b.sync.flush();
     a.port.offline = false;
     await a.sync.checkDrive();
     await b.sync.checkDrive();
     for (const d of [a, b]) {
-      expect(Object.keys(d.store.get().customTypes).sort()).toEqual(['custom:a', 'custom:b']);
+      expect(Object.keys(d.store.get().products).sort()).toEqual(['prod-a', 'prod-b']);
       expect(d.sync.state().conflicts).toEqual([]);
     }
   });
 
-  it('the same custom type renamed two ways asks which copy, like any other record', async () => {
+  it('the same product renamed two ways asks which copy, like any other record', async () => {
     const cloud = createFakeCloud();
     const a = await device(cloud);
     const b = await device(cloud);
-    setType(a, 'x', 'Soup');
+    setProduct(a, 'x', 'Beans');
     await a.sync.connect();
     await b.sync.connect();
     a.port.offline = true;
-    setType(a, 'x', 'Tomato soup');
+    setProduct(a, 'x', 'Heinz Beanz');
     await settle(a);
-    setType(b, 'x', 'Lentil soup');
+    setProduct(b, 'x', 'Tesco beans');
     await b.sync.flush();
     a.port.offline = false;
     await a.sync.checkDrive();
     const [c] = a.sync.state().conflicts;
-    expect(c).toMatchObject({ key: 'customTypes/custom:x', noun: 'Custom item' });
+    expect(c).toMatchObject({ key: 'products/prod-x', noun: 'Product' });
     await a.sync.resolveAll('theirs');
     await a.sync.whenIdle();
     await b.sync.checkDrive();
-    expect(a.store.get().customTypes['custom:x']?.name).toBe('Lentil soup');
-    expect(b.store.get().customTypes['custom:x']?.name).toBe('Lentil soup');
+    expect(a.store.get().products['prod-x']?.name).toBe('Tesco beans');
+    expect(b.store.get().products['prod-x']?.name).toBe('Tesco beans');
   });
 
-  it('a sidecar from schema 4 is refused without merging', async () => {
+  it('a sidecar from schema 5 is refused without merging', async () => {
     const cloud = createFakeCloud();
     const a = await device(cloud);
-    setType(a, 'one');
+    setProduct(a, 'one');
     await a.sync.connect();
     const sidecar = JSON.parse(cloud.text(JSON_FILE_NAME)!);
-    sidecar.meta.schemaVersion = 4;
+    sidecar.meta.schemaVersion = 5;
     cloud.put(JSON_FILE_NAME, JSON.stringify(sidecar));
     cloud.put(YJS_FILE_NAME, a.store.bytes());
     const b = await device(cloud);
     await b.sync.connect();
     expect(b.sync.state().status).toEqual({ kind: 'error', message: NEWER_VERSION_MESSAGE });
-    expect(b.store.get().customTypes).toEqual({});
+    expect(b.store.get().products).toEqual({});
   });
 });
 
@@ -327,12 +323,12 @@ describe('disconnect and reconnect', () => {
     expect(a.sync.state().firstConnect).toBe(false);
     expect(a.sync.state().conflicts).toEqual([]);
     expect(kind(a)).toBe('synced');
-    expect(a.store.get().items.x).toMatchObject({ qty: 5 });
-    expect(a.store.get().items.y).toMatchObject({ qty: 7 });
-    expect(JSON.parse(cloud.text(JSON_FILE_NAME)!).items.x.qty).toBe(5);
+    expect(a.store.get().stock.x).toMatchObject({ qty: 5 });
+    expect(a.store.get().stock.y).toMatchObject({ qty: 7 });
+    expect(JSON.parse(cloud.text(JSON_FILE_NAME)!).stock.x.qty).toBe(5);
 
     await b.sync.checkDrive();
-    expect(b.store.get().items.x).toMatchObject({ qty: 5 });
+    expect(b.store.get().stock.x).toMatchObject({ qty: 5 });
   });
 
   it('reconnecting with nothing changed asks nothing and writes nothing', async () => {
@@ -358,16 +354,16 @@ describe('disconnect and reconnect', () => {
 
     await a.sync.resolveAll('mine');
     await a.sync.whenIdle();
-    expect(a.store.get().items.x).toMatchObject({ qty: 2 });
+    expect(a.store.get().stock.x).toMatchObject({ qty: 2 });
     await b.sync.checkDrive();
-    expect(b.store.get().items.x).toMatchObject({ qty: 2 });
+    expect(b.store.get().stock.x).toMatchObject({ qty: 2 });
   });
 
   it('keeps a delete-versus-edit question across disconnect, so the edit is not lost', async () => {
     const { cloud, a, b } = await pair();
     a.port.offline = true;
     a.store.change('delete x', (d) => {
-      delete d.items.x;
+      delete d.stock.x;
     });
     await settle(a);
     setItem(b, 'x', 7);
@@ -382,11 +378,11 @@ describe('disconnect and reconnect', () => {
     await a.sync.whenIdle();
     expect(a.sync.state().conflicts.length).toBeGreaterThan(0);
     expect(cloud.writes[YJS_FILE_NAME]).toBe(writes);
-    expect(JSON.parse(cloud.text(JSON_FILE_NAME)!).items.x.qty).toBe(7);
+    expect(JSON.parse(cloud.text(JSON_FILE_NAME)!).stock.x.qty).toBe(7);
 
     await a.sync.resolveAll('theirs');
     await a.sync.whenIdle();
-    expect(a.store.get().items.x).toMatchObject({ qty: 7 });
+    expect(a.store.get().stock.x).toMatchObject({ qty: 7 });
   });
 
   it('a failed Connect press that Google needs the person for offers Reconnect', async () => {
@@ -523,7 +519,7 @@ describe('two tabs of one browser', () => {
     await two.whenIdle();
     expect(one.port.isConnected()).toBe(true);
     expect(two.state().firstConnect).toBe(false);
-    expect(Object.keys(one.store.get().items).sort()).toEqual(['mine', 'theirs']);
+    expect(Object.keys(one.store.get().stock).sort()).toEqual(['mine', 'theirs']);
   });
 });
 
@@ -540,7 +536,7 @@ describe('pushing', () => {
     expect(cloud.writes[YJS_FILE_NAME]).toBe(yjs0 + 1);
     expect(cloud.writes[JSON_FILE_NAME]).toBe(yjs0 + 1);
     expect(kind(a)).toBe('synced');
-    expect(JSON.parse(cloud.text(JSON_FILE_NAME)!).items.b.qty).toBe(2);
+    expect(JSON.parse(cloud.text(JSON_FILE_NAME)!).stock.b.qty).toBe(2);
   });
 
   it('flush() pushes at once, without waiting for the debounce', async () => {
@@ -550,7 +546,7 @@ describe('pushing', () => {
     setItem(a, 'a', 1);
     await a.sync.flush();
     expect(kind(a)).toBe('synced');
-    expect(JSON.parse(cloud.text(JSON_FILE_NAME)!).items.a.qty).toBe(1);
+    expect(JSON.parse(cloud.text(JSON_FILE_NAME)!).stock.a.qty).toBe(1);
   });
 
   it('hiding the page pushes at once', async () => {
@@ -599,7 +595,7 @@ describe('pushing', () => {
     a.port.offline = false;
     await again.checkDrive();
     expect(again.state().status.kind).toBe('synced');
-    expect(JSON.parse(cloud.text(JSON_FILE_NAME)!).items.a.qty).toBe(1);
+    expect(JSON.parse(cloud.text(JSON_FILE_NAME)!).stock.a.qty).toBe(1);
   });
 });
 
@@ -616,7 +612,7 @@ describe('pulling', () => {
     await a.sync.flush();
 
     await b.sync.checkDrive();
-    expect(b.store.get().items.a).toMatchObject({ qty: 3 });
+    expect(b.store.get().stock.a).toMatchObject({ qty: 3 });
     expect(b.sync.state().conflicts).toEqual([]);
     expect(b.sync.state().notice?.text).toBe('2 changes from your other device');
     expect(kind(b)).toBe('synced');
@@ -632,7 +628,7 @@ describe('pulling', () => {
     await a.sync.flush();
     b.host.fire('visible');
     await b.sync.whenIdle();
-    expect(b.store.get().items.a).toBeDefined();
+    expect(b.store.get().stock.a).toBeDefined();
   });
 
   it('does not download again when Drive has not changed', async () => {
@@ -655,15 +651,15 @@ describe('pulling', () => {
     await a.sync.flush();
     setItem(b, 'b', 4);
     await b.sync.flush(); // pulls a's item first, then sends both
-    expect(Object.keys(b.store.get().items).sort()).toEqual(['a', 'b']);
+    expect(Object.keys(b.store.get().stock).sort()).toEqual(['a', 'b']);
     await a.sync.checkDrive();
-    expect(Object.keys(a.store.get().items).sort()).toEqual(['a', 'b']);
+    expect(Object.keys(a.store.get().stock).sort()).toEqual(['a', 'b']);
   });
 });
 
 describe('a stale write must not undo a deletion', () => {
   const has = (text: string | undefined, id: string) =>
-    Object.keys(JSON.parse(text!).items).includes(id);
+    Object.keys(JSON.parse(text!).stock).includes(id);
 
   async function pair() {
     const cloud = createFakeCloud();
@@ -682,7 +678,7 @@ describe('a stale write must not undo a deletion', () => {
     // B has looked at Drive when A deletes x and pushes
     b.port.afterNextList = async () => {
       a.store.change('delete x', (d) => {
-        delete d.items.x;
+        delete d.stock.x;
       });
       await a.sync.flush();
     };
@@ -705,7 +701,7 @@ describe('a stale write must not undo a deletion', () => {
     const { cloud, a, b } = await pair();
     const stale = b.store.bytes(); // still has x
     a.store.change('delete x', (d) => {
-      delete d.items.x;
+      delete d.stock.x;
     });
     await a.sync.flush();
     setItem(b, 'other', 2);
@@ -735,7 +731,7 @@ describe('a stale write must not undo a deletion', () => {
     a.sync.stop();
     // edits whose dirty flag never reached storage (the page died first)
     a.store.change('delete x', (d) => {
-      delete d.items.x;
+      delete d.stock.x;
     });
     const before = cloud.writes[YJS_FILE_NAME];
     // same persisted sync state, new page load
@@ -770,16 +766,16 @@ describe('when Drive moves things under us', () => {
     setItem(a, 'a2', 2);
     await a.sync.flush();
     expect(kind(a)).toBe('synced');
-    expect(Object.keys(JSON.parse(cloud.text(JSON_FILE_NAME)!).items).sort()).toEqual(['a', 'a2']);
+    expect(Object.keys(JSON.parse(cloud.text(JSON_FILE_NAME)!).stock).sort()).toEqual(['a', 'a2']);
 
     // B still remembers the old folder: it recovers on its own too, and picks up A's edit
     await b.sync.checkDrive();
     expect(kind(b)).toBe('synced');
-    expect(Object.keys(b.store.get().items).sort()).toEqual(['a', 'a2']);
+    expect(Object.keys(b.store.get().stock).sort()).toEqual(['a', 'a2']);
     setItem(b, 'b', 3);
     await b.sync.flush();
     expect(kind(b)).toBe('synced');
-    expect(Object.keys(JSON.parse(cloud.text(JSON_FILE_NAME)!).items).sort()).toEqual([
+    expect(Object.keys(JSON.parse(cloud.text(JSON_FILE_NAME)!).stock).sort()).toEqual([
       'a',
       'a2',
       'b',
@@ -796,7 +792,7 @@ describe('both devices changed the same thing', () => {
     setItem(a, 'x', 1);
     await a.sync.flush();
     await b.sync.connect();
-    expect(b.store.get().items.x).toBeDefined();
+    expect(b.store.get().stock.x).toBeDefined();
 
     // b goes offline and edits; a edits and pushes
     b.port.offline = true;
@@ -815,7 +811,7 @@ describe('both devices changed the same thing', () => {
     const { conflicts } = b.sync.state();
     expect(conflicts).toHaveLength(1);
     expect(conflicts[0]).toMatchObject({
-      key: 'items/x',
+      key: 'stock/x',
       fields: [{ field: 'qty', mine: 20, theirs: 10 }],
     });
     expect(kind(b)).toBe('remoteNewer');
@@ -827,20 +823,20 @@ describe('both devices changed the same thing', () => {
 
   it('"take theirs" writes their value on top, and both devices end up agreeing', async () => {
     const { a, b } = await conflicted();
-    await b.sync.resolveConflicts({ 'items/x': 'theirs' });
-    expect(b.store.get().items.x!.qty).toBe(10);
+    await b.sync.resolveConflicts({ 'stock/x': 'theirs' });
+    expect(b.store.get().stock.x!.qty).toBe(10);
     expect(b.sync.state().conflicts).toEqual([]);
     expect(kind(b)).toBe('synced');
     await a.sync.checkDrive();
-    expect(a.store.get().items.x!.qty).toBe(10);
+    expect(a.store.get().stock.x!.qty).toBe(10);
   });
 
   it('"keep mine" wins on both devices', async () => {
     const { a, b } = await conflicted();
     await b.sync.resolveAll('mine');
-    expect(b.store.get().items.x!.qty).toBe(20);
+    expect(b.store.get().stock.x!.qty).toBe(20);
     await a.sync.checkDrive();
-    expect(a.store.get().items.x!.qty).toBe(20);
+    expect(a.store.get().stock.x!.qty).toBe(20);
     expect(kind(a)).toBe('synced');
   });
 
@@ -858,7 +854,7 @@ describe('both devices changed the same thing', () => {
     });
     opened.push({ store: b.store, sync: again });
     await again.start();
-    expect(again.state().conflicts.map((c) => c.key)).toEqual(['items/x']);
+    expect(again.state().conflicts.map((c) => c.key)).toEqual(['stock/x']);
   });
 
   it('different fields of the same record merge without a question', async () => {
@@ -872,19 +868,19 @@ describe('both devices changed the same thing', () => {
 
     b.port.offline = true;
     b.store.change('qty', (d) => {
-      d.items.x!.qty = 7;
+      d.stock.x!.qty = 7;
     });
     await b.sync.flush();
     a.store.change('date', (d) => {
-      d.items.x!.bestBefore = '2027-05';
+      d.stock.x!.bestBefore = '2027-05';
     });
     await a.sync.flush();
     b.port.offline = false;
     await b.sync.checkDrive();
     expect(b.sync.state().conflicts).toEqual([]);
-    expect(b.store.get().items.x).toMatchObject({ qty: 7, bestBefore: '2027-05' });
+    expect(b.store.get().stock.x).toMatchObject({ qty: 7, bestBefore: '2027-05' });
     await a.sync.checkDrive();
-    expect(a.store.get().items.x).toMatchObject({ qty: 7, bestBefore: '2027-05' });
+    expect(a.store.get().stock.x).toMatchObject({ qty: 7, bestBefore: '2027-05' });
   });
 });
 
@@ -902,7 +898,7 @@ describe('guards', () => {
     const b = await device(cloud);
     await b.sync.connect();
     expect(b.sync.state().status).toEqual({ kind: 'error', message: NEWER_VERSION_MESSAGE });
-    expect(b.store.get().items.a).toBeUndefined();
+    expect(b.store.get().stock.a).toBeUndefined();
     expect(b.store.status().kind).toBe('ok');
   });
 
@@ -916,11 +912,11 @@ describe('guards', () => {
     await b.sync.connect();
     expect(b.sync.state().envWarning).toEqual({ fileEnv: 'dev', buildEnv: 'prod' });
     expect(kind(b)).toBe('remoteNewer');
-    expect(b.store.get().items.a).toBeUndefined();
+    expect(b.store.get().stock.a).toBeUndefined();
 
     await b.sync.resolveEnv('continue');
     expect(b.sync.state().envWarning).toBeNull();
-    expect(b.store.get().items.a).toBeDefined();
+    expect(b.store.get().stock.a).toBeDefined();
     expect(kind(b)).toBe('synced');
   });
 
@@ -935,7 +931,7 @@ describe('guards', () => {
     expect(b.sync.state().status).toMatchObject({ kind: 'error' });
     setItem(b, 'b', 2);
     await b.sync.flush();
-    expect(b.store.get().items.a).toBeUndefined();
+    expect(b.store.get().stock.a).toBeUndefined();
     expect(cloud.writes[YJS_FILE_NAME]).toBe(1);
   });
 
@@ -968,7 +964,7 @@ describe('guards', () => {
     await b.sync.resolveEnv('continue');
     await b.sync.resolveFirstConnect('merge'); // b made its first answers while sync was off
     await b.sync.whenIdle();
-    expect(Object.keys(JSON.parse(cloud.text(JSON_FILE_NAME)!).items).sort()).toEqual(['a', 'b']);
+    expect(Object.keys(JSON.parse(cloud.text(JSON_FILE_NAME)!).stock).sort()).toEqual(['a', 'b']);
   });
 
   it('is quiet when both devices run the same build, whichever it is', async () => {
@@ -979,7 +975,116 @@ describe('guards', () => {
     const b = await device(cloud, { env: 'next' });
     await b.sync.connect();
     expect(b.sync.state().envWarning).toBeNull();
-    expect(b.store.get().items.a).toBeDefined();
+    expect(b.store.get().stock.a).toBeDefined();
+  });
+
+  it('asks which build before offering to replace a schema-3 household from another environment', async () => {
+    const cloud = createFakeCloud();
+    const old = await device(cloud, { env: 'dev' });
+    setItem(old, 'old', 1);
+    await old.sync.connect();
+    const sidecar = JSON.parse(cloud.text(JSON_FILE_NAME)!);
+    sidecar.meta.schemaVersion = 3;
+    cloud.put(JSON_FILE_NAME, JSON.stringify(sidecar));
+    cloud.put(YJS_FILE_NAME, old.store.bytes());
+
+    const b = await device(cloud, { env: 'prod' });
+    await b.sync.connect();
+    expect(b.sync.state().envWarning).toEqual({ fileEnv: 'dev', buildEnv: 'prod' });
+    expect(b.sync.state().oldRemote).toBe(false);
+  });
+});
+
+describe('a household on Drive from before schema 4', () => {
+  /** Drive holds a schema-3 household: both files say so. */
+  async function oldDrive() {
+    const cloud = createFakeCloud();
+    const old = await device(cloud);
+    setItem(old, 'old', 1);
+    await old.sync.connect();
+    const sidecar = JSON.parse(cloud.text(JSON_FILE_NAME)!);
+    sidecar.meta.schemaVersion = 3;
+    cloud.put(JSON_FILE_NAME, JSON.stringify(sidecar));
+    cloud.put(YJS_FILE_NAME, old.store.bytes());
+    return cloud;
+  }
+
+  it('merges nothing, asks once, and says remoteNewer', async () => {
+    const cloud = await oldDrive();
+    const b = await device(cloud);
+    setItem(b, 'mine', 2);
+    await b.sync.connect();
+    expect(b.sync.state().oldRemote).toBe(true);
+    expect(kind(b)).toBe('remoteNewer');
+    expect(Object.keys(b.store.get().stock)).toEqual(['mine']);
+    expect(b.sync.state().firstConnect).toBe(false);
+  });
+
+  it('reads the old version from the household file itself when there is no readable sidecar', async () => {
+    const cloud = await oldDrive();
+    const legacy = await openStore({
+      name: `legacy-${++counter}`,
+      env: 'local',
+      deviceId: 'legacy',
+      channel: false,
+      schemaVersion: 3,
+      steps: [],
+      validate: false,
+    });
+    cloud.put(YJS_FILE_NAME, legacy.bytes());
+    cloud.put(JSON_FILE_NAME, 'not json');
+    await legacy.close();
+    const b = await device(cloud);
+    await b.sync.connect();
+    expect(b.sync.state().oldRemote).toBe(true);
+    expect(b.store.get().stock).toEqual({});
+  });
+
+  it('Replace pushes this household over it, and a second device then loads schema 4', async () => {
+    const cloud = await oldDrive();
+    const b = await device(cloud);
+    setItem(b, 'mine', 2);
+    await b.sync.connect();
+    expect(b.sync.state().oldRemote).toBe(true);
+
+    await b.sync.resolveOldRemote('replace');
+    await b.sync.whenIdle();
+    expect(b.sync.state().oldRemote).toBe(false);
+    expect(kind(b)).toBe('synced');
+    const onDrive = JSON.parse(cloud.text(JSON_FILE_NAME)!);
+    expect(onDrive.meta.schemaVersion).toBe(4);
+    expect(Object.keys(onDrive.stock)).toEqual(['mine']);
+
+    const c = await device(cloud);
+    await c.sync.connect();
+    expect(Object.keys(c.store.get().stock)).toEqual(['mine']);
+    expect(c.sync.state().oldRemote).toBe(false);
+    expect(c.sync.state().notice?.text).toBe('Loaded your household from Google Drive');
+  });
+
+  it('Cancel keeps sync off until the app is reopened, counting edits as unsent', async () => {
+    const cloud = await oldDrive();
+    const b = await device(cloud);
+    setItem(b, 'mine', 2);
+    await b.sync.connect();
+    const writes = { ...cloud.writes };
+    await b.sync.resolveOldRemote('cancel');
+    expect(b.sync.state().oldRemote).toBe(false);
+    expect(b.sync.state().status).toMatchObject({ kind: 'error' });
+    expect(JSON.stringify(b.sync.state().status)).toContain(OLDER_REMOTE_MESSAGE);
+    setItem(b, 'more', 1);
+    await settle(b);
+    await b.sync.checkDrive();
+    expect(cloud.writes).toEqual(writes);
+    expect(JSON.parse(cloud.text(JSON_FILE_NAME)!).meta.schemaVersion).toBe(3);
+  });
+
+  it('a blank device that meets one is asked too, and never merges it', async () => {
+    const cloud = await oldDrive();
+    const b = await device(cloud);
+    await b.sync.connect();
+    expect(b.sync.state().oldRemote).toBe(true);
+    expect(b.store.get().stock).toEqual({});
   });
 });
 
@@ -1001,7 +1106,7 @@ describe('offline and sign-in', () => {
     a.host.fire('online');
     await a.sync.whenIdle();
     expect(kind(a)).toBe('synced');
-    expect(Object.keys(JSON.parse(cloud.text(JSON_FILE_NAME)!).items)).toEqual(['a', 'b', 'c']);
+    expect(Object.keys(JSON.parse(cloud.text(JSON_FILE_NAME)!).stock)).toEqual(['a', 'b', 'c']);
   });
 
   it('a failing network call reads as offline, not as an error', async () => {
@@ -1028,6 +1133,6 @@ describe('offline and sign-in', () => {
     });
     await a.sync.connect();
     expect(kind(a)).toBe('synced');
-    expect(JSON.parse(cloud.text(JSON_FILE_NAME)!).items.a.qty).toBe(1);
+    expect(JSON.parse(cloud.text(JSON_FILE_NAME)!).stock.a.qty).toBe(1);
   });
 });

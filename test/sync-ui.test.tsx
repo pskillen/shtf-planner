@@ -34,6 +34,7 @@ function fakeSync(initial: Partial<SyncState> = {}) {
     resolveAll: vi.fn(async (side: string) => void calls.push(`all:${side}`)),
     resolveEnv: vi.fn(async (c: string) => void calls.push(`env:${c}`)),
     resolveFirstConnect: vi.fn(async (c: string) => void calls.push(`first:${c}`)),
+    resolveOldRemote: vi.fn(async (c: string) => void calls.push(`old:${c}`)),
     dismissNotice: vi.fn(),
   } as unknown as Sync;
   return {
@@ -171,6 +172,15 @@ describe('the sync chrome', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Merge them' }));
     fireEvent.click(screen.getByRole('button', { name: 'Not now' }));
     expect(f.calls).toEqual(['first:merge', 'first:cancel']);
+  });
+
+  it('asks when Drive holds an older household', () => {
+    const f = fakeSync({ oldRemote: true });
+    wrap(f.sync, <SyncChrome />);
+    expect(screen.getByTestId('old-remote-dialog').textContent).toMatch(/older version/);
+    fireEvent.click(screen.getByRole('button', { name: 'Replace it' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Not now' }));
+    expect(f.calls).toEqual(['old:replace', 'old:cancel']);
   });
 
   it('toasts a notice and lets it go', () => {

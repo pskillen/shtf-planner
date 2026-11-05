@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { DocumentSchema, migrate } from '../src/model';
 import { bundledPacks, subregionIssue } from '../src/packs';
 import { biggarDocument } from '../src/fixtures/household-biggar';
+import { sizeFits } from '../src/util';
 
 const jsonPath = fileURLToPath(new URL('../src/fixtures/household-biggar.json', import.meta.url));
 
@@ -47,10 +48,19 @@ describe('the Biggar fixture household', () => {
 
   it('only names pack things that exist, and its pack versions are current', () => {
     const packs = bundledPacks();
-    for (const i of Object.values(doc.items)) {
-      expect(packs.items[i.typeId], i.typeId).toBeDefined();
-      expect(doc.locations[i.locationId], i.locationId).toBeDefined();
+    for (const p of Object.values(doc.products)) {
+      if (p.itemId !== undefined) expect(packs.items[p.itemId], p.itemId).toBeDefined();
+      if (p.itemId !== undefined) {
+        const item = packs.items[p.itemId]!;
+        expect(sizeFits(p.size, item.measure), p.id).toBe(true);
+        expect(item.assetTypeId, `${p.id} is equipment`).toBeUndefined();
+      }
     }
+    for (const x of Object.values(doc.stock)) {
+      expect(doc.products[x.productId], x.productId).toBeDefined();
+      expect(doc.locations[x.locationId], x.locationId).toBeDefined();
+    }
+    for (const b of Object.values(doc.barcodes)) expect(doc.products[b.productId]).toBeDefined();
     for (const a of Object.values(doc.assets)) {
       const type = packs.assets[a.typeId];
       expect(type, a.typeId).toBeDefined();
@@ -68,7 +78,7 @@ describe('the Biggar fixture household', () => {
       }
     }
     for (const key of Object.keys(doc.plans)) expect(packs.plans[key], key).toBeDefined();
-    for (const key of Object.keys(doc.floors)) {
+    for (const key of Object.keys(doc.minimums)) {
       const [locationId, typeId] = key.split('|');
       expect(doc.locations[locationId!]?.kind).toBe('rotating');
       expect(packs.items[typeId!], typeId).toBeDefined();
@@ -89,11 +99,12 @@ describe('the Biggar fixture household', () => {
 
   it('has sane dates: created and added from 2026-09-01, one expired item, the rest not yet', () => {
     expect(doc.meta.createdAt >= '2026-09-01').toBe(true);
-    for (const i of Object.values(doc.items)) expect(i.added >= '2026-09-01', i.id).toBe(true);
-    const expired = Object.values(doc.items)
+    for (const i of Object.values(doc.stock)) expect(i.added >= '2026-09-01', i.id).toBe(true);
+    for (const p of Object.values(doc.products)) expect(p.added >= '2026-09-01', p.id).toBe(true);
+    const expired = Object.values(doc.stock)
       .filter((i) => i.bestBefore !== undefined && i.bestBefore < '2026-11')
       .map((i) => i.id);
-    expect(expired).toEqual(['item-uht']);
+    expect(expired).toEqual(['stock-uht']);
     for (const m of doc.household.members) expect(m.dob <= doc.meta.createdAt, m.id).toBe(true);
   });
 });

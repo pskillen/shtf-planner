@@ -178,8 +178,8 @@ function ImportSection() {
             <li>{plural(preview.summary.pets, 'pet')}</li>
             <li>{plural(preview.summary.locations, 'location')}</li>
             <li>{plural(preview.summary.assets, 'asset')}</li>
-            <li>{plural(preview.summary.items, 'item')}</li>
-            <li>{plural(preview.summary.customTypes, 'custom item type')}</li>
+            <li>{plural(preview.summary.products, 'product')}</li>
+            <li>{plural(preview.summary.stock, 'stock entry', 'stock entries')}</li>
             <li>{plural(preview.summary.barcodes, 'remembered barcode')}</li>
             <li>{plural(preview.summary.scans, 'scan to sort', 'scans to sort')}</li>
           </ul>

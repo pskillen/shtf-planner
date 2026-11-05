@@ -1,7 +1,8 @@
 import {
+  MEASURE_UNITS,
   PackSchema,
   type AssetType,
-  type ItemType,
+  type Item,
   type Meta,
   type Pack,
   type Packs,
@@ -58,7 +59,9 @@ export function loadPacks(raws: ReadonlyArray<{ label: string; raw: unknown }>):
     byId[pack.id] = pack;
   }
 
-  const items: Record<string, ItemType> = {};
+  const items: Record<string, Item> = {};
+  /** Open Food Facts tag to the item that claimed it (a tag means one item). */
+  const offTags = new Map<string, string>();
   const assets: Record<string, AssetType> = {};
   const rules: Record<string, Rule> = {};
   const plans: Record<string, PlanDef> = {};
@@ -96,11 +99,43 @@ export function loadPacks(raws: ReadonlyArray<{ label: string; raw: unknown }>):
               `${where}: source ${item.source} is not listed in the pack's sources (with the date checked)`,
             );
           item.gives.forEach((g, j) => {
-            if (g.store === 'medicationDays')
+            if (g.resource === 'medicationDays')
               issues.push(
                 `${where}.gives[${j}]: medicationDays is computed, an item cannot give it`,
               );
           });
+          if (item.gives.length > 0 && item.source === undefined)
+            issues.push(
+              `${where}: an item that gives a number needs a source (a URL or "assumption")`,
+            );
+          item.sizes.forEach((size, j) => {
+            if (!MEASURE_UNITS[item.measure].includes(size.unit))
+              issues.push(
+                `${where}.sizes[${j}]: ${size.unit} does not fit a ${item.measure} item (use ${MEASURE_UNITS[item.measure].join(' or ')})`,
+              );
+          });
+          if (item.assetTypeId === undefined) {
+            if (item.sizes.length === 0)
+              issues.push(`${where}: a stock item needs at least one size`);
+          } else {
+            const one = item.sizes.length === 1 ? item.sizes[0]! : undefined;
+            if (
+              item.measure !== 'count' ||
+              !one ||
+              one.amount !== 1 ||
+              one.unit !== 'pieces' ||
+              one.count !== undefined
+            )
+              issues.push(
+                `${where}: an equipment entry has measure "count" and exactly one size, 1 piece`,
+              );
+          }
+          for (const tag of item.offCategories ?? []) {
+            const other = offTags.get(tag);
+            if (other !== undefined && other !== item.id)
+              issues.push(`${where}.offCategories: ${tag} is already on ${other}`);
+            else offTags.set(tag, item.id);
+          }
         });
         break;
       case 'assets':

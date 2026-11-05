@@ -35,7 +35,7 @@ describe('preview examples on the Biggar household', () => {
       expect(food).not.toMatch(/Dried pasta \(5 kg\)/);
     }
     expect(at(3, 'food').example).toBe(
-      'e.g. 15 tins, 4 kg of pasta and rice, 1 kg of porridge oats and 3 jars of peanut butter',
+      'e.g. 18 tins, 3.5 kg of pasta and rice, 1 kg of porridge oats and 3 jars of peanut butter',
     );
   });
 
@@ -62,7 +62,8 @@ describe('preview examples on the Biggar household', () => {
       if ((r.title === 'Drinking water' || r.title === 'Power for phones') && h === 28) continue;
       expect(n, `${h} days ${r.title}: ${r.example}`).toBeLessThanOrEqual(EXAMPLE_MAX_UNITS);
     }
-    expect(at(3, 'water').example).toBe('e.g. 4 × Bottled water (6 × 2 L)');
+    // cheapest per litre within EXAMPLE_MAX_UNITS packs
+    expect(at(3, 'water').example).toBe('e.g. 10 × Bottled water (5 L)');
     expect(at(28, 'water').example).not.toMatch(/\b(2|3)\d ×/);
   });
 
@@ -83,24 +84,30 @@ describe('preview examples on the Biggar household', () => {
 describe('example helpers', () => {
   it('splits the food kcal across the mix in shares that add to one', () => {
     expect(FOOD_MIX.reduce((n, p) => n + p.share, 0)).toBeCloseTo(1);
-    for (const part of FOOD_MIX)
-      for (const id of part.sizes) expect(packs.items[`items-base:${id}`], id).toBeDefined();
+    for (const part of FOOD_MIX) {
+      const item = packs.items[`items-base:${part.item}`];
+      expect(item, part.item).toBeDefined();
+      expect(item!.gives.some((g) => g.resource === 'foodKcal')).toBe(true);
+    }
   });
 
-  it('reads a mass from a pack size', () => {
-    expect(massKg('5 kg')).toBe(5);
-    expect(massKg('340 g')).toBeCloseTo(0.34);
-    expect(massKg('6 x 2 L')).toBeUndefined();
-    expect(massKg(undefined)).toBeUndefined();
+  it('reads a mass from a size', () => {
+    expect(massKg({ amount: 5, unit: 'kg' }, 'mass')).toBe(5);
+    expect(massKg({ amount: 340, unit: 'g' }, 'mass')).toBeCloseTo(0.34);
+    expect(massKg({ count: 6, amount: 2, unit: 'L' }, 'volume')).toBeUndefined();
   });
 
-  it('prefers the cheapest size with a sane count, else the fewest packs', () => {
-    const types = ['bottled-water-2l', 'bottled-water-6x2l', 'water-can', 'water-carriers'].map(
+  it('prefers the cheapest pack with a sane count, else the fewest packs', () => {
+    const items = ['bottled-water', 'water-container'].map(
       (id) => packs.items[`items-base:${id}`]!,
     );
-    expect(pickSize(types, 'waterL', 40)!.type.id).toBe('items-base:bottled-water-6x2l');
-    // 30 bottles-worth of a month: only the biggest size is under a dozen packs
-    expect(pickSize(types, 'waterL', 400)!.type.id).toBe('items-base:water-carriers');
+    const small = pickSize(items, 'waterL', 40)!;
+    expect(small.units).toBeLessThanOrEqual(12);
+    expect(small.item.id).toBe('items-base:bottled-water');
+    // a month: only the biggest packs are under a dozen
+    const big = pickSize(items, 'waterL', 400)!;
+    expect(big.units).toBeLessThanOrEqual(12);
+    expect(big.per).toBeGreaterThanOrEqual(30);
     expect(pickSize([], 'waterL', 10)).toBeUndefined();
   });
 });

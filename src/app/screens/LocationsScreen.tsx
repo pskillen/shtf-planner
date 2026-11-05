@@ -131,7 +131,7 @@ export function LocationsScreen() {
   const names = new Set(all.map((l) => l.name.toLowerCase()));
   const suggestions = LOCATION_SUGGESTIONS.filter((s) => !names.has(s.name.toLowerCase()));
   const stockHere = (id: string) =>
-    Object.values(doc.items).filter((i) => i.locationId === id).length;
+    Object.values(doc.stock).filter((s) => s.locationId === id).length;
 
   return (
     <div>

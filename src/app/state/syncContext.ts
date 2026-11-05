@@ -17,6 +17,7 @@ export const NO_SYNC_STATE: SyncState = {
   firstConnect: false,
   notice: null,
   checkedAt: null,
+  oldRemote: false,
 };
 
 /** The engine for actions (connect, flush, resolve ...); `null` until it is ready. */

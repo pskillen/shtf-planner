@@ -1,6 +1,7 @@
 import 'fake-indexeddb/auto';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { openStore } from './documentStore';
+import { isDriveConnected, loadDriveAccount, saveDriveSession } from './drive/drivePrefs';
 import { memoryStorage } from './drive/testStorage';
 import { forgetDeviceData } from './forget';
 import {
@@ -52,11 +53,15 @@ describe('forgetDeviceData', () => {
   it('also forgets the choices remembered per device', async () => {
     const storage = memoryStorage();
     storage.setItem('shtf.lastLocationId', 'loc-1');
-    storage.setItem('shtf.recentItemTypes', '["a"]');
+    storage.setItem('shtf.recentItems', '["a"]');
+    storage.setItem('shtf.recentProducts', '["p"]');
+    storage.setItem('shtf.recentItemTypes', '["old"]');
     storage.setItem('unrelated', 'kept');
     vi.stubGlobal('localStorage', storage);
     await forgetDeviceData();
     expect(storage.getItem('shtf.lastLocationId')).toBeNull();
+    expect(storage.getItem('shtf.recentItems')).toBeNull();
+    expect(storage.getItem('shtf.recentProducts')).toBeNull();
     expect(storage.getItem('shtf.recentItemTypes')).toBeNull();
     expect(storage.getItem('unrelated')).toBe('kept');
   });
@@ -99,5 +104,35 @@ describe('forgetDeviceData', () => {
     expect((await again.load()).record.folderId).toBeUndefined();
     await again.close();
     await deleteSyncDatabase();
+  });
+
+  it('keepDrive leaves the Drive sign-in and token alone, but still deletes the sync state', async () => {
+    const storage = memoryStorage();
+    vi.stubGlobal('localStorage', storage);
+    saveDriveSession({ accessToken: 't', expiresAt: Date.now() + 60_000, accountEmail: 'a@b.c' });
+    const revoked: string[] = [];
+    const sync = createIdbPersistence();
+    await sync.save({ folderId: 'f' });
+    await forgetDeviceData(
+      undefined,
+      sync,
+      {
+        disconnect: async () => {
+          revoked.push('revoked');
+        },
+      },
+      { keepDrive: true },
+    );
+    expect(revoked).toEqual([]);
+    expect(isDriveConnected()).toBe(true);
+    expect(loadDriveAccount()).toBe('a@b.c');
+    const again = createIdbPersistence();
+    expect((await again.load()).record.folderId).toBeUndefined();
+    await again.close();
+    await deleteSyncDatabase();
+
+    // and without it the sign-in goes
+    await forgetDeviceData(undefined, undefined, { disconnect: async () => {} });
+    expect(isDriveConnected()).toBe(false);
   });
 });

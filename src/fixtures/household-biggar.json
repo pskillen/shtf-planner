@@ -77,17 +77,9 @@
   },
   "barcodes": {
     "3017620422003": {
-      "name": "Test spread 400 g",
-      "seen": "2026-10-01",
-      "typeId": "items-base:peanut-butter-340g"
+      "productId": "prod-spread",
+      "seen": "2026-10-01"
     }
-  },
-  "customTypes": {},
-  "floors": {
-    "loc-pantry|items-base:dried-pasta": 1,
-    "loc-pantry|items-base:rice-sack": 1,
-    "loc-pantry|items-base:tinned-food": 2,
-    "loc-pantry|items-base:uht-milk": 3
   },
   "home": {
     "area": "ML12",
@@ -172,128 +164,6 @@
       }
     ]
   },
-  "items": {
-    "item-aa": {
-      "added": "2026-09-01",
-      "bestBefore": "2031-01",
-      "id": "item-aa",
-      "locationId": "loc-hall",
-      "qty": 1,
-      "source": "manual",
-      "typeId": "items-base:aa-cells-8"
-    },
-    "item-first-aid": {
-      "added": "2026-09-01",
-      "bestBefore": "2028-01",
-      "id": "item-first-aid",
-      "locationId": "loc-hall",
-      "qty": 1,
-      "source": "manual",
-      "typeId": "items-base:first-aid-kit"
-    },
-    "item-lpg": {
-      "added": "2026-09-01",
-      "id": "item-lpg",
-      "locationId": "loc-shed",
-      "qty": 1,
-      "source": "manual",
-      "typeId": "items-base:lpg-bottle-13kg"
-    },
-    "item-nappies": {
-      "added": "2026-09-01",
-      "id": "item-nappies",
-      "locationId": "loc-hall",
-      "qty": 1,
-      "source": "manual",
-      "typeId": "items-base:nappies-size-2"
-    },
-    "item-oats": {
-      "added": "2026-09-01",
-      "bestBefore": "2026-12",
-      "id": "item-oats",
-      "locationId": "loc-pantry",
-      "qty": 1,
-      "source": "manual",
-      "typeId": "items-base:porridge-oats"
-    },
-    "item-pasta": {
-      "added": "2026-09-01",
-      "bestBefore": "2027-09",
-      "id": "item-pasta",
-      "locationId": "loc-pantry",
-      "qty": 2,
-      "source": "manual",
-      "typeId": "items-base:dried-pasta"
-    },
-    "item-rice": {
-      "added": "2026-09-01",
-      "bestBefore": "2027-12",
-      "id": "item-rice",
-      "locationId": "loc-pantry",
-      "qty": 1,
-      "source": "manual",
-      "typeId": "items-base:rice-sack"
-    },
-    "item-tea": {
-      "added": "2026-09-01",
-      "bestBefore": "2027-03",
-      "id": "item-tea",
-      "locationId": "loc-pantry",
-      "qty": 1,
-      "source": "manual",
-      "typeId": "items-base:tea-and-sugar"
-    },
-    "item-tinned": {
-      "added": "2026-09-01",
-      "bestBefore": "2028-06",
-      "id": "item-tinned",
-      "locationId": "loc-pantry",
-      "qty": 3,
-      "source": "manual",
-      "typeId": "items-base:tinned-food"
-    },
-    "item-torch-1": {
-      "added": "2026-09-01",
-      "id": "item-torch-1",
-      "locationId": "loc-hall",
-      "qty": 1,
-      "source": "manual",
-      "typeId": "items-base:torch-led-200lm"
-    },
-    "item-torch-2": {
-      "added": "2026-09-01",
-      "id": "item-torch-2",
-      "locationId": "loc-pantry",
-      "qty": 1,
-      "source": "manual",
-      "typeId": "items-base:torch-led-200lm"
-    },
-    "item-torch-3": {
-      "added": "2026-09-01",
-      "id": "item-torch-3",
-      "locationId": "loc-garage",
-      "qty": 1,
-      "source": "manual",
-      "typeId": "items-base:torch-led-200lm"
-    },
-    "item-uht": {
-      "added": "2026-09-01",
-      "bestBefore": "2026-10",
-      "id": "item-uht",
-      "locationId": "loc-pantry",
-      "qty": 6,
-      "source": "manual",
-      "typeId": "items-base:uht-milk"
-    },
-    "item-water": {
-      "added": "2026-09-01",
-      "id": "item-water",
-      "locationId": "loc-garage",
-      "qty": 2,
-      "source": "manual",
-      "typeId": "items-base:water-can"
-    }
-  },
   "locations": {
     "loc-attic": {
       "conditions": [
@@ -352,15 +222,21 @@
     ],
     "env": "local",
     "packVersions": {
-      "assets-base": 4,
-      "guidance-grid-free": 2,
-      "guidance-uk-prepare": 2,
-      "guidance-us-ready": 3,
-      "items-base": 8,
+      "assets-base": 5,
+      "guidance-grid-free": 3,
+      "guidance-uk-prepare": 3,
+      "guidance-us-ready": 4,
+      "items-base": 9,
       "plans-base": 1,
       "regions": 3
     },
-    "schemaVersion": 3
+    "schemaVersion": 4
+  },
+  "minimums": {
+    "loc-pantry|items-base:baked-beans": 6,
+    "loc-pantry|items-base:dried-pasta": 2,
+    "loc-pantry|items-base:rice": 1,
+    "loc-pantry|items-base:uht-milk": 1
   },
   "plans": {
     "plans-base:documents": {
@@ -368,6 +244,160 @@
     },
     "plans-base:meeting-point": {
       "doneAt": "2026-01-20"
+    }
+  },
+  "products": {
+    "prod-aa": {
+      "added": "2026-09-01",
+      "id": "prod-aa",
+      "itemId": "items-base:aa-cells",
+      "name": "AA cells 8-pack",
+      "size": {
+        "amount": 8,
+        "unit": "pieces"
+      }
+    },
+    "prod-beans": {
+      "added": "2026-09-01",
+      "id": "prod-beans",
+      "itemId": "items-base:baked-beans",
+      "labelKcalPer100": 75,
+      "name": "Test beans 415 g",
+      "size": {
+        "amount": 415,
+        "unit": "g"
+      }
+    },
+    "prod-can": {
+      "added": "2026-09-01",
+      "id": "prod-can",
+      "itemId": "items-base:water-container",
+      "name": "Water can 10 L",
+      "size": {
+        "amount": 10,
+        "unit": "L"
+      }
+    },
+    "prod-first-aid": {
+      "added": "2026-09-01",
+      "id": "prod-first-aid",
+      "itemId": "items-base:first-aid-kit",
+      "name": "First aid kit",
+      "size": {
+        "amount": 1,
+        "unit": "pieces"
+      }
+    },
+    "prod-nappies": {
+      "added": "2026-09-01",
+      "id": "prod-nappies",
+      "itemId": "items-base:nappies-size-2",
+      "name": "Nappies size 2, 50",
+      "size": {
+        "amount": 50,
+        "unit": "pieces"
+      }
+    },
+    "prod-oats": {
+      "added": "2026-09-01",
+      "id": "prod-oats",
+      "itemId": "items-base:porridge-oats",
+      "name": "Porridge oats 1 kg",
+      "size": {
+        "amount": 1,
+        "unit": "kg"
+      }
+    },
+    "prod-pasta": {
+      "added": "2026-09-01",
+      "id": "prod-pasta",
+      "itemId": "items-base:dried-pasta",
+      "name": "Fusilli 500 g",
+      "size": {
+        "amount": 500,
+        "unit": "g"
+      }
+    },
+    "prod-propane": {
+      "added": "2026-09-01",
+      "id": "prod-propane",
+      "itemId": "items-base:propane-bottle",
+      "name": "Propane 13 kg",
+      "size": {
+        "amount": 13,
+        "unit": "kg"
+      }
+    },
+    "prod-rice": {
+      "added": "2026-09-01",
+      "id": "prod-rice",
+      "itemId": "items-base:rice",
+      "name": "Rice 10 kg sack",
+      "size": {
+        "amount": 10,
+        "unit": "kg"
+      }
+    },
+    "prod-soup": {
+      "added": "2026-09-01",
+      "id": "prod-soup",
+      "itemId": "items-base:tinned-soup",
+      "name": "Tomato soup 400 g",
+      "size": {
+        "amount": 400,
+        "unit": "g"
+      }
+    },
+    "prod-spread": {
+      "added": "2026-09-01",
+      "id": "prod-spread",
+      "itemId": "items-base:peanut-butter",
+      "name": "Test spread 400 g",
+      "size": {
+        "amount": 400,
+        "unit": "g"
+      }
+    },
+    "prod-torch": {
+      "added": "2026-09-01",
+      "id": "prod-torch",
+      "itemId": "items-base:torch-aa",
+      "name": "LED torch",
+      "size": {
+        "amount": 1,
+        "unit": "pieces"
+      }
+    },
+    "prod-twine": {
+      "added": "2026-09-01",
+      "id": "prod-twine",
+      "name": "Garden twine",
+      "size": {
+        "amount": 1,
+        "unit": "pieces"
+      }
+    },
+    "prod-uht": {
+      "added": "2026-09-01",
+      "id": "prod-uht",
+      "itemId": "items-base:uht-milk",
+      "name": "UHT milk 6 × 1 L",
+      "size": {
+        "amount": 1,
+        "count": 6,
+        "unit": "L"
+      }
+    },
+    "prod-water": {
+      "added": "2026-09-01",
+      "id": "prod-water",
+      "itemId": "items-base:bottled-water",
+      "name": "Spring water 6 × 2 L",
+      "size": {
+        "amount": 2,
+        "count": 6,
+        "unit": "L"
+      }
     }
   },
   "reviews": {},
@@ -386,5 +416,162 @@
     ],
     "region": "UK",
     "reviewCadenceMonths": 6
+  },
+  "stock": {
+    "stock-aa": {
+      "added": "2026-09-01",
+      "bestBefore": "2031-01",
+      "id": "stock-aa",
+      "locationId": "loc-hall",
+      "productId": "prod-aa",
+      "qty": 1,
+      "source": "manual"
+    },
+    "stock-beans": {
+      "added": "2026-09-01",
+      "bestBefore": "2028-06",
+      "id": "stock-beans",
+      "locationId": "loc-pantry",
+      "productId": "prod-beans",
+      "qty": 12,
+      "source": "manual"
+    },
+    "stock-can": {
+      "added": "2026-09-01",
+      "id": "stock-can",
+      "locationId": "loc-garage",
+      "productId": "prod-can",
+      "qty": 2,
+      "source": "manual"
+    },
+    "stock-first-aid": {
+      "added": "2026-09-01",
+      "bestBefore": "2028-01",
+      "id": "stock-first-aid",
+      "locationId": "loc-hall",
+      "productId": "prod-first-aid",
+      "qty": 1,
+      "source": "manual"
+    },
+    "stock-nappies": {
+      "added": "2026-09-01",
+      "id": "stock-nappies",
+      "locationId": "loc-hall",
+      "productId": "prod-nappies",
+      "qty": 1,
+      "source": "manual"
+    },
+    "stock-oats": {
+      "added": "2026-09-01",
+      "bestBefore": "2026-12",
+      "id": "stock-oats",
+      "locationId": "loc-pantry",
+      "productId": "prod-oats",
+      "qty": 1.5,
+      "source": "manual"
+    },
+    "stock-pasta": {
+      "added": "2026-09-01",
+      "bestBefore": "2027-09",
+      "id": "stock-pasta",
+      "locationId": "loc-pantry",
+      "productId": "prod-pasta",
+      "qty": 4,
+      "source": "manual"
+    },
+    "stock-pasta-attic": {
+      "added": "2026-09-01",
+      "bestBefore": "2028-01",
+      "id": "stock-pasta-attic",
+      "locationId": "loc-attic",
+      "productId": "prod-pasta",
+      "qty": 6,
+      "source": "manual"
+    },
+    "stock-propane": {
+      "added": "2026-09-01",
+      "id": "stock-propane",
+      "locationId": "loc-shed",
+      "productId": "prod-propane",
+      "qty": 1,
+      "source": "manual"
+    },
+    "stock-rice": {
+      "added": "2026-09-01",
+      "bestBefore": "2027-12",
+      "id": "stock-rice",
+      "locationId": "loc-pantry",
+      "productId": "prod-rice",
+      "qty": 1,
+      "source": "manual"
+    },
+    "stock-soup": {
+      "added": "2026-09-01",
+      "bestBefore": "2027-11",
+      "id": "stock-soup",
+      "locationId": "loc-pantry",
+      "productId": "prod-soup",
+      "qty": 6,
+      "source": "manual"
+    },
+    "stock-spread": {
+      "added": "2026-09-01",
+      "bestBefore": "2027-06",
+      "id": "stock-spread",
+      "locationId": "loc-pantry",
+      "productId": "prod-spread",
+      "qty": 2,
+      "source": "manual"
+    },
+    "stock-torch-1": {
+      "added": "2026-09-01",
+      "id": "stock-torch-1",
+      "locationId": "loc-hall",
+      "productId": "prod-torch",
+      "qty": 1,
+      "source": "manual"
+    },
+    "stock-torch-2": {
+      "added": "2026-09-01",
+      "id": "stock-torch-2",
+      "locationId": "loc-pantry",
+      "productId": "prod-torch",
+      "qty": 1,
+      "source": "manual"
+    },
+    "stock-torch-3": {
+      "added": "2026-09-01",
+      "id": "stock-torch-3",
+      "locationId": "loc-garage",
+      "productId": "prod-torch",
+      "qty": 1,
+      "source": "manual"
+    },
+    "stock-twine": {
+      "added": "2026-09-01",
+      "id": "stock-twine",
+      "locationId": "loc-shed",
+      "productId": "prod-twine",
+      "qty": 1,
+      "source": "manual"
+    },
+    "stock-uht": {
+      "added": "2026-09-01",
+      "bestBefore": "2026-10",
+      "id": "stock-uht",
+      "locationId": "loc-pantry",
+      "productId": "prod-uht",
+      "qty": 1,
+      "source": "manual"
+    },
+    "stock-water": {
+      "added": "2026-09-01",
+      "bestBefore": "2027-08",
+      "id": "stock-water",
+      "locationId": "loc-garage",
+      "productId": "prod-water",
+      "qty": 3,
+      "source": "manual"
+    }
   }
 }

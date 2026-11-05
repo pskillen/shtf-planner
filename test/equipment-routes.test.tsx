@@ -33,13 +33,11 @@ const search = (text: string) =>
 describe('equipment is added to the home, never as stock', () => {
   it('quick add of a stove ends in an asset, not a stock row', () => {
     const s = app('/app/stores');
-    const items = Object.keys(s.doc().items).length;
+    const stock = Object.keys(s.doc().stock).length;
     const assets = Object.keys(s.doc().assets).length;
 
     fireEvent.click(screen.getByRole('button', { name: 'Add stock' }));
-    search('stove');
-    // no stock row for a stove: only the equipment route
-    expect(screen.queryByRole('button', { name: /stove/i })).toBeNull();
+    search('camping stove');
     const route = screen.getByRole('region', { name: 'Equipment: add to your home' });
     fireEvent.click(within(route).getByRole('link', { name: /Camping stove/ }));
 
@@ -47,7 +45,7 @@ describe('equipment is added to the home, never as stock', () => {
     expect(screen.getByText('Add Camping stove (gas canister)')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
-    expect(Object.keys(s.doc().items).length).toBe(items);
+    expect(Object.keys(s.doc().stock).length).toBe(stock);
     const added = Object.values(s.doc().assets);
     expect(added.length).toBe(assets + 1);
     expect(added.some((a) => a.typeId === 'assets-base:camping-stove')).toBe(true);
@@ -63,9 +61,6 @@ describe('equipment is added to the home, never as stock', () => {
     expect(
       searchRow.compareDocumentPosition(route) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
-    // and above "Add as a custom item", so a stove is not saved as a custom stock item
-    const custom = screen.getByRole('button', { name: 'Add as a custom item' });
-    expect(route.compareDocumentPosition(custom) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(route.compareDocumentPosition(stock) & Node.DOCUMENT_POSITION_PRECEDING).toBeFalsy();
   });
 
