@@ -1,20 +1,27 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { ItemType, ProductInfo } from '../../../model';
 import { today } from '../../../util';
+import type { CameraStream } from '../../../scan/camera';
+import { terminateDateReader } from '../../../scan/ocr/client';
 import { CameraStrip } from '../../components/CameraStrip';
-import { Field } from '../../components/controls';
+import { Field, Switch } from '../../components/controls';
 import { ExpiryBadge } from '../../components/ExpiryBadge';
 import { Sheet } from '../../components/Sheet';
 import { Stepper } from '../../components/Stepper';
 import { Toast } from '../../components/Toast';
 import { useChange, useDocument } from '../../state';
 import { equipmentAddPath } from '../assets/route';
+import { DateAbout } from './DateAbout';
+import { DateReader, type DateRead } from './DateReader';
+import { readUseCamera, writeUseCamera } from './dateSettings';
 import { MonthField } from './MonthField';
 import { ScanResolve } from './ScanResolve';
 import {
+  dateSummaryText,
   readTypedCode,
   savedText,
+  type DateCounts,
   summaryText,
   useEquipmentMatches,
   useStockTypes,
@@ -63,6 +70,9 @@ interface Saved {
   label: string;
 }
 
+/** How the date in the card got there. */
+type DateSource = 'camera' | 'suggestion' | 'picked';
+
 /**
  * Stocktake: pick up a tin, scan its barcode, confirm what it is (once per product, then the app
  * remembers), set the best-before month, OK, next. Step 1 BARCODE (blue) and step 2 DATE
@@ -103,6 +113,18 @@ export function StocktakeScreen() {
   const [sortLater, setSortLater] = useState(0);
   const [started] = useState(() => Date.now());
   const [finishedAfter, setFinishedAfter] = useState(0);
+  const [cam, setCam] = useState<CameraStream | null>(null);
+  const [useCamera, setUseCamera] = useState(readUseCamera);
+  // Bumped when the graphics-chip switch changes, so the date step starts a fresh reader.
+  const [readerKey, setReaderKey] = useState(0);
+  const [dateCounts, setDateCounts] = useState<DateCounts>({ camera: 0, picked: 0, suggestion: 0 });
+  const [dateMs, setDateMs] = useState<number[]>([]);
+  const dateSource = useRef<DateSource | null>(null);
+  const dateStarted = useRef(0);
+  const [copied, setCopied] = useState(false);
+
+  // The reader's models go back to the browser when the screen goes.
+  useEffect(() => () => terminateDateReader(), []);
 
   // The Undo toast goes after a few seconds; only the latest save can be undone.
   useEffect(() => {
@@ -122,6 +144,8 @@ export function StocktakeScreen() {
     setBestBefore(undefined);
     setCode(null);
     setFinding(false);
+    dateSource.current = null;
+    dateStarted.current = Date.now();
     setPhase('date');
   }
 
@@ -149,7 +173,8 @@ export function StocktakeScreen() {
     backToBarcode();
   }
 
-  function ok(): void {
+  /** Saves the item with `date` (the card's month, or the one a suggestion carried). */
+  function save(date: string | undefined, source: DateSource | null): void {
     if (!counting || !place) return;
     let addition: StockAddition | undefined;
     change('stocktake', (d) => {
@@ -159,7 +184,7 @@ export function StocktakeScreen() {
           typeId: counting.type.id,
           qty,
           locationId: place.id,
-          bestBefore,
+          bestBefore: date,
           source: 'barcode',
         },
         today(),
@@ -168,15 +193,19 @@ export function StocktakeScreen() {
     if (!addition) return;
     pushRecent(counting.type.id);
     setItems((n) => n + qty);
+    if (date && source) setDateCounts((c) => ({ ...c, [source]: c[source] + 1 }));
+    setDateMs((l) => [...l, Date.now() - dateStarted.current]);
     setSaved({
       addition,
       counting,
       qty,
-      bestBefore,
+      bestBefore: date,
       label: savedText(qty, counting.type.name, place.name),
     });
     backToBarcode();
   }
+
+  const ok = (): void => save(bestBefore, dateSource.current);
 
   function undo(): void {
     if (!saved) return;
@@ -188,6 +217,8 @@ export function StocktakeScreen() {
       setCounting(saved.counting);
       setQty(saved.qty);
       setBestBefore(saved.bestBefore);
+      dateSource.current = saved.bestBefore ? 'picked' : null;
+      dateStarted.current = Date.now();
       setPhase('date');
     }
     setSaved(null);
@@ -195,7 +226,14 @@ export function StocktakeScreen() {
 
   function changeDate(next: string | undefined): void {
     if (next && next !== bestBefore) buzz('date');
+    dateSource.current = next ? 'picked' : null;
     setBestBefore(next);
+  }
+
+  /** The camera settled on a month: it fills the field, and nothing is saved until OK. */
+  function cameraRead(read: DateRead): void {
+    dateSource.current = 'camera';
+    setBestBefore(read.bestBefore);
   }
 
   function finish(): void {
@@ -204,6 +242,17 @@ export function StocktakeScreen() {
     setPhase('done');
   }
 
+  const dateText = dateSummaryText(dateCounts, dateMs);
+  const copySummary = (): void => {
+    const text = [summaryText(items, finishedAfter, sortLater), dateText]
+      .filter(Boolean)
+      .join('\n');
+    void navigator.clipboard?.writeText(text).then(
+      () => setCopied(true),
+      () => undefined,
+    );
+  };
+
   if (phase === 'done') {
     return (
       <section className="screen stocktake">
@@ -211,9 +260,20 @@ export function StocktakeScreen() {
         <p role="status" data-testid="stocktake-summary">
           {summaryText(items, finishedAfter, sortLater)}
         </p>
-        <button type="button" onClick={() => navigate('/app/stores')}>
-          Back to Stores
-        </button>
+        {dateText ? (
+          <p className="muted" data-testid="stocktake-date-summary">
+            {dateText}
+          </p>
+        ) : null}
+        <div className="scan-actions">
+          <button type="button" className="secondary" onClick={copySummary}>
+            Copy summary
+          </button>
+          <button type="button" onClick={() => navigate('/app/stores')}>
+            Back to Stores
+          </button>
+        </div>
+        {copied ? <p role="status">Copied.</p> : null}
       </section>
     );
   }
@@ -250,7 +310,8 @@ export function StocktakeScreen() {
 
       {hint ? (
         <p className="note stocktake-hint">
-          Hold the barcode upright in the blue box. OK saves and goes to the next one.{' '}
+          Hold the barcode upright in the blue box. Then hold the date in the yellow box. OK saves
+          and goes to the next one.{' '}
           <button
             type="button"
             className="link"
@@ -270,7 +331,25 @@ export function StocktakeScreen() {
         chip={phase === 'barcode' ? '1 BARCODE' : '2 DATE'}
         scanning={phase === 'barcode' && code === null && Boolean(place)}
         onCode={got}
+        onReady={setCam}
       />
+      <Switch
+        label="Read dates with the camera"
+        checked={useCamera}
+        onChange={(next) => {
+          setUseCamera(next);
+          writeUseCamera(next);
+          if (!next) terminateDateReader();
+        }}
+      />
+      {useCamera ? (
+        <DateAbout
+          onChange={() => {
+            terminateDateReader();
+            setReaderKey((n) => n + 1);
+          }}
+        />
+      ) : null}
 
       {phase === 'barcode' ? (
         code === null ? (
@@ -368,6 +447,15 @@ export function StocktakeScreen() {
                   onChange={setQty}
                 />
               </Field>
+              {useCamera ? (
+                <DateReader
+                  key={`${counting.type.id}:${counting.code ?? ''}:${readerKey}:${items}`}
+                  cam={cam}
+                  todayIso={today()}
+                  onResult={cameraRead}
+                  onSuggestion={(ym) => save(ym, 'suggestion')}
+                />
+              ) : null}
               <MonthField
                 value={bestBefore}
                 onChange={changeDate}

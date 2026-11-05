@@ -81,3 +81,27 @@ export function summaryText(items: number, ms: number, sortLater: number): strin
   if (sortLater > 0) parts.push(`${sortLater} to sort later`);
   return parts.join(' · ');
 }
+
+/** How each date in a stocktake was set. Counts only: never the text read, a code or a picture. */
+export interface DateCounts {
+  camera: number;
+  picked: number;
+  suggestion: number;
+}
+
+export const median = (values: number[]): number => {
+  const s = [...values].sort((a, b) => a - b);
+  return s.length ? s[Math.floor(s.length / 2)]! : 0;
+};
+
+/** "dates by camera 9 · picked 4 · from a suggestion 1 · date step 3.2 s (median)", or nothing if none. */
+export function dateSummaryText(counts: DateCounts, dateMs: number[]): string {
+  if (counts.camera + counts.picked + counts.suggestion === 0) return '';
+  const parts = [
+    `dates by camera ${counts.camera}`,
+    `picked ${counts.picked}`,
+    `from a suggestion ${counts.suggestion}`,
+  ];
+  if (dateMs.length > 0) parts.push(`date step ${(median(dateMs) / 1000).toFixed(1)} s (median)`);
+  return parts.join(' · ');
+}

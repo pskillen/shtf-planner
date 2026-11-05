@@ -1222,3 +1222,45 @@ button.scans-note {
   flex: 1;
   min-width: 0;
 }
+
+/* Reading the best-before date with the camera (stocktake date step, quick add's sheet). */
+.date-reader {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.date-status {
+  margin: 0;
+  font-weight: 600;
+}
+
+.date-result {
+  display: grid;
+  gap: 6px;
+}
+
+.date-month {
+  font-size: 1.75rem;
+  line-height: 1.2;
+}
+
+.date-crop {
+  max-width: 100%;
+  height: auto;
+  max-height: 72px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  justify-self: start;
+}
+
+.date-about {
+  margin: 4px 0 8px;
+}
+
+.date-about summary {
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}

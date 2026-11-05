@@ -13,6 +13,8 @@ import { usePacks } from '../../usePacks';
 import { CustomItemForm } from './CustomItemForm';
 import { ScanSheet } from './ScanSheet';
 import { MonthField } from './MonthField';
+import { hasCamera } from './dateSettings';
+import { ReadDateSheet } from './ReadDateSheet';
 import {
   addStock,
   defaultLocationId,
@@ -55,7 +57,7 @@ const COMMON = [
   'aa-cells-8',
 ];
 
-type Step = 'search' | 'form' | 'custom' | 'scan' | 'repick';
+type Step = 'search' | 'form' | 'custom' | 'scan' | 'repick' | 'readdate';
 
 /**
  * Quick add: search for what you are putting away, pick it, then Add. The place is the last one
@@ -283,6 +285,18 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
     );
   }
 
+  if (step === 'readdate') {
+    return (
+      <ReadDateSheet
+        onClose={() => setStep('form')}
+        onUse={(ym) => {
+          edit(setBestBefore)(ym);
+          setStep('form');
+        }}
+      />
+    );
+  }
+
   if (step === 'custom') {
     return (
       <CustomItemForm
@@ -450,6 +464,11 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
             today={today()}
           />
           {bestBefore ? <ExpiryBadge bestBefore={bestBefore} /> : null}
+          {hasCamera() ? (
+            <button type="button" className="secondary" onClick={() => setStep('readdate')}>
+              Read the date
+            </button>
+          ) : null}
         </>
       ) : null}
     </Sheet>

@@ -142,3 +142,11 @@ export function getDateReader(preferWebGpu = true): DateReader {
   });
   return single;
 }
+
+/** The page's reader if one has been made, without making one. */
+export const peekDateReader = (): DateReader | undefined => single;
+
+/** Frees the reader's memory, if there is one. Call when the screen that used it goes away. */
+export function terminateDateReader(): void {
+  single?.terminate();
+}
