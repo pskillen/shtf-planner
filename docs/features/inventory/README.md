@@ -10,7 +10,7 @@ The Stores tab: what the household has, by where it is kept, and the quick way t
 | Piece           | Where                                                                    | What                                                                                                |
 | --------------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
 | Stores tab      | `/app/stores`, `StoresScreen.tsx`                                        | Stock grouped by place (collapsible), search across places, a floating + for Quick add.             |
-| Quick add       | `screens/stores/QuickAdd.tsx`                                            | Search, pick, Add; then Same again or Next item. Also opened from the Gaps tab.                     |
+| Quick add       | `screens/stores/QuickAdd.tsx`                                            | Search, pick, Add; then Add another or Next item. Also opened from the Gaps tab.                    |
 | Edit and floors | `screens/stores/ItemSheet.tsx`, `FloorSheet.tsx`                         | Quantity stepper, place, best-before, delete with undo; the floor of each type in a rotating place. |
 | Month field     | `screens/stores/MonthField.tsx`                                          | A month box and one-tap chips for the best-before.                                                  |
 | Scanning        | `screens/stores/ScanSheet.tsx`, `StocktakeScreen.tsx`, `ScansToSort.tsx` | Scan a barcode in Quick add, stocktake mode, scans to sort. See [Scanning](../scanning/README.md).  |
@@ -50,7 +50,9 @@ The Stores tab: what the household has, by where it is kept, and the quick way t
   "Add as a custom item" is under the search box. The place starts as where that type already
   lives, else the last place used, else the fullest place. Stock of the same type, place and best-before is added to rather than listed twice. The
   best-before is optional; the chips follow how long the type keeps (+1 y, +2 y, +5 y for things that
-  keep for years). A counter shows what was added this session.
+  keep for years). A counter shows what was added this session. After an add the sheet offers
+  **Next item** (primary, on the right) and **Add another**: the form stays filled and editable
+  (change the date, place or quantity) and adds only when Add another is tapped.
 - **Scanning.** Quick add's search step starts with **Scan a barcode** (above the search box) and
   **Stocktake a pile**. A scanned item lands on the form with its type picked and is saved with
   `source: 'barcode'`; Next item goes back to the scanner. Stores shows "3 scans to sort ›" when

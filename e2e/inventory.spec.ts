@@ -64,7 +64,7 @@ test('the fixture household: the Stores tab groups stock by place, flags the odd
   await expect(page.getByRole('region', { name: 'Shed' })).toHaveCount(0);
 });
 
-test('Quick add: ten items, two of them same-again and one custom, each in few taps', async ({
+test('Quick add: ten items, two of them added again and one custom, each in few taps', async ({
   page,
 }) => {
   await fixture(page);
@@ -111,9 +111,9 @@ test('Quick add: ten items, two of them same-again and one custom, each in few t
   await page.getByLabel('Where does it go?').selectOption({ label: 'Garage' });
   await page.getByRole('button', { name: 'Add', exact: true }).click();
   await expect(page.getByText('Added 1 × Water can (10 L) to Garage')).toBeVisible();
-  // same again, twice
-  await page.getByRole('button', { name: 'Same again' }).click();
-  await page.getByRole('button', { name: 'Same again' }).click();
+  // add another, twice
+  await page.getByRole('button', { name: 'Add another' }).click();
+  await page.getByRole('button', { name: 'Add another' }).click();
   await expect(page.getByTestId('added-count')).toHaveText('Added this session: 3');
   await page.getByRole('button', { name: 'Next item' }).click();
 
