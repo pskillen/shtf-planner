@@ -1,10 +1,12 @@
-import { DEFAULT_ZOOM, FOCUS_HOLD_MS, type Box } from './tunables';
+import { fromRGBA, type Gray } from './ocr/image';
+import { CAPTURE_MAX_H, DEFAULT_ZOOM, FOCUS_HOLD_MS, type Box } from './tunables';
 
 /**
  * One camera stream per screen, shared by the barcode step and (later) the date step: it stays
  * open between steps. Each camera setting (torch, zoom, focus) is applied on its own, because a
  * browser that refuses one should not lose the others; a refusal is recorded, never thrown.
- * Frames are only read to find a barcode; they never leave the phone and are never stored.
+ * Frames are only read to find a barcode or a best-before date; they never leave the phone and
+ * are never stored.
  */
 
 export interface CameraCapabilities {
@@ -322,5 +324,14 @@ export class CameraStream {
     if (!ctx) throw new Error('No canvas');
     ctx.drawImage(v, r.sx, r.sy, r.sw, r.sh, 0, 0, size.w, size.h);
     return ctx.getImageData(0, 0, size.w, size.h);
+  }
+
+  /**
+   * The box as a grey picture for the date reader: through the cover crop, at most `maxHeight`
+   * pixels high (and never narrower than 480). In memory only.
+   */
+  captureGray(box: Box, maxHeight = CAPTURE_MAX_H): Gray {
+    const frame = this.captureBox(box, maxHeight);
+    return fromRGBA(frame.data, frame.width, frame.height);
   }
 }
