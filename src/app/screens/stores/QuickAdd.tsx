@@ -435,14 +435,16 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
                 onChange={edit(setBestBefore)}
                 shelfLife={activeItem.shelfLife}
                 today={today()}
+                action={
+                  hasCamera() ? (
+                    <button type="button" className="secondary" onClick={() => setStep('readdate')}>
+                      Read the date
+                    </button>
+                  ) : undefined
+                }
               />
             ) : null}
             {bestBefore ? <ExpiryBadge bestBefore={bestBefore} /> : null}
-            {hasCamera() ? (
-              <button type="button" className="secondary" onClick={() => setStep('readdate')}>
-                Read the date
-              </button>
-            ) : null}
           </>
         ) : null}
       </Sheet>

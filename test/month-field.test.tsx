@@ -14,7 +14,12 @@ function monthNative(): boolean {
 describe('MonthField hints', () => {
   it('shows Optional. when empty', () => {
     render(
-      <MonthField value={undefined} onChange={() => undefined} shelfLife="years" today="2026-11-05" />,
+      <MonthField
+        value={undefined}
+        onChange={() => undefined}
+        shelfLife="years"
+        today="2026-11-05"
+      />,
     );
     expect(screen.getByText('Optional.')).toBeTruthy();
   });
@@ -22,7 +27,12 @@ describe('MonthField hints', () => {
   it('with a native month box, does not repeat the chosen month under the label', () => {
     if (!monthNative()) return;
     render(
-      <MonthField value="2027-03" onChange={() => undefined} shelfLife="years" today="2026-11-05" />,
+      <MonthField
+        value="2027-03"
+        onChange={() => undefined}
+        shelfLife="years"
+        today="2026-11-05"
+      />,
     );
     expect(screen.queryByText('Mar 2027')).toBeNull();
     expect(document.querySelector('input[type="month"]')).toBeTruthy();
@@ -41,7 +51,12 @@ describe('MonthField hints', () => {
       });
     }
     render(
-      <MonthField value="2027-03" onChange={() => undefined} shelfLife="years" today="2026-11-05" />,
+      <MonthField
+        value="2027-03"
+        onChange={() => undefined}
+        shelfLife="years"
+        today="2026-11-05"
+      />,
     );
     expect(screen.getByText('Mar 2027')).toBeTruthy();
     expect(document.querySelector('input[placeholder="Mar 2027"]')).toBeTruthy();
@@ -60,10 +75,31 @@ describe('MonthField hints', () => {
       });
     }
     render(
-      <MonthField value={undefined} onChange={() => undefined} shelfLife="years" today="2026-11-05" />,
+      <MonthField
+        value={undefined}
+        onChange={() => undefined}
+        shelfLife="years"
+        today="2026-11-05"
+      />,
     );
     fireEvent.change(screen.getByPlaceholderText('Mar 2027'), { target: { value: 'soon' } });
     expect(screen.getByText(/Read as a month and year/)).toBeTruthy();
     expect(screen.queryByText('Optional.')).toBeNull();
+  });
+});
+
+describe('MonthField action', () => {
+  it('renders the action beside the input', () => {
+    render(
+      <MonthField
+        value={undefined}
+        onChange={() => undefined}
+        shelfLife="years"
+        today="2026-11-05"
+        action={<button type="button">Read the date</button>}
+      />,
+    );
+    expect(document.querySelector('.field-input-row')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Read the date' })).toBeTruthy();
   });
 });
