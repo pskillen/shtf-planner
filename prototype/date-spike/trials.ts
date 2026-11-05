@@ -33,6 +33,10 @@ ort.env.wasm.numThreads = 1;
 // round-1 ones by date-spike/shrink-onnx.mjs (in MODEL_DIR).
 const MODELS: Record<string, { det?: string; rec?: string; dict?: string; base?: string }> = {
   paddle: {},
+  'v6t': { det: 'det-v6t.ort', rec: 'rec-v6t.ort', dict: 'dict-v6t.txt' },
+  'v5m+rec': { det: 'det-v5m.onnx' },
+  'v5m+fp16': { det: 'det-v5m.onnx', rec: 'rec-fp16.onnx' },
+  'fp16': { det: 'det-fp16.onnx', rec: 'rec-fp16.onnx' },
   'det-v4': { det: '../../../node_modules/paddle-ocr-onnx-models/models/ch_PP-OCRv4_det_infer.onnx' },
 };
 const m = MODELS[engineName] ?? JSON.parse(engineName); // or a JSON object {"det":..,"rec":..}

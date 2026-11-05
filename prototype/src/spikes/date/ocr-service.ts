@@ -1,7 +1,7 @@
 // Lazy, cached engines for the browser. Everything is served from /ocr (same origin): no CDN, no upload.
 import { type Engine, paddleEngine, tesseractEngine } from './engines.ts';
 
-export type EngineId = 'tesseract' | 'paddle' | 'paddle-rec' | 'paddle-fp16' | 'paddle-int8' | 'paddle-det4';
+export type EngineId = 'tesseract' | 'paddle' | 'paddle-rec' | 'paddle-fp16' | 'paddle-int8' | 'paddle-det4' | 'paddle-v6t' | 'paddle-v5m' | 'paddle-v5m-fp16';
 export const ENGINE_LABEL: Record<EngineId, string> = {
   tesseract: 'Tesseract.js',
   paddle: 'PaddleOCR det+rec',
@@ -9,12 +9,18 @@ export const ENGINE_LABEL: Record<EngineId, string> = {
   'paddle-fp16': 'PaddleOCR det+rec, FP16 weights',
   'paddle-int8': 'PaddleOCR det+rec, INT8 weights',
   'paddle-det4': 'PaddleOCR PP-OCRv4 det + v5 rec',
+  'paddle-v6t': 'PaddleOCR PP-OCRv6 tiny det + rec (.ort)',
+  'paddle-v5m': 'PaddleOCR PP-OCRv5 mobile det + v5 rec',
+  'paddle-v5m-fp16': 'PaddleOCR PP-OCRv5 mobile det + FP16 rec',
 };
 /** Model files for the Paddle variants (names in /ocr/paddle). The default is det.onnx + rec.onnx. */
-const PADDLE_FILES: Partial<Record<EngineId, { det?: string; rec?: string }>> = {
+const PADDLE_FILES: Partial<Record<EngineId, { det?: string; rec?: string; dict?: string }>> = {
   'paddle-fp16': { det: 'det-fp16.onnx', rec: 'rec-fp16.onnx' },
   'paddle-int8': { det: 'det-int8.onnx', rec: 'rec-int8.onnx' },
   'paddle-det4': { det: 'det4.onnx' },
+  'paddle-v6t': { det: 'det-v6t.ort', rec: 'rec-v6t.ort', dict: 'dict-v6t.txt' },
+  'paddle-v5m': { det: 'det-v5m.onnx' },
+  'paddle-v5m-fp16': { det: 'det-v5m.onnx', rec: 'rec-fp16.onnx' },
 };
 
 const abs = (p: string) => new URL(p, document.baseURI).href;
@@ -56,6 +62,9 @@ export const ASSETS: Record<EngineId, string[]> = {
   'paddle-fp16': ['ocr/ort/ort-wasm-simd-threaded.wasm', 'ocr/ort/ort-wasm-simd-threaded.mjs', 'ocr/paddle/det-fp16.onnx', 'ocr/paddle/rec-fp16.onnx', 'ocr/paddle/dict.txt'],
   'paddle-int8': ['ocr/ort/ort-wasm-simd-threaded.wasm', 'ocr/ort/ort-wasm-simd-threaded.mjs', 'ocr/paddle/det-int8.onnx', 'ocr/paddle/rec-int8.onnx', 'ocr/paddle/dict.txt'],
   'paddle-det4': ['ocr/ort/ort-wasm-simd-threaded.wasm', 'ocr/ort/ort-wasm-simd-threaded.mjs', 'ocr/paddle/det4.onnx', 'ocr/paddle/rec.onnx', 'ocr/paddle/dict.txt'],
+  'paddle-v6t': ['ocr/ort/ort-wasm-simd-threaded.wasm', 'ocr/ort/ort-wasm-simd-threaded.mjs', 'ocr/paddle/det-v6t.ort', 'ocr/paddle/rec-v6t.ort', 'ocr/paddle/dict-v6t.txt'],
+  'paddle-v5m': ['ocr/ort/ort-wasm-simd-threaded.wasm', 'ocr/ort/ort-wasm-simd-threaded.mjs', 'ocr/paddle/det-v5m.onnx', 'ocr/paddle/rec.onnx', 'ocr/paddle/dict.txt'],
+  'paddle-v5m-fp16': ['ocr/ort/ort-wasm-simd-threaded.wasm', 'ocr/ort/ort-wasm-simd-threaded.mjs', 'ocr/paddle/det-v5m.onnx', 'ocr/paddle/rec-fp16.onnx', 'ocr/paddle/dict.txt'],
 };
 
 export async function measureSizes(gz: (b: Uint8Array) => Promise<number>): Promise<string[]> {
