@@ -20,7 +20,15 @@ describe('storesGrouping', () => {
     const doc = biggarDocument();
     const stocks = [
       { ...doc.stock['stock-beans']!, bestBefore: '2028-06' },
-      { id: 's2', productId: 'prod-beans', qty: 1, locationId: 'loc-pantry', added: '2026-09-01', source: 'manual' as const, bestBefore: '2026-10' },
+      {
+        id: 's2',
+        productId: 'prod-beans',
+        qty: 1,
+        locationId: 'loc-pantry',
+        added: '2026-09-01',
+        source: 'manual' as const,
+        bestBefore: '2026-10',
+      },
     ];
     expect(worstExpiryWord(stocks, '2026-11-04', doc.settings)).toBe('Expired');
   });

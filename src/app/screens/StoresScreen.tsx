@@ -110,8 +110,7 @@ export function StoresScreen() {
   const placeMatchesSearch =
     q === '' ||
     placeFilter === 'all' ||
-    (doc.locations[placeFilter] !== undefined &&
-      matchesPlaceName(doc.locations[placeFilter]!));
+    (doc.locations[placeFilter] !== undefined && matchesPlaceName(doc.locations[placeFilter]!));
 
   const itemIds = itemIdsInView(doc, placeFilter);
   const orderedItems = orderedItemsInView(packs, itemIds).filter(matchesItem);

@@ -303,7 +303,12 @@ export function ProductSheet({
       <button type="button" className="secondary" onClick={() => setMode('merge')}>
         Merge into…
       </button>
-      <button type="button" className="danger" disabled={hasStock} onClick={() => setMode('deleteConfirm')}>
+      <button
+        type="button"
+        className="danger"
+        disabled={hasStock}
+        onClick={() => setMode('deleteConfirm')}
+      >
         Delete
       </button>
       {hasStock ? (
