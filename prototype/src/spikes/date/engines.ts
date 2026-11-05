@@ -52,14 +52,15 @@ export function paddleEngine(ort: Ort, assets: Assets, opts: PaddleOpts): Engine
   let det: any, rec: any;
   let dict: string[] = [];
   const dir = assets.base + '/paddle';
+  const at = (f: string) => (f.startsWith('/') ? f : `${dir}/${f}`); // an absolute path is for the node bench
   return {
     name: opts.label ?? (opts.mode === 'rec' ? 'paddle-rec' : 'paddle'),
     async init() {
       const so = { executionProviders: ['wasm'], graphOptimizationLevel: 'all' };
-      const [recB, dictB] = await Promise.all([assets.bytes(`${dir}/${opts.rec ?? 'rec.onnx'}`), assets.bytes(`${dir}/${opts.dict ?? 'dict.txt'}`)]);
+      const [recB, dictB] = await Promise.all([assets.bytes(at(opts.rec ?? 'rec.onnx')), assets.bytes(at(opts.dict ?? 'dict.txt'))]);
       rec = await ort.InferenceSession.create(recB, so);
       dict = ['', ...new TextDecoder().decode(dictB).split('\n').filter((l) => l.length > 0), ' '];
-      if (opts.mode === 'det+rec') det = await ort.InferenceSession.create(await assets.bytes(`${dir}/${opts.det ?? 'det.onnx'}`), so);
+      if (opts.mode === 'det+rec') det = await ort.InferenceSession.create(await assets.bytes(at(opts.det ?? 'det.onnx')), so);
     },
     async read(g) {
       let boxes: Box[];

@@ -14,4 +14,5 @@ copyFileSync(nm('tesseract.js-core/tesseract-core-simd-lstm.wasm.js'), out('tess
 copyFileSync(nm('tesseract.js-core/tesseract-core-lstm.wasm.js'), out('tess/tesseract-core-lstm.wasm.js'));
 copyFileSync(nm('onnxruntime-web/dist/ort-wasm-simd-threaded.wasm'), out('ort/ort-wasm-simd-threaded.wasm'));
 copyFileSync(nm('onnxruntime-web/dist/ort-wasm-simd-threaded.mjs'), out('ort/ort-wasm-simd-threaded.mjs'));
+copyFileSync(nm('paddle-ocr-onnx-models/models/ch_PP-OCRv4_det_infer.onnx'), out('paddle/det4.onnx')); // PP-OCRv4 detector, Apache-2.0, from the npm package
 console.log('ocr runtime files copied to public/ocr');

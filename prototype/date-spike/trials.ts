@@ -40,7 +40,7 @@ const assets = { base: root + 'public/ocr', bytes: async (p: string) => new Uint
 const engine: Engine = paddleEngine(ort, assets, { mode: 'det+rec', ...m, label: engineName });
 await engine.init();
 
-const SW = Number(process.env.SW ?? 0.4), SK = Number(process.env.SK ?? 0.3);
+const SW = Number(process.env.SW ?? 0.4), SK = Number(process.env.SK ?? 0.4), SB = (process.env.SB ?? 'fit') as '64' | 'fit';
 const sv = (base: '64' | 'fit', f: number, k: number, dil: boolean): Variant => ({
   name: `sauvola${base === '64' ? '@64' : ''}${dil ? '+dil' : ''}(${f},${k})`,
   apply: (g) => {
@@ -51,11 +51,12 @@ const sv = (base: '64' | 'fit', f: number, k: number, dil: boolean): Variant => 
 });
 const variantSets: Record<string, Variant[]> = {
   default: VARIANTS,
-  '+sauvola': [...VARIANTS, sv('64', SW, SK, false)],
-  '+sauvola+dil': [...VARIANTS, sv('64', SW, SK, true)],
-  '+both': [...VARIANTS, sv('64', SW, SK, false), sv('64', SW, SK, true)],
-  sauvola: [sv('64', SW, SK, false)],
-  'sauvola-dil': [sv('64', SW, SK, true)],
+  '+sauvola': [...VARIANTS, sv(SB, SW, SK, false)],
+  '+sauvola+dil': [...VARIANTS, sv(SB, SW, SK, true)],
+  '+both': [...VARIANTS, sv(SB, SW, SK, false), sv(SB, SW, SK, true)],
+  'swap-adapt': [...VARIANTS.filter((v) => v.name !== 'adapt'), sv(SB, SW, SK, true)],
+  sauvola: [sv(SB, SW, SK, false)],
+  'sauvola-dil': [sv(SB, SW, SK, true)],
 };
 
 const crops: { id: string; f: string; truth: string; g: Gray }[] = [];

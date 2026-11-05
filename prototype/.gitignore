@@ -2,3 +2,4 @@
 public/ocr/ort/
 public/ocr/tess/worker.min.js
 public/ocr/tess/tesseract-core-*.js
+public/ocr/paddle/det4.onnx
