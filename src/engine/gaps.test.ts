@@ -44,9 +44,9 @@ describe('gaps', () => {
     const water = find(gaps(doc, packs, NOW, 3), 'water:waterL')!;
     expect(water.shortfall).toBe(9);
     const [first] = water.suggestions;
-    expect(first).toMatchObject({ itemTypeId: 'items-base:bottled-water', qty: 1 });
-    expect(first!.label).toBe('1 × Bottled water (24 × 500 ml)');
-    expect(first!.pricePence).toBe(400);
+    expect(first).toMatchObject({ itemTypeId: 'items-base:bottled-water-5l', qty: 2 });
+    expect(first!.label).toBe('2 × Bottled water (5 L bottle)');
+    expect(first!.pricePence).toBe(280);
     for (const s of water.suggestions) {
       // every suggestion on its own closes the shortfall, in whole units
       expect(Number.isInteger(s.qty)).toBe(true);
@@ -86,7 +86,65 @@ describe('gaps', () => {
     const doc = biggarDocument(); // 47.25 L wanted, 20 L held: 27.25 L short
     const water = find(gaps(doc, packs, NOW, 3), 'water:waterL')!;
     expect(water.shortfall).toBeCloseTo(27.25);
-    expect(water.suggestions[0]).toMatchObject({ itemTypeId: 'items-base:bottled-water', qty: 3 });
+    expect(water.suggestions[0]).toMatchObject({
+      itemTypeId: 'items-base:bottled-water-6x5l',
+      qty: 1,
+    });
+  });
+
+  it('leads food with a pack count a shopper can carry, at every horizon', () => {
+    for (const days of [3, 7, 14, 28]) {
+      const food = find(gaps(biggarDocument(), packs, NOW, days), 'food:foodKcal')!;
+      const first = food.suggestions[0]!;
+      expect(first.qty, `${days} days: ${first.label}`).toBeLessThanOrEqual(12);
+      // alternatives are other ways to close the same shortfall, never two sizes of one thing
+      expect(first.label).not.toMatch(/\(1 kg\)|\(500 g\)/);
+      const families = food.suggestions.map((x) =>
+        packs.items[x.itemTypeId!]!.name.replace(/\s*\(.*$/, ''),
+      );
+      expect(new Set(families).size, `${days} days: ${food.suggestions.map((x) => x.label)}`).toBe(
+        families.length,
+      );
+    }
+  });
+
+  it('says an empty container is to fill from the tap', () => {
+    const only = {
+      ...packs,
+      items: Object.fromEntries(
+        Object.entries(packs.items).filter(
+          ([, t]) => !t.gives.some((g) => g.store === 'waterL') || t.tags.includes('refillable'),
+        ),
+      ),
+    };
+    const water = find(gaps(empty(), only, NOW, 3), 'water:waterL')!;
+    expect(water.suggestions.length).toBeGreaterThan(0);
+    for (const s of water.suggestions) expect(s.label).toMatch(/, to fill from the tap$/);
+    // and bottled water is not worded that way
+    const bottled = find(gaps(empty(), packs, NOW, 3), 'water:waterL')!;
+    expect(bottled.suggestions[0]!.label).not.toMatch(/tap/);
+  });
+
+  it('does not lead a small shortfall with an oversized, dearer trade pack', () => {
+    const doc = empty(); // one adult
+    const food = find(gaps(doc, packs, NOW, 7), 'food:foodKcal')!;
+    const first = food.suggestions[0]!;
+    expect(first.itemTypeId).not.toBe('items-base:porridge-oats-10kg');
+    // 14,000 kcal: two 3 kg packs (900 p), not one 10 kg sack (1300 p, nearly three times the need)
+    expect(first.itemTypeId).toBe('items-base:porridge-oats');
+    expect(first.pricePence!).toBeLessThanOrEqual(900);
+  });
+
+  it('ranks the same however the packs are listed', () => {
+    const shuffled = {
+      ...packs,
+      items: Object.fromEntries(Object.entries(packs.items).reverse()),
+    };
+    for (const days of [3, 7, 28]) {
+      const a = find(gaps(biggarDocument(), packs, NOW, days), 'food:foodKcal')!;
+      const b = find(gaps(biggarDocument(), shuffled, NOW, days), 'food:foodKcal')!;
+      expect(b.suggestions.map((s) => s.label)).toEqual(a.suggestions.map((s) => s.label));
+    }
   });
 
   it('does not suggest food that needs cooking when cooking is not covered', () => {

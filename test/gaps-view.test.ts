@@ -129,7 +129,10 @@ describe('the gaps view on the fixture household', () => {
   it('suggests a heater and its fuel for heat, as two lines to tick', () => {
     const heat = view(3).shopping.filter((r) => r.capability === 'heat');
     expect(heat.length).toBe(2);
-    expect(heat.every((r) => r.itemTypeId)).toBe(true);
+    // the heater is equipment (its row opens the equipment form); its fuel is stock
+    expect(heat[0]!.assetTypeId).toMatch(/^assets-base:/);
+    expect(heat[0]!.itemTypeId).toBeUndefined();
+    expect(heat[1]!.itemTypeId).toBeDefined();
     expect(heat[0]!.closes).toBe('heat: 18 h short of 3 days');
   });
 

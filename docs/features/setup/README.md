@@ -19,7 +19,7 @@ leaving half-way.
 | People               | `/app/people`, `PeopleScreen.tsx`       | Members and pets. A sheet per person: name, date of birth (age shown as "2 y 5 m" or "3 months"), risk chips, dietary note, medication with days of supply. Pets: name, species, size.                                                                                                                                   |
 | Home                 | `/app/home`, `HomeScreen.tsx`           | Every home field in plain language. Region and, for the UK, the part of the UK.                                                                                                                                                                                                                                          |
 | Locations            | `/app/locations`, `LocationsScreen.tsx` | Places with a kind (rotating or stored), conditions, size and optional litres. Pantry, Garage, Loft, Shed and Grab bags are suggestions: tapping one opens the form filled in, and nothing exists until Save.                                                                                                            |
-| Equipment            | `/app/assets`, `AssetsScreen.tsx`       | Grouped by category. Add: search the asset types of the enabled packs, answer the type's questions, say where it is and when it was bought. The form says in words what it gives with the answers applied.                                                                                                               |
+| Equipment            | `/app/assets`, `AssetsScreen.tsx`       | Grouped by category. Add: search the asset types of the enabled packs (category chips narrow the list: All, Heat, Power, Water and so on, only those with a type), answer the type's questions, say where it is and when it was bought. The form says in words what it gives with the answers applied.                   |
 | Risks                | `/app/risks`, `RisksScreen.tsx`         | The local-risk chips, and for each chosen risk the region's "check" links (open in a new tab).                                                                                                                                                                                                                           |
 | How long to plan for | `/app/horizon`, `HorizonScreen.tsx`     | Pick 3, 7, 14 or 28 days (a sentence says what each means). Below it the table of what that is for this household at every horizon.                                                                                                                                                                                      |
 | More, Settings       | `/app/more`, `/app/more/settings`       | Region, content packs (name, version, on or off), review reminder (3 or 6 months), anonymise names. The data section (`settings/DataSection.tsx`) links to the Data screen (see [Drive sync](../drive-sync/README.md)).                                                                                                  |
@@ -46,6 +46,11 @@ leaving half-way.
 - **All-electric homes get a plain warning** when heating and cooking are electric (or a heat pump,
   or induction) and there is no mains gas: "In a power cut this home has no heat or cooking; the
   score will show that."
+- **One home per thing.** Equipment is kept here and nowhere else; Stores holds stock (food, water,
+  fuels, cells, power banks). `/app/assets?add=<asset type id>` opens the add form with the type
+  chosen (Quick add's "Equipment: add to your home" and the shopping list's tick use it) and
+  `?edit=<asset id>` the edit form (a place's equipment rows in Stores use it); an unknown id is
+  ignored.
 - **Equipment questions.** A yes/no is a switch, a number is a box with its unit, a choice is a row
   of buttons. A new asset starts with every yes/no off and every choice on its first option;
   numbers start empty, because an invented capacity would be counted as real. The description

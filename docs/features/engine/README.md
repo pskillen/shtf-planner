@@ -108,12 +108,21 @@ capabilities' rows and the score, not the earlier row's display.
 
 ## Suggestions
 
-Whole units of one item type that give the store, cheapest per unit first, not overshooting the
-shortfall by more than 3 times (unless nothing else is left), at most three. `pricePence` is the
-whole suggestion's price. Items that need cooking are skipped while cooking is not covered, and
-items whose age band fits nobody are skipped. The household's own custom item types are never
-suggested. An item type tagged `no-suggest` (the bath water bladder, loose D, AA and AAA cells) is
-cheap per unit but an odd first answer, so it is suggested only when no other type gives the store.
+Whole units of one item type that give the store, at most three, not overshooting the shortfall
+by more than 3 times (unless nothing else is left). Ranking: the best price per unit of the store
+among the candidates sets the bar; every pack within `NEAR_PRICE` (20 %, an assumption in
+`suggest.ts`) of it is **on a par**, and of those the one that costs least _in total_ leads, then
+the one that overshoots least. So one adult's week of oats is two 3 kg packs, not one 10 kg sack
+that is nearly three times the need and dearer, while a month for a household is the sack. Packs
+dearer per unit than that come after, cheapest per unit first, and unpriced ones last. The order
+does not depend on how the packs are listed. Only one size of a product is suggested ("Porridge
+oats" appears once, not as 10 kg, 3 kg and 1 kg). `pricePence` is the whole suggestion's price.
+Items that need cooking are skipped while cooking is not covered, and items whose age band fits
+nobody are skipped. The household's own custom item types are never suggested. An item type tagged
+`no-suggest` (the bath water bladder, loose D, AA and AAA cells) is cheap per unit but an odd first
+answer, so it is suggested only when no other type gives the store. An empty container
+(`refillable`, such as a water can) is still suggested for storage but labelled ", to fill from
+the tap".
 
 ## Score
 
@@ -138,7 +147,28 @@ order alone. `nextHorizonPreview` is the overall score at the next horizon (3, 7
 `(typeof HORIZONS)[number]`, so it drops into code keyed by the horizons). Each `PreviewRow` has the
 target's `capability`, a lower-case `label` ("water"), a sentence-case `title` for screens
 ("Drinking water", "Power for phones", "Radio"; a medication shows its own name), the `amount` and
-`unit`, and an `example` from the item catalogue.
+`unit`, and an `example`: worded as an example ("e.g. 4 × Bottled water (6 × 2 L)"), never an
+instruction, and always an illustration, not advice. `src/engine/examples.ts` builds them, pure
+and over the packs it is given:
+
+- **Stores** use everyday stock only (no equipment, `no-suggest` types, loose cells or empty containers): the
+  cheapest size per unit whose count is 12 or fewer, else the biggest pack. So water at 3 days is
+  "4 × Bottled water (6 × 2 L)", not "37 × 500 ml cases".
+- **Food** is never one item for all the calories: a fixed split of the kcal across staples,
+  `FOOD_MIX` in `examples.ts` (25 % tins, 20 % pasta, 20 % rice, 15 % porridge oats, 20 % peanut
+  butter), each in the smallest pack size that gives a sane count (tins up to 70; the weekly tinned pack reads "N packs of tinned food (each one person's week)"), shown as "e.g.
+  15 tins, 4 kg of pasta and rice, 1 kg of porridge oats and 3 jars of peanut butter". The shares
+  are an assumption chosen for variety, not a diet.
+- **Power for phones** is power banks, never a leisure battery. Up to a dozen banks that is the
+  example; for more (a month of charging) the banks are still named and a portable power station is
+  added in words ("or 5 × Portable power station (500 Wh)"), because a station costs two to two and
+  a half times as much for the same Wh and is never swapped in silently.
+- **Heat and cooking** keep "a heater and its fuel to run it" (or the fuel for the one you own).
+- A radio is "e.g. a wind-up or battery-powered radio"; driving range is "about the same as a
+  vehicle charged or fuelled to drive N km".
+
+The horizon table's exact examples for the invented Biggar household are tested in
+`src/engine/preview.test.ts`.
 
 ## Where the numbers come from
 

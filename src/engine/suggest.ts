@@ -2,7 +2,7 @@ import type { CapabilityId, Document, ItemType, Packs } from '../model';
 import { compareText } from '../util';
 import { MAX_OVERSHOOT } from './assumptions';
 import { activeConverters } from './coverage';
-import { fitsHousehold, localId, type Person } from './context';
+import { fitsHousehold, type Person } from './context';
 
 export interface Suggestion {
   itemTypeId?: string;
@@ -24,6 +24,9 @@ export interface SuggestContext {
 }
 
 const EPS = 1e-9;
+
+/** Unit prices this close (a fraction) count as equal when ranking suggestions. */
+const NEAR_PRICE = 0.2;
 
 /** The item tag that keeps a type out of the suggestions unless nothing else would do. */
 export const NO_SUGGEST = 'no-suggest';
@@ -66,19 +69,41 @@ export function closeStore(
   const sensible = candidates.filter((c) => c.total <= shortfall * MAX_OVERSHOOT + EPS);
   const pool = sensible.length > 0 ? sensible : candidates;
   const perUnitPrice = (c: Candidate) => (c.type.typicalPricePence ?? 0) / c.per;
+  // Those within `NEAR_PRICE` of the best price per unit are on a par: the one that costs least
+  // in total leads (so a trade-size sack never leads a small shortfall), then the one that
+  // overshoots least. Dearer per unit than that come after, cheapest per unit first. The tier is
+  // measured from the single best price, so the order is the same however the packs are listed.
+  const priced = pool.filter((c) => c.price !== undefined).map(perUnitPrice);
+  const best = priced.length > 0 ? Math.min(...priced) : 0;
+  const onPar = (c: Candidate) =>
+    c.price !== undefined && perUnitPrice(c) <= best * (1 + NEAR_PRICE) + EPS;
   pool.sort((a, b) => {
     const pa = a.price !== undefined;
     const pb = b.price !== undefined;
     if (pa !== pb) return pa ? -1 : 1;
     if (!pa) return b.per - a.per;
+    const [ta, tb] = [onPar(a), onPar(b)];
+    if (ta !== tb) return ta ? -1 : 1;
+    if (ta) return a.price! - b.price! || a.total - b.total || compareText(a.type.id, b.type.id);
     return (
       perUnitPrice(a) - perUnitPrice(b) || a.price! - b.price! || compareText(a.type.id, b.type.id)
     );
   });
-  return pool.slice(0, limit).map((c) => ({
+  // One size of a product: "Porridge oats (10 kg)" does not also come as (3 kg) and (1 kg).
+  const seen = new Set<string>();
+  const distinct = pool.filter((c) => {
+    const family = c.type.name.replace(/\s*\(.*$/, '');
+    if (seen.has(family)) return false;
+    seen.add(family);
+    return true;
+  });
+  return distinct.slice(0, limit).map((c) => ({
     itemTypeId: c.type.id,
+    // Equipment is bought, then added under Home, Equipment: say which type it is.
+    ...(c.type.assetTypeId ? { assetTypeId: c.type.assetTypeId } : {}),
     qty: c.units,
-    label: `${c.units} × ${c.type.name}`,
+    // An empty container holds water, it is not water: it says so, to fill from the tap.
+    label: `${c.units} × ${c.type.name}${c.type.tags.includes('refillable') ? ', to fill from the tap' : ''}`,
     ...(c.price !== undefined ? { pricePence: c.price } : {}),
     perUnitCoverage: c.per,
   }));
@@ -114,7 +139,7 @@ export function closeHours(
   for (const asset of Object.values(ctx.packs.assets)) {
     const c = asset.contributes.find((x) => x.capability === capability && x.converts?.perHour);
     if (!c?.converts?.perHour) continue;
-    const item = Object.values(ctx.packs.items).find((i) => localId(i.id) === localId(asset.id));
+    const item = Object.values(ctx.packs.items).find((i) => i.assetTypeId === asset.id);
     const fuel = closeStore(ctx, c.converts.store, shortfallHours * c.converts.perHour, 1)[0];
     const price =
       item?.typicalPricePence !== undefined && fuel?.pricePence !== undefined

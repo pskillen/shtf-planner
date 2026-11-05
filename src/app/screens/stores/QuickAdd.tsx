@@ -1,12 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CATEGORIES, STORE_INFO, type Category, type ItemType, type StoreId } from '../../../model';
+import {
+  CATEGORIES,
+  STORE_INFO,
+  type AssetType,
+  type Category,
+  type ItemType,
+  type StoreId,
+} from '../../../model';
 import { today } from '../../../util';
 import { Field, NumberInput } from '../../components/controls';
 import { Sheet } from '../../components/Sheet';
 import { Stepper } from '../../components/Stepper';
 import { CATEGORY_LABEL, labelOf } from '../../labels';
 import { useChange, useDocument } from '../../state';
+import { EQUIPMENT_PATH, equipmentAddPath } from '../assets/route';
 import { usePacks } from '../../usePacks';
 import {
   DEFAULT_STORE,
@@ -35,6 +43,29 @@ export interface QuickAddPrefill {
 /** How many recent types sit above the list when nothing is typed. */
 const RECENT_SHOWN = 8;
 
+/**
+ * The everyday types shown when nothing is typed and nothing has been added yet on this device
+ * (local ids in the items pack); the rest are one search, or "Browse everything", away.
+ */
+const COMMON = [
+  'bottled-water-6x2l',
+  'tinned-food-tin',
+  'dried-pasta-1kg',
+  'rice-1kg',
+  'porridge-oats-1kg',
+  'peanut-butter-340g',
+  'uht-milk',
+  'gas-canisters',
+  'lpg-bottle-13kg',
+  'power-bank-20000mah',
+  'torch-led-200lm',
+  'first-aid-kit',
+  'candles',
+  'hygiene-kit',
+  'toilet-bags',
+  'aa-cells-8',
+];
+
 type Step = 'search' | 'form' | 'custom';
 
 /**
@@ -52,8 +83,16 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
     () => new Set(['custom', ...packs.enabledPacks(doc.settings).map((p) => p.id)]),
     [packs, doc.settings],
   );
+  // Stock only: equipment (a stove, a generator, a leisure battery) is kept under Home, Equipment.
   const types = useMemo(
-    () => Object.values(packs.items).filter((t) => enabled.has(t.id.split(':')[0]!)),
+    () =>
+      Object.values(packs.items).filter(
+        (t) => enabled.has(t.id.split(':')[0]!) && t.assetTypeId === undefined,
+      ),
+    [packs, enabled],
+  );
+  const equipmentTypes = useMemo(
+    () => Object.values(packs.assets).filter((t) => enabled.has(t.id.split(':')[0]!)),
     [packs, enabled],
   );
   const locations = useMemo(
@@ -62,7 +101,8 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
   );
   const [recent, setRecent] = useState(readRecent);
 
-  const start = prefill ? packs.items[prefill.typeId] : undefined;
+  const prefilled = prefill ? packs.items[prefill.typeId] : undefined;
+  const start = prefilled?.assetTypeId === undefined ? prefilled : undefined;
   const [step, setStep] = useState<Step>(start ? 'form' : 'search');
   const [query, setQuery] = useState('');
   const [type, setType] = useState<ItemType | undefined>(start);
@@ -95,6 +135,27 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
         .slice(0, RECENT_SHOWN),
     [recent, types],
   );
+  // With no recent additions, the common types stand in for them.
+  const common = useMemo(
+    () =>
+      COMMON.map((id) => types.find((t) => t.id.split(':')[1] === id)).filter(
+        (t): t is ItemType => t !== undefined,
+      ),
+    [types],
+  );
+  const [browsing, setBrowsing] = useState(false);
+  // Equipment that matches the search, by its own name or the name of a thing people buy for it.
+  const equipmentShown = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (q === '') return [];
+    const linked = (t: AssetType) =>
+      Object.values(packs.items)
+        .filter((i) => i.assetTypeId === t.id)
+        .map((i) => i.name);
+    return equipmentTypes.filter((t) =>
+      [t.name, ...linked(t)].some((n) => n.toLowerCase().includes(q)),
+    );
+  }, [equipmentTypes, packs, query]);
   const byCategory = useMemo(() => {
     const skip = new Set(recentTypes.map((t) => t.id));
     const groups = new Map<Category, ItemType[]>();
@@ -221,13 +282,30 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
                 onChange={(e) => setQuery(e.target.value)}
               />
             </Field>
+            {equipmentShown.length > 0 ? (
+              <section aria-label="Equipment: add to your home" className="equipment-route">
+                <h3>Equipment: add to your home</h3>
+                <ul className="row-list">
+                  {equipmentShown.map((t) => (
+                    <li className="row-item" key={t.id}>
+                      <Link className="row-main" to={equipmentAddPath(t.id)}>
+                        <strong>{t.name}</strong>
+                        <span className="muted">Opens the equipment form, not stock</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
             <button type="button" className="secondary" onClick={() => setStep('custom')}>
               Add as a custom item
             </button>
           </div>
           {searching ? (
             <>
-              {shown.length === 0 ? <p className="muted">Nothing matches “{query}”.</p> : null}
+              {shown.length === 0 && equipmentShown.length === 0 ? (
+                <p className="muted">Nothing matches “{query}”.</p>
+              ) : null}
               <ul className="row-list">{shown.map(typeRow)}</ul>
             </>
           ) : (
@@ -237,15 +315,29 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
                   <h3>Recent</h3>
                   <ul className="row-list">{recentTypes.map(typeRow)}</ul>
                 </section>
-              ) : null}
-              {byCategory.map(([category, list]) => (
-                <details className="type-group" key={category}>
-                  <summary>
-                    {labelOf(CATEGORY_LABEL, category)} ({list.length})
-                  </summary>
-                  <ul className="row-list">{list.map(typeRow)}</ul>
-                </details>
-              ))}
+              ) : (
+                <section aria-label="Common" className="recent">
+                  <h3>Common</h3>
+                  <ul className="row-list">{common.map(typeRow)}</ul>
+                </section>
+              )}
+              <Link className="row-main equipment-route" to={EQUIPMENT_PATH}>
+                <strong>Equipment: add to your home</strong>
+                <span className="muted">Stoves, heaters, generators, batteries and panels</span>
+              </Link>
+              <details className="type-group" onToggle={(e) => setBrowsing(e.currentTarget.open)}>
+                <summary>Browse everything by category</summary>
+                {browsing
+                  ? byCategory.map(([category, list]) => (
+                      <details className="type-group" key={category}>
+                        <summary>
+                          {labelOf(CATEGORY_LABEL, category)} ({list.length})
+                        </summary>
+                        <ul className="row-list">{list.map(typeRow)}</ul>
+                      </details>
+                    ))
+                  : null}
+              </details>
             </>
           )}
         </>

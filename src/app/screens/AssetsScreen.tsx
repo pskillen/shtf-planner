@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
-import type { Asset, AssetType } from '../../model';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { CATEGORIES, type Asset, type AssetType, type Category } from '../../model';
 import { coverage, type BlockedAsset } from '../../engine';
 import { blockedBadge } from '../blocked';
 import { formatVolume, today } from '../../util';
@@ -19,8 +20,14 @@ const newId = () => crypto.randomUUID();
 
 function TypePicker({ types, onPick }: { types: AssetType[]; onPick: (t: AssetType) => void }) {
   const [query, setQuery] = useState('');
+  const [category, setCategory] = useState<Category | null>(null);
   const q = query.trim().toLowerCase();
-  const shown = q ? types.filter((t) => t.name.toLowerCase().includes(q)) : types;
+  // Only the categories that have a type to pick, in the usual order.
+  const categories = CATEGORIES.filter((c) => types.some((t) => t.category === c));
+  const shown = types.filter(
+    (t) =>
+      (category === null || t.category === category) && (!q || t.name.toLowerCase().includes(q)),
+  );
   return (
     <>
       <Field label="Search equipment">
@@ -31,7 +38,22 @@ function TypePicker({ types, onPick }: { types: AssetType[]; onPick: (t: AssetTy
           onChange={(e) => setQuery(e.target.value)}
         />
       </Field>
-      {shown.length === 0 ? <p className="muted">Nothing matches “{query}”.</p> : null}
+      <div className="chips" role="group" aria-label="Show category">
+        {[null, ...categories].map((c) => (
+          <button
+            key={c ?? 'all'}
+            type="button"
+            className={c === category ? 'chip on' : 'chip'}
+            aria-pressed={c === category}
+            onClick={() => setCategory(c)}
+          >
+            {c === null ? 'All' : labelOf(CATEGORY_LABEL, c)}
+          </button>
+        ))}
+      </div>
+      {shown.length === 0 ? (
+        <p className="muted">{q ? `Nothing matches “${query}”.` : 'Nothing in this category.'}</p>
+      ) : null}
       <ul className="row-list">
         {shown.map((t) => (
           <li className="row-item" key={t.id}>
@@ -157,8 +179,33 @@ type Editing =
 export function AssetsScreen() {
   const doc = useDocument();
   const change = useChange();
-  const [editing, setEditing] = useState<Editing>(null);
   const packs = usePacks();
+  const [params, setParams] = useSearchParams();
+  // Deep links from elsewhere: ?add=<asset type id> opens the add form for that type (Quick add,
+  // the shopping list), ?edit=<asset id> the edit form (Stores). Unknown ids are ignored. The
+  // screen mounts when the link is followed, so the link is read once, as the initial state.
+  const [editing, setEditing] = useState<Editing>(() => {
+    const addId = params.get('add');
+    const editId = params.get('edit');
+    const type = addId ? packs.assets[addId] : undefined;
+    if (type)
+      return {
+        step: 'form',
+        type,
+        isNew: true,
+        asset: { id: newId(), typeId: type.id, answers: defaultAnswers(type), maintenance: {} },
+      };
+    const existing = editId ? doc.assets[editId] : undefined;
+    const existingType = existing ? packs.assets[existing.typeId] : undefined;
+    return existing && existingType
+      ? { step: 'form', type: existingType, asset: existing, isNew: false }
+      : null;
+  });
+  // Take the link off the address so a reload or a Back does not open the form again.
+  const hasLink = params.has('add') || params.has('edit');
+  useEffect(() => {
+    if (hasLink) setParams({}, { replace: true });
+  }, [hasLink, setParams]);
 
   // Assets that give the plan nothing, and why, from the engine (never worked out here).
   const blocked = useMemo(() => {

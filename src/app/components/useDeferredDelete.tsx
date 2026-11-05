@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Toast } from './Toast';
 
 const UNDO_MS = 5000;
 
@@ -70,12 +71,12 @@ export function useDeferredDelete(
 
   const last = [...pending.entries()].at(-1);
   const toast = last ? (
-    <div className="toast" role="status">
+    <Toast>
       <span>{message(last[1])}</span>
       <button type="button" onClick={() => finish(last[0], false)}>
         Undo
       </button>
-    </div>
+    </Toast>
   ) : null;
 
   return { pending: new Set(pending.keys()), request, toast };

@@ -2,7 +2,7 @@
   "format": 1,
   "id": "items-base",
   "kind": "items",
-  "version": 4,
+  "version": 8,
   "name": "Base household items",
   "sources": [
     {
@@ -34,16 +34,12 @@
       "name": "Camping stove",
       "category": "food",
       "unit": "each",
-      "gives": [
-        {
-          "store": "gasCanister",
-          "amount": 2
-        }
-      ],
+      "gives": [],
       "suitability": ["frost", "heat", "damp"],
       "shelfLife": "none",
       "typicalPricePence": 3500,
-      "tags": ["cooking", "heat"]
+      "tags": ["cooking", "heat"],
+      "assetTypeId": "assets-base:camping-stove"
     },
     {
       "id": "items-base:gas-canisters",
@@ -70,7 +66,8 @@
       "suitability": ["frost", "heat"],
       "shelfLife": "none",
       "typicalPricePence": 6000,
-      "tags": ["heat"]
+      "tags": ["heat"],
+      "assetTypeId": "assets-base:paraffin-heater"
     },
     {
       "id": "items-base:paraffin",
@@ -150,7 +147,7 @@
       "suitability": [],
       "shelfLife": "years",
       "typicalPricePence": 4000,
-      "tags": ["power"]
+      "tags": ["power", "phone"]
     },
     {
       "id": "items-base:solar-panel",
@@ -161,7 +158,8 @@
       "suitability": [],
       "shelfLife": "none",
       "typicalPricePence": 7000,
-      "tags": ["power"]
+      "tags": ["power"],
+      "assetTypeId": "assets-base:solar-pv"
     },
     {
       "id": "items-base:generator",
@@ -172,7 +170,8 @@
       "suitability": [],
       "shelfLife": "none",
       "typicalPricePence": 15000,
-      "tags": ["power", "noise"]
+      "tags": ["power", "noise"],
+      "assetTypeId": "assets-base:generator"
     },
     {
       "id": "items-base:petrol-can",
@@ -227,7 +226,8 @@
       "suitability": [],
       "shelfLife": "none",
       "typicalPricePence": 2500,
-      "tags": ["radio-rx", "light"]
+      "tags": ["radio-rx", "light"],
+      "assetTypeId": "assets-base:wind-up-radio"
     },
     {
       "id": "items-base:blackout-curtains",
@@ -256,6 +256,78 @@
       "shelfLife": "year",
       "typicalPricePence": 400,
       "tags": ["water", "sells-out-first"]
+    },
+    {
+      "id": "items-base:bottled-water-6x2l",
+      "name": "Bottled water (6 × 2 L)",
+      "category": "water",
+      "unit": "pack",
+      "unitSize": "6 x 2 L",
+      "gives": [
+        {
+          "store": "waterL",
+          "amount": 12
+        }
+      ],
+      "suitability": ["frost"],
+      "shelfLife": "year",
+      "typicalPricePence": 300,
+      "tags": ["water", "sells-out-first"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:bottled-water-5l",
+      "name": "Bottled water (5 L bottle)",
+      "category": "water",
+      "unit": "bottle",
+      "unitSize": "5 L",
+      "gives": [
+        {
+          "store": "waterL",
+          "amount": 5
+        }
+      ],
+      "suitability": ["frost"],
+      "shelfLife": "year",
+      "typicalPricePence": 140,
+      "tags": ["water", "sells-out-first"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:bottled-water-6x5l",
+      "name": "Bottled water (6 × 5 L)",
+      "category": "water",
+      "unit": "case",
+      "unitSize": "6 x 5 L",
+      "gives": [
+        {
+          "store": "waterL",
+          "amount": 30
+        }
+      ],
+      "suitability": ["frost"],
+      "shelfLife": "year",
+      "typicalPricePence": 800,
+      "tags": ["water", "sells-out-first"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:bottled-water-2l",
+      "name": "Bottled water (2 L bottle)",
+      "category": "water",
+      "unit": "bottle",
+      "unitSize": "2 L",
+      "gives": [
+        {
+          "store": "waterL",
+          "amount": 2
+        }
+      ],
+      "suitability": ["frost"],
+      "shelfLife": "year",
+      "typicalPricePence": 70,
+      "tags": ["water", "sells-out-first"],
+      "source": "assumption"
     },
     {
       "id": "items-base:bath-bladder",
@@ -288,7 +360,7 @@
       "suitability": ["frost"],
       "shelfLife": "months",
       "typicalPricePence": 1500,
-      "tags": ["water"]
+      "tags": ["water", "refillable"]
     },
     {
       "id": "items-base:water-butt",
@@ -299,7 +371,8 @@
       "suitability": ["frost", "heat", "damp"],
       "shelfLife": "none",
       "typicalPricePence": 5000,
-      "tags": ["water", "outdoor", "needs-garden", "untreated"]
+      "tags": ["water", "outdoor", "needs-garden", "untreated"],
+      "assetTypeId": "assets-base:water-butt"
     },
     {
       "id": "items-base:purification-tablets",
@@ -342,7 +415,7 @@
       "id": "items-base:tinned-food",
       "name": "Tinned food (1 week, 1 person)",
       "category": "food",
-      "unit": "week's worth",
+      "unit": "pack",
       "unitSize": "one person, one week",
       "gives": [
         {
@@ -354,6 +427,78 @@
       "shelfLife": "years",
       "typicalPricePence": 2000,
       "tags": ["food", "no-cook"]
+    },
+    {
+      "id": "items-base:tinned-food-tin",
+      "name": "Tinned food (400 g tin)",
+      "category": "food",
+      "unit": "tin",
+      "unitSize": "400 g",
+      "gives": [
+        {
+          "store": "foodKcal",
+          "amount": 400
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
+      "typicalPricePence": 80,
+      "tags": ["food", "no-cook"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:dried-pasta-500g",
+      "name": "Dried pasta (500 g)",
+      "category": "food",
+      "unit": "bag",
+      "unitSize": "500 g",
+      "gives": [
+        {
+          "store": "foodKcal",
+          "amount": 1750
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
+      "typicalPricePence": 85,
+      "tags": ["food", "needs-cooking"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:dried-pasta-1kg",
+      "name": "Dried pasta (1 kg)",
+      "category": "food",
+      "unit": "bag",
+      "unitSize": "1 kg",
+      "gives": [
+        {
+          "store": "foodKcal",
+          "amount": 3500
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
+      "typicalPricePence": 150,
+      "tags": ["food", "needs-cooking"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:rice-1kg",
+      "name": "Rice (1 kg bag)",
+      "category": "food",
+      "unit": "bag",
+      "unitSize": "1 kg",
+      "gives": [
+        {
+          "store": "foodKcal",
+          "amount": 3600
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
+      "typicalPricePence": 180,
+      "tags": ["food", "needs-cooking"],
+      "source": "assumption"
     },
     {
       "id": "items-base:rice-sack",
@@ -407,6 +552,42 @@
       "tags": ["food"]
     },
     {
+      "id": "items-base:porridge-oats-1kg",
+      "name": "Porridge oats (1 kg)",
+      "category": "food",
+      "unit": "bag",
+      "unitSize": "1 kg",
+      "gives": [
+        {
+          "store": "foodKcal",
+          "amount": 3800
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "year",
+      "typicalPricePence": 160,
+      "tags": ["food"],
+      "source": "assumption"
+    },
+    {
+      "id": "items-base:porridge-oats-10kg",
+      "name": "Porridge oats (10 kg sack)",
+      "category": "food",
+      "unit": "sack",
+      "unitSize": "10 kg",
+      "gives": [
+        {
+          "store": "foodKcal",
+          "amount": 38000
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "year",
+      "typicalPricePence": 1300,
+      "tags": ["food"],
+      "source": "assumption"
+    },
+    {
       "id": "items-base:freeze-dried-meals",
       "name": "Freeze-dried meals (12)",
       "category": "food",
@@ -438,6 +619,24 @@
       "shelfLife": "year",
       "typicalPricePence": 800,
       "tags": ["food", "no-cook"]
+    },
+    {
+      "id": "items-base:peanut-butter-340g",
+      "name": "Peanut butter (340 g jar)",
+      "category": "food",
+      "unit": "jar",
+      "unitSize": "340 g",
+      "gives": [
+        {
+          "store": "foodKcal",
+          "amount": 2040
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "year",
+      "typicalPricePence": 150,
+      "tags": ["food", "no-cook"],
+      "source": "assumption"
     },
     {
       "id": "items-base:energy-bars",
@@ -480,7 +679,8 @@
       "suitability": ["frost", "heat", "damp"],
       "shelfLife": "none",
       "typicalPricePence": 4000,
-      "tags": ["cooking", "outdoor-use"]
+      "tags": ["cooking", "outdoor-use"],
+      "assetTypeId": "assets-base:rocket-stove"
     },
     {
       "id": "items-base:logs-and-kindling",
@@ -546,7 +746,8 @@
       "suitability": [],
       "shelfLife": "years",
       "typicalPricePence": 35000,
-      "tags": ["power"]
+      "tags": ["power", "portable-power"],
+      "assetTypeId": "assets-base:power-station"
     },
     {
       "id": "items-base:solar-kit",
@@ -557,7 +758,8 @@
       "suitability": [],
       "shelfLife": "none",
       "typicalPricePence": 25000,
-      "tags": ["power", "outdoor"]
+      "tags": ["power", "outdoor"],
+      "assetTypeId": "assets-base:solar-pv"
     },
     {
       "id": "items-base:leisure-battery",
@@ -573,7 +775,8 @@
       "suitability": [],
       "shelfLife": "years",
       "typicalPricePence": 10000,
-      "tags": ["power", "12v"]
+      "tags": ["power", "12v"],
+      "assetTypeId": "assets-base:leisure-battery"
     },
     {
       "id": "items-base:inverter",
@@ -595,7 +798,8 @@
       "suitability": [],
       "shelfLife": "none",
       "typicalPricePence": 55000,
-      "tags": ["power", "noise"]
+      "tags": ["power", "noise"],
+      "assetTypeId": "assets-base:generator"
     },
     {
       "id": "items-base:petrol-jerrycan",
@@ -650,7 +854,8 @@
       "suitability": ["frost", "heat"],
       "shelfLife": "none",
       "typicalPricePence": 9000,
-      "tags": ["heat"]
+      "tags": ["heat"],
+      "assetTypeId": "assets-base:cabinet-heater"
     },
     {
       "id": "items-base:gas-bottle",
@@ -678,7 +883,8 @@
       "suitability": ["frost", "heat"],
       "shelfLife": "none",
       "typicalPricePence": 5000,
-      "tags": ["heat"]
+      "tags": ["heat"],
+      "assetTypeId": "assets-base:catalytic-heater"
     },
     {
       "id": "items-base:winter-sleeping-bag",
@@ -908,7 +1114,8 @@
       "suitability": [],
       "shelfLife": "none",
       "typicalPricePence": 5000,
-      "tags": ["radio-tx"]
+      "tags": ["radio-tx"],
+      "assetTypeId": "assets-base:pmr446-radio"
     },
     {
       "id": "items-base:cb-rig",
@@ -919,7 +1126,8 @@
       "suitability": [],
       "shelfLife": "none",
       "typicalPricePence": 12000,
-      "tags": ["radio-tx", "radio-rx", "12v"]
+      "tags": ["radio-tx", "radio-rx", "12v"],
+      "assetTypeId": "assets-base:handheld-radio"
     },
     {
       "id": "items-base:dual-band-handheld",
@@ -930,7 +1138,8 @@
       "suitability": [],
       "shelfLife": "none",
       "typicalPricePence": 6000,
-      "tags": ["radio-tx", "radio-rx"]
+      "tags": ["radio-tx", "radio-rx"],
+      "assetTypeId": "assets-base:handheld-radio"
     },
     {
       "id": "items-base:mobile-rig",
@@ -941,7 +1150,8 @@
       "suitability": [],
       "shelfLife": "none",
       "typicalPricePence": 35000,
-      "tags": ["radio-tx", "radio-rx", "12v"]
+      "tags": ["radio-tx", "radio-rx", "12v"],
+      "assetTypeId": "assets-base:radio-station"
     },
     {
       "id": "items-base:hf-station",
@@ -952,7 +1162,8 @@
       "suitability": [],
       "shelfLife": "none",
       "typicalPricePence": 90000,
-      "tags": ["radio-tx", "radio-rx", "12v"]
+      "tags": ["radio-tx", "radio-rx", "12v"],
+      "assetTypeId": "assets-base:radio-station"
     },
     {
       "id": "items-base:garden-mast",
@@ -1084,7 +1295,8 @@
       "suitability": ["frost", "heat", "damp"],
       "shelfLife": "none",
       "typicalPricePence": 4500,
-      "tags": ["safety", "fire"]
+      "tags": ["safety", "fire"],
+      "assetTypeId": "assets-base:fire-extinguisher"
     },
     {
       "id": "items-base:co-alarm",
@@ -1095,7 +1307,8 @@
       "suitability": ["frost", "heat", "damp"],
       "shelfLife": "none",
       "typicalPricePence": 2000,
-      "tags": ["safety"]
+      "tags": ["safety"],
+      "assetTypeId": "assets-base:co-alarm"
     },
     {
       "id": "items-base:games-and-books",
@@ -1361,6 +1574,24 @@
       "tags": ["sanitation"]
     },
     {
+      "id": "items-base:toilet-bags-100",
+      "name": "Toilet waste bags with absorbent (100)",
+      "category": "sanitation",
+      "unit": "pack",
+      "unitSize": "100 bags",
+      "gives": [
+        {
+          "store": "sanitationUses",
+          "amount": 100
+        }
+      ],
+      "suitability": [],
+      "shelfLife": "years",
+      "typicalPricePence": 3000,
+      "tags": ["sanitation"],
+      "source": "assumption"
+    },
+    {
       "id": "items-base:hand-sanitiser",
       "name": "Hand sanitiser (500 ml)",
       "category": "sanitation",
@@ -1599,7 +1830,8 @@
       "suitability": ["frost"],
       "shelfLife": "none",
       "typicalPricePence": 2500,
-      "tags": ["radio-rx", "light", "manual"]
+      "tags": ["radio-rx", "light", "manual"],
+      "assetTypeId": "assets-base:wind-up-radio"
     }
   ]
 }

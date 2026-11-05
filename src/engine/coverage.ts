@@ -247,7 +247,14 @@ export function analyse(
     const fit = fitsHousehold(type, people);
     const gate = type.tags.includes('needs-cooking') ? ('cooking' as const) : undefined;
     const treatment = type.tags.includes('treatment') || localId(type.id) === 'water-filter';
-    const unfit = fit ? undefined : "does not fit anyone's age in the household";
+    // Equipment is counted once, from the Equipment list: a stock row of an equipment type (from
+    // a document made before the packs split the two) gives nothing, and says why.
+    const countsAsStock = fit && type.assetTypeId === undefined;
+    const unfit = fit
+      ? type.assetTypeId === undefined
+        ? undefined
+        : `${type.name} is equipment: add it under Home, Equipment so it counts once`
+      : "does not fit anyone's age in the household";
 
     if (location?.kind === 'rotating') {
       const floor = doc.floors[key];
@@ -255,12 +262,12 @@ export function analyse(
         belowFloor.push({ locationId, typeId, floor, actual: liveQty });
       if (insts.length === 0 || (floor === undefined && liveQty === 0)) continue;
       const counted = floor === undefined ? 0 : Math.min(liveQty, floor);
-      if (counted > 0 && fit && treatment) hasTreatmentItem = true;
+      if (counted > 0 && countsAsStock && treatment) hasTreatmentItem = true;
       for (const g of gives) {
         push(g.store, {
           kind: 'floor',
           id: key,
-          amount: fit ? counted * g.amount : 0,
+          amount: countsAsStock ? counted * g.amount : 0,
           ...(gate ? { gate } : {}),
           ...(unfit
             ? { note: unfit }
@@ -273,12 +280,12 @@ export function analyse(
       }
     } else {
       for (const inst of live) {
-        if (inst.qty > 0 && fit && treatment) hasTreatmentItem = true;
+        if (inst.qty > 0 && countsAsStock && treatment) hasTreatmentItem = true;
         for (const g of gives)
           push(g.store, {
             kind: 'item',
             id: inst.id,
-            amount: fit ? inst.qty * g.amount : 0,
+            amount: countsAsStock ? inst.qty * g.amount : 0,
             ...(gate ? { gate } : {}),
             ...(unfit ? { note: unfit } : {}),
           });

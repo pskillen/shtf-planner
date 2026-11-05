@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { addMonths, applicablePlanItems, coverage, gaps, planDone, score } from '../../engine';
 import { today } from '../../util';
 import { EditArea } from '../components/EditArea';
@@ -9,6 +9,7 @@ import { CAPABILITY_LABEL } from '../labels';
 import { useChange, useDocument } from '../state';
 import { usePacks } from '../usePacks';
 import { buildGapsView, formatPrice, type ShoppingRow, type ShoppingSort } from './gaps/view';
+import { equipmentAddPath } from './assets/route';
 import { QuickAdd, type QuickAddPrefill } from './stores/QuickAdd';
 
 /**
@@ -21,6 +22,7 @@ export function GapsScreen() {
   const packs = usePacks();
   const [sort, setSort] = useState<ShoppingSort>('capability');
   const [buying, setBuying] = useState<QuickAddPrefill | null>(null);
+  const navigate = useNavigate();
   const horizonDays = doc.settings.horizonDays;
   const now = today();
 
@@ -71,8 +73,12 @@ export function GapsScreen() {
       type="button"
       className="tick"
       aria-label={`Bought: ${r.label}`}
-      disabled={!r.itemTypeId}
-      onClick={() => r.itemTypeId && setBuying({ typeId: r.itemTypeId, qty: r.qty })}
+      disabled={!r.itemTypeId && !r.assetTypeId}
+      onClick={() => {
+        // Equipment goes to the equipment form with its type chosen, never into stock.
+        if (r.assetTypeId) navigate(equipmentAddPath(r.assetTypeId));
+        else if (r.itemTypeId) setBuying({ typeId: r.itemTypeId, qty: r.qty });
+      }}
     >
       ✓
     </button>

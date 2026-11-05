@@ -23,6 +23,8 @@ export interface ShoppingRow {
   pricePence?: number;
   /** What Quick add opens with when the row is ticked; absent for advice with nothing to add. */
   itemTypeId?: string;
+  /** Set when the row is a piece of equipment: ticking it opens the equipment form, not stock. */
+  assetTypeId?: string;
   qty?: number;
   alternatives: string[];
   critical?: boolean;
@@ -107,7 +109,11 @@ function shoppingRowsFor(gap: Gap, horizonDays: number, region: 'UK' | 'US', at:
     key: `${gap.target.id}|${gap.kind}|${at}|${i}`,
     label: s.label,
     ...(s.pricePence !== undefined ? { pricePence: s.pricePence } : {}),
-    ...(s.itemTypeId ? { itemTypeId: s.itemTypeId } : {}),
+    ...(s.assetTypeId
+      ? { assetTypeId: s.assetTypeId }
+      : s.itemTypeId
+        ? { itemTypeId: s.itemTypeId }
+        : {}),
     ...(s.qty ? { qty: s.qty } : {}),
     alternatives,
   });

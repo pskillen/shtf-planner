@@ -22,10 +22,25 @@ describe('Quick add: the search step', () => {
     expect(search.closest('.search-row')).toBe(custom.closest('.search-row'));
   });
 
-  it('on a fresh device shows the types under collapsed categories, not 110 rows', () => {
+  it('on a fresh device shows a few common types, not 110 rows', () => {
     open();
     expect(screen.queryByRole('heading', { name: 'Recent' })).toBeNull();
-    const groups = document.querySelectorAll('details.type-group');
+    const common = screen.getByRole('region', { name: 'Common' });
+    const rows = within(common).getAllByRole('button');
+    expect(rows.length).toBeGreaterThan(5);
+    expect(rows.length).toBeLessThanOrEqual(16);
+    // the categories are behind one closed "Browse everything" and not even built until opened
+    const browse = document.querySelector('details.type-group') as HTMLDetailsElement;
+    expect(browse.open).toBe(false);
+    expect(browse.querySelectorAll('details.type-group').length).toBe(0);
+  });
+
+  it('lists the categories, collapsed, once Browse everything is opened', () => {
+    open();
+    const browse = document.querySelector('details.type-group') as HTMLDetailsElement;
+    browse.open = true;
+    fireEvent(browse, new Event('toggle'));
+    const groups = browse.querySelectorAll('details.type-group');
     expect(groups.length).toBeGreaterThan(3);
     for (const g of groups) expect((g as HTMLDetailsElement).open).toBe(false);
   });

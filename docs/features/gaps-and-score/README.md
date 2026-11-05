@@ -26,7 +26,8 @@ The Gaps and Score tabs. Both only show what the engine returns for the chosen h
   Nothing sums the two. A store or radio shortfall lists the best choice with "or" alternatives; a shortfall of
   heat or cooking hours lists a heater and its fuel as separate lines. Sort by weakest need first
   or by cheapest cover (the row's own price, unpriced last). The tick opens Quick add with that
-  item and quantity.
+  item and quantity; for equipment (a stove, a heater, a leisure battery) it opens the equipment
+  form for that type instead, never a stock row.
 - **To do.** Plan items with Done, which waits five seconds behind an Undo toast and then writes
   `plans[id].doneAt` and `expires` (from the plan's `expiresMonths`). A "Done" list under To do keeps
   the items already done, each with an Undo that clears `doneAt` and `expires`. Tasks, such as "Fit

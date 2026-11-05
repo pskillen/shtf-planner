@@ -2,7 +2,8 @@ import type { CapabilityId, Document, Packs, StoreId } from '../model';
 import { HORIZONS } from './assumptions';
 import { analyse } from './coverage';
 import { suggestContext } from './gaps';
-import { closeHours, closeStore } from './suggest';
+import { storeExample } from './examples';
+import { closeHours } from './suggest';
 import { fmt } from './context';
 import type { Target, TargetKind } from './targets';
 
@@ -14,7 +15,10 @@ export interface PreviewRow {
   title: string;
   amount: number;
   unit: string;
-  /** What that looks like in the item catalogue: "about 3 × Water can (10 L)". */
+  /**
+   * What that looks like in the shops, worded as an example and never an instruction: "e.g. 4 ×
+   * Bottled water (6 × 2 L)". Food is a short mix of staples; see `examples.ts`.
+   */
   example: string;
 }
 
@@ -70,14 +74,14 @@ export function preview(doc: Document, packs: Packs, asOf: string): PreviewHoriz
       let example: string;
       switch (t.kind) {
         case 'store': {
-          const s = closeStore(ctx, t.store as string, t.amount, 1)[0];
-          example = s ? `about ${s.label}` : `${fmt(t.amount)} ${t.unit}`;
+          const text = storeExample(ctx, t.store as string, t.amount);
+          example = text ? `e.g. ${text}` : `about ${fmt(t.amount)} ${t.unit}`;
           break;
         }
         case 'hours': {
           const s = closeHours(ctx, doc, t.capability, t.amount);
           example = s.length
-            ? `about ${s.map((x) => x.label).join(' and ')}`
+            ? `e.g. ${s.map((x) => x.label).join(' and ')}`
             : `${fmt(t.amount)} hours`;
           break;
         }
@@ -85,10 +89,10 @@ export function preview(doc: Document, packs: Packs, asOf: string): PreviewHoriz
           example = `${fmt(Math.ceil(t.amount))} doses of ${t.label}`;
           break;
         case 'range':
-          example = `a vehicle charged or fuelled to drive ${fmt(t.amount)} km`;
+          example = `about the same as a vehicle charged or fuelled to drive ${fmt(t.amount)} km`;
           break;
         default:
-          example = `one ${t.label} that needs no mains power`;
+          example = `e.g. a wind-up or battery-powered ${t.label}`;
       }
       rows.push({
         capability: t.capability,
