@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@zxing/library": "0.23.0",
+    "onnxruntime-web": "1.20.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-router-dom": "^7.9.0",

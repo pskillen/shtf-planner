@@ -15,6 +15,8 @@ export default defineConfig(({ mode }) => {
   return {
     base: '/',
     build: { target: 'es2022' },
+    // The date reader runs in a module worker (src/scan/ocr/ocr.worker.ts).
+    worker: { format: 'es' },
     plugins: [
       react(),
       VitePWA({
@@ -42,7 +44,13 @@ export default defineConfig(({ mode }) => {
         },
         workbox: {
           // Precache the built app; the PWA serves index.html for every path (client routing).
-          globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest,woff2}'],
+          // That includes the date reader: its runtime wasm (21 MB), the two models and their
+          // character list, so a camera date reads with no network after install.
+          globPatterns: ['**/*.{js,mjs,css,html,svg,png,ico,webmanifest,woff2,wasm,onnx,txt}'],
+          // Workbox skips files over 2 MiB by default; the wasm is 20.7 MiB. Cloudflare Pages
+          // refuses files over 25 MiB, so this stays under that.
+          maximumFileSizeToCacheInBytes: 24 * 1024 * 1024,
+          globIgnores: ['ocr/LICENSE-Apache-2.0.txt'],
           navigateFallback: '/index.html',
         },
       }),
