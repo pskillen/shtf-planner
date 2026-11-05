@@ -42,6 +42,8 @@ export interface ImportSummary {
   assets: number;
   items: number;
   customTypes: number;
+  barcodes: number;
+  scans: number;
   reviews: number;
 }
 
@@ -88,6 +90,8 @@ export function previewImport(text: string): ImportPreview {
       assets: Object.keys(doc.assets).length,
       items: Object.keys(doc.items).length,
       customTypes: Object.keys(doc.customTypes).length,
+      barcodes: Object.keys(doc.barcodes).length,
+      scans: Object.keys(doc.scans).length,
       reviews: Object.keys(doc.reviews).length,
     },
   };

@@ -17,7 +17,7 @@ import {
  * Ids are strings: `crypto.randomUUID()` for instances, `"<packId>:<localId>"` for pack things.
  * Dates are ISO `YYYY-MM-DD`, month-only dates `YYYY-MM`, timestamps ISO strings.
  */
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 /** The deploy targets (the footer shows one; `src/util/build-env.ts` re-exports this type). */
 export const ENVS = ['local', 'preview', 'dev', 'next', 'staging', 'prod'] as const;
@@ -186,12 +186,49 @@ export const ReviewSchema = z.object({
 });
 export type Review = z.infer<typeof ReviewSchema>;
 
+/** A barcode the household has told the app about: which item type it is. Keyed by `normaliseGtin(code)`. */
+export const BarcodeSchema = z.object({
+  /** A pack or custom item type id; never an equipment entry. */
+  typeId: Id,
+  /** What Open Food Facts called it, for display ("Heinz baked beans 415 g"). */
+  name: z.string().optional(),
+  /** First remembered (not updated on every scan: no churn). */
+  seen: IsoDateSchema,
+});
+export type Barcode = z.infer<typeof BarcodeSchema>;
+
+/** What Open Food Facts said about a queued scan, once looked up. */
+export const ProductInfoSchema = z.object({
+  found: z.boolean(),
+  name: z.string().optional(),
+  /** OFF's `quantity` text, e.g. "415 g". */
+  quantity: z.string().optional(),
+  checked: Timestamp,
+});
+export type ProductInfo = z.infer<typeof ProductInfoSchema>;
+
+/** A scan saved for later: the type isn't chosen yet, so it counts towards nothing. */
+export const ScanSchema = z.object({
+  id: Id,
+  code: z.string().regex(/^\d{8,14}$/),
+  qty: z.number().int().min(1),
+  locationId: Id,
+  bestBefore: YearMonthSchema.optional(),
+  scanned: Timestamp,
+  product: ProductInfoSchema.optional(),
+});
+export type Scan = z.infer<typeof ScanSchema>;
+
 export const SettingsSchema = z.object({
   horizonDays: z.union([z.literal(3), z.literal(7), z.literal(14), z.literal(28)]),
   region: RegionSchema,
   packs: z.array(z.string()),
   reviewCadenceMonths: z.union([z.literal(3), z.literal(6)]),
   anonymise: z.boolean(),
+  /** Months ahead (0 to 3) that count as "Expires soon". Absent: 1. Added in schema 3. */
+  expirySoonMonths: z.number().int().min(0).max(3).optional(),
+  /** Months ahead (1 to 12) that count as "Before next check". Absent: 3. Added in schema 3. */
+  expiryCheckMonths: z.number().int().min(1).max(12).optional(),
 });
 export type Settings = z.infer<typeof SettingsSchema>;
 
@@ -208,6 +245,10 @@ export const DocumentSchema = z.object({
    * (`withCustomTypes` in `src/packs`). Added in schema 2.
    */
   customTypes: z.record(Id, ItemTypeSchema),
+  /** Remembered barcodes: normalised GTIN to the item type it is. Added in schema 3. */
+  barcodes: z.record(z.string(), BarcodeSchema),
+  /** Scans waiting to be sorted into stock, keyed by id. Added in schema 3. */
+  scans: z.record(Id, ScanSchema),
   /** Minimum level counted for rotating locations, keyed by `floorKey`. */
   floors: z.record(z.string(), z.number().min(0)),
   /** Keyed by pack-namespaced plan item id. */
@@ -240,6 +281,8 @@ export function emptyDocument(env: Env, now: string = new Date().toISOString()):
     assets: {},
     items: {},
     customTypes: {},
+    barcodes: {},
+    scans: {},
     floors: {},
     plans: {},
     reviews: {},

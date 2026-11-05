@@ -194,6 +194,15 @@ export function biggarDocument(): Document {
     assets: Object.fromEntries(assets.map((a) => [a.id, a])),
     items: Object.fromEntries(items.map((i) => [i.id, i])),
     customTypes: {},
+    barcodes: {
+      // A known barcode for the e2e: a made-up display name on a real pack type.
+      '3017620422003': {
+        typeId: `${ITEMS}:peanut-butter-340g`,
+        name: 'Test spread 400 g',
+        seen: '2026-10-01',
+      },
+    },
+    scans: {},
     floors: {
       [floorKey(L.pantry, `${ITEMS}:tinned-food`)]: 2,
       [floorKey(L.pantry, `${ITEMS}:dried-pasta`)]: 1,

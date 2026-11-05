@@ -265,7 +265,7 @@ test('export downloads JSON and YAML; importing YAML replaces the household and 
   ]);
   expect(yamlDownload.suggestedFilename()).toMatch(/^household-local-\d{4}-\d{2}-\d{2}\.yaml$/);
   const yaml = readFileSync(await yamlDownload.path(), 'utf8');
-  expect(yaml).toContain('schemaVersion: 2');
+  expect(yaml).toContain('schemaVersion: 3');
   expect(yaml).toContain('name: Alex');
 
   // Import: a smaller household, from the YAML export edited, replaces the loaded one.

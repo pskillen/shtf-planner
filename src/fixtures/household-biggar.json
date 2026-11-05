@@ -75,6 +75,13 @@
       "typeId": "assets-base:solar-pv"
     }
   },
+  "barcodes": {
+    "3017620422003": {
+      "name": "Test spread 400 g",
+      "seen": "2026-10-01",
+      "typeId": "items-base:peanut-butter-340g"
+    }
+  },
   "customTypes": {},
   "floors": {
     "loc-pantry|items-base:dried-pasta": 1,
@@ -353,7 +360,7 @@
       "plans-base": 1,
       "regions": 3
     },
-    "schemaVersion": 2
+    "schemaVersion": 3
   },
   "plans": {
     "plans-base:documents": {
@@ -364,6 +371,7 @@
     }
   },
   "reviews": {},
+  "scans": {},
   "settings": {
     "anonymise": false,
     "horizonDays": 3,

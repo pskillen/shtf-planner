@@ -34,6 +34,14 @@ the same shape as a pack's item type. `withCustomTypes` / `packsFor` (`src/packs
 them into the packs as a pseudo-pack `custom`, so the engine and the screens find them like any
 other item type. The pseudo-pack is not in `packs.all` and not a Settings toggle.
 
+`barcodes` and `scans` (schema 3) belong to scanning (`docs/features/scanning/`). `barcodes` is the
+household's memory of which item type a barcode is, keyed by the normalised GTIN (a UPC-A and its
+EAN-13 form are one key), with the name Open Food Facts gave it and the date first remembered.
+`scans` holds scans saved for later ("sort later"): a code, quantity, place, best-before, and what
+Open Food Facts said once looked up. A scan counts towards nothing until it is sorted into stock.
+`settings.expirySoonMonths` (0 to 3) and `settings.expiryCheckMonths` (1 to 12) are optional: absent
+means 1 and 3, so no step writes them.
+
 `Env` has six values (`local`, `preview`, `dev`, `next`, `staging`, `prod`) and lives in
 `src/model/document.ts`; `src/util/build-env.ts` re-exports the type, so there is one source.
 
@@ -58,8 +66,11 @@ one member never clobbers another.
 
 ## Migrations and old clients
 
-`SCHEMA_VERSION` is 2 (schema 2 added `customTypes`: the step `custom item types` creates the empty
-container). A change to the document's shape adds a `v(n)` to `v(n+1)` step to
+`SCHEMA_VERSION` is 3 (schema 2 added `customTypes`: the step `custom item types` creates the empty
+container; schema 3 added `barcodes` and `scans`: the step `barcodes and scans` creates both empty,
+each under its fixed step client id, so two devices that migrate before they sync share one map of
+each). A device still on a schema-2 build that receives a schema-3 document goes read-only with
+"update this device", so take the update toast on every phone. A change to the document's shape adds a `v(n)` to `v(n+1)` step to
 `MIGRATIONS` and bumps `SCHEMA_VERSION`. Rules:
 
 - **Steps are idempotent per record**: running one on a record already in the new shape changes

@@ -67,6 +67,8 @@ export function isBlank(doc: Document): boolean {
     Object.keys(doc.plans).length === 0 &&
     Object.keys(doc.reviews).length === 0 &&
     Object.keys(doc.customTypes).length === 0 &&
+    Object.keys(doc.barcodes).length === 0 &&
+    Object.keys(doc.scans).length === 0 &&
     doc.household.members.length === 0 &&
     doc.household.pets.length === 0
   );
@@ -80,6 +82,8 @@ const COLLECTIONS = [
   'plans',
   'reviews',
   'customTypes',
+  'barcodes',
+  'scans',
 ] as const;
 const LISTS = ['members', 'pets'] as const;
 
@@ -144,6 +148,8 @@ const NOUNS: Record<string, string> = {
   plans: 'Plan item',
   reviews: 'Review',
   customTypes: 'Custom item',
+  barcodes: 'Barcode',
+  scans: 'Scan to sort',
   'household.members': 'Member',
   'household.pets': 'Pet',
   home: 'Home',
@@ -159,6 +165,8 @@ function describe(key: string, record: unknown): { noun: string; title: string }
   if (collection === 'settings') return { noun, title: 'Your settings' };
   const r = isObj(record) ? record : {};
   const name = typeof r.name === 'string' && r.name ? r.name : undefined;
+  if (collection === 'barcodes') return { noun, title: name ?? id };
+  if (collection === 'scans') return { noun, title: typeof r.code === 'string' ? r.code : id };
   const typeId = typeof r.typeId === 'string' ? r.typeId : undefined;
   return { noun, title: name ?? typeId ?? id };
 }

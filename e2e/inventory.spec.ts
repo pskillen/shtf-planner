@@ -148,7 +148,7 @@ test('Quick add: ten items, two of them same-again and one custom, each in few t
   await page.evaluate(() => (window as unknown as { __shtf: Shtf }).__shtf.flush());
   await page.goto('/app/stores?debug=1');
   const after = await doc(page);
-  expect(after.meta.schemaVersion).toBe(2);
+  expect(after.meta.schemaVersion).toBe(3);
   expect(Object.values(after.customTypes).map((t) => t.name)).toEqual(["Gran's soup"]);
   expect(Object.values(after.customTypes)[0]!.gives).toEqual([{ store: 'foodKcal', amount: 600 }]);
 

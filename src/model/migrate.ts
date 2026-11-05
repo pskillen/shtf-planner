@@ -44,8 +44,24 @@ const addCustomTypes: MigrationStep = {
   up: (raw) => ({ ...raw, customTypes: (raw.customTypes as Raw | undefined) ?? {} }),
 };
 
+/**
+ * Schema 3 adds `barcodes` (remembered barcode to item type) and `scans` (scans waiting to be
+ * sorted). Like schema 2 it only creates the empty containers; the store writes each under a fixed
+ * client id. The two optional expiry settings are absent until set, so no step writes them.
+ */
+const addScanning: MigrationStep = {
+  from: 2,
+  to: 3,
+  name: 'barcodes and scans',
+  up: (raw) => ({
+    ...raw,
+    barcodes: (raw.barcodes as Raw | undefined) ?? {},
+    scans: (raw.scans as Raw | undefined) ?? {},
+  }),
+};
+
 /** Ordered `v(n)` to `v(n+1)` steps. */
-export const MIGRATIONS: readonly MigrationStep[] = [addCustomTypes];
+export const MIGRATIONS: readonly MigrationStep[] = [addCustomTypes, addScanning];
 
 function versionOf(raw: unknown): number {
   const meta = (raw as { meta?: { schemaVersion?: unknown } } | null)?.meta;
