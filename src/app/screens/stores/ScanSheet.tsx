@@ -72,7 +72,7 @@ export function ScanSheet({
       ) : null}
       {code === null ? (
         <>
-          <p className="muted">Hold the barcode upright in the blue box.</p>
+          <p className="muted">Hold the barcode upright, across the red line.</p>
           <form
             className="number-row"
             onSubmit={(e) => {
