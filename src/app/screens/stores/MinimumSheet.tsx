@@ -1,45 +1,40 @@
 import { useState } from 'react';
-import type { Location } from '../../../model';
+import type { Item, Location } from '../../../model';
 import { minimumKey } from '../../../model';
 import { Sheet } from '../../components/Sheet';
 import { Stepper } from '../../components/Stepper';
 import { isDirty } from '../../components/isDirty';
 
-export interface MinimumRow {
-  itemId: string;
-  name: string;
-  unit: string;
-  /** What is in the place now (packs of any product of this item). */
-  have: number;
-}
-
 /**
- * Minimums for one rotating place: the least kept of each item there. What counts towards the
- * plan is the minimum (up to what is there), not today's stock.
+ * Minimums for one item: the least kept in each rotating place. What counts towards the plan is
+ * the minimum (up to what is there), not today's stock.
  */
 export function MinimumSheet({
-  location,
-  rows,
+  item,
+  locations,
+  haveByPlace,
   minimums,
   onSave,
   onClose,
 }: {
-  location: Location;
-  rows: readonly MinimumRow[];
-  /** The document's `minimums`. */
+  item: Item;
+  /** Rotating places, sorted by name. */
+  locations: readonly Location[];
+  /** Packs of any product of this item currently in each place. */
+  haveByPlace: Readonly<Record<string, number>>;
   minimums: Readonly<Record<string, number>>;
-  /** The new minimum per item id (0 removes it). */
+  /** Minimum per rotating place id (0 removes it). */
   onSave: (next: Record<string, number>) => void;
   onClose: () => void;
 }) {
   const start = Object.fromEntries(
-    rows.map((r) => [r.itemId, minimums[minimumKey(location.id, r.itemId)] ?? 0]),
+    locations.map((l) => [l.id, minimums[minimumKey(l.id, item.id)] ?? 0]),
   );
   const [levels, setLevels] = useState<Record<string, number>>(start);
 
   return (
     <Sheet
-      title={`Always keep at least, in the ${location.name}`}
+      title="Always keep at least"
       onClose={onClose}
       dirty={isDirty(levels, start)}
       actions={
@@ -54,22 +49,25 @@ export function MinimumSheet({
       }
     >
       <p className="muted">
-        The least you always keep. The plan counts this minimum, not what is on the shelf today.
+        {item.name}. The least you always keep in each rotating place. The plan counts this minimum,
+        not what is on the shelf today.
       </p>
-      {rows.length === 0 ? <p className="muted">Nothing is kept here yet.</p> : null}
+      {locations.length === 0 ? (
+        <p className="muted">Add a rotating place under Home → Locations to set minimums.</p>
+      ) : null}
       <ul className="row-list">
-        {rows.map((r) => (
-          <li className="row-item floor-row" key={r.itemId}>
+        {locations.map((l) => (
+          <li className="row-item floor-row" key={l.id}>
             <div className="row-main">
-              <strong>{r.name}</strong>
+              <strong>{l.name}</strong>
               <span className="muted">
-                {r.have} in stock · {r.unit}
+                {haveByPlace[l.id] ?? 0} in stock · {item.unit}
               </span>
             </div>
             <Stepper
-              label={`Minimum for ${r.name}`}
-              value={levels[r.itemId] ?? 0}
-              onChange={(n) => setLevels({ ...levels, [r.itemId]: n })}
+              label={`Minimum for ${item.name} in the ${l.name}`}
+              value={levels[l.id] ?? 0}
+              onChange={(n) => setLevels({ ...levels, [l.id]: n })}
             />
           </li>
         ))}

@@ -15,12 +15,18 @@ afterEach(() => {
 });
 
 const tick = (ms: number) => act(() => void vi.advanceTimersByTime(ms));
-const edit = () => screen.getByRole('button', { name: 'Edit Water can 10 L' });
+
+const showWaterCan = () => {
+  fireEvent.change(screen.getByLabelText('Search stock'), { target: { value: 'water can' } });
+};
+
+const edit = () => screen.getByRole('button', { name: 'Edit 2 Water can 10 L in Garage' });
 
 describe('the Stores edit sheet', () => {
   it('saves a new quantity', () => {
     const s = liveStore(biggarDocument());
     render(s.wrap(<StoresScreen />));
+    showWaterCan();
     fireEvent.click(edit());
     fireEvent.click(screen.getByRole('button', { name: /^One more: / }));
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
@@ -31,13 +37,13 @@ describe('the Stores edit sheet', () => {
   it('stops the stepper at a quarter pack: deleting is the way to zero', () => {
     const s = liveStore(biggarDocument());
     render(s.wrap(<StoresScreen />));
+    showWaterCan();
     fireEvent.click(edit());
+    fireEvent.click(screen.getByRole('button', { name: /^One fewer: / }));
+    fireEvent.click(screen.getByRole('radio', { name: '¼' }));
+    fireEvent.click(screen.getByRole('button', { name: /^One fewer: / }));
     const fewer = screen.getByRole('button', { name: /^One fewer: / });
-    for (let n = 0; n < 8; n++) {
-      if ((fewer as HTMLButtonElement).disabled) break;
-      fireEvent.click(fewer);
-    }
-    expect((screen.getByLabelText(/, number$/) as HTMLInputElement).value).toBe('0.25');
+    expect(screen.getByRole('radio', { name: '¼' }).getAttribute('aria-checked')).toBe('true');
     expect((fewer as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     expect(s.doc().stock['stock-can']!.qty).toBe(0.25);
@@ -46,9 +52,10 @@ describe('the Stores edit sheet', () => {
   it('Delete hides the row with an undo toast and removes it after five seconds', () => {
     const s = liveStore(biggarDocument());
     render(s.wrap(<StoresScreen />));
+    showWaterCan();
     fireEvent.click(edit());
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
-    expect(screen.queryByRole('button', { name: 'Edit Water can 10 L' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Edit .*Water can 10 L in Garage/ })).toBeNull();
     expect(screen.getByRole('status').textContent).toContain('deleted');
     expect(s.doc().stock['stock-can']).toBeDefined();
     tick(5100);
@@ -58,6 +65,7 @@ describe('the Stores edit sheet', () => {
   it('Undo after Delete brings the row back and keeps the stock', () => {
     const s = liveStore(biggarDocument());
     render(s.wrap(<StoresScreen />));
+    showWaterCan();
     fireEvent.click(edit());
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
     fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
@@ -67,19 +75,32 @@ describe('the Stores edit sheet', () => {
   });
 });
 
-describe('the Stores floor sheet', () => {
-  it('saves a changed floor, and a floor taken to 0 is removed', () => {
+describe('the Stores minimum sheet', () => {
+  it('saves a changed minimum, and a minimum taken to 0 is removed', () => {
     const s = liveStore(biggarDocument());
     render(s.wrap(<StoresScreen />));
-    fireEvent.click(screen.getByRole('button', { name: 'Set minimums' }));
-    const sheet = screen.getByRole('dialog');
-    fireEvent.click(within(sheet).getByRole('button', { name: /^One more: Minimum for UHT milk/ }));
+    fireEvent.change(screen.getByLabelText('Place filter'), { target: { value: 'loc-pantry' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Set a minimum' }));
+    const pick = screen.getByRole('dialog', { name: 'Set a minimum' });
+    fireEvent.click(within(pick).getByRole('button', { name: /^UHT milk/i }));
+    let sheet = screen.getByRole('dialog');
+    fireEvent.click(
+      within(sheet).getByRole('button', { name: /^One more: Minimum for UHT milk in the Pantry/ }),
+    );
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Save minimums' }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Set a minimum' }));
+    fireEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: /Dried pasta/i }),
+    );
+    sheet = screen.getByRole('dialog');
     const pasta = within(sheet).getByRole('button', {
-      name: /^One fewer: Minimum for Dried pasta/,
+      name: /^One fewer: Minimum for Dried pasta in the Pantry/,
     });
     fireEvent.click(pasta);
     fireEvent.click(pasta);
     fireEvent.click(within(sheet).getByRole('button', { name: 'Save minimums' }));
+
     const mins = s.doc().minimums;
     expect(mins['loc-pantry|items-base:uht-milk']).toBe(2);
     expect(mins['loc-pantry|items-base:dried-pasta']).toBeUndefined();
@@ -89,10 +110,15 @@ describe('the Stores floor sheet', () => {
   it('writes nothing on Cancel', () => {
     const s = liveStore(biggarDocument());
     render(s.wrap(<StoresScreen />));
-    fireEvent.click(screen.getByRole('button', { name: 'Set minimums' }));
-    fireEvent.click(screen.getByRole('button', { name: /^One more: Minimum for UHT milk/ }));
+    fireEvent.change(screen.getByLabelText('Place filter'), { target: { value: 'loc-pantry' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Set a minimum' }));
+    const pick = screen.getByRole('dialog', { name: 'Set a minimum' });
+    fireEvent.click(within(pick).getByRole('button', { name: /^UHT milk/i }));
+    fireEvent.click(
+      screen.getByRole('button', { name: /^One more: Minimum for UHT milk in the Pantry/ }),
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
-    expect(s.labels).not.toContain('set floors');
+    expect(s.labels).not.toContain('set minimums');
   });
 });
 
@@ -116,9 +142,9 @@ describe('the Stores search', () => {
     const s = liveStore(doc);
     render(s.wrap(<StoresScreen />));
     fireEvent.change(screen.getByLabelText('Search stock'), { target: { value: 'mystery' } });
-    expect(screen.getByRole('button', { name: 'Edit Mystery-Tin' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Edit 1 Mystery-Tin in Shed' })).toBeTruthy();
     fireEvent.change(screen.getByLabelText('Search stock'), { target: { value: 'MYSTERY' } });
-    expect(screen.getByRole('button', { name: 'Edit Mystery-Tin' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Edit 1 Mystery-Tin in Shed' })).toBeTruthy();
   });
 });
 
@@ -127,14 +153,15 @@ describe('the Stores screen markup', () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const s = liveStore(biggarDocument());
     render(s.wrap(<StoresScreen />));
-    expect(screen.getByRole('button', { name: 'Set minimums' })).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Place filter'), { target: { value: 'loc-pantry' } });
+    expect(screen.getByRole('button', { name: 'Set a minimum' })).toBeTruthy();
     expect(error.mock.calls.map((c) => String(c[0]))).toEqual([]);
     error.mockRestore();
   });
 });
 
 describe('best-before words and colours', () => {
-  const rowFor = (name: string) => screen.getByRole('button', { name: `Edit ${name}` });
+  const rowFor = () => screen.getByRole('button', { name: /Edit .*Water can 10 L in Garage/ });
 
   it('shows Expired, Expires soon and Before next check beside the month, never colour alone', () => {
     vi.setSystemTime(new Date(2026, 10, 4, 12));
@@ -142,26 +169,25 @@ describe('best-before words and colours', () => {
     doc.stock['stock-can']!.bestBefore = '2026-10';
     const s = liveStore(doc);
     render(s.wrap(<StoresScreen />));
-    const badge = within(rowFor('Water can 10 L')).getByText(/Oct 2026/);
+    showWaterCan();
+    const badge = within(rowFor()).getByText(/Oct 2026/);
     expect(badge.textContent).toBe('Oct 2026 · Expired');
     expect(badge.className).toContain('bb-expired');
 
     act(() => {
       s.store.change('t', (d) => void (d.stock['stock-can']!.bestBefore = '2026-12'));
     });
-    expect(within(rowFor('Water can 10 L')).getByText(/Dec 2026/).textContent).toBe(
-      'Dec 2026 · Expires soon',
-    );
+    expect(within(rowFor()).getByText(/Dec 2026/).textContent).toBe('Dec 2026 · Expires soon');
     act(() => {
       s.store.change('t', (d) => void (d.stock['stock-can']!.bestBefore = '2027-02'));
     });
-    const check = within(rowFor('Water can 10 L')).getByText(/Feb 2027/);
+    const check = within(rowFor()).getByText(/Feb 2027/);
     expect(check.textContent).toBe('Feb 2027 · Before next check');
     expect(check.className).toContain('bb-check');
     act(() => {
       s.store.change('t', (d) => void (d.stock['stock-can']!.bestBefore = '2027-06'));
     });
-    expect(within(rowFor('Water can 10 L')).getByText(/Jun 2027/).textContent).toBe('Jun 2027');
+    expect(within(rowFor()).getByText(/Jun 2027/).textContent).toBe('Jun 2027');
   });
 
   it('follows the household settings', () => {
@@ -171,8 +197,7 @@ describe('best-before words and colours', () => {
     doc.settings.expirySoonMonths = 3;
     const s = liveStore(doc);
     render(s.wrap(<StoresScreen />));
-    expect(within(rowFor('Water can 10 L')).getByText(/Feb 2027/).textContent).toBe(
-      'Feb 2027 · Expires soon',
-    );
+    showWaterCan();
+    expect(within(rowFor()).getByText(/Feb 2027/).textContent).toBe('Feb 2027 · Expires soon');
   });
 });

@@ -1,41 +1,57 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { minimumKey, type Asset, type Location, type Product, type Stock } from '../../model';
+import { minimumKey, type Asset, type Item, type Location, type Stock } from '../../model';
+import { formatQty, today } from '../../util';
 import { EditArea } from '../components/EditArea';
 import { ExpiryBadge } from '../components/ExpiryBadge';
+import { Sheet } from '../components/Sheet';
 import { useDeferredDelete } from '../components/useDeferredDelete';
+import { CATEGORY_LABEL, EXPIRY_LABEL, labelOf } from '../labels';
 import { useChange, useDocument } from '../state';
 import { usePacks } from '../usePacks';
 import { equipmentEditPath } from './assets/route';
 import { keyAnswer } from './assets/questionnaire';
-import { MinimumSheet, type MinimumRow } from './stores/MinimumSheet';
+import { ItemPicker } from './stores/ItemPicker';
+import { MinimumSheet } from './stores/MinimumSheet';
 import { QuickAdd } from './stores/QuickAdd';
 import { ScansToSort, ScansToSortNote } from './stores/ScansToSort';
 import { StockSheet } from './stores/StockSheet';
+import {
+  batchesForProduct,
+  formatItemMeasureTotal,
+  formatPackTotal,
+  itemIdsInView,
+  locationName,
+  minBadgesForItem,
+  nothingProductIds,
+  orderedItemsInView,
+  productsOfItemInDoc,
+  rotatingPlaces,
+  stocksForItem,
+  sumItemBase,
+  sumProductPacks,
+  totalPacksForItem,
+  useFirstMap,
+  worstExpiryLevel,
+} from './stores/storesGrouping';
 import { useScanQueue } from './stores/useScanQueue';
 import { matchItems, suitabilityWarning } from './stores/stock';
+import { groupItemsForPicker } from './stores/pickerHelpers';
 
-/** One line of the list: a stock batch, or a minimum with nothing on the shelf (`stock` unset). */
-interface Row {
-  key: string;
-  stock?: Stock;
-  product?: Product;
-  itemId?: string;
-  qty: number;
-  /** Product name for a batch; item name for a minimum-only row. */
-  name: string;
-}
-
-/** The Stores tab: everything in stock, grouped by where it is kept. */
+/** The Stores tab: stock grouped by item, product and batch. */
 export function StoresScreen() {
   const doc = useDocument();
   const change = useChange();
   const packs = usePacks();
+  const todayIso = today();
   const [query, setQuery] = useState('');
-  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
+  const [placeFilter, setPlaceFilter] = useState<string | 'all'>('all');
+  const [collapsedCats, setCollapsedCats] = useState<ReadonlySet<string>>(new Set());
+  const [openItems, setOpenItems] = useState<ReadonlySet<string>>(new Set());
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<Stock | null>(null);
-  const [minimumLocationId, setMinimumLocationId] = useState<string | null>(null);
+  const [minimumItem, setMinimumItem] = useState<Item | null>(null);
+  const [pickMinimumItem, setPickMinimumItem] = useState(false);
   const [sorting, setSorting] = useState(false);
   useScanQueue();
 
@@ -52,59 +68,61 @@ export function StoresScreen() {
     return new Set(matchItems(packItems, q).map((t) => t.id));
   }, [packItems, q]);
 
-  const matchesProduct = (product: Product | undefined): boolean => {
+  const locations = useMemo(
+    () => Object.values(doc.locations).sort((a, b) => a.name.localeCompare(b.name)),
+    [doc.locations],
+  );
+  const knownIds = new Set(locations.map((l) => l.id));
+  const useFirst = useFirstMap(doc, packs, todayIso);
+  const rotating = rotatingPlaces(doc);
+
+  const matchesPlaceName = (loc: Location): boolean =>
+    q === '' || loc.name.toLowerCase().includes(q.toLowerCase());
+
+  const matchesItem = (item: Item): boolean => {
     if (q === '') return true;
-    if (!product) return false;
+    if (item.name.toLowerCase().includes(q.toLowerCase())) return true;
+    if (item.countsAs.toLowerCase().includes(q.toLowerCase())) return true;
+    if (matchedItemIds!.has(item.id)) return true;
+    for (const p of productsOfItemInDoc(doc, item.id, placeFilter, remove.pending)) {
+      if (p.name.toLowerCase().includes(q.toLowerCase())) return true;
+    }
+    for (const loc of locations) {
+      if (!loc.name.toLowerCase().includes(q.toLowerCase())) continue;
+      if (totalPacksForItem(doc, item.id, loc.id, remove.pending) > 0) return true;
+      if (doc.minimums[minimumKey(loc.id, item.id)] !== undefined) return true;
+    }
+    return false;
+  };
+
+  const matchesProduct = (product: { name: string; itemId?: string }): boolean => {
+    if (q === '') return true;
     if (product.name.toLowerCase().includes(q.toLowerCase())) return true;
     return product.itemId ? matchedItemIds!.has(product.itemId) : false;
   };
 
-  const matchesItemId = (itemId: string): boolean => {
-    if (q === '') return true;
-    if (matchedItemIds!.has(itemId)) return true;
-    const item = packs.items[itemId];
-    return item
-      ? item.name.toLowerCase().includes(q.toLowerCase())
-      : itemId.toLowerCase().includes(q.toLowerCase());
-  };
+  const placeMatchesSearch =
+    q === '' ||
+    placeFilter === 'all' ||
+    matchesPlaceName(locations.find((l) => l.id === placeFilter)!);
 
-  /** The rows of one place: its stock batches, and for a rotating place a row per minimum with none. */
-  const rowsFor = (location: Location): Row[] => {
-    const rows: Row[] = Object.values(doc.stock)
-      .filter((s) => s.locationId === location.id && !remove.pending.has(s.id))
-      .map((s) => {
-        const product = doc.products[s.productId];
-        return {
-          key: s.id,
-          stock: s,
-          product,
-          itemId: product?.itemId,
-          qty: s.qty,
-          name: product?.name ?? s.productId,
-        };
-      });
-    if (location.kind === 'rotating') {
-      const have = new Set(
-        rows.map((r) => r.itemId).filter((id): id is string => id !== undefined),
-      );
-      for (const key of Object.keys(doc.minimums)) {
-        const [locId, itemId] = key.split('|') as [string, string];
-        if (locId === location.id && !have.has(itemId)) {
-          const item = packs.items[itemId];
-          rows.push({
-            key,
-            itemId,
-            qty: 0,
-            name: item?.name ?? itemId.split(':')[1] ?? itemId,
-          });
-          have.add(itemId);
-        }
-      }
-    }
-    return rows
-      .filter((r) => (r.stock ? matchesProduct(r.product) : matchesItemId(r.itemId!)))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  };
+  const itemIds = itemIdsInView(doc, placeFilter);
+  const orderedItems = orderedItemsInView(packs, itemIds).filter(matchesItem);
+  const nothingIds = nothingProductIds(doc, placeFilter, remove.pending).filter((id) =>
+    matchesProduct(doc.products[id]!),
+  );
+
+  const categoryGroups = useMemo(() => {
+    return groupItemsForPicker(packItems)
+      .map((g) => ({
+        key: `${g.category}|${g.heading}`,
+        label: g.heading
+          ? `${labelOf(CATEGORY_LABEL, g.category)} › ${g.heading}`
+          : labelOf(CATEGORY_LABEL, g.category),
+        items: g.items.filter((i) => orderedItems.some((v) => v.id === i.id)),
+      }))
+      .filter((g) => g.items.length > 0);
+  }, [orderedItems, packItems]);
 
   const equipmentMatches = (a: Asset): boolean => {
     if (q === '') return true;
@@ -112,75 +130,55 @@ export function StoresScreen() {
     return [a.name ?? '', type?.name ?? ''].some((n) => n.toLowerCase().includes(q.toLowerCase()));
   };
 
-  /** The equipment kept in a place, shown read-only: it is edited on the Equipment screen. */
-  const equipmentFor = (location: Location): Asset[] =>
-    Object.values(doc.assets)
-      .filter((a) => a.locationId === location.id)
-      .filter(equipmentMatches)
-      .sort((a, b) => (a.name ?? a.typeId).localeCompare(b.name ?? b.typeId));
-
-  const locations = useMemo(
-    () => Object.values(doc.locations).sort((a, b) => a.name.localeCompare(b.name)),
-    [doc.locations],
-  );
-  const knownIds = new Set(locations.map((l) => l.id));
-  const lost = Object.values(doc.stock).filter(
-    (s) =>
-      !knownIds.has(s.locationId) &&
-      !remove.pending.has(s.id) &&
-      matchesProduct(doc.products[s.productId]),
-  );
-
-  // Equipment with no place, or whose place has gone, so the two screens never hide each other.
-  const unplaced = Object.values(doc.assets)
-    .filter((a) => !a.locationId || !knownIds.has(a.locationId))
-    .filter((a) => equipmentMatches(a))
+  const equipmentRows = Object.values(doc.assets)
+    .filter((a) => {
+      if (!equipmentMatches(a)) return false;
+      if (placeFilter !== 'all') {
+        return a.locationId === placeFilter;
+      }
+      return true;
+    })
     .sort((a, b) => (a.name ?? a.typeId).localeCompare(b.name ?? b.typeId));
 
-  const toggle = (id: string) =>
-    setCollapsed((cur) => {
+  const lost = Object.values(doc.stock).filter((s) => {
+    if (knownIds.has(s.locationId)) return false;
+    if (remove.pending.has(s.id)) return false;
+    if (placeFilter !== 'all') return false;
+    return matchesProduct(doc.products[s.productId] ?? { name: s.productId });
+  });
+
+  const filterLocation = placeFilter === 'all' ? undefined : doc.locations[placeFilter];
+
+  const toggleCat = (key: string) =>
+    setCollapsedCats((cur) => {
       const next = new Set(cur);
-      if (!next.delete(id)) next.add(id);
+      if (!next.delete(key)) next.add(key);
       return next;
     });
 
-  function renderRow(row: Row, location: Location | undefined) {
-    const item = row.itemId ? packs.items[row.itemId] : undefined;
-    const min =
-      location && row.itemId ? doc.minimums[minimumKey(location.id, row.itemId)] : undefined;
-    const warning = item && location ? suitabilityWarning(item, location) : undefined;
-    return (
-      <li className="row-item" key={row.key}>
-        <button
-          type="button"
-          className="row-main"
-          aria-label={`${row.stock ? 'Edit' : 'Set minimum for'} ${row.name}`}
-          onClick={() =>
-            row.stock ? setEditing(row.stock) : location && setMinimumLocationId(location.id)
-          }
-        >
-          <strong>
-            {row.name} {min !== undefined ? <span className="badge">min {min}</span> : null}
-          </strong>
-          <span className="muted">
-            {row.qty} × {item?.unit ?? 'packs'}
-            {row.stock?.bestBefore ? (
-              <>
-                {' · '}
-                <ExpiryBadge bestBefore={row.stock.bestBefore} showMonth />
-              </>
-            ) : null}
-          </span>
-          {warning ? <span className="warn">⚠ {warning}</span> : null}
-        </button>
-      </li>
-    );
-  }
+  const toggleItem = (itemId: string) =>
+    setOpenItems((cur) => {
+      const next = new Set(cur);
+      if (!next.delete(itemId)) next.add(itemId);
+      return next;
+    });
 
-  function renderEquipment(asset: Asset) {
+  const itemOpen = (itemId: string): boolean =>
+    q !== '' || openItems.has(itemId) || (matchedItemIds?.has(itemId) ?? false);
+
+  const haveByPlaceForItem = (itemId: string): Record<string, number> => {
+    const out: Record<string, number> = {};
+    for (const loc of rotating) {
+      out[loc.id] = totalPacksForItem(doc, itemId, loc.id, remove.pending);
+    }
+    return out;
+  };
+
+  const renderEquipment = (asset: Asset) => {
     const type = packs.assets[asset.typeId];
     const name = asset.name || type?.name || asset.typeId;
     const detail = [
+      asset.locationId ? locationName(doc, asset.locationId) : 'No place',
       asset.name && type ? type.name : undefined,
       type ? keyAnswer(type, asset.answers) : undefined,
     ].filter(Boolean);
@@ -194,44 +192,122 @@ export function StoresScreen() {
           <strong>
             {name} <span className="badge">Equipment</span>
           </strong>
-          <span className="muted">{detail.length > 0 ? detail.join(' · ') : 'Equipment'}</span>
+          <span className="muted">{detail.join(' · ')}</span>
         </Link>
       </li>
     );
-  }
+  };
 
-  const minimumLocation = minimumLocationId ? doc.locations[minimumLocationId] : undefined;
-  const minimumRows: MinimumRow[] = minimumLocation
-    ? (() => {
-        const ids = new Set<string>();
-        for (const s of Object.values(doc.stock)) {
-          if (s.locationId === minimumLocation.id) {
-            const itemId = doc.products[s.productId]?.itemId;
-            if (itemId) ids.add(itemId);
-          }
-        }
-        for (const key of Object.keys(doc.minimums)) {
-          const [locId, itemId] = key.split('|') as [string, string];
-          if (locId === minimumLocation.id) ids.add(itemId);
-        }
-        return [...ids]
-          .map((itemId) => ({
-            itemId,
-            name: packs.items[itemId]?.name ?? itemId.split(':')[1] ?? itemId,
-            unit: packs.items[itemId]?.unit ?? 'packs',
-            have: Object.values(doc.stock)
-              .filter(
-                (s) =>
-                  s.locationId === minimumLocation.id &&
-                  doc.products[s.productId]?.itemId === itemId,
-              )
-              .reduce((n, s) => n + s.qty, 0),
-          }))
-          .sort((a, b) => a.name.localeCompare(b.name));
-      })()
-    : [];
+  const renderBatch = (stock: Stock, item: Item | undefined) => {
+    const product = doc.products[stock.productId];
+    const where = locationName(doc, stock.locationId);
+    const warning = item ? suitabilityWarning(item, doc.locations[stock.locationId]!) : undefined;
+    const first =
+      product?.itemId && useFirst.get(product.itemId) === stock.id ? (
+        <strong className="use-first">Use first</strong>
+      ) : null;
+    return (
+      <li className="row-item" key={stock.id}>
+        <button
+          type="button"
+          className="row-main"
+          aria-label={`Edit ${formatQty(stock.qty)} ${product?.name ?? stock.productId} in ${where}`}
+          onClick={() => setEditing(stock)}
+        >
+          <strong>
+            {formatQty(stock.qty)} · {where}
+          </strong>
+          <span className="muted">
+            {stock.bestBefore ? <ExpiryBadge bestBefore={stock.bestBefore} showMonth /> : 'No date'}
+            {first ? <> · {first}</> : null}
+          </span>
+          {warning ? <span className="warn">⚠ {warning}</span> : null}
+        </button>
+      </li>
+    );
+  };
 
-  const empty = Object.keys(doc.stock).length === 0 && Object.keys(doc.minimums).length === 0;
+  const renderItemPanel = (item: Item) => {
+    const products = productsOfItemInDoc(doc, item.id, placeFilter, remove.pending).filter(
+      matchesProduct,
+    );
+    return (
+      <div className="item-panel">
+        <p className="muted counts-as">{item.countsAs}</p>
+        <ul className="row-list">
+          {products.map((product) => {
+            const packsTotal = sumProductPacks(doc, product.id, placeFilter, remove.pending);
+            const batches = batchesForProduct(doc, product.id, placeFilter, remove.pending);
+            return (
+              <li key={product.id}>
+                <div className="row-item">
+                  <Link
+                    className="row-main"
+                    to={`/app/stores/products?open=${product.id}`}
+                    aria-label={`Product list: ${product.name}`}
+                  >
+                    <strong>
+                      {product.name} · {formatPackTotal(packsTotal, item.unit)} ›
+                    </strong>
+                  </Link>
+                </div>
+                <ul className="row-list batch-list">{batches.map((s) => renderBatch(s, item))}</ul>
+              </li>
+            );
+          })}
+        </ul>
+        <EditArea>
+          <button type="button" className="link" onClick={() => setMinimumItem(item)}>
+            Set minimum
+          </button>
+        </EditArea>
+      </div>
+    );
+  };
+
+  const renderItemRow = (item: Item) => {
+    const packsTotal = totalPacksForItem(doc, item.id, placeFilter, remove.pending);
+    const base = sumItemBase(doc, item.id, placeFilter, remove.pending);
+    const measure = formatItemMeasureTotal(item.measure, base);
+    const mins = minBadgesForItem(doc, item.id);
+    const stocks = stocksForItem(doc, item.id, placeFilter, remove.pending);
+    const worstLevel = worstExpiryLevel(stocks, todayIso, doc.settings);
+    const expiryWord = worstLevel && worstLevel !== 'ok' ? EXPIRY_LABEL[worstLevel] : undefined;
+    const open = itemOpen(item.id);
+    return (
+      <li className="row-item" key={item.id}>
+        <button
+          type="button"
+          className="row-main"
+          aria-expanded={open}
+          onClick={() => toggleItem(item.id)}
+        >
+          <strong>
+            {item.name} · {formatPackTotal(packsTotal, item.unit)} · {measure}
+            {mins.map((m) => (
+              <span className="badge" key={m.locationId}>
+                min {m.min} in {m.name}
+              </span>
+            ))}
+            {expiryWord ? <span className={`badge bb bb-${worstLevel}`}>{expiryWord}</span> : null}
+          </strong>
+        </button>
+        {open ? renderItemPanel(item) : null}
+      </li>
+    );
+  };
+
+  const empty =
+    Object.keys(doc.stock).length === 0 &&
+    Object.keys(doc.minimums).length === 0 &&
+    Object.keys(doc.assets).length === 0;
+
+  const showGroups =
+    q === '' ||
+    orderedItems.length > 0 ||
+    nothingIds.length > 0 ||
+    equipmentRows.length > 0 ||
+    lost.length > 0;
 
   return (
     <section className="screen stores">
@@ -245,76 +321,104 @@ export function StoresScreen() {
       {empty ? (
         <p className="muted">Nothing in stock yet. Tap + to add what you have.</p>
       ) : (
-        <div className="field">
-          <input
-            type="search"
-            aria-label="Search stock"
-            placeholder="Search your stock"
-            autoComplete="off"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-        </div>
+        <>
+          <div className="field">
+            <input
+              type="search"
+              aria-label="Search stock"
+              placeholder="Search your stock"
+              autoComplete="off"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
+          {locations.length > 0 ? (
+            <FieldLike label="Place filter">
+              <select
+                aria-label="Place filter"
+                value={placeFilter}
+                onChange={(e) => setPlaceFilter(e.target.value === 'all' ? 'all' : e.target.value)}
+              >
+                <option value="all">All places</option>
+                {locations.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.name}
+                  </option>
+                ))}
+              </select>
+            </FieldLike>
+          ) : null}
+        </>
       )}
+
+      {filterLocation?.kind === 'rotating' && placeMatchesSearch ? (
+        <div className="note rotating-note">
+          This place rotates: the minimum counts, not today’s stock.{' '}
+          <EditArea>
+            <button type="button" className="link" onClick={() => setPickMinimumItem(true)}>
+              Set a minimum
+            </button>
+          </EditArea>
+        </div>
+      ) : null}
+
       {locations.length === 0 && !empty ? (
         <p className="note">Some stock is not in any place. Add places under Home → Locations.</p>
       ) : null}
 
-      {locations.map((l) => {
-        const rows = rowsFor(l);
-        const equipment = equipmentFor(l);
-        if (q !== '' && rows.length === 0 && equipment.length === 0) return null;
-        const open = q !== '' || !collapsed.has(l.id);
+      {!showGroups && q !== '' ? <p className="muted">No stock matches your search.</p> : null}
+
+      {categoryGroups.map((g) => {
+        const open = q !== '' || !collapsedCats.has(g.key);
         return (
-          <section key={l.id} className="store-group" aria-label={l.name}>
+          <section key={g.key} className="store-group" aria-label={g.label}>
             <h2>
               <button
                 type="button"
                 className="group-toggle"
                 aria-expanded={open}
-                onClick={() => toggle(l.id)}
+                onClick={() => toggleCat(g.key)}
               >
-                <span aria-hidden="true">{open ? '▾' : '▸'}</span> {l.name}{' '}
-                <span className="muted">({rows.length + equipment.length})</span>
+                <span aria-hidden="true">{open ? '▾' : '▸'}</span> {g.label}{' '}
+                <span className="muted">({g.items.length})</span>
               </button>
             </h2>
             {open ? (
-              <>
-                {l.kind === 'rotating' ? (
-                  <div className="note rotating-note">
-                    This place rotates: the minimum counts, not today’s stock.{' '}
-                    <EditArea>
-                      <button
-                        type="button"
-                        className="link"
-                        onClick={() => setMinimumLocationId(l.id)}
-                      >
-                        Set minimums
-                      </button>
-                    </EditArea>
-                  </div>
-                ) : null}
-                {rows.length === 0 && equipment.length === 0 ? (
-                  <p className="muted">Nothing here yet.</p>
-                ) : null}
-                {rows.length > 0 ? (
-                  <ul className="row-list">{rows.map((r) => renderRow(r, l))}</ul>
-                ) : null}
-                {equipment.length > 0 ? (
-                  <ul className="row-list" aria-label={`Equipment in ${l.name}`}>
-                    {equipment.map((a) => renderEquipment(a))}
-                  </ul>
-                ) : null}
-              </>
+              <ul className="row-list">{g.items.map((item) => renderItemRow(item))}</ul>
             ) : null}
           </section>
         );
       })}
 
-      {unplaced.length > 0 ? (
-        <section className="store-group" aria-label="Equipment, no place">
-          <h2>Equipment, no place</h2>
-          <ul className="row-list">{unplaced.map((a) => renderEquipment(a))}</ul>
+      {nothingIds.length > 0 ? (
+        <section className="store-group" aria-label="Counts towards nothing">
+          <h2>Counts towards nothing</h2>
+          <ul className="row-list">
+            {nothingIds.map((productId) => {
+              const product = doc.products[productId]!;
+              const batches = batchesForProduct(doc, productId, placeFilter, remove.pending);
+              const packsTotal = sumProductPacks(doc, productId, placeFilter, remove.pending);
+              return (
+                <li key={productId}>
+                  <div className="row-item">
+                    <strong>
+                      {product.name} · {formatPackTotal(packsTotal, 'pack')}
+                    </strong>
+                  </div>
+                  <ul className="row-list batch-list">
+                    {batches.map((s) => renderBatch(s, undefined))}
+                  </ul>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
+
+      {equipmentRows.length > 0 ? (
+        <section className="store-group" aria-label="Equipment">
+          <h2>Equipment</h2>
+          <ul className="row-list">{equipmentRows.map((a) => renderEquipment(a))}</ul>
         </section>
       ) : null}
 
@@ -322,20 +426,14 @@ export function StoresScreen() {
         <section className="store-group" aria-label="Unknown place">
           <h2>Unknown place</h2>
           <ul className="row-list">
-            {lost.map((s) => {
-              const product = doc.products[s.productId];
-              return renderRow(
-                {
-                  key: s.id,
-                  stock: s,
-                  product,
-                  itemId: product?.itemId,
-                  qty: s.qty,
-                  name: product?.name ?? s.productId,
-                },
-                undefined,
-              );
-            })}
+            {lost.map((s) =>
+              renderBatch(
+                s,
+                doc.products[s.productId]?.itemId
+                  ? packs.items[doc.products[s.productId]!.itemId!]
+                  : undefined,
+              ),
+            )}
           </ul>
         </section>
       ) : null}
@@ -353,6 +451,19 @@ export function StoresScreen() {
 
       {adding ? <QuickAdd onClose={() => setAdding(false)} /> : null}
       {sorting ? <ScansToSort onClose={() => setSorting(false)} /> : null}
+      {pickMinimumItem ? (
+        <Sheet title="Set a minimum" onClose={() => setPickMinimumItem(false)}>
+          <ItemPicker
+            searchLabel="Which item?"
+            onItem={(item) => {
+              setPickMinimumItem(false);
+              setMinimumItem(item);
+            }}
+            onProduct={() => undefined}
+            showEquipmentLink={false}
+          />
+        </Sheet>
+      ) : null}
       {editing ? (
         <StockSheet
           key={editing.id}
@@ -377,26 +488,38 @@ export function StoresScreen() {
           onClose={() => setEditing(null)}
         />
       ) : null}
-      {minimumLocation ? (
+      {minimumItem ? (
         <MinimumSheet
-          key={minimumLocation.id}
-          location={minimumLocation}
-          rows={minimumRows}
+          key={minimumItem.id}
+          item={minimumItem}
+          locations={rotating}
+          haveByPlace={haveByPlaceForItem(minimumItem.id)}
           minimums={doc.minimums}
           onSave={(levels) => {
             change('set minimums', (d) => {
-              for (const [itemId, n] of Object.entries(levels)) {
-                const key = minimumKey(minimumLocation.id, itemId);
+              for (const [locId, n] of Object.entries(levels)) {
+                const key = minimumKey(locId, minimumItem.id);
                 if (n > 0) d.minimums[key] = n;
                 else delete d.minimums[key];
               }
             });
-            setMinimumLocationId(null);
+            setMinimumItem(null);
           }}
-          onClose={() => setMinimumLocationId(null)}
+          onClose={() => setMinimumItem(null)}
         />
       ) : null}
       {remove.toast}
     </section>
+  );
+}
+
+function FieldLike({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="field">
+      <label>
+        <span className="field-label">{label}</span>
+        {children}
+      </label>
+    </div>
   );
 }

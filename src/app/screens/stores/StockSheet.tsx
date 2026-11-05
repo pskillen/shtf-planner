@@ -2,9 +2,9 @@ import { useState } from 'react';
 import type { Item, Product, Stock } from '../../../model';
 import { today } from '../../../util';
 import { Field } from '../../components/controls';
+import { QtyField } from '../../components/QtyField';
 import { isDirty } from '../../components/isDirty';
 import { Sheet } from '../../components/Sheet';
-import { Stepper } from '../../components/Stepper';
 import { useDocument } from '../../state';
 import { MonthField } from './MonthField';
 import { suitabilityWarning } from './stock';
@@ -49,10 +49,9 @@ export function StockSheet({
       }
     >
       <Field label={`How many (${item?.unit ?? 'packs'})?`}>
-        <Stepper
+        <QtyField
           label={`How many ${item?.unit ?? 'packs'}`}
           value={row.qty}
-          min={0.25}
           onChange={(qty) => setRow({ ...row, qty })}
         />
       </Field>
