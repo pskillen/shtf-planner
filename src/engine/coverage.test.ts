@@ -50,14 +50,14 @@ describe('coverage: stores from items', () => {
     // 3 tins held, a floor of 2: counted at 2 x 14,000 kcal
     const tins = food.from.find((s) => s.id === `${L.pantry}|items-base:tinned-food`)!;
     expect(tins).toMatchObject({ kind: 'floor', amount: 28000 });
-    expect(tins.note).toMatch(/floor of 2, 3 held/);
+    expect(tins.note).toMatch(/minimum of 2, 3 held/);
   });
 
   it('does not rely on a rotating location with no floor for the type', () => {
     const food = cov(biggarDocument(), 'food:foodKcal');
     const oats = food.from.find((s) => s.id === `${L.pantry}|items-base:porridge-oats`)!;
     expect(oats.amount).toBe(0);
-    expect(oats.note).toMatch(/no floor/);
+    expect(oats.note).toMatch(/no minimum/);
     // the torch in the pantry has no floor either: only the hall and garage torches count
     const light = cov(biggarDocument(), 'light:lumenHours');
     expect(light.amount).toBe(4000);

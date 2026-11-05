@@ -68,12 +68,14 @@ describe('the Stores floor sheet', () => {
   it('saves a changed floor, and a floor taken to 0 is removed', () => {
     const s = liveStore(biggarDocument());
     render(s.wrap(<StoresScreen />));
-    fireEvent.click(screen.getByRole('button', { name: 'Set floors' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Set minimums' }));
     const sheet = screen.getByRole('dialog');
-    fireEvent.click(within(sheet).getByRole('button', { name: /^One more: Floor for UHT milk/ }));
-    const pasta = within(sheet).getByRole('button', { name: /^One fewer: Floor for Dried pasta/ });
+    fireEvent.click(within(sheet).getByRole('button', { name: /^One more: Minimum for UHT milk/ }));
+    const pasta = within(sheet).getByRole('button', {
+      name: /^One fewer: Minimum for Dried pasta/,
+    });
     fireEvent.click(pasta);
-    fireEvent.click(within(sheet).getByRole('button', { name: 'Save floors' }));
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Save minimums' }));
     const floors = s.doc().floors;
     expect(floors['loc-pantry|items-base:uht-milk']).toBe(4);
     expect(floors['loc-pantry|items-base:dried-pasta']).toBeUndefined();
@@ -83,8 +85,8 @@ describe('the Stores floor sheet', () => {
   it('writes nothing on Cancel', () => {
     const s = liveStore(biggarDocument());
     render(s.wrap(<StoresScreen />));
-    fireEvent.click(screen.getByRole('button', { name: 'Set floors' }));
-    fireEvent.click(screen.getByRole('button', { name: /^One more: Floor for UHT milk/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Set minimums' }));
+    fireEvent.click(screen.getByRole('button', { name: /^One more: Minimum for UHT milk/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(s.labels).not.toContain('set floors');
   });
@@ -115,7 +117,7 @@ describe('the Stores screen markup', () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const s = liveStore(biggarDocument());
     render(s.wrap(<StoresScreen />));
-    expect(screen.getByRole('button', { name: 'Set floors' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Set minimums' })).toBeTruthy();
     expect(error.mock.calls.map((c) => String(c[0]))).toEqual([]);
     error.mockRestore();
   });

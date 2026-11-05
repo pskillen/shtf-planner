@@ -82,6 +82,24 @@ describe('Quick add: the search step', () => {
     expect(within(recent).getByRole('button', { name: /Water can/i })).toBeTruthy();
   });
 
+  it('after an add, Next item is the primary button on the right and Add another keeps the form editable', () => {
+    open();
+    fireEvent.change(screen.getByLabelText('What are you adding?'), { target: { value: 'water' } });
+    fireEvent.click(screen.getAllByRole('button', { name: /Water can/i })[0]!);
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+    const another = screen.getByRole('button', { name: 'Add another' });
+    const next = screen.getByRole('button', { name: 'Next item' });
+    expect(another.className).toBe('secondary');
+    expect(next.className).toBe('');
+    expect(another.nextElementSibling).toBe(next);
+    // an edit keeps both buttons, and nothing is added until Add another is tapped
+    fireEvent.click(screen.getByRole('button', { name: /^One more/ }));
+    expect(screen.getByRole('button', { name: 'Add another' })).toBeTruthy();
+    expect(screen.getByTestId('added-count').textContent).toBe('Added this session: 1');
+    fireEvent.click(screen.getByRole('button', { name: 'Add another' }));
+    expect(screen.getByTestId('added-count').textContent).toBe('Added this session: 3');
+  });
+
   it('puts an item where its type already lives, not in the first place by name', () => {
     open();
     fireEvent.change(screen.getByLabelText('What are you adding?'), { target: { value: 'UHT' } });

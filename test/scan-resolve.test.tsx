@@ -153,7 +153,7 @@ describe('Quick add: Scan a barcode', () => {
     render(s.wrap(<QuickAdd onClose={() => undefined} />));
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Scan a barcode' })));
     expect(await screen.findByText(/No camera\./)).toBeTruthy();
-    const box = screen.getByLabelText('Barcode number');
+    const box = screen.getByLabelText('Or type the barcode number');
     fireEvent.change(box, { target: { value: '3017620422004' } });
     fireEvent.click(screen.getByRole('button', { name: 'Use this number' }));
     expect(screen.getByText(/does not look right/)).toBeTruthy();

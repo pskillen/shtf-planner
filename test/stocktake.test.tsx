@@ -150,12 +150,12 @@ describe('Stocktake: the step machine', () => {
 
   it('shows the hint once and remembers it was dismissed', async () => {
     await open();
-    expect(screen.getByText(/Hold the barcode upright in the blue box/)).toBeTruthy();
+    expect(screen.getByText(/Red line for the barcode, yellow box for the date/)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Got it' }));
-    expect(screen.queryByText(/Hold the barcode upright in the blue box/)).toBeNull();
+    expect(screen.queryByText(/Red line for the barcode, yellow box for the date/)).toBeNull();
     cleanup();
     await open();
-    expect(screen.queryByText(/Hold the barcode upright in the blue box/)).toBeNull();
+    expect(screen.queryByText(/Red line for the barcode, yellow box for the date/)).toBeNull();
   });
 });
 
@@ -224,7 +224,9 @@ describe('Undo and Sort later edge cases', () => {
     const doc = biggarDocument();
     doc.locations = {};
     render(liveStore(doc).wrap(<StocktakeScreen />)); // no place, so nothing scans: the number is typed
-    fireEvent.change(screen.getByLabelText('Barcode number'), { target: { value: UNKNOWN } });
+    fireEvent.change(screen.getByLabelText('Or type the barcode number'), {
+      target: { value: UNKNOWN },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Use this number' }));
     const later = await screen.findByRole('button', { name: 'Decide later' });
     expect((later as HTMLButtonElement).disabled).toBe(true);

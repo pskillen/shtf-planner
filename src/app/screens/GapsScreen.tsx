@@ -131,7 +131,7 @@ export function GapsScreen() {
           <EditArea>
             {restock.length > 0 ? (
               <>
-                <h3>Back to your floors</h3>
+                <h3>Back to your minimums</h3>
                 {shoppingList(restock)}
               </>
             ) : null}

@@ -24,7 +24,7 @@ export interface Gap {
   kind: 'acquire' | 'replenish' | 'task' | 'plan';
   /** A critical medication. */
   critical?: boolean;
-  /** For `replenish`: which floor, so a screen can say "3 below its floor of 6". */
+  /** For `replenish`: which floor, so a screen can say "3 below its minimum of 6". */
   restock?: { place: string; typeName: string; floor: number; actual: number };
 }
 

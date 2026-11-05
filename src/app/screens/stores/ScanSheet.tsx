@@ -72,8 +72,7 @@ export function ScanSheet({
       ) : null}
       {code === null ? (
         <>
-          <p className="muted">Hold the barcode upright in the blue box.</p>
-          <h3 className="type-title">Type the barcode number</h3>
+          <p className="muted">Hold the barcode upright, across the red line.</p>
           <form
             className="number-row"
             onSubmit={(e) => {
@@ -85,7 +84,7 @@ export function ScanSheet({
               got(r.code);
             }}
           >
-            <Field label="Barcode number">
+            <Field label="Or type the barcode number">
               <input
                 type="text"
                 inputMode="numeric"

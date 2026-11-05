@@ -716,6 +716,26 @@ table.horizon .big td {
   font-weight: 700;
 }
 
+.stocktake-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  margin: 4px -12px;
+  padding: 0 4px 0 8px;
+  border-left: 4px solid var(--accent);
+  background: var(--surface);
+  font-size: 0.75rem;
+}
+
+.stocktake-hint span {
+  min-width: 0;
+}
+
+.stocktake-hint button {
+  white-space: nowrap;
+}
+
 .note {
   padding: 8px 12px;
   border-left: 4px solid var(--accent);
@@ -1294,6 +1314,22 @@ button.scans-note {
 
 .number-row .field {
   margin: 0;
+}
+
+/* The label takes the whole first line; the box and its button share the second. */
+.number-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 8px;
+  align-items: end;
+}
+
+.number-row .field {
+  display: contents;
+}
+
+.number-row .field-label {
+  grid-column: 1 / -1;
 }
 
 .scan-choices {

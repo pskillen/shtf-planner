@@ -52,10 +52,10 @@ test('the fixture household: the Stores tab groups stock by place, flags the odd
   // grouped by place, with a floor badge on the rotating pantry and a past best-before
   await expect(page.getByRole('region', { name: 'Pantry' })).toBeVisible();
   await expect(
-    page.getByRole('region', { name: 'Pantry' }).getByText('floor 2').first(),
+    page.getByRole('region', { name: 'Pantry' }).getByText('min 2').first(),
   ).toBeVisible();
   await expect(
-    page.getByText('This place rotates: the floor counts, not today’s stock.'),
+    page.getByText('This place rotates: the minimum counts, not today’s stock.'),
   ).toBeVisible();
   await expect(page.locator('.bb-expired').first()).toBeVisible();
   // search narrows across places
@@ -64,7 +64,7 @@ test('the fixture household: the Stores tab groups stock by place, flags the odd
   await expect(page.getByRole('region', { name: 'Shed' })).toHaveCount(0);
 });
 
-test('Quick add: ten items, two of them same-again and one custom, each in few taps', async ({
+test('Quick add: ten items, two of them added again and one custom, each in few taps', async ({
   page,
 }) => {
   await fixture(page);
@@ -111,9 +111,9 @@ test('Quick add: ten items, two of them same-again and one custom, each in few t
   await page.getByLabel('Where does it go?').selectOption({ label: 'Garage' });
   await page.getByRole('button', { name: 'Add', exact: true }).click();
   await expect(page.getByText('Added 1 × Water can (10 L) to Garage')).toBeVisible();
-  // same again, twice
-  await page.getByRole('button', { name: 'Same again' }).click();
-  await page.getByRole('button', { name: 'Same again' }).click();
+  // add another, twice
+  await page.getByRole('button', { name: 'Add another' }).click();
+  await page.getByRole('button', { name: 'Add another' }).click();
   await expect(page.getByTestId('added-count')).toHaveText('Added this session: 3');
   await page.getByRole('button', { name: 'Next item' }).click();
 
@@ -190,9 +190,9 @@ test('a pantry floor counts towards food, and Gaps hands a ticked row to Quick a
     ).find((c) => c.targetId === 'food:foodKcal')!.amount;
   const before = await food();
 
-  await page.getByRole('button', { name: 'Set floors' }).click();
-  await page.getByRole('button', { name: /^One more: Floor for Tinned food/ }).click();
-  await page.getByRole('button', { name: 'Save floors' }).click();
+  await page.getByRole('button', { name: 'Set minimums' }).click();
+  await page.getByRole('button', { name: /^One more: Minimum for Tinned food/ }).click();
+  await page.getByRole('button', { name: 'Save minimums' }).click();
   expect((await food()) - before).toBeGreaterThan(0);
 
   // Ticking a shopping row opens Quick add with that item.

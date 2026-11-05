@@ -333,9 +333,9 @@ export function StocktakeScreen() {
       )}
 
       {hint ? (
-        <p className="note stocktake-hint">
-          Hold the barcode upright in the blue box. Then hold the date in the yellow box. OK saves
-          and goes to the next one.{' '}
+        // One line, so the controls below stay on the screen at 360 x 740.
+        <p className="stocktake-hint">
+          <span>Red line for the barcode, yellow box for the date.</span>
           <button
             type="button"
             className="link"
@@ -361,7 +361,6 @@ export function StocktakeScreen() {
       {phase === 'barcode' ? (
         code === null ? (
           <>
-            <h3 className="type-title">Type the barcode number</h3>
             <form
               className="number-row"
               onSubmit={(e) => {
@@ -373,7 +372,7 @@ export function StocktakeScreen() {
                 got(r.code);
               }}
             >
-              <Field label="Barcode number">
+              <Field label="Or type the barcode number">
                 <input
                   type="text"
                   inputMode="numeric"

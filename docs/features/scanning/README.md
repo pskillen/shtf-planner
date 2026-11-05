@@ -36,12 +36,15 @@ cleanly in Firefox on Android.
 **Stores, Stocktake** (also "Stocktake a pile" in Quick add) opens a full screen under the Stores tab.
 
 1. **Counting into: Pantry.** The place for the whole session; it starts at the last place used and
-   can change at any time (on the date step it is named on the item card instead).
+   can change at any time (on the date step it is named on the item card instead). The first time,
+   a one-line banner ("Red line for the barcode, yellow box for the date." with **Got it**) sits under it; it is one
+   line so the month field and "Use this number" stay above the tab bar at 360 by 740. Got it hides
+   it for good on this device.
 2. **1 BARCODE.** The camera looks continuously. The strip is one size for the whole stocktake: it
    never grows or shrinks between steps. A **red line** across the middle is the barcode target (a
    faint wide box shows what is read). Under the strip: torch, zoom (slider with minus and plus) and
-   tap to focus where the browser has them, else one line saying so. **Type the barcode number**
-   (a field labelled "Barcode number" with **Use this number** beside it), **Find it by name**, **Done**.
+   tap to focus where the browser has them, else one line saying so. A field labelled **Or type the barcode number**
+   (with **Use this number** beside it), **Find it by name**, **Done**.
 3. On a barcode there is one buzz and a brief green tick in the centre of the strip. A **known**
    barcode (remembered by the household) goes straight to the date. An **unknown** one asks Open
    Food Facts (at most four seconds) and shows what it said with up to three likely pack types,

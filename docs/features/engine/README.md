@@ -31,7 +31,7 @@ loader returns (`bundledPacks()`); the engine reads only the packs enabled in `d
    per day, or a fixed `perHousehold` amount. Every matching multiplier multiplies. A rule applies
    if its pack's lowest horizon band is at most the horizon (a 3-day pack still applies at 14
    days); if every banded pack is above the horizon, the lowest-banded one applies anyway.
-2. **Coverage.** What the household has against each target, from items, floors and assets (below).
+2. **Coverage.** What the household has against each target, from items, minimums and assets (below).
 3. **Gaps.** Target minus coverage where positive, with suggestions.
 4. **Score.** Per capability the product of its targets' cover ratios; plans (done / total) to the power 1.5; overall the mean.
 
@@ -39,7 +39,7 @@ A `Target` has a stable `id` (`water:waterL`, `heat:hours`, `medical:medication:
 `plan:<planItemId>`), its `kind` (`store`, `hours`, `medication`, `range`, `device`, `plan`), the
 `rules` that produced it with their sources and contributions, and `fixed` for a one-off amount.
 A `Coverage` row has the same `targetId`, the `amount`, and `from`: where each part came from,
-including things listed but not counted (expired, below the floor, gated) with a `note`.
+including things listed but not counted (expired, below the minimum, gated) with a `note`.
 
 ## What meets each capability
 
@@ -71,9 +71,9 @@ food is 4 x 2,000 kcal a day while Jo is on formula.)
 
 ## Floors and rotating locations
 
-A `rotating` location (a pantry) counts a type at most at its **floor**: `min(held, floor)`. With
-no floor for that type it counts nothing, and says so in `from`. A `stored` location counts what is
-there. A type below its floor also yields a `replenish` gap. The missing stock is part of the target's shortfall, so the store's
+A `rotating` location (a pantry) counts a type at most at its **minimum**: `min(held, minimum)`. With
+no minimum for that type it counts nothing, and says so in `from`. A `stored` location counts what is
+there. A type below its minimum also yields a `replenish` gap. The missing stock is part of the target's shortfall, so the store's
 `acquire` gap is the shortfall less what restocking puts back (none if restocking closes it): the
 two add up to the target's shortfall. Items past their best-before month (`bestBefore` before `asOf`'s month) count
 zero and are listed with `expired: true`. An item with an `ageBand` (nappies, formula, baby food)
@@ -204,7 +204,7 @@ Numbers worth a look, none of them official:
 ## Out of scope
 
 No screens (they call these functions). No review queue (expiry windows, maintenance due), no
-budgeting, no floor suggestions from recounts.
+budgeting, no minimum suggestions from recounts.
 
 ## Known gaps
 

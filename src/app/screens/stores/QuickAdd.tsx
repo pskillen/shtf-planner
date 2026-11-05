@@ -62,8 +62,8 @@ type Step = 'search' | 'form' | 'custom' | 'scan' | 'repick' | 'readdate';
 /**
  * Quick add: search for what you are putting away, pick it, then Add. The place is the last one
  * you used and the quantity is one, so a plain item is a search, a tap on the item and a tap on
- * Add. The sheet stays open afterwards with "Same again" (one more with the same details) and
- * "Next item". Something the packs do not list can be added as a custom item.
+ * Add. The sheet stays open afterwards with "Add another" (the form stays filled and editable, and adds only
+ * when tapped) and "Next item". Something the packs do not list can be added as a custom item.
  */
 export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: QuickAddPrefill }) {
   const doc = useDocument();
@@ -104,6 +104,8 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
   const [bestBefore, setBestBefore] = useState<string | undefined>(undefined);
   const [added, setAdded] = useState(0);
   const [last, setLast] = useState<string | null>(null);
+  /** This item has been added at least once: the form offers "Add another" and "Next item". */
+  const [putOnce, setPutOnce] = useState(false);
   /** The item in the form came from a barcode scan: it is saved as `barcode` and Next item scans again. */
   const [viaScan, setViaScan] = useState(false);
   /** The barcode behind a scanned item, for "Not this item?". */
@@ -204,6 +206,7 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
     setRecent(readRecent());
     setAdded((n) => n + qty);
     setLast(`Added ${qty} × ${type.name} to ${location.name}`);
+    setPutOnce(true);
   }
 
   function pick(t: ItemType, scanned = false): void {
@@ -213,12 +216,14 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
     setQty(1);
     setBestBefore(undefined);
     setLast(null);
+    setPutOnce(false);
     setStep('form');
   }
 
   function next(): void {
     setType(undefined);
     setLast(null);
+    setPutOnce(false);
     setQuery('');
     setStep(viaScan ? 'scan' : 'search');
   }
@@ -319,13 +324,18 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
       onClose={onClose}
       actions={
         step === 'form' ? (
-          last ? (
+          putOnce ? (
             <>
-              <button type="button" className="secondary" onClick={next}>
-                Next item
+              <button
+                type="button"
+                className="secondary"
+                disabled={!location || qty < 1}
+                onClick={put}
+              >
+                Add another
               </button>
-              <button type="button" onClick={put}>
-                Same again
+              <button type="button" onClick={next}>
+                Next item
               </button>
             </>
           ) : (

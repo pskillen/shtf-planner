@@ -21,7 +21,7 @@ The Gaps and Score tabs. Both only show what the engine returns for the chosen h
 
 - **Shopping.** One line per suggestion: "2 × Water can (10 L)", what it closes ("water: 20 L short of
   14 days"), a rough price when the pack has one. Restocking a rotating place comes first,
-  under "Back to your floors" and worded from the floor ("Pantry: UHT milk is 3 below its floor of
+  under "Back to your minimums" and worded from the minimum ("Pantry: UHT milk is 3 below its minimum of
   6", no "short of N days"), then buying; a buy row for the same need says "beyond restocking".
   Nothing sums the two. A store or radio shortfall lists the best choice with "or" alternatives; a shortfall of
   heat or cooking hours lists a heater and its fuel as separate lines. Sort by weakest need first
@@ -61,7 +61,7 @@ days is in bold.
 
 `test/gaps-view.test.ts`, `test/gaps-screen.test.tsx` (Done and its undo),
 `test/score-screen.test.tsx`, `test/equipment-blocked.test.tsx`, `test/stores-helpers.test.ts`,
-`test/stores-screen.test.tsx` (edit sheet, floors, search), `test/quick-add.test.tsx`,
+`test/stores-screen.test.tsx` (edit sheet, minimums, search), `test/quick-add.test.tsx`,
 `test/custom-item.test.ts`, `test/self-hosted-font.test.ts`, `src/engine/score.test.ts` (both scoring
-rules), and Playwright `e2e/inventory.spec.ts` (ten items through Quick add, floors, plan items, a
+rules), and Playwright `e2e/inventory.spec.ts` (ten items through Quick add, minimums, plan items, a
 phone width).

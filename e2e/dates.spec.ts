@@ -212,6 +212,15 @@ for (const size of [
         const box = async (loc: ReturnType<Page['locator']>) => (await loc.boundingBox())!;
         const strip = page.getByTestId('camera-strip');
         const stripBarcode = await box(strip);
+        if (hintShown) {
+          // The one-line hint leaves "Use this number" above the tab bar on the barcode step.
+          const tabTop = (await box(page.getByRole('navigation', { name: 'Main' }))).y;
+          const use = await box(page.getByRole('button', { name: 'Use this number' }));
+          expect(use.y + use.height).toBeLessThanOrEqual(tabTop);
+          await page.screenshot({
+            path: `test-results/p9-tweaks-barcode-${size.width}x${size.height}-hint-on.png`,
+          });
+        }
 
         await show(page, { ean: KNOWN });
         await expect(
@@ -244,15 +253,15 @@ for (const size of [
         const month = page.locator('input[type="month"], input[placeholder="Mar 2027"]');
         const okBtn = page.getByRole('button', { name: 'OK', exact: true });
         const barTop = async () => (await box(okBtn)).y - 8;
-        let monthState = 'above the OK bar';
+        const monthState = 'above the OK bar';
         if (!hintShown) {
           const m = await box(month);
           expect(m.y).toBeGreaterThanOrEqual(0);
           expect(m.y + m.height).toBeLessThanOrEqual((await barTop()) - MONTH_SLACK);
         } else {
+          // The hint is one line, so the month field clears the OK bar with it showing too.
           const m = await box(month);
-          monthState =
-            m.y + m.height <= (await barTop()) + 1 ? 'above the OK bar' : 'below the fold';
+          expect(m.y + m.height).toBeLessThanOrEqual((await barTop()) - MONTH_SLACK);
         }
         // The date box on the screen is 88% by 56% of the strip.
         test.info().annotations.push({
@@ -273,7 +282,7 @@ for (const size of [
         const c = await box(card);
         expect(c.y).toBeGreaterThanOrEqual(after.y);
         expect(c.y + c.height).toBeLessThanOrEqual(after.y + after.height);
-        if (!hintShown) {
+        {
           const m = await box(month);
           expect(m.y + m.height).toBeLessThanOrEqual((await barTop()) - MONTH_SLACK);
         }
