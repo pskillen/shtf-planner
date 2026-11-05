@@ -1,7 +1,7 @@
 import type { Cam } from './camera.ts';
 import type { Engine } from './engines.ts';
 import { type Gray, frameDiff, saturatedShare, sharpness, thumb } from './image.ts';
-import { type MonthYear, fmtMY } from './parse.ts';
+import { type MonthYear, type Suggestion, fmtMY } from './parse.ts';
 import { type ReadResult, readDate } from './reader.ts';
 
 /** What the one status line says. Exactly one at a time. */
@@ -17,7 +17,9 @@ export type LoopOut = {
   res: ReadResult | null; // on 'got' the frame that completed the answer; otherwise the last frame read, with no value
   crop: Gray | null; // the exact frame that produced the result (or the last one read)
   frames: number; // frames actually read (OCR run)
-  skipped: number; // frames skipped as blurred or moving
+  skipped: number; // frames skipped as blurred or moving (= skippedMotion + skippedBlur)
+  skippedMotion: number; // ...of which for motion (the first frame after the tap counts here)
+  skippedBlur: number; // ...of which for blur
   glare: number; // frames not read because the box was washed out by a reflection
   totalMs: number; // from the READ tap to the end
   aimMs: number; // from the READ tap to the start of the first frame that went into the answer
@@ -27,6 +29,7 @@ export type LoopOut = {
   agreed: number; // frames that gave the answer's month and year (1 for a lone confident or unchecked read)
   stop: StopReason | null;
   lone: { value: MonthYear; text: string } | null; // on 'none': a date read once and never confirmed
+  suggestions: (Suggestion & { why: 'seen once' | 'weak read' })[]; // on 'none': up to three plausible month-years to offer as one-tap choices
 };
 
 export type ScanOpts = {
@@ -55,13 +58,13 @@ export const GLARE_MAX = 0.65;
 const MAX_GLARE_RUN = 25;
 
 /** A frame is "moving" when its thumbnail differs this much from the last one (mean grey levels, 0..255). */
-export const MOVING_DIFF = 12;
+export const MOVING_DIFF = 18; // round 4a: was 12; the owner's Chrome stocktake skipped 11-29 frames an item
 /** A frame is "blurred" when it is this much less sharp than the sharpest frame so far in this scan. */
-export const BLUR_RATIO = 0.65;
+export const BLUR_RATIO = 0.5; // round 4a: was 0.65
 /** Mean edge strength below this means there is nothing to read in the box. */
 export const FLAT_SHARPNESS = 2;
 /** Never skip more than this many frames in a row: read one anyway so a shaky hand can't starve the loop. */
-const MAX_SKIPS = 12;
+const MAX_SKIPS = 4; // round 4a: was 12
 
 /** Resolves after the next paint (or 60 ms, in a background tab where rAF does not fire). */
 const paint = () => new Promise<void>((r) => { const t = setTimeout(r, 60); requestAnimationFrame(() => { clearTimeout(t); setTimeout(r, 0); }); });
@@ -80,10 +83,11 @@ export async function scanUntil(
   const t0 = performance.now();
   const needAgree = (opts.needAgree ?? false) && timeoutMs > 0; // one tapped read (auto off) is one frame: nothing to agree with
   const readOpts = opts.rotations ? { rotations: opts.rotations } : {};
-  let frames = 0, skipped = 0, glare = 0, glareRun = 0, skipRun = 0, best = 0, prev: Gray | null = null;
+  let frames = 0, skipped = 0, skippedMotion = 0, skippedBlur = 0, glare = 0, glareRun = 0, skipRun = 0, best = 0, prev: Gray | null = null;
   let last: Gray | null = null, lastRes: ReadResult | null = null;
   // month-year -> the frames that read it, so the second one can complete the answer
   const seen = new Map<number, { v: MonthYear; n: number; firstStart: number; computeMs: number; text: string }>();
+  const weak = new Map<string, { s: Suggestion; n: number }>(); // weak runs over all frames
   let pending: string | undefined; // a date read once, waiting for company
   const gate = timeoutMs > 0; // a single tapped read (no auto-retry) reads whatever frame it gets
   const say = (s: ScanStatus) => onStatus?.(s, { frames, skipped, seen: pending });
@@ -93,7 +97,7 @@ export async function scanUntil(
     last = crop;
     const th = thumb(crop);
     const sharp = sharpness(crop);
-    best = Math.max(best * 0.98, sharp);
+    best = Math.max(best * 0.9, sharp); // round 4a: was 0.98, so one sharp frame made every later one look blurred for ~35 frames
     const first = !prev; // the tap itself shakes the phone: look at one frame to measure motion before reading anything
     const moving = prev ? frameDiff(prev, th) > MOVING_DIFF : false;
     const blurred = sharp < best * BLUR_RATIO;
@@ -109,6 +113,7 @@ export async function scanUntil(
     } else if (gate && (first || moving || blurred) && skipRun < MAX_SKIPS) {
       glareRun = 0;
       skipped++; skipRun++;
+      if (first || moving) skippedMotion++; else skippedBlur++;
       say('hold');
     } else {
       skipRun = 0; glareRun = 0;
@@ -118,11 +123,12 @@ export async function scanUntil(
       const res = await readDate(engine, crop, { maxMs: 3000, ...readOpts });
       frames++;
       lastRes = res;
+      for (const x of res.suggestions) { const e = weak.get(fmtMY(x)); if (e) e.n++; else weak.set(fmtMY(x), { s: x, n: 1 }); }
       if (abort()) break; // the owner moved on while this frame was being read: drop the result
       if (res.value) {
         const now = performance.now();
         const done = (stop: StopReason, agreed: number, aim: number, compute: number): LoopOut =>
-          ({ outcome: 'got', res, crop, frames, skipped, glare, totalMs: now - t0, aimMs: aim - t0, computeMs: compute, ms: now - t0, aborted: false, agreed, stop, lone: null });
+          ({ outcome: 'got', res, crop, frames, skipped, glare, skippedMotion, skippedBlur, totalMs: now - t0, aimMs: aim - t0, computeMs: compute, ms: now - t0, aborted: false, agreed, stop, lone: null, suggestions: [] });
         if (!needAgree) return done('single', 1, tFrame, res.ms);
         const k = res.value.year * 12 + res.value.month;
         const e = seen.get(k) ?? { v: res.value, n: 0, firstStart: tFrame, computeMs: 0, text: res.text };
@@ -143,9 +149,13 @@ export async function scanUntil(
   // the last frame's read, minus its date: anything left unconfirmed is reported as `lone`, never as an answer
   const lone = [...seen.values()].sort((a, b) => b.n - a.n)[0];
   const rest = lastRes ? { ...lastRes, value: null, yearAssumed: false, expired: false } : null;
+  const sugg: LoopOut['suggestions'] = [];
+  const addS = (x: Suggestion, why: 'seen once' | 'weak read') => { if (!sugg.some((y) => y.year === x.year && y.month === x.month)) sugg.push({ ...x, why }); };
+  for (const e of seen.values()) addS({ ...e.v, text: e.text.replace(/\s+/g, ' ').slice(0, 30), expired: e.v.year * 12 + e.v.month < new Date().getFullYear() * 12 + new Date().getMonth() + 1 }, 'seen once');
+  [...weak.values()].sort((a, b) => b.n - a.n).forEach((e) => addS(e.s, 'weak read'));
   return {
-    outcome: aborted ? 'stopped' : 'none', res: rest, crop: last, frames, skipped, glare, totalMs: total, aimMs: total, computeMs: lastRes?.ms ?? 0, ms: total, aborted,
-    agreed: 0, stop: null, lone: lone ? { value: lone.v, text: lone.text } : null,
+    outcome: aborted ? 'stopped' : 'none', res: rest, crop: last, frames, skipped, skippedMotion, skippedBlur, glare, totalMs: total, aimMs: total, computeMs: lastRes?.ms ?? 0, ms: total, aborted,
+    agreed: 0, stop: null, lone: lone ? { value: lone.v, text: lone.text } : null, suggestions: sugg.slice(0, 3),
   };
 }
 

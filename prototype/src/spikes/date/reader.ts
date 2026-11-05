@@ -2,13 +2,14 @@
 // parse each OCR text, stop at the first confident parse. Used by the UI and by the desktop bench.
 import type { Engine } from './engines.ts';
 import { type Gray, VARIANTS, type Variant, rotate } from './image.ts';
-import { type DateHit, type MonthYear, parseDates } from './parse.ts';
+import { fmtMY, type DateHit, type MonthYear, type Suggestion, parseDates } from './parse.ts';
 
 export type Try = { variant: string; rot: number; text: string; conf: number; hit: DateHit | null; ms: number };
 export type ReadResult = {
   value: MonthYear | null;
   yearAssumed: boolean; // day and month were printed, the year was filled in
   expired: boolean; // the date read is in the past (up to 2 years back)
+  suggestions: Suggestion[]; // weak date-like runs seen in any pass, most often seen first (never a result)
   confidence: number; // 0..1, combined
   text: string; // raw OCR text of the winning try (or the first non-empty)
   votes: number;
@@ -38,6 +39,7 @@ export async function readDate(engine: Engine, crop: Gray, o: ReadOpts = {}): Pr
   const maxMs = o.maxMs ?? 4000;
   const need = o.needVotes ?? 2;
   const tries: Try[] = [];
+  const sugg = new Map<string, { s: Suggestion; n: number }>();
   const tally = new Map<number, { v: MonthYear; votes: number; conf: number; text: string; assumed: boolean; expired: boolean; sure: boolean }>();
   let winner: { v: MonthYear; votes: number; conf: number; text: string; assumed: boolean; expired: boolean; sure: boolean } | undefined;
 
@@ -48,6 +50,7 @@ export async function readDate(engine: Engine, crop: Gray, o: ReadOpts = {}): Pr
       const img = v.apply(rotate(crop, rot));
       const out = await engine.read(img);
       const p = parseDates(out.text, o.now);
+      for (const x of p.suggestions) { const e = sugg.get(fmtMY(x)); if (e) e.n++; else sugg.set(fmtMY(x), { s: x, n: 1 }); }
       tries.push({ variant: v.name, rot, text: out.text, conf: out.conf, hit: p.best, ms: performance.now() - t1 });
       if (!p.best) continue;
       const k = p.best.year * 12 + p.best.month;
@@ -65,7 +68,8 @@ export async function readDate(engine: Engine, crop: Gray, o: ReadOpts = {}): Pr
   }
   const ms = performance.now() - t0;
   const first = tries.find((t) => t.text)?.text ?? '';
-  const base = { tries, variants: tries.length, rotations: rotations.length, ms, engine: engine.name };
+  const suggestions = [...sugg.values()].sort((a, b) => b.n - a.n).map((e) => e.s).slice(0, 3);
+  const base = { suggestions, tries, variants: tries.length, rotations: rotations.length, ms, engine: engine.name };
   if (!winner) return { value: null, yearAssumed: false, expired: false, confidence: 0, text: first, votes: 0, ...base };
   // Disagreeing reads: lower the confidence. A single unconfirmed, unsure read is capped.
   let c = winner.conf;

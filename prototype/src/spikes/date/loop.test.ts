@@ -62,6 +62,10 @@ const Y = String(NOW_YEAR + 2); // a printed year clear of the parser's limits
   const { out } = await run(Array.from({ length: 40 }, (_, i) => 'BB ' + String((i % 12) + 1).padStart(2, '0') + '/' + Y), { needAgree: true, conf: 0.9, timeoutMs: 700 });
   check('on: disagreeing frames give none', out.outcome === 'none' && out.res?.value === null && !!out.lone, brief(out) + ' lone ' + JSON.stringify(out.lone));
 }
+{ // a bare unlabelled MM/YY is never a result: none, with the month-year offered as a suggestion
+  const { out } = await run(['L2314B 06/' + Y.slice(2)], { needAgree: true, conf: 0.99, timeoutMs: 700 });
+  check('bare MM/YY: none plus a suggestion', out.outcome === 'none' && out.suggestions.some((x) => x.month === 6 && x.year === +Y), brief(out) + JSON.stringify(out.suggestions));
+}
 { // no frame reads anything: none
   const { out } = await run(['nothing here'], { needAgree: true, timeoutMs: 800 });
   check('on: nothing to read', out.outcome === 'none' && !out.lone, brief(out));
@@ -72,6 +76,7 @@ const Y = String(NOW_YEAR + 2); // a printed year clear of the parser's limits
 }
 { // glare: while the box is blown out the frame is not read; it reads once the glare is gone
   const { out, statuses } = await run(['BEST BEFORE 06 10 ' + Y], { needAgree: false, sat: [0.5, 0.5, 0.5, 0] });
+  check('skip counts add up', out.skipped === out.skippedMotion + out.skippedBlur, `${out.skipped} ${out.skippedMotion} ${out.skippedBlur}`);
   check('glare: hint shown, then read', statuses.includes('glare') && out.outcome === 'got' && out.glare >= 1, `${statuses.join(',')} ${brief(out)} glare ${out.glare}`);
 }
 { // a bright white label with dark print: not glare

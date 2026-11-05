@@ -43,6 +43,8 @@ export class Cam {
   private detailsSummary = el('summary');
   private detailsBody = el('pre');
   private ring = el('div');
+  private stepLabel = el('div');
+  mode: 'barcode' | 'date' = 'date';
   /** The framing box as fractions of the visible strip (not of the whole video frame). */
   frac = { x: 0.06, y: 0.22, w: 0.88, h: 0.56 };
   torchOn = false;
@@ -54,8 +56,28 @@ export class Cam {
     this.box.style.cssText = 'position:absolute;border:3px solid #fc0;box-shadow:0 0 0 9999px rgba(0,0,0,.45);border-radius:6px;pointer-events:none;';
     const s = this.box.style;
     s.left = this.frac.x * 100 + '%'; s.top = this.frac.y * 100 + '%'; s.width = this.frac.w * 100 + '%'; s.height = this.frac.h * 100 + '%';
+    this.stepLabel.style.cssText = 'position:absolute;left:6px;top:6px;font-size:20px;font-weight:800;letter-spacing:.5px;padding:2px 10px;border-radius:6px;display:none;pointer-events:none;';
+    this.wrap.append(this.stepLabel);
+    this.wrap.style.boxSizing = 'border-box';
     this.setBoxVisible(true);
     this.buildControls();
+  }
+
+  /**
+   * Stocktake steps look different at a glance: barcode is blue with a wide, short box and a "1 BARCODE" chip; date is yellow with the
+   * taller box and a "2 DATE" chip. `label` false (the date screen on its own) leaves the chip off but still sets the box.
+   */
+  setMode(mode: 'barcode' | 'date', label = true) {
+    this.mode = mode;
+    const c = mode === 'barcode' ? '#2aa8ff' : '#fc0';
+    this.frac = mode === 'barcode' ? { x: 0.04, y: 0.36, w: 0.92, h: 0.28 } : { x: 0.06, y: 0.22, w: 0.88, h: 0.56 };
+    const s = this.box.style;
+    s.left = this.frac.x * 100 + '%'; s.top = this.frac.y * 100 + '%'; s.width = this.frac.w * 100 + '%'; s.height = this.frac.h * 100 + '%';
+    s.borderColor = c;
+    this.wrap.style.border = label ? `5px solid ${c}` : '0';
+    this.stepLabel.textContent = mode === 'barcode' ? '1 BARCODE' : '2 DATE';
+    this.stepLabel.style.background = c; this.stepLabel.style.color = '#001';
+    this.stepLabel.style.display = label ? 'block' : 'none';
   }
 
   setBoxVisible(v: boolean) {

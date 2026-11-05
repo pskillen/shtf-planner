@@ -4,7 +4,8 @@ import { el } from '../../ui';
 import { type Gray } from './image.ts';
 import { grayToCanvas } from './camera.ts';
 import { type ScanStatus, type StatusInfo } from './read-loop.ts';
-import { type MonthYear, fmtMY } from './parse.ts';
+import { type MonthYear, type Suggestion, fmtMY } from './parse.ts';
+import { expiryBadge, expiryLook } from './expiry.ts';
 
 const LOOK: Record<ScanStatus, { text: string; bg: string; fg: string }> = {
   ready: { text: 'Ready', bg: '#dde6f0', fg: '#123' },
@@ -54,13 +55,10 @@ export function resultCard(opts: { crop: Gray | null; value: MonthYear | null; y
   const right = el('div');
   right.style.cssText = 'flex:1;min-width:0;';
   const v = el('div', { textContent: opts.value ? fmtMY(opts.value) : '--/----' });
-  v.style.cssText = 'font-size:38px;font-weight:700;line-height:1.1;' + (opts.expired ? 'color:#b36b00;' : '');
+  const look = opts.value ? expiryLook(opts.value) : null;
+  v.style.cssText = 'font-size:38px;font-weight:700;line-height:1.1;' + (look && look.level !== 'ok' ? `color:${look.level === 'check' ? '#a05a00' : '#c0262d'};` : '');
   right.append(v);
-  if (opts.expired) {
-    const x = el('div', { textContent: 'expired' });
-    x.style.cssText = 'font-size:14px;font-weight:700;color:#fff;background:#d98a00;border-radius:6px;padding:1px 8px;display:inline-block;';
-    right.append(x);
-  }
+  if (opts.value) { const b = expiryBadge(opts.value); b.style.margin = '2px 0'; right.append(b); }
   if (opts.yearAssumed) {
     const y = el('div', { textContent: 'year assumed' });
     y.style.cssText = 'font-size:14px;font-weight:700;color:#a40;';
@@ -81,4 +79,24 @@ export function smallCrop(g: Gray, maxW = 120): Gray {
   const o = { w, h, d: new Uint8ClampedArray(w * h) };
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) o.d[y * w + x] = g.d[Math.min(g.h - 1, Math.floor(y / k)) * g.w + Math.min(g.w - 1, Math.floor(x / k))];
   return o;
+}
+
+/** Up to three plausible month-years as one-tap buttons, best first, each with its expiry colour. Nothing is saved until one is tapped. */
+export function suggestionRow(list: (Suggestion & { why?: string })[], onPick: (s: Suggestion) => void) {
+  const box = el('div');
+  if (!list.length) return box;
+  box.style.cssText = 'margin:4px 0;';
+  box.append(el('div', { textContent: 'Is it one of these? (tap to use)', style: 'font-size:13px;font-weight:700;' } as any));
+  const row = el('div');
+  row.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;';
+  for (const s of list) {
+    const l = expiryLook(s);
+    const b = el('button', { textContent: `${fmtMY(s)}  ${l.word === 'OK' ? '' : l.word.toLowerCase()}`.trim() });
+    b.title = `from "${s.text}"`;
+    b.style.cssText = `font-size:17px;font-weight:700;padding:8px 12px;min-height:44px;border:0;border-radius:8px;background:${l.bg};color:${l.fg};`;
+    b.onclick = () => onPick(s);
+    row.append(b);
+  }
+  box.append(row);
+  return box;
 }

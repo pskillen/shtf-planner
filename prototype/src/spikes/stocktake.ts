@@ -6,18 +6,20 @@ import { type Gray } from './date/image.ts';
 import { ENGINE_LABEL, type EngineId, getEngine } from './date/ocr-service.ts';
 import { type MonthYear, addMonths, fmtMY } from './date/parse.ts';
 import { copyText, load, median, p90, save, scanUntil } from './date/read-loop.ts';
-import { resultCard, statusLine, styleBtn } from './date/widgets.ts';
+import { resultCard, statusLine, styleBtn, suggestionRow } from './date/widgets.ts';
+import { expiryBadge, expiryLook, expirySettingsEl } from './date/expiry.ts';
+import { type Suggestion } from './date/parse.ts';
 
 // Screen F: mock stocktake, timed. scan barcode -> read date -> outcome -> Next. One camera stream for the whole session.
 
-type Outcome = 'ok' | 'date_misread' | 'date_unreadable' | 'barcode_unreadable';
+type Outcome = 'ok' | 'date_misread' | 'date_unreadable' | 'barcode_unreadable' | 'date_suggested';
 type Item = {
   n: number; ean: string; tBarcodeMs: number; tDateMs: number; totalMs: number; outcome: Outcome; engine: string; raw: string; parsed: string; final: string;
-  aimMs?: number; computeMs?: number; frames?: number; skipped?: number; yearAssumed?: boolean; expired?: boolean; agreed?: number; stop?: string; needAgree?: boolean; glare?: number;
+  aimMs?: number; computeMs?: number; frames?: number; skipped?: number; skippedMotion?: number; skippedBlur?: number; yearAssumed?: boolean; expired?: boolean; agreed?: number; stop?: string; needAgree?: boolean; glare?: number;
 };
 type Session = { id: string; mode: 'ocr' | 'picker'; engine: string; startedAt: number; stoppedAt?: number; items: Item[] };
 const KEY = 'stocktake-sessions';
-const OUTCOMES: Outcome[] = ['ok', 'date_misread', 'date_unreadable', 'barcode_unreadable'];
+const OUTCOMES: Outcome[] = ['ok', 'date_misread', 'date_unreadable', 'barcode_unreadable', 'date_suggested'];
 
 const sec = (ms: number) => (ms / 1000).toFixed(1);
 const big = (b: HTMLElement, bg: string) => styleBtn(b, bg, '#fff', 17);
@@ -52,8 +54,8 @@ export function summaryText(sessions: Session[]) {
     }
   }
   if (!picker.length) L.push('(no picker-only session yet: run a second basket with the Picker only toggle for the baseline)');
-  L.push('', 'items (session | n | ean | barcode s | date s | total s | outcome | engine | raw OCR | parsed | final | aim s | compute s | frames read (skipped) | year assumed | expired | frames agreed | stopped on | need two frames | glare frames):');
-  for (const s of sessions) for (const i of s.items) L.push(`${s.id} | ${i.n} | ${i.ean} | ${sec(i.tBarcodeMs)} | ${sec(i.tDateMs)} | ${sec(i.totalMs)} | ${i.outcome} | ${i.engine} | ${i.raw.replace(/\s+/g, ' ')} | ${i.parsed || '-'} | ${i.final || '-'} | ${i.aimMs === undefined ? '-' : sec(i.aimMs)} | ${i.computeMs === undefined ? '-' : sec(i.computeMs)} | ${i.frames ?? '-'} (${i.skipped ?? '-'}) | ${i.yearAssumed ? 'yes' : 'no'} | ${i.expired ? 'yes' : 'no'} | ${i.agreed ?? '-'} | ${i.stop || '-'} | ${i.needAgree === undefined ? '-' : i.needAgree ? 'yes' : 'no'} | ${i.glare ?? '-'}`);
+  L.push('', 'items (session | n | ean | barcode s | date s | total s | outcome | engine | raw OCR | parsed | final | aim s | compute s | frames read (skipped) | skipped for motion | skipped for blur | glare frames | expiry | year assumed | expired | frames agreed | stopped on | need two frames):');
+  for (const s of sessions) for (const i of s.items) L.push(`${s.id} | ${i.n} | ${i.ean} | ${sec(i.tBarcodeMs)} | ${sec(i.tDateMs)} | ${sec(i.totalMs)} | ${i.outcome} | ${i.engine} | ${i.raw.replace(/\s+/g, ' ')} | ${i.parsed || '-'} | ${i.final || '-'} | ${i.aimMs === undefined ? '-' : sec(i.aimMs)} | ${i.computeMs === undefined ? '-' : sec(i.computeMs)} | ${i.frames ?? '-'} (${i.skipped ?? '-'}) | ${i.skippedMotion ?? '-'} | ${i.skippedBlur ?? '-'} | ${i.glare ?? '-'} | ${i.final ? expiryLook({ month: +i.final.slice(0, 2), year: +i.final.slice(3) }).word.toLowerCase() : '-'} | ${i.yearAssumed ? 'yes' : 'no'} | ${i.expired ? 'yes' : 'no'} | ${i.agreed ?? '-'} | ${i.stop || '-'} | ${i.needAgree === undefined ? '-' : i.needAgree ? 'yes' : 'no'}`);
   return L.join('\n');
 }
 
@@ -70,7 +72,7 @@ export function mount(root: HTMLElement) {
   let phase: 'idle' | 'scan' | 'date' | 'done' = 'idle';
   let itemStart = 0, tBarcode = 0, tDate = 0, ean = '', barcodeFail = false;
   let parsed: MonthYear | null = null, value: MonthYear | null = null, raw = '', engineName = '';
-  let aimMs = 0, computeMs = 0, frames = 0, skippedFrames = 0, yearAssumed = false, expired = false, shownCrop: Gray | null = null, agreed = 0, stop = '', glareFrames = 0;
+  let aimMs = 0, computeMs = 0, frames = 0, skippedFrames = 0, skMotion = 0, skBlur = 0, sugg: Suggestion[] = [], yearAssumed = false, expired = false, shownCrop: Gray | null = null, agreed = 0, stop = '', glareFrames = 0;
   let dateState: 'reading' | 'result' | 'fix' | 'pick' = 'reading', pickOutcome: Outcome = 'ok';
   let abort = false, stopBarcode: (() => void) | undefined, runId = 0;
 
@@ -80,6 +82,8 @@ export function mount(root: HTMLElement) {
   const stage = el('div');
   const buttons = el('div');
   const summary = el('pre');
+  const undoRow = el('div');
+  const itemsEl = el('div');
   const note = el('div'); note.style.cssText = 'font-size:12px;opacity:.8;';
   const agreeBox = el('input', { type: 'checkbox', checked: true }); // round 3: two frames must agree before "Got it"
   const modeBox = el('input', { type: 'checkbox' });
@@ -134,10 +138,10 @@ export function mount(root: HTMLElement) {
     const id = ++runId;
     phase = 'scan'; abort = false; barcodeFail = false;
     ean = ''; parsed = value = null; raw = ''; engineName = pickerOnly ? 'picker' : engineId;
-    tBarcode = tDate = 0; aimMs = computeMs = frames = skippedFrames = agreed = glareFrames = 0; stop = ''; yearAssumed = false; expired = false; shownCrop = null;
+    tBarcode = tDate = 0; aimMs = computeMs = frames = skippedFrames = skMotion = skBlur = agreed = glareFrames = 0; sugg = []; stop = ''; yearAssumed = false; expired = false; shownCrop = null;
     itemStart = performance.now();
     if (!cam.running) await cam.start();
-    cam.setBoxVisible(false); cam.setStripVisible(true); void cam.video.play().catch(() => {});
+    cam.setMode('barcode'); cam.setBoxVisible(true); cam.setStripVisible(true); void cam.video.play().catch(() => {});
     status.set('looking', undefined, 'barcode');
     render();
     stopBarcode = startBarcode((code) => { if (id === runId) gotBarcode(code, id); });
@@ -153,7 +157,7 @@ export function mount(root: HTMLElement) {
     phase = 'date';
     if (cur!.mode === 'picker') { dateState = 'pick'; pickOutcome = 'ok'; cam.setBoxVisible(false); cam.setStripVisible(false); status.set('ready'); render(); return; }
     dateState = 'reading'; pickOutcome = 'date_unreadable';
-    cam.setBoxVisible(true);
+    cam.setMode('date'); cam.setBoxVisible(true);
     status.set('looking', { frames: 0, skipped: 0 });
     render();
     try {
@@ -163,13 +167,13 @@ export function mount(root: HTMLElement) {
       if (id !== runId || phase !== 'date' || dateState !== 'reading') return;
       engineName = engine.name;
       raw = lo.res?.text ?? '';
-      aimMs = lo.aimMs; computeMs = lo.computeMs; frames = lo.frames; skippedFrames = lo.skipped; shownCrop = lo.crop;
+      aimMs = lo.aimMs; computeMs = lo.computeMs; frames = lo.frames; skippedFrames = lo.skipped; skMotion = lo.skippedMotion; skBlur = lo.skippedBlur; sugg = lo.suggestions; shownCrop = lo.crop;
       yearAssumed = !!lo.res?.yearAssumed; expired = !!lo.res?.expired; agreed = lo.agreed; stop = lo.stop ?? ''; glareFrames = lo.glare;
       cam.video.pause(); // freeze on the frame that was read
       if (lo.res?.value) {
         parsed = value = lo.res.value; dateState = 'result';
         status.set('got', undefined, 'date', [yearAssumed ? '(year assumed)' : '', expired ? '(expired)' : ''].filter(Boolean).join(' '));
-        navigator.vibrate?.(60);
+        navigator.vibrate?.([60, 90, 60]); // two buzzes: the date is caught (the barcode gives one)
       } else { dateState = 'pick'; status.set('none'); }
       tDate = performance.now() - itemStart - tBarcode;
       cam.setBoxVisible(false);
@@ -184,11 +188,39 @@ export function mount(root: HTMLElement) {
     if (!tBarcode) tBarcode = total;
     if (!tDate) tDate = Math.max(0, total - tBarcode);
     const o: Outcome = barcodeFail ? 'barcode_unreadable' : outcome;
-    cur.items.push({ n: cur.items.length + 1, ean, tBarcodeMs: tBarcode, tDateMs: tDate, totalMs: total, outcome: o, engine: engineName, raw, parsed: parsed ? fmtMY(parsed) : '', final: value ? fmtMY(value) : '', aimMs, computeMs, frames, skipped: skippedFrames, yearAssumed, expired, agreed, stop, needAgree: agreeBox.checked, glare: glareFrames });
+    cur.items.push({ n: cur.items.length + 1, ean, tBarcodeMs: tBarcode, tDateMs: tDate, totalMs: total, outcome: o, engine: engineName, raw, parsed: parsed ? fmtMY(parsed) : '', final: value ? fmtMY(value) : '', aimMs, computeMs, frames, skipped: skippedFrames, skippedMotion: skMotion, skippedBlur: skBlur, yearAssumed, expired, agreed, stop, needAgree: agreeBox.checked, glare: glareFrames });
     persist(); refreshSummary();
-    phase = 'done'; cam.setBoxVisible(false); cam.setStripVisible(true); void cam.video.play().catch(() => {});
-    status.set('ready');
-    render();
+    // one tap per item: straight into barcode mode for the next one, with a few seconds to undo this one
+    const saved = cur.items[cur.items.length - 1];
+    showUndo(saved);
+    void startItem();
+  }
+
+  let undoTimer: number | undefined;
+  function showUndo(it: Item) {
+    clearTimeout(undoTimer);
+    undoRow.replaceChildren();
+    undoRow.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px;margin:4px 0;';
+    const mine = it.final ? expiryBadge({ month: +it.final.slice(0, 2), year: +it.final.slice(3) }) : '';
+    undoRow.append(`Saved #${it.n} ${it.final || '(no date)'} `, mine, styleBtn(button('Undo', () => {
+      if (!cur || cur.items[cur.items.length - 1] !== it) return;
+      cur.items.pop(); persist(); refreshSummary();
+      clearTimeout(undoTimer); undoRow.replaceChildren();
+      note.textContent = `Undid #${it.n}`;
+      void startItem();
+    }), '#c62', '#fff', 16));
+    undoTimer = window.setTimeout(() => undoRow.replaceChildren(), 6000);
+  }
+
+  function renderItems() {
+    itemsEl.replaceChildren();
+    if (!cur) return;
+    for (const it of cur.items.slice(-5).reverse()) {
+      const r = el('div');
+      r.style.cssText = 'font-size:12px;display:flex;gap:6px;align-items:center;';
+      r.append(`#${it.n} ${it.final || '-'}`, it.final ? expiryBadge({ month: +it.final.slice(0, 2), year: +it.final.slice(3) }) : '', `${it.outcome} ${sec(it.totalMs)} s`);
+      itemsEl.append(r);
+    }
   }
 
   function pick(outcome: Outcome) {
@@ -201,7 +233,7 @@ export function mount(root: HTMLElement) {
 
   // ---------------------------------------------------------------- render
   function render() {
-    stage.replaceChildren(); buttons.replaceChildren();
+    stage.replaceChildren(); buttons.replaceChildren(); renderItems();
     // the strip gives its room to the month picker when the picker is up
     cam.setStripVisible(!!cur && !(phase === 'date' && (dateState === 'fix' || dateState === 'pick')));
     if (!cur) { stage.append('Press Start. Aim at a barcode, then at the best-before date.'); return; }
@@ -227,12 +259,9 @@ export function mount(root: HTMLElement) {
       } else {
         if (cur.mode === 'picker') stage.append(el('div', { textContent: 'Picker only: pick the best-before month' }));
         else stage.append(resultCard({ crop: shownCrop, value: null, yearAssumed: false, detail: `No date read. OCR: ${raw.replace(/\s+/g, ' ') || 'nothing'}` }).row);
+        stage.append(suggestionRow(sugg, (s) => { value = { month: s.month, year: s.year }; if (!tDate) tDate = performance.now() - itemStart - tBarcode; finish('date_suggested'); }));
         pick(pickOutcome);
       }
-    } else if (phase === 'done') {
-      const it = cur.items[cur.items.length - 1];
-      stage.append(el('div', { textContent: `Item ${it.n}: ${it.outcome}  ${it.final || '-'}${it.yearAssumed ? ' (year assumed)' : ''}${it.expired ? ' (expired)' : ''}  ${sec(it.totalMs)} s` }));
-      buttons.append(big(button('Next', () => { startItem(); }), '#26c'));
     }
   }
 
@@ -256,7 +285,7 @@ export function mount(root: HTMLElement) {
   const stopBtn = button('Stop', () => {
     if (!cur) return;
     abort = true; runId++; stopBarcode?.();
-    cur.stoppedAt = Date.now(); persist(); phase = 'idle'; cam.setBoxVisible(false);
+    cur.stoppedAt = Date.now(); persist(); phase = 'idle'; cam.setBoxVisible(false); undoRow.replaceChildren();
     cur = null; clock.textContent = ''; render(); refreshSummary(); status.set('ready');
     stage.append(el('div', { textContent: 'Session stopped. Summary below.' }));
   });
@@ -271,7 +300,7 @@ export function mount(root: HTMLElement) {
   topRow.style.cssText = 'display:flex;flex-wrap:wrap;align-items:center;';
   root.append(
     title, topRow, cfgRow,
-    cam.ui, status.box, stage, buttons, note,
+    cam.ui, status.box, stage, buttons, undoRow, itemsEl, note, expirySettingsEl(),
     el('h4', { textContent: 'Summary' }), summary,
     button('Copy summary', async () => { note.textContent = (await copyText(cam.summaryLine() + '\n\n' + summaryText(sessions))) ? 'copied' : 'copy failed'; }),
     button('Clear sessions', () => { if (confirm('Clear all stocktake sessions?')) { sessions.length = 0; persist(); refreshSummary(); } }),
