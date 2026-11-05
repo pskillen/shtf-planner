@@ -1,21 +1,26 @@
 import { BarcodeFormat, DecodeHintType } from '@zxing/library';
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import { button, el } from '../ui';
-import { Cam, bigValue, monthYearPicker } from './date/camera.ts';
+import { Cam, monthYearPicker } from './date/camera.ts';
+import { type Gray } from './date/image.ts';
 import { ENGINE_LABEL, type EngineId, getEngine } from './date/ocr-service.ts';
 import { type MonthYear, addMonths, fmtMY } from './date/parse.ts';
-import { copyText, load, median, p90, readUntil, save } from './date/read-loop.ts';
+import { copyText, load, median, p90, save, scanUntil } from './date/read-loop.ts';
+import { resultCard, statusLine, styleBtn } from './date/widgets.ts';
 
 // Screen F: mock stocktake, timed. scan barcode -> read date -> outcome -> Next. One camera stream for the whole session.
 
 type Outcome = 'ok' | 'date_misread' | 'date_unreadable' | 'barcode_unreadable';
-type Item = { n: number; ean: string; tBarcodeMs: number; tDateMs: number; totalMs: number; outcome: Outcome; engine: string; raw: string; parsed: string; final: string };
+type Item = {
+  n: number; ean: string; tBarcodeMs: number; tDateMs: number; totalMs: number; outcome: Outcome; engine: string; raw: string; parsed: string; final: string;
+  aimMs?: number; computeMs?: number; frames?: number; skipped?: number; yearAssumed?: boolean;
+};
 type Session = { id: string; mode: 'ocr' | 'picker'; engine: string; startedAt: number; stoppedAt?: number; items: Item[] };
 const KEY = 'stocktake-sessions';
 const OUTCOMES: Outcome[] = ['ok', 'date_misread', 'date_unreadable', 'barcode_unreadable'];
 
 const sec = (ms: number) => (ms / 1000).toFixed(1);
-const big = (b: HTMLElement, bg: string) => { b.style.cssText = `font-size:20px;padding:16px 14px;margin:4px;border:0;border-radius:8px;color:#fff;background:${bg};`; return b; };
+const big = (b: HTMLElement, bg: string) => styleBtn(b, bg, '#fff', 17);
 
 export function sessionStats(s: Session) {
   const el_ = ((s.stoppedAt ?? Date.now()) - s.startedAt) / 60000;
@@ -35,6 +40,9 @@ export function summaryText(sessions: Session[]) {
     L.push(`  outcomes: ${OUTCOMES.map((o) => `${o}=${st.counts[o]}`).join(' ')}`);
     const bc = s.items.map((i) => i.tBarcodeMs / 1000), dt = s.items.map((i) => i.tDateMs / 1000);
     L.push(`  median time to barcode ${median(bc).toFixed(1)} s, to date ${median(dt).toFixed(1)} s`);
+    const cm = s.items.filter((i) => i.computeMs !== undefined && i.engine !== 'picker' && i.engine !== 'none').map((i) => i.computeMs! / 1000);
+    const am = s.items.filter((i) => i.aimMs !== undefined && i.engine !== 'picker' && i.engine !== 'none').map((i) => i.aimMs! / 1000);
+    if (cm.length) L.push(`  date step split: median aim ${median(am).toFixed(1)} s, median compute ${median(cm).toFixed(1)} s (OCR + parse of the frame that read)`);
     if (s.mode === 'ocr' && pickerDate.length) {
       const swapped = s.items.map((i) => (i.totalMs - i.tDateMs + pickerMed) / 1000);
       const mins = swapped.reduce((a, b) => a + b, 0) / 60;
@@ -42,8 +50,8 @@ export function summaryText(sessions: Session[]) {
     }
   }
   if (!picker.length) L.push('(no picker-only session yet: run a second basket with the Picker only toggle for the baseline)');
-  L.push('', 'items (session | n | ean | barcode s | date s | total s | outcome | engine | raw OCR | parsed | final):');
-  for (const s of sessions) for (const i of s.items) L.push(`${s.id} | ${i.n} | ${i.ean} | ${sec(i.tBarcodeMs)} | ${sec(i.tDateMs)} | ${sec(i.totalMs)} | ${i.outcome} | ${i.engine} | ${i.raw.replace(/\s+/g, ' ')} | ${i.parsed || '-'} | ${i.final || '-'}`);
+  L.push('', 'items (session | n | ean | barcode s | date s | total s | outcome | engine | raw OCR | parsed | final | aim s | compute s | frames read (skipped) | year assumed):');
+  for (const s of sessions) for (const i of s.items) L.push(`${s.id} | ${i.n} | ${i.ean} | ${sec(i.tBarcodeMs)} | ${sec(i.tDateMs)} | ${sec(i.totalMs)} | ${i.outcome} | ${i.engine} | ${i.raw.replace(/\s+/g, ' ')} | ${i.parsed || '-'} | ${i.final || '-'} | ${i.aimMs === undefined ? '-' : sec(i.aimMs)} | ${i.computeMs === undefined ? '-' : sec(i.computeMs)} | ${i.frames ?? '-'} (${i.skipped ?? '-'}) | ${i.yearAssumed ? 'yes' : 'no'}`);
   return L.join('\n');
 }
 
@@ -60,11 +68,13 @@ export function mount(root: HTMLElement) {
   let phase: 'idle' | 'scan' | 'date' | 'done' = 'idle';
   let itemStart = 0, tBarcode = 0, tDate = 0, ean = '', barcodeFail = false;
   let parsed: MonthYear | null = null, value: MonthYear | null = null, raw = '', engineName = '';
+  let aimMs = 0, computeMs = 0, frames = 0, skippedFrames = 0, yearAssumed = false, shownCrop: Gray | null = null;
   let dateState: 'reading' | 'result' | 'fix' | 'pick' = 'reading', pickOutcome: Outcome = 'ok';
   let abort = false, stopBarcode: (() => void) | undefined, runId = 0;
 
-  const clock = el('div'); clock.style.cssText = 'font-size:28px;font-weight:700;';
-  const count = el('div'); count.style.cssText = 'font-size:18px;';
+  const clock = el('span'); clock.style.cssText = 'font-size:24px;font-weight:700;margin:0 6px;';
+  const count = el('span'); count.style.cssText = 'font-size:16px;';
+  const status = statusLine();
   const stage = el('div');
   const buttons = el('div');
   const summary = el('pre');
@@ -121,34 +131,43 @@ export function mount(root: HTMLElement) {
     const id = ++runId;
     phase = 'scan'; abort = false; barcodeFail = false;
     ean = ''; parsed = value = null; raw = ''; engineName = pickerOnly ? 'picker' : engineId;
-    tBarcode = tDate = 0;
+    tBarcode = tDate = 0; aimMs = computeMs = frames = skippedFrames = 0; yearAssumed = false; shownCrop = null;
     itemStart = performance.now();
     if (!cam.running) await cam.start();
-    cam.setBoxVisible(false);
+    cam.setBoxVisible(false); cam.setStripVisible(true); void cam.video.play().catch(() => {});
+    status.set('looking', undefined, 'barcode');
     render();
     stopBarcode = startBarcode((code) => { if (id === runId) gotBarcode(code, id); });
   }
 
   function gotBarcode(code: string, id: number) {
     ean = code; tBarcode = performance.now() - itemStart;
+    status.set('got', undefined, 'barcode');
     startDate(id);
   }
 
   async function startDate(id: number) {
     phase = 'date';
-    if (cur!.mode === 'picker') { dateState = 'pick'; pickOutcome = 'ok'; cam.setBoxVisible(false); render(); return; }
+    if (cur!.mode === 'picker') { dateState = 'pick'; pickOutcome = 'ok'; cam.setBoxVisible(false); cam.setStripVisible(false); status.set('ready'); render(); return; }
     dateState = 'reading'; pickOutcome = 'date_unreadable';
     cam.setBoxVisible(true);
+    status.set('looking', { frames: 0, skipped: 0 });
     render();
     try {
       const engine = await getEngine(cur!.engine as EngineId);
       // engine load time lands in the item time on purpose: the first item pays it, the owner should feel that
-      const lo = await readUntil(cam, engine, 8000, () => abort || id !== runId || phase !== 'date' || dateState !== 'reading');
+      const lo = await scanUntil(cam, engine, 8000, () => abort || id !== runId || phase !== 'date' || dateState !== 'reading', (s, i) => { if (id === runId && phase === 'date' && dateState === 'reading') status.set(s, i); });
       if (id !== runId || phase !== 'date' || dateState !== 'reading') return;
       engineName = engine.name;
       raw = lo.res?.text ?? '';
-      if (lo.res?.value) { parsed = value = lo.res.value; dateState = 'result'; navigator.vibrate?.(60); }
-      else dateState = 'pick';
+      aimMs = lo.aimMs; computeMs = lo.computeMs; frames = lo.frames; skippedFrames = lo.skipped; shownCrop = lo.crop;
+      yearAssumed = !!lo.res?.yearAssumed;
+      cam.video.pause(); // freeze on the frame that was read
+      if (lo.res?.value) {
+        parsed = value = lo.res.value; dateState = 'result';
+        status.set('got', undefined, 'date', yearAssumed ? '(year assumed)' : '');
+        navigator.vibrate?.(60);
+      } else { dateState = 'pick'; status.set('none'); }
       tDate = performance.now() - itemStart - tBarcode;
       cam.setBoxVisible(false);
       render();
@@ -162,9 +181,10 @@ export function mount(root: HTMLElement) {
     if (!tBarcode) tBarcode = total;
     if (!tDate) tDate = Math.max(0, total - tBarcode);
     const o: Outcome = barcodeFail ? 'barcode_unreadable' : outcome;
-    cur.items.push({ n: cur.items.length + 1, ean, tBarcodeMs: tBarcode, tDateMs: tDate, totalMs: total, outcome: o, engine: engineName, raw, parsed: parsed ? fmtMY(parsed) : '', final: value ? fmtMY(value) : '' });
+    cur.items.push({ n: cur.items.length + 1, ean, tBarcodeMs: tBarcode, tDateMs: tDate, totalMs: total, outcome: o, engine: engineName, raw, parsed: parsed ? fmtMY(parsed) : '', final: value ? fmtMY(value) : '', aimMs, computeMs, frames, skipped: skippedFrames, yearAssumed });
     persist(); refreshSummary();
-    phase = 'done'; cam.setBoxVisible(false);
+    phase = 'done'; cam.setBoxVisible(false); cam.setStripVisible(true); void cam.video.play().catch(() => {});
+    status.set('ready');
     render();
   }
 
@@ -179,34 +199,36 @@ export function mount(root: HTMLElement) {
   // ---------------------------------------------------------------- render
   function render() {
     stage.replaceChildren(); buttons.replaceChildren();
+    // the strip gives its room to the month picker when the picker is up
+    cam.setStripVisible(!!cur && !(phase === 'date' && (dateState === 'fix' || dateState === 'pick')));
     if (!cur) { stage.append('Press Start. Aim at a barcode, then at the best-before date.'); return; }
+    const detail = () => `${raw.replace(/\s+/g, ' ') || '(nothing)'} | ${engineName} | aim ${Math.round(aimMs)} + compute ${Math.round(computeMs)} ms, ${frames} frame${frames === 1 ? '' : 's'}, ${skippedFrames} skipped`;
     if (phase === 'scan') {
-      stage.append(el('div', { textContent: 'Scan the barcode…' }));
       buttons.append(big(button('Barcode can\'t read', () => manualEntry()), '#a52'));
     } else if (phase === 'date') {
-      stage.append(el('div', { textContent: `barcode ${ean || '(manual)'}  ${sec(tBarcode)} s` }));
+      stage.append(el('div', { textContent: `barcode ${ean || '(manual)'}  ${sec(tBarcode)} s`, style: 'font-size:12px;opacity:.75' } as any));
       if (dateState === 'reading') {
-        stage.append(el('div', { textContent: 'Line the date up in the yellow box…' }));
         buttons.append(
-          big(button("Date can't read", () => { abort = true; value = null; tDate = performance.now() - itemStart - tBarcode; dateState = 'pick'; pickOutcome = 'date_unreadable'; cam.setBoxVisible(false); render(); }), '#888'),
+          big(button("Date can't read", () => { abort = true; value = null; tDate = performance.now() - itemStart - tBarcode; dateState = 'pick'; pickOutcome = 'date_unreadable'; cam.setBoxVisible(false); status.set('none'); render(); }), '#888'),
           big(button("Barcode can't read", () => manualEntry()), '#a52'));
       } else if (dateState === 'result') {
-        stage.append(bigValue(value), el('div', { textContent: `OCR: ${raw.replace(/\s+/g, ' ')}`, style: 'font-size:12px;opacity:.75' } as any));
+        stage.append(resultCard({ crop: shownCrop, value, yearAssumed, detail: detail() }).row);
         buttons.append(
           big(button('OK', () => finish('ok')), '#2a7'),
           big(button('Date misread', () => { dateState = 'fix'; render(); }), '#c62'),
           big(button("Date can't read", () => { value = null; dateState = 'pick'; pickOutcome = 'date_unreadable'; render(); }), '#888'));
       } else if (dateState === 'fix') {
-        stage.append(el('div', { textContent: 'Fix it: ±1 month, or pick' }), bigValue(value));
-        buttons.append(big(button('Done', () => finish('date_misread')), '#2a7'), button('-1 month', () => { value = addMonths(value!, -1); render(); }), button('+1 month', () => { value = addMonths(value!, 1); render(); }));
+        stage.append(resultCard({ crop: shownCrop, value, yearAssumed, detail: 'fix it: +-1 month, or pick' }).row);
+        buttons.append(big(button('Done', () => finish('date_misread')), '#2a7'), big(button('-1', () => { value = addMonths(value!, -1); render(); }), '#26c'), big(button('+1', () => { value = addMonths(value!, 1); render(); }), '#26c'));
         pick('date_misread');
       } else {
-        stage.append(el('div', { textContent: cur.mode === 'picker' ? 'Picker only: pick the best-before month' : `No date read (OCR: ${raw || 'nothing'}). Pick it:` }));
+        if (cur.mode === 'picker') stage.append(el('div', { textContent: 'Picker only: pick the best-before month' }));
+        else stage.append(resultCard({ crop: shownCrop, value: null, yearAssumed: false, detail: `No date read. OCR: ${raw.replace(/\s+/g, ' ') || 'nothing'}` }).row);
         pick(pickOutcome);
       }
     } else if (phase === 'done') {
       const it = cur.items[cur.items.length - 1];
-      stage.append(el('div', { textContent: `Item ${it.n}: ${it.outcome}  ${it.final || '-'}  ${sec(it.totalMs)} s` }));
+      stage.append(el('div', { textContent: `Item ${it.n}: ${it.outcome}  ${it.final || '-'}${it.yearAssumed ? ' (year assumed)' : ''}  ${sec(it.totalMs)} s` }));
       buttons.append(big(button('Next', () => { startItem(); }), '#26c'));
     }
   }
@@ -227,21 +249,26 @@ export function mount(root: HTMLElement) {
     sessions.push(cur); persist();
     await startItem();
   });
-  startBtn.style.cssText = 'font-size:22px;padding:14px 30px;';
+  styleBtn(startBtn, '#26c', '#fff', 20);
   const stopBtn = button('Stop', () => {
     if (!cur) return;
     abort = true; runId++; stopBarcode?.();
     cur.stoppedAt = Date.now(); persist(); phase = 'idle'; cam.setBoxVisible(false);
-    cur = null; clock.textContent = ''; render(); refreshSummary();
+    cur = null; clock.textContent = ''; render(); refreshSummary(); status.set('ready');
     stage.append(el('div', { textContent: 'Session stopped. Summary below.' }));
   });
-  stopBtn.style.cssText = 'font-size:22px;padding:14px 30px;';
+  styleBtn(stopBtn, '#888', '#fff', 20);
 
+  const title = el('div', { textContent: 'Spike F: mock stocktake' });
+  title.style.cssText = 'font-size:15px;font-weight:700;margin:2px 0 4px;';
+  const cfgRow = el('div', {}, sel, el('label', {}, ' ', modeBox, ' picker only (baseline)'));
+  cfgRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;margin-top:4px;font-size:14px;';
+  sel.style.cssText = 'font-size:15px;padding:6px;max-width:55vw;';
+  const topRow = el('div', {}, startBtn, stopBtn, clock, count);
+  topRow.style.cssText = 'display:flex;flex-wrap:wrap;align-items:center;';
   root.append(
-    el('h3', { textContent: 'Spike F: mock stocktake' }),
-    el('div', {}, 'Date engine: ', sel, el('label', {}, ' ', modeBox, ' Picker only (baseline, no OCR)')),
-    startBtn, stopBtn, clock, count,
-    cam.wrap, stage, buttons, note,
+    title, topRow, cfgRow,
+    cam.wrap, status.box, stage, buttons, note,
     el('h4', { textContent: 'Summary' }), summary,
     button('Copy summary', async () => { note.textContent = (await copyText(summaryText(sessions))) ? 'copied' : 'copy failed'; }),
     button('Clear sessions', () => { if (confirm('Clear all stocktake sessions?')) { sessions.length = 0; persist(); refreshSummary(); } }),

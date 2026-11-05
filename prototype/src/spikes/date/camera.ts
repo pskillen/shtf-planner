@@ -8,31 +8,27 @@ export class Cam {
   box = el('div');
   wrap = el('div', {}, this.video, this.box);
   stream: MediaStream | null = null;
-  /** framing box as fractions of the frame; recomputed from the stream aspect */
-  frac = { x: 0.07, y: 0.35, w: 0.86, h: 0.3 };
+  /** The framing box as fractions of the visible strip (not of the whole video frame). */
+  frac = { x: 0.06, y: 0.22, w: 0.88, h: 0.56 };
   torchOn = false;
 
   constructor() {
-    this.wrap.style.cssText = 'position:relative;width:100%;background:#000;';
-    this.video.style.cssText = 'width:100%;max-height:none;display:block;';
+    // A short strip, not the whole viewfinder: a third of the screen at most, so the controls stay on screen.
+    this.wrap.style.cssText = 'position:relative;width:100%;height:min(30vh,260px);min-height:140px;background:#000;overflow:hidden;border-radius:8px;';
+    this.video.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;max-height:none;';
     this.box.style.cssText = 'position:absolute;border:3px solid #fc0;box-shadow:0 0 0 9999px rgba(0,0,0,.45);border-radius:6px;pointer-events:none;';
+    const s = this.box.style;
+    s.left = this.frac.x * 100 + '%'; s.top = this.frac.y * 100 + '%'; s.width = this.frac.w * 100 + '%'; s.height = this.frac.h * 100 + '%';
     this.setBoxVisible(true);
   }
 
   setBoxVisible(v: boolean) {
     this.box.style.display = v ? 'block' : 'none';
-    this.wrap.style.overflow = 'hidden';
   }
 
-  private layout() {
-    const vw = this.video.videoWidth, vh = this.video.videoHeight;
-    if (!vw) return;
-    const w = 0.86, h = Math.min(0.5, (w * vw) / 4.5 / vh); // about 4.5:1 in real pixels
-    this.frac = { x: (1 - w) / 2, y: (1 - h) / 2, w, h };
-    const s = this.box.style;
-    s.left = this.frac.x * 100 + '%'; s.top = this.frac.y * 100 + '%'; s.width = w * 100 + '%'; s.height = h * 100 + '%';
-    this.wrap.style.aspectRatio = `${vw} / ${vh}`;
-    this.video.style.height = '100%';
+  /** Hide the strip (e.g. while the month picker needs the room). The stream keeps running. */
+  setStripVisible(v: boolean) {
+    this.wrap.style.display = v ? 'block' : 'none';
   }
 
   get running() { return !!this.stream; }
@@ -46,7 +42,6 @@ export class Cam {
     this.video.srcObject = this.stream;
     await this.video.play().catch(() => {});
     if (!this.video.videoWidth) await new Promise((r) => this.video.addEventListener('loadedmetadata', r, { once: true }));
-    this.layout();
   }
 
   stop() {
@@ -74,10 +69,14 @@ export class Cam {
     this.torchOn = on;
   }
 
-  /** The framed region as a Gray image, at most 256 px high. */
+  /** The framed region as a Gray image, at most 256 px high. The strip shows the video with object-fit: cover, so map through that. */
   captureBox(): Gray {
     const vw = this.video.videoWidth, vh = this.video.videoHeight;
-    const sx = this.frac.x * vw, sy = this.frac.y * vh, sw = this.frac.w * vw, sh = this.frac.h * vh;
+    const cw = this.wrap.clientWidth || vw, ch = this.wrap.clientHeight || vh;
+    const k0 = Math.max(cw / vw, ch / vh);
+    const visW = cw / k0, visH = ch / k0;
+    const offX = (vw - visW) / 2, offY = (vh - visH) / 2;
+    const sx = offX + this.frac.x * visW, sy = offY + this.frac.y * visH, sw = this.frac.w * visW, sh = this.frac.h * visH;
     const k = Math.min(1, 256 / sh);
     const c = document.createElement('canvas');
     c.width = Math.round(sw * k); c.height = Math.round(sh * k);
@@ -88,13 +87,13 @@ export class Cam {
   }
 }
 
-export function grayToCanvas(g: Gray, maxW = 480): HTMLCanvasElement {
+export function grayToCanvas(g: Gray, maxW = 480, extra = ''): HTMLCanvasElement {
   const c = document.createElement('canvas');
   c.width = g.w; c.height = g.h;
   const id = new ImageData(g.w, g.h);
   for (let i = 0; i < g.d.length; i++) { id.data[i * 4] = id.data[i * 4 + 1] = id.data[i * 4 + 2] = g.d[i]; id.data[i * 4 + 3] = 255; }
   c.getContext('2d')!.putImageData(id, 0, 0);
-  c.style.cssText = `max-width:${maxW}px;width:100%;border:1px solid #888;display:block;`;
+  c.style.cssText = `max-width:${maxW}px;width:100%;border:1px solid #888;display:block;${extra}`;
   return c;
 }
 
