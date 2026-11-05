@@ -276,9 +276,45 @@ export function createSync(options: SyncOptions): Sync {
     return syncWaiting;
   }
 
+  let connecting: Promise<void> | undefined;
+
+  async function connectOnce(): Promise<void> {
+    const wasConnected = connected();
+    try {
+      await drive.connect();
+    } catch (e) {
+      if (e instanceof DriveCancelledError) return publish(); // quiet: still "Connect"
+      let message = driveErrorMessage(e);
+      if (e instanceof DrivePopupBlockedError) {
+        // The pill alone would not say why. The button is "Connect" until the first connect.
+        if (!wasConnected) message = message.replace('Tap Reconnect.', 'Tap Connect.');
+        toast(message);
+      }
+      problem = { kind: 'error', message, reconnect: e instanceof DriveAuthError };
+      publish();
+      return;
+    }
+    clearProblem();
+    paused = false;
+    await enqueue(async () => {
+      const account = drive.accountEmail() ?? undefined;
+      if (base && (!account || rec.account !== account)) {
+        // Another Google account, or one we cannot tell apart from the last (the email could
+        // not be read): its folder, files and history are not ours to compare with, so start
+        // afresh and ask first rather than merge silently.
+        base = undefined;
+        rec = emptySyncRecord();
+        await persistence.clear();
+      }
+      if (account) await save({ account });
+      await deriveDirty(); // edits made while disconnected
+    });
+    await requestSync(); // publishes as it starts: no "Synced" flash before the first pull
+  }
+
   // ---- gates ----------------------------------------------------------------------------
 
-  /** A silent renewal failed: only the Connect button gets past this. */
+  /** Google needs the person (no tap, or it said no): only a Connect or Reconnect tap gets past this. */
   const needsReconnect = () => problem?.kind === 'error' && problem.reconnect === true;
 
   /** Everything that stops sync from touching Drive. */
@@ -714,36 +750,12 @@ export function createSync(options: SyncOptions): Sync {
       retryTimer = undefined;
     },
 
-    async connect() {
-      try {
-        await drive.connect();
-      } catch (e) {
-        if (e instanceof DriveCancelledError) return publish(); // quiet: still "Connect"
-        if (e instanceof DrivePopupBlockedError) toast(e.message); // the pill alone would not say why
-        problem = {
-          kind: 'error',
-          message: driveErrorMessage(e),
-          reconnect: e instanceof DriveAuthError,
-        };
-        publish();
-        return;
-      }
-      clearProblem();
-      paused = false;
-      await enqueue(async () => {
-        const account = drive.accountEmail() ?? undefined;
-        if (base && (!account || rec.account !== account)) {
-          // Another Google account, or one we cannot tell apart from the last (the email could
-          // not be read): its folder, files and history are not ours to compare with, so start
-          // afresh and ask first rather than merge silently.
-          base = undefined;
-          rec = emptySyncRecord();
-          await persistence.clear();
-        }
-        if (account) await save({ account });
-        await deriveDirty(); // edits made while disconnected
+    // A second tap while Google's window is open joins the first: one window, one follow-up run.
+    connect() {
+      connecting ??= connectOnce().finally(() => {
+        connecting = undefined;
       });
-      await requestSync(); // publishes as it starts: no "Synced" flash before the first pull
+      return connecting;
     },
 
     dropToken() {

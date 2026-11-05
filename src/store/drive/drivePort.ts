@@ -148,11 +148,12 @@ export function createDrivePort(deps?: Partial<DrivePortDeps>): DrivePort {
   }
 
   /**
-   * Inside a tap, a token about to run out is renewed now, while Google's window is allowed. Not
-   * being able to is no failure: the token still works, so nothing is latched or cleared, and the
-   * next tap does not try again for this token.
+   * Inside a tap, a token about to run out is renewed now, while Google's window is allowed. The
+   * sync does not wait for the window: it carries on with the token that still works, and the new
+   * one is saved when Google answers. Not being able to is no failure, so nothing is latched or
+   * cleared, and the next tap does not try again for this token.
    */
-  async function renewEarly(current: DriveSession): Promise<DriveSession> {
+  function renewEarly(current: DriveSession): DriveSession {
     const clientId = getClientId();
     if (
       !clientId ||
@@ -165,15 +166,16 @@ export function createDrivePort(deps?: Partial<DrivePortDeps>): DrivePort {
       return current;
     }
     earlyRenewalSpent = true;
-    try {
-      const tokens = await auth.authorize(clientId, { loginHint: loadDriveAccount() ?? undefined });
-      const renewed = { ...tokens, accountEmail: loadDriveAccount() ?? undefined };
-      saveDriveSession(renewed);
-      earlyRenewalSpent = false;
-      return renewed;
-    } catch {
-      return current;
-    }
+    auth
+      .authorize(clientId, { loginHint: loadDriveAccount() ?? undefined })
+      .then((tokens) => {
+        // Not if the person disconnected, or reconnected with a newer token, while it was open.
+        if (!isDriveConnected() || loadDriveSession()?.accessToken !== current.accessToken) return;
+        saveDriveSession({ ...tokens, accountEmail: loadDriveAccount() ?? undefined });
+        earlyRenewalSpent = false;
+      })
+      .catch(() => {});
+    return current;
   }
 
   async function session(): Promise<DriveSession> {
@@ -185,6 +187,31 @@ export function createDrivePort(deps?: Partial<DrivePortDeps>): DrivePort {
       if (renewed) return renewed;
     }
     throw new DriveAuthError();
+  }
+
+  let connectInFlight: Promise<void> | undefined;
+
+  async function connectOnce(): Promise<void> {
+    const clientId = getClientId();
+    if (!clientId) throw new DriveConfigError();
+    // One tap, one Google window: the request goes out straight from the tap (the script was
+    // loaded at start-up), with the saved account as the hint. A second request would find the
+    // tap's user activation already spent and be blocked.
+    const tokens = await auth.authorize(clientId, {
+      loginHint: loadDriveAccount() ?? undefined,
+    });
+    let accountEmail = loadDriveAccount() ?? undefined;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        accountEmail = (await api.getUserEmail(tokens.accessToken)) || accountEmail;
+        break;
+      } catch {
+        // Tried twice; sync treats an unreadable account as "cannot tell".
+      }
+    }
+    saveDriveSession({ ...tokens, accountEmail });
+    renewalFailed = false;
+    earlyRenewalSpent = false;
   }
 
   /** Runs `fn` with a live token; on a 401 renews once and tries once more. */
@@ -207,27 +234,12 @@ export function createDrivePort(deps?: Partial<DrivePortDeps>): DrivePort {
     isConnected: isDriveConnected,
     accountEmail: loadDriveAccount,
 
-    async connect() {
-      const clientId = getClientId();
-      if (!clientId) throw new DriveConfigError();
-      // One tap, one Google window: the request goes out straight from the tap (the script was
-      // loaded at start-up), with the saved account as the hint. A second request would find the
-      // tap's user activation already spent and be blocked.
-      const tokens = await auth.authorize(clientId, {
-        loginHint: loadDriveAccount() ?? undefined,
+    // A second call while Google's window is open joins the first: never two windows from one tap.
+    connect() {
+      connectInFlight ??= connectOnce().finally(() => {
+        connectInFlight = undefined;
       });
-      let accountEmail = loadDriveAccount() ?? undefined;
-      for (let attempt = 0; attempt < 2; attempt++) {
-        try {
-          accountEmail = (await api.getUserEmail(tokens.accessToken)) || accountEmail;
-          break;
-        } catch {
-          // Tried twice; sync treats an unreadable account as "cannot tell".
-        }
-      }
-      saveDriveSession({ ...tokens, accountEmail });
-      renewalFailed = false;
-      earlyRenewalSpent = false;
+      return connectInFlight;
     },
 
     warmUp() {

@@ -194,10 +194,43 @@ describe('drivePort', () => {
     expect(a.authorize).not.toHaveBeenCalled();
     expect(api.listChildren).toHaveBeenLastCalledWith('f', 'soon');
 
+    // The sync goes on with the working token; the new one is there for the next call.
     tapped = true;
+    const p = port(api, a);
+    await p.listFiles('f');
+    expect(a.authorize).toHaveBeenCalledTimes(1);
+    expect(api.listChildren).toHaveBeenLastCalledWith('f', 'soon');
+    await vi.waitFor(() => expect(loadDriveSession()?.accessToken).toBe('fresh'));
+    await p.listFiles('f');
+    expect(api.listChildren).toHaveBeenLastCalledWith('f', 'fresh');
+  });
+
+  it('a Google window nobody answers does not hold the sync up', async () => {
+    saveDriveSession({ accessToken: 'soon', expiresAt: NOW + 3 * 60_000 });
+    const a = auth(() => new Promise(() => {}));
+    const api = fakeApi();
     await port(api, a).listFiles('f');
     expect(a.authorize).toHaveBeenCalledTimes(1);
-    expect(api.listChildren).toHaveBeenLastCalledWith('f', 'fresh');
+    expect(api.listChildren).toHaveBeenCalledWith('f', 'soon');
+  });
+
+  it('a double tap on Reconnect makes one Google request', async () => {
+    saveDriveSession({ accessToken: 'old', expiresAt: NOW - 1 });
+    let release!: () => void;
+    const a = auth(
+      () =>
+        new Promise((resolve) => {
+          release = () => resolve({ accessToken: 'fresh', expiresAt: NOW + 3_600_000 });
+        }),
+    );
+    const api = fakeApi();
+    const p = port(api, a);
+    const first = p.connect();
+    const second = p.connect();
+    release();
+    await Promise.all([first, second]);
+    expect(a.authorize).toHaveBeenCalledTimes(1);
+    expect(api.getUserEmail).toHaveBeenCalledTimes(1);
   });
 
   it('a failed early renewal keeps the working token and is not repeated on every tap', async () => {
