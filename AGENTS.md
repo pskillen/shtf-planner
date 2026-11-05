@@ -21,20 +21,23 @@ project of the SHTF game (`shtf-game`). Working title.
 
 ## Layout
 
-| Path             | What                                                                                |
-| ---------------- | ----------------------------------------------------------------------------------- |
-| `src/app/`       | React screens, routing, the shell, the `?debug=1` hook                              |
-| `src/engine/`    | Pure functions over the document and packs (targets, coverage, gaps, score)         |
-| `src/model/`     | TypeScript types and Zod schemas of the document and the packs                      |
-| `src/packs/`     | JSON content packs and their loader                                                 |
-| `src/scan/`      | Camera stream, barcode loop, Open Food Facts client (no React); `tunables.ts`       |
-| `src/store/`     | The document store (CRDT + IndexedDB) and Drive sync (`sync.ts`, `drive/`)          |
-| `src/util/`      | Small pure helpers                                                                  |
-| `src/generated/` | Build output of `scripts/releases.mjs` (gitignored)                                 |
-| `test/`          | Unit tests that aren't next to their source, fixtures, helpers                      |
-| `e2e/`           | Playwright                                                                          |
-| `scripts/`       | `releases.mjs` (bake the changelog), `icons.mjs` (PWA icons), `setup-cloudflare.sh` |
-| `docs/`          | `build/` (environments, CI), `features/` (one hub per feature)                      |
+| Path                   | What                                                                                |
+| ---------------------- | ----------------------------------------------------------------------------------- |
+| `src/app/`             | React screens, routing, the shell, the `?debug=1` hook                              |
+| `src/engine/`          | Pure functions over the document and packs (targets, coverage, gaps, score)         |
+| `src/model/`           | TypeScript types and Zod schemas of the document and the packs                      |
+| `src/packs/`           | JSON content packs and their loader                                                 |
+| `src/scan/`            | Camera stream, barcode loop, Open Food Facts client, `dateLoop.ts`; `tunables.ts`   |
+| `src/scan/ocr/`        | The date reader: PaddleOCR in a web worker (onnxruntime-web), images, worker client |
+| `src/engine/datecode/` | Best-before parser and frame agreement (pure)                                       |
+| `public/ocr/`          | Third-party model files with their notice and licence (not ours: leave them alone)  |
+| `src/store/`           | The document store (CRDT + IndexedDB) and Drive sync (`sync.ts`, `drive/`)          |
+| `src/util/`            | Small pure helpers                                                                  |
+| `src/generated/`       | Build output of `scripts/releases.mjs` (gitignored)                                 |
+| `test/`                | Unit tests that aren't next to their source, fixtures, helpers                      |
+| `e2e/`                 | Playwright                                                                          |
+| `scripts/`             | `releases.mjs` (bake the changelog), `icons.mjs` (PWA icons), `setup-cloudflare.sh` |
+| `docs/`                | `build/` (environments, CI), `features/` (one hub per feature)                      |
 
 ## Rules
 
@@ -45,7 +48,7 @@ project of the SHTF game (`shtf-game`). Working title.
     `src/store`, `src/packs`, `idb`, or anything Drive or Google.
   - `src/store` never imports `src/app` or React.
   - `src/scan` (camera, barcode decoding, the Open Food Facts client) imports `src/model`,
-    `src/util`, `src/engine`, itself and packages (`@zxing/*`); never React, `src/app`,
+    `src/util`, `src/engine`, itself and packages (`@zxing/*`, `onnxruntime-web`); never React, `src/app`,
     `src/store`, `src/packs`, or anything Drive or Google.
   - `src/app` may import everything, but reaches the store only through `DocumentProvider` and the
     `useDocument()` / `useChange()` hooks (`src/app/state/`); it never calls `openStore` itself.

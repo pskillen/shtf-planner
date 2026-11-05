@@ -54,7 +54,9 @@ The Stores tab: what the household has, by where it is kept, and the quick way t
 - **Scanning.** Quick add's search step starts with **Scan a barcode** (above the search box) and
   **Stocktake a pile**. A scanned item lands on the form with its type picked and is saved with
   `source: 'barcode'`; Next item goes back to the scanner. Stores shows "3 scans to sort ›" when
-  scans are waiting. See [Scanning](../scanning/README.md).
+  scans are waiting. The form's **Read the date** (where the browser has a camera) opens a sheet that
+  reads the best-before month off the pack; **Use this date** fills the field and you still tap Add.
+  See [Scanning](../scanning/README.md).
 - **Custom items.** "Add as a custom item" asks for a name, a category and, for food and water, what
   one piece gives (kcal, litres). Other categories may give a store or nothing. The type is saved in
   `customTypes` as `custom:<uuid>` and counts like any pack item. It suits every place and has no

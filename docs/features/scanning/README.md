@@ -1,29 +1,34 @@
 # Scanning
 
-**Status:** Done (barcodes and stocktake). Reading best-before dates from the camera is a later step.
+**Status:** Done (barcodes, stocktake and best-before dates read by the camera).
 **Tracking:** none
 
 Pick up a tin, scan its barcode, say what it is (once per product: the app remembers), set the
-best-before month, OK, next. Quick add can scan too. Barcodes the app has not met are looked up on
+best-before month (the camera can read it off the pack), OK, next. Quick add can scan too. Barcodes the app has not met are looked up on
 Open Food Facts for a name and size; offline, scans wait in a queue and are sorted later. It works
 in Chrome on Android (torch, zoom, tap to focus) and degrades cleanly in Firefox on Android.
 
 ## Map
 
-| Piece               | Where                                                               | What                                                                                                     |
-| ------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Camera stream       | `src/scan/camera.ts`                                                | One stream per screen; torch, zoom, focus each applied on its own; `captureBox` of the framing box       |
-| Barcode loop        | `src/scan/barcode.ts`                                               | `BarcodeDetector` where it has EAN, else zxing (lazy chunk); every other zxing attempt turned 90 degrees |
-| Open Food Facts     | `src/scan/openFoodFacts.ts`                                         | `offClient()`: lookup, own rate limit, the identification string                                         |
-| Tunables            | `src/scan/tunables.ts`, `screens/stores/stocktakeTunables.ts`       | Intervals, zoom, timeouts, limits, box shapes, Undo time, buzz patterns: one line each                   |
-| Camera strip        | `src/app/components/CameraStrip.tsx`                                | The live strip, framing box, step chip, torch, zoom, tap to focus; "no camera" and fallback lines        |
-| The card for a code | `screens/stores/ScanResolve.tsx`                                    | Known: straight on. Unknown: Open Food Facts, "Which of these is it?", search, own item, sort later      |
-| Quick add's scanner | `screens/stores/ScanSheet.tsx`                                      | The strip, type the number, find it by name                                                              |
-| Stocktake           | `screens/stores/StocktakeScreen.tsx`, route `/app/stores/stocktake` | Step 1 BARCODE, step 2 DATE, OK, Undo, Done summary                                                      |
-| Scans to sort       | `screens/stores/ScansToSort.tsx`, `useScanQueue.ts`                 | The queue note on Stores, its sheet, and the lookup of queued codes when online                          |
-| Pure pieces         | `src/util/gtin.ts`, `src/engine/productMatch.ts`                    | Check digit and normalising; Open Food Facts categories to likely item types                             |
-| Document            | `barcodes`, `scans` (schema 3)                                      | See [Data model](../data-model/README.md)                                                                |
-| Test support        | `e2e/fakeCamera.ts`, `test/helpers/fakeScan.ts`                     | A canvas as the camera; a fake Open Food Facts                                                           |
+| Piece               | Where                                                                                               | What                                                                                                     |
+| ------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Camera stream       | `src/scan/camera.ts`                                                                                | One stream per screen; torch, zoom, focus each applied on its own; `captureBox` of the framing box       |
+| Barcode loop        | `src/scan/barcode.ts`                                                                               | `BarcodeDetector` where it has EAN, else zxing (lazy chunk); every other zxing attempt turned 90 degrees |
+| Open Food Facts     | `src/scan/openFoodFacts.ts`                                                                         | `offClient()`: lookup, own rate limit, the identification string                                         |
+| Date reader         | `src/scan/ocr/` (`client.ts`, `ocr.worker.ts`, `paddle.ts`, `reader.ts`, `image.ts`, `provider.ts`) | PaddleOCR in a web worker on onnxruntime-web, WebGPU or WASM; grey-image helpers                         |
+| Date loop           | `src/scan/dateLoop.ts`                                                                              | Capture, gates (glare, flat, moving, blurred), one read at a time, agreement, timeout                    |
+| Date parser, tally  | `src/engine/datecode/`                                                                              | Reader text to month-years; passes to a frame verdict; frames to an answer. Pure                         |
+| Date card           | `screens/stores/DateReader.tsx`, `ReadDateSheet.tsx`, `DateAbout.tsx`                               | Status line, result card, suggestions; quick add's sheet; the "About the date reader" line               |
+| Models, notice      | `public/ocr/`                                                                                       | FP16 PaddleOCR models, `NOTICE.md`, Apache-2.0 text, the self-test label                                 |
+| Tunables            | `src/scan/tunables.ts`, `screens/stores/stocktakeTunables.ts`                                       | Intervals, zoom, timeouts, limits, box shapes, Undo time, buzz patterns: one line each                   |
+| Camera strip        | `src/app/components/CameraStrip.tsx`                                                                | The live strip, framing box, step chip, torch, zoom, tap to focus; "no camera" and fallback lines        |
+| The card for a code | `screens/stores/ScanResolve.tsx`                                                                    | Known: straight on. Unknown: Open Food Facts, "Which of these is it?", search, own item, sort later      |
+| Quick add's scanner | `screens/stores/ScanSheet.tsx`                                                                      | The strip, type the number, find it by name                                                              |
+| Stocktake           | `screens/stores/StocktakeScreen.tsx`, route `/app/stores/stocktake`                                 | Step 1 BARCODE, step 2 DATE, OK, Undo, Done summary                                                      |
+| Scans to sort       | `screens/stores/ScansToSort.tsx`, `useScanQueue.ts`                                                 | The queue note on Stores, its sheet, and the lookup of queued codes when online                          |
+| Pure pieces         | `src/util/gtin.ts`, `src/engine/productMatch.ts`                                                    | Check digit and normalising; Open Food Facts categories to likely item types                             |
+| Document            | `barcodes`, `scans` (schema 3)                                                                      | See [Data model](../data-model/README.md)                                                                |
+| Test support        | `e2e/fakeCamera.ts`, `test/helpers/fakeScan.ts`                                                     | A canvas as the camera; a fake Open Food Facts                                                           |
 
 ## The stocktake
 
@@ -105,8 +110,8 @@ Apache-2.0) is its own lazily loaded chunk, so the main bundle does not carry it
 `src/scan/*.test.ts` (loop with a fake detector and fake zxing, and real zxing on rendered bars;
 Open Food Facts with a fake `fetch`; camera constraints with a fake track), `test/scan-resolve.test.tsx`,
 `test/stocktake.test.tsx`, `test/lint-fence.test.ts` (the `src/scan` fence), and
-`e2e/stocktake.spec.ts`, which uses `e2e/fakeCamera.ts`: `getUserMedia` returns a canvas stream and
-`window.__fakeCam.show({ ean, sideways })` draws a rendered EAN-13. It can report Chrome's controls or
+`e2e/stocktake.spec.ts` and `e2e/dates.spec.ts`, which use `e2e/fakeCamera.ts`: `getUserMedia` returns a canvas stream and
+`window.__fakeCam.show({ ean, sideways, text })` draws a rendered EAN-13 or a text label. It can report Chrome's controls or
 none, and install a fake `BarcodeDetector` or remove it so zxing runs, so it needs no real camera
 and runs in CI. With `?debug=1`, `window.__shtf.scan.code('...')` injects a code into the active scanner.
 
@@ -115,14 +120,83 @@ and runs in CI. With `?debug=1`, `window.__shtf.scan.code('...')` injects a code
 - Only a phone can say how well the real camera, torch, zoom and focus behave; the fake camera
   proves the flow, not the optics.
 - A code held sideways is read by zxing's retry only if its whole length fits the tall box.
-- Reading the best-before date from the camera is not built (the date step is the month field).
+- Only a phone can say how accurate the date reader is on real print (the e2e reads synthetic
+  labels), how long a read takes there, whether WebGPU helps, and how much memory the models use.
+- The date step's strip is the compact one, so the framing box on screen is small; the reader sees
+  the full video resolution inside it, but aiming is on a thin strip.
+- Only upright text is read (no rotation); day-level dates are stored as month-year; a misaligned
+  print is not re-aimable (no nudging the crop).
 - A remembered barcode can be corrected with Not this item? but not forgotten.
 - iOS Safari is not a target.
 
 ## Reading dates
 
-The date step reads the best-before month from the pack with the camera. The text-to-date step is
-`src/engine/datecode/parse.ts`, a pure parser: text in, month-years out, today passed in. Its rules:
+On the date step (stocktake) and in Quick add's **Read the date** sheet, the camera reads the
+best-before month off the pack, on the phone, with no network once installed. The person sees what
+was read with its expiry colour, and **nothing is saved until they OK it** (or tap a suggestion in
+the stocktake).
+
+**The flow.** The strip turns yellow (**2 DATE**, taller box) and the reader starts by itself when
+"Read dates with the camera" is on (a switch on the stocktake screen, on by default, remembered per
+device). One status line says exactly one of: _Getting the date reader ready…_ (first use after
+install), _Looking for a date…_, _Hold still_, _Glare: tilt the phone a little_, _Reading…_,
+_Got Jun 2027 once, checking…_, _Got it_, _No date found_.
+
+- **Got it**: two buzzes, the loop stops, a card shows the month large, the expiry word and colour,
+  "year assumed" where it applies, and the small crop that was read (in memory only). The month
+  field below is set to it, so a wrong read is fixed by a chip or the month box. **OK** saves.
+  **Read again** starts over.
+- **No date found** (after 8 s, or **Stop**): up to three suggestion buttons, best first, each with
+  its expiry colour. In the stocktake a tap saves that month and goes to the next barcode (it is the
+  person's choice); in Quick add it sets the field.
+- **Not available** (models not downloaded and offline, or the load failed): the status says so and
+  the month field works as before.
+- **Quick add**: a **Read the date** button (only where the browser has a camera) opens a sheet with
+  the strip and the same card; **Use this date** sets the field and closes; the person still taps Add.
+- **Done summary** adds "dates by camera 9 · picked 4 · from a suggestion 1 · date step 3.2 s
+  (median)" and a **Copy summary** button (counts and times only: no text read, no codes, no images).
+
+**Agreement and gates** (numbers are named constants: the tally ones in
+`src/engine/datecode/tally.ts`, the loop's in `src/scan/tunables.ts`).
+
+- One frame is read in up to five pictures of the box (shrunk and stretched, native size, inverted,
+  inverted native, adaptive threshold last); a pass is _sure_ when the parser's confidence is at least
+  0.7, the text reader's at least 0.75 and the year was not assumed. A frame stops at the first sure
+  pass, or at two agreeing passes.
+- A date settles when two frames give the same month and year, or one frame is confident (0.85) with
+  no assumed year. A year-assumed or expired read never settles alone.
+- Gates: **glare** (20 to 65 % of the box at 250+ grey: say so, skip; after 25 in a row read anyway);
+  **flat** (sharpness under 2: nothing to read); **steadiness** (the first frame is never read; skip a
+  frame that moved more than 18 grey levels or is under half as sharp as the sharpest recently; at most
+  4 skips in a row, then one is read anyway). One read in flight at a time.
+
+**The reader.** PaddleOCR (PP-OCRv3 mobile detection and PP-OCRv5 English mobile recognition, float16
+weights) on onnxruntime-web 1.20.1, in a **web worker** so the screen stays smooth. WebGPU is used only
+when the person has not switched it off, the browser has it, an adapter comes back, both models create
+and a **self-test** (a synthetic "BEST BEFORE 06/2027" label, read in the worker) comes out right;
+otherwise both sessions are made again on WASM (single-threaded: threads need cross-origin isolation,
+decision 134). A collapsed **About the date reader** line shows "WebGPU · last read 0.4 s" or "WASM ·
+last read 1.5 s" (and why WASM) and holds the per-device WebGPU switch. The worker is stopped when the
+stocktake or the sheet goes away; the next use reloads from the cache.
+
+**Offline and size.** The service worker precaches the worker, the single hashed ORT wasm
+(21,663,894 B, 20.7 MiB, 5.2 MB gzipped), the two models and `dict.txt` (5,301,452 B). The whole
+precache is about 27.4 MiB, roughly 10 MB downloaded once at install. Workbox's per-file limit is
+raised to 24 MiB; Cloudflare Pages refuses files over 25 MiB, so the wasm fits. No Tesseract, no
+other models, no cloud text reading.
+
+**Privacy.** Frames are read in memory and dropped: never stored (not in the document, IndexedDB or
+localStorage; only the two on/off switches are kept) and never sent anywhere. The e2e checks that no
+request leaves the app's origin and that nothing image-shaped is in storage.
+
+**Models and licences.** PaddleOCR (PaddlePaddle), Apache-2.0, ONNX conversions from
+huggingface.co/monkt/paddleocr-onnx, with the weights stored as float16 by the spike's shrink script
+(a modification; the calculation stays float32). onnxruntime-web is MIT. Text, checksums and the
+Apache-2.0 licence are in `public/ocr/NOTICE.md` and `public/ocr/LICENSE-Apache-2.0.txt`.
+
+### The parser
+
+The text-to-date step is `src/engine/datecode/parse.ts`, a pure parser: text in, month-years out, today passed in. Its rules:
 
 - **Normalising.** Upper case. Newlines, tabs, `|` and `_` become spaces; `,` and `;` become `.`.
   Inside a run that already has a digit, `O` reads as 0 and `I`/`L` as 1, except a run glued to a
@@ -147,3 +221,11 @@ The date step reads the best-before month from the pack with the camera. The tex
 `src/engine/datecode/tally.ts` turns passes into a frame verdict and frames into an answer; the
 numbers are named constants there. `parse.test.ts` holds 152 cases and `tally.test.ts` the agreement
 rules.
+
+The date reader's tests: `src/engine/datecode/*.test.ts` (152 parser cases, agreement rules),
+`src/scan/dateLoop.test.ts` (scripted camera and reader), `src/scan/ocr/*.test.ts` (images, the
+provider choice, the worker client with a fake worker, and `paddle.node.test.ts`, which runs the real
+float16 models on WASM in node over the synthetic labels in `test/fixtures/datecodes/`, made by
+`scripts/datecode-fixtures.mjs`), `test/date-reader.test.tsx` (screens with a fake reader), and
+`e2e/dates.spec.ts` (the real worker and models, offline after install, the unavailable fallback,
+quick add, privacy). Headless Chrome has no WebGPU adapter, so the e2e runs the WASM path.
