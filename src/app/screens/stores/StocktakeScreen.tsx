@@ -335,7 +335,7 @@ export function StocktakeScreen() {
       {hint ? (
         // One line, so the controls below stay on the screen at 360 x 740.
         <p className="stocktake-hint">
-          <span>Barcode in blue, date in yellow.</span>
+          <span>Red line for the barcode, yellow box for the date.</span>
           <button
             type="button"
             className="link"

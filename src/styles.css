@@ -720,12 +720,12 @@ table.horizon .big td {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  margin: 4px 0;
-  padding: 0 8px 0 12px;
+  gap: 4px;
+  margin: 4px -12px;
+  padding: 0 4px 0 8px;
   border-left: 4px solid var(--accent);
   background: var(--surface);
-  font-size: 0.875rem;
+  font-size: 0.75rem;
 }
 
 .stocktake-hint span {
