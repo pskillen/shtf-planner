@@ -58,6 +58,20 @@ describe('ItemPicker', () => {
     expect(link.getAttribute('href')).toMatch(/\/app\/assets\?add=/);
   });
 
+  it('still lists recent items under Browse everything', () => {
+    localStorage.setItem('shtf.recentItems', JSON.stringify(['items-base:baked-beans']));
+    renderPicker();
+    const browse = document.querySelector('details.type-group') as HTMLDetailsElement;
+    browse.open = true;
+    fireEvent(browse, new Event('toggle'));
+    const food = [...document.querySelectorAll('details.type-group')].find((d) =>
+      d.querySelector('summary')?.textContent?.includes('Food'),
+    ) as HTMLDetailsElement;
+    food.open = true;
+    fireEvent(food, new Event('toggle'));
+    expect(within(food).getByRole('button', { name: /Baked beans/i })).toBeTruthy();
+  });
+
   it('shows heading sections when browsing', () => {
     renderPicker();
     const browse = document.querySelector('details.type-group') as HTMLDetailsElement;
@@ -69,5 +83,10 @@ describe('ItemPicker', () => {
     food.open = true;
     fireEvent(food, new Event('toggle'));
     expect(document.querySelector('.picker-heading')?.textContent).toBeTruthy();
+  });
+
+  it('shows Common when there are no recent products yet', () => {
+    renderPicker();
+    expect(screen.getByRole('region', { name: 'Common' })).toBeTruthy();
   });
 });

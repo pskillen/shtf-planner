@@ -80,12 +80,7 @@ export function ItemPicker({
     [items],
   );
 
-  const skipBrowse = useMemo(() => new Set(recentItemIds), [recentItemIds]);
-  const browseItems = useMemo(
-    () => items.filter((t) => !skipBrowse.has(t.id)),
-    [items, skipBrowse],
-  );
-  const groups = useMemo(() => groupItemsForPicker(browseItems), [browseItems]);
+  const groups = useMemo(() => groupItemsForPicker(items), [items]);
 
   const categories = useMemo(() => {
     const order: Category[] = [];
