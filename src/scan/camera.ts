@@ -116,6 +116,8 @@ export class CameraStream {
   private stream: MediaStream | undefined;
   private readonly opts: CameraOptions;
   private focusTimer: ReturnType<typeof setTimeout> | undefined;
+  /** Bumped by `stop()`: a `start()` still waiting for permission sees it changed and lets go. */
+  private epoch = 0;
 
   constructor(opts: CameraOptions = {}) {
     this.opts = opts;
@@ -142,18 +144,27 @@ export class CameraStream {
     if (this.stream) return;
     const devices = this.opts.mediaDevices ?? globalThis.navigator?.mediaDevices;
     if (!devices?.getUserMedia) throw new Error('No camera in this browser');
+    const epoch = this.epoch;
     const stream = await devices.getUserMedia({
       video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
       audio: false,
     });
+    if (epoch !== this.epoch) {
+      // The screen was left (or the page hidden) while the browser was still asking: the camera
+      // must not come on afterwards.
+      stream.getTracks().forEach((t) => t.stop());
+      return;
+    }
     this.stream = stream;
     this.video = video;
     video.srcObject = stream;
     await video.play?.().catch(() => undefined);
+    if (epoch !== this.epoch) return;
     await this.setUp();
   }
 
   stop(): void {
+    this.epoch++;
     clearTimeout(this.focusTimer);
     this.stream?.getTracks().forEach((t) => t.stop());
     this.stream = undefined;

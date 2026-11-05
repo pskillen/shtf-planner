@@ -108,6 +108,26 @@ describe('camera constraints', () => {
     expect(cam.running).toBe(false);
   });
 
+  it('lets go of a camera that was granted after stop() (the screen was left while it asked)', async () => {
+    const { cam, track, video } = setup(CHROME);
+    let grant: (s: MediaStream) => void = () => undefined;
+    const stream = { getVideoTracks: () => [track], getTracks: () => [track] } as unknown as MediaStream;
+    const pending = new CameraStream({
+      mediaDevices: {
+        getUserMedia: () => new Promise<MediaStream>((r) => (grant = r)),
+        getSupportedConstraints: () => ({}),
+      },
+    });
+    const started = pending.start(video);
+    pending.stop(); // left before the person tapped Allow
+    grant(stream);
+    await started;
+    expect(track.stop).toHaveBeenCalled();
+    expect(pending.running).toBe(false);
+    expect(video.srcObject).toBeNull();
+    void cam;
+  });
+
   it('rejects start when there is no camera', async () => {
     const cam = new CameraStream({
       mediaDevices: {
