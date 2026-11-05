@@ -62,7 +62,8 @@ describe('preview examples on the Biggar household', () => {
       if ((r.title === 'Drinking water' || r.title === 'Power for phones') && h === 28) continue;
       expect(n, `${h} days ${r.title}: ${r.example}`).toBeLessThanOrEqual(EXAMPLE_MAX_UNITS);
     }
-    expect(at(3, 'water').example).toMatch(/^e\.g\. \d+ × Bottled water \(.+\)$/);
+    // cheapest per litre within EXAMPLE_MAX_UNITS packs
+    expect(at(3, 'water').example).toBe('e.g. 10 × Bottled water (5 L)');
     expect(at(28, 'water').example).not.toMatch(/\b(2|3)\d ×/);
   });
 

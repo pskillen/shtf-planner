@@ -27,7 +27,7 @@ describe('deleteLocation', () => {
 
   it('drops the place’s minimum entries and no one else’s', () => {
     const doc = biggarDocument();
-    doc.minimums[minimumKey(shed, 'items-base:tinned-food')] = 4;
+    doc.minimums[minimumKey(shed, 'items-base:baked-beans')] = 4;
     const pantryKeys = Object.keys(doc.minimums).filter((k) => k.startsWith(`${pantry}|`));
     expect(pantryKeys.length).toBeGreaterThan(0);
     deleteLocation(doc, shed);
