@@ -81,7 +81,7 @@ export interface DrivePortDeps {
 }
 
 /** Inside a tap, a token with less than this left is renewed before it runs out. */
-export const DRIVE_RENEW_AHEAD_MS = 5 * 60_000;
+export const DRIVE_RENEW_AHEAD_MS = 15 * 60_000;
 
 /**
  * `navigator.userActivation.isActive`. Where the API is missing (older browsers) the answer is no:

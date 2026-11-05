@@ -131,7 +131,7 @@ only opens a popup for a tap, so **nothing asks Google unless a tap is behind it
   flashes open and shut on its own (renewal is never fully invisible), but there is nothing to
   choose or type. If the browser blocks the window anyway, a toast and the Data screen say "Your
   browser blocked Google's window. Tap Reconnect.".
-- **Renewing early.** Inside a tap, a token with under 5 minutes left is renewed before it runs
+- **Renewing early.** Inside a tap, a token with under 15 minutes left is renewed before it runs
   out; the sync does not wait for Google's window and carries on with the token that still works. If the window cannot open or is closed, the token that still works is kept and the next
   tap does not try again for it.
 - **Test control.** Outside `prod` builds, Data shows **Drop the Drive token (test)**: it forgets the
