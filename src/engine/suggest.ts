@@ -102,7 +102,8 @@ export function closeStore(
     // Equipment is bought, then added under Home, Equipment: say which type it is.
     ...(c.type.assetTypeId ? { assetTypeId: c.type.assetTypeId } : {}),
     qty: c.units,
-    label: `${c.units} × ${c.type.name}`,
+    // An empty container holds water, it is not water: it says so, to fill from the tap.
+    label: `${c.units} × ${c.type.name}${c.type.tags.includes('refillable') ? ', to fill from the tap' : ''}`,
     ...(c.price !== undefined ? { pricePence: c.price } : {}),
     perUnitCoverage: c.per,
   }));

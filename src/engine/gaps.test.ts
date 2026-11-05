@@ -108,6 +108,23 @@ describe('gaps', () => {
     }
   });
 
+  it('says an empty container is to fill from the tap', () => {
+    const only = {
+      ...packs,
+      items: Object.fromEntries(
+        Object.entries(packs.items).filter(
+          ([, t]) => !t.gives.some((g) => g.store === 'waterL') || t.tags.includes('refillable'),
+        ),
+      ),
+    };
+    const water = find(gaps(empty(), only, NOW, 3), 'water:waterL')!;
+    expect(water.suggestions.length).toBeGreaterThan(0);
+    for (const s of water.suggestions) expect(s.label).toMatch(/, to fill from the tap$/);
+    // and bottled water is not worded that way
+    const bottled = find(gaps(empty(), packs, NOW, 3), 'water:waterL')!;
+    expect(bottled.suggestions[0]!.label).not.toMatch(/tap/);
+  });
+
   it('does not lead a small shortfall with an oversized, dearer trade pack', () => {
     const doc = empty(); // one adult
     const food = find(gaps(doc, packs, NOW, 7), 'food:foodKcal')!;
