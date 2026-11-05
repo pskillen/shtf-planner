@@ -30,7 +30,8 @@ export function statusLine() {
     if (s === 'checking') t = `Got ${info?.seen ?? 'a date'} once, checking…`;
     if (s === 'hold' && info) t += ` (${info.skipped} skipped)`;
     box.textContent = t + (extra ? '  ' + extra : '');
-    box.style.background = l.bg; box.style.color = l.fg;
+    const amber = s === 'got' && extra.includes('expired');
+    box.style.background = amber ? '#f2b84b' : l.bg; box.style.color = amber ? '#2a1700' : l.fg;
     box.dataset.state = s;
   };
   set('ready');
@@ -44,7 +45,7 @@ export function styleBtn(b: HTMLElement, bg = '', fg = '#fff', size = 18) {
 }
 
 /** The frozen result: the exact crop that produced it, next to the value. */
-export function resultCard(opts: { crop: Gray | null; value: MonthYear | null; yearAssumed: boolean; detail: string }) {
+export function resultCard(opts: { crop: Gray | null; value: MonthYear | null; yearAssumed: boolean; expired?: boolean; detail: string }) {
   const row = el('div');
   row.style.cssText = 'display:flex;gap:10px;align-items:center;margin:4px 0;';
   const left = el('div');
@@ -53,8 +54,13 @@ export function resultCard(opts: { crop: Gray | null; value: MonthYear | null; y
   const right = el('div');
   right.style.cssText = 'flex:1;min-width:0;';
   const v = el('div', { textContent: opts.value ? fmtMY(opts.value) : '--/----' });
-  v.style.cssText = 'font-size:38px;font-weight:700;line-height:1.1;';
+  v.style.cssText = 'font-size:38px;font-weight:700;line-height:1.1;' + (opts.expired ? 'color:#b36b00;' : '');
   right.append(v);
+  if (opts.expired) {
+    const x = el('div', { textContent: 'expired' });
+    x.style.cssText = 'font-size:14px;font-weight:700;color:#fff;background:#d98a00;border-radius:6px;padding:1px 8px;display:inline-block;';
+    right.append(x);
+  }
   if (opts.yearAssumed) {
     const y = el('div', { textContent: 'year assumed' });
     y.style.cssText = 'font-size:14px;font-weight:700;color:#a40;';

@@ -8,6 +8,7 @@ export type Try = { variant: string; rot: number; text: string; conf: number; hi
 export type ReadResult = {
   value: MonthYear | null;
   yearAssumed: boolean; // day and month were printed, the year was filled in
+  expired: boolean; // the date read is in the past (up to 2 years back)
   confidence: number; // 0..1, combined
   text: string; // raw OCR text of the winning try (or the first non-empty)
   votes: number;
@@ -37,8 +38,8 @@ export async function readDate(engine: Engine, crop: Gray, o: ReadOpts = {}): Pr
   const maxMs = o.maxMs ?? 4000;
   const need = o.needVotes ?? 2;
   const tries: Try[] = [];
-  const tally = new Map<number, { v: MonthYear; votes: number; conf: number; text: string; assumed: boolean; sure: boolean }>();
-  let winner: { v: MonthYear; votes: number; conf: number; text: string; assumed: boolean; sure: boolean } | undefined;
+  const tally = new Map<number, { v: MonthYear; votes: number; conf: number; text: string; assumed: boolean; expired: boolean; sure: boolean }>();
+  let winner: { v: MonthYear; votes: number; conf: number; text: string; assumed: boolean; expired: boolean; sure: boolean } | undefined;
 
   outer: for (const rot of rotations) {
     for (const v of variants) {
@@ -51,7 +52,7 @@ export async function readDate(engine: Engine, crop: Gray, o: ReadOpts = {}): Pr
       if (!p.best) continue;
       const k = p.best.year * 12 + p.best.month;
       const sure = confident(p.confidence, out.conf, !!p.best.yearAssumed);
-      const e = tally.get(k) ?? { v: { month: p.best.month, year: p.best.year }, votes: 0, conf: 0, text: out.text, assumed: !!p.best.yearAssumed, sure: false };
+      const e = tally.get(k) ?? { v: { month: p.best.month, year: p.best.year }, votes: 0, conf: 0, text: out.text, assumed: !!p.best.yearAssumed, expired: !!p.best.expired, sure: false };
       e.votes++;
       e.sure ||= sure;
       e.conf = Math.max(e.conf, p.confidence * (0.5 + 0.5 * Math.min(1, out.conf + 0.2)));
@@ -65,12 +66,12 @@ export async function readDate(engine: Engine, crop: Gray, o: ReadOpts = {}): Pr
   const ms = performance.now() - t0;
   const first = tries.find((t) => t.text)?.text ?? '';
   const base = { tries, variants: tries.length, rotations: rotations.length, ms, engine: engine.name };
-  if (!winner) return { value: null, yearAssumed: false, confidence: 0, text: first, votes: 0, ...base };
+  if (!winner) return { value: null, yearAssumed: false, expired: false, confidence: 0, text: first, votes: 0, ...base };
   // Disagreeing reads: lower the confidence. A single unconfirmed, unsure read is capped.
   let c = winner.conf;
   if (winner.votes >= 2) c = Math.min(0.97, c + 0.1 * (winner.votes - 1));
   else if (!winner.sure) c = Math.min(c, 0.6);
   else c = Math.min(c, 0.9);
   if (tally.size > 1) c *= 0.6;
-  return { value: winner.v, yearAssumed: winner.assumed, confidence: c, text: winner.text, votes: winner.votes, ...base };
+  return { value: winner.v, yearAssumed: winner.assumed, expired: winner.expired, confidence: c, text: winner.text, votes: winner.votes, ...base };
 }

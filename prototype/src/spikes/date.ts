@@ -12,7 +12,7 @@ import { resultCard, smallCrop, statusLine, styleBtn } from './date/widgets.ts';
 type Attempt = {
   at: string; engine: string; ms: number; raw: string; parsed: string; final: string;
   outcome: 'ok' | 'corrected' | 'picked' | 'unread'; conf: number;
-  aimMs?: number; computeMs?: number; frames?: number; skipped?: number; passes?: number; yearAssumed?: boolean; zoom?: number; agreed?: number; stop?: string; needAgree?: boolean; glare?: number;
+  aimMs?: number; computeMs?: number; frames?: number; skipped?: number; passes?: number; yearAssumed?: boolean; expired?: boolean; zoom?: number; agreed?: number; stop?: string; needAgree?: boolean; glare?: number;
 };
 const KEY = 'date-spike-attempts';
 
@@ -30,14 +30,14 @@ export function summaryText(rows: Attempt[]) {
     lines.push(`${e} | ${a.length} | ${c('ok')} (${Math.round((100 * c('ok')) / a.length)}%) | ${c('corrected')} | ${c('picked')} | ${c('unread')} | ${Math.round(median(ms))} | ${Math.round(p90(ms))} | ${comp.length ? Math.round(median(comp)) : '-'} | ${aim.length ? Math.round(median(aim)) : '-'}`);
   }
   for (const [e, a] of by) lines.push(`${e}: stopped on agreement ${a.filter((x) => x.stop === 'agreement').length}, one confident read ${a.filter((x) => x.stop === 'confident').length}, first read (agreement off) ${a.filter((x) => x.stop === 'single').length}`);
-  lines.push('', 'attempts (engine | total ms | aim ms | compute ms | frames read (skipped) | passes | raw OCR | parsed | final | outcome | year assumed | zoom | frames agreed | stopped on | need two frames | glare frames):');
-  for (const r of rows) lines.push(`${r.engine} | ${n0(r.ms)} | ${n0(r.aimMs)} | ${n0(r.computeMs)} | ${r.frames ?? '-'} (${r.skipped ?? '-'}) | ${r.passes ?? '-'} | ${r.raw.replace(/\s+/g, ' ')} | ${r.parsed || '-'} | ${r.final || '-'} | ${r.outcome} | ${r.yearAssumed ? 'yes' : 'no'} | ${r.zoom ? r.zoom.toFixed(1) + 'x' : '-'} | ${r.agreed ?? '-'} | ${r.stop ?? '-'} | ${r.needAgree === undefined ? '-' : r.needAgree ? 'yes' : 'no'} | ${r.glare ?? '-'}`);
+  lines.push('', 'attempts (engine | total ms | aim ms | compute ms | frames read (skipped) | passes | raw OCR | parsed | final | outcome | year assumed | expired | zoom | frames agreed | stopped on | need two frames | glare frames):');
+  for (const r of rows) lines.push(`${r.engine} | ${n0(r.ms)} | ${n0(r.aimMs)} | ${n0(r.computeMs)} | ${r.frames ?? '-'} (${r.skipped ?? '-'}) | ${r.passes ?? '-'} | ${r.raw.replace(/\s+/g, ' ')} | ${r.parsed || '-'} | ${r.final || '-'} | ${r.outcome} | ${r.yearAssumed ? 'yes' : 'no'} | ${r.expired ? 'yes' : 'no'} | ${r.zoom ? r.zoom.toFixed(1) + 'x' : '-'} | ${r.agreed ?? '-'} | ${r.stop ?? '-'} | ${r.needAgree === undefined ? '-' : r.needAgree ? 'yes' : 'no'} | ${r.glare ?? '-'}`);
   return lines.join('\n');
 }
 
 type Cur = {
   parsed: MonthYear | null; value: MonthYear | null; raw: string; ms: number; aimMs: number; computeMs: number; frames: number; skipped: number;
-  passes: number; conf: number; engine: string; yearAssumed: boolean; agreed: number; stop: string; needAgree: boolean; glare: number; touched: 'none' | 'corrected' | 'picked'; crop: Gray | null;
+  passes: number; conf: number; engine: string; yearAssumed: boolean; expired: boolean; agreed: number; stop: string; needAgree: boolean; glare: number; touched: 'none' | 'corrected' | 'picked'; crop: Gray | null;
 };
 
 export function mount(root: HTMLElement) {
@@ -78,7 +78,7 @@ export function mount(root: HTMLElement) {
       const t = thumbs.get(r);
       if (t) head.append(grayToCanvas(smallCrop(t, 90), 90, 'flex:0 0 90px;width:90px;'));
       else { const none = el('div', { textContent: '(no image)' }); none.style.cssText = 'flex:0 0 90px;font-size:11px;opacity:.6;'; head.append(none); }
-      head.append(el('div', { textContent: `${r.engine}  ${r.final || '-'}${r.yearAssumed ? ' (year assumed)' : ''}  ${r.outcome}  ${n0(r.ms)} ms` }));
+      head.append(el('div', { textContent: `${r.engine}  ${r.final || '-'}${r.yearAssumed ? ' (year assumed)' : ''}${r.expired ? ' (expired)' : ''}  ${r.outcome}  ${n0(r.ms)} ms` }));
       const more = el('div');
       more.style.cssText = 'display:none;font-size:12px;margin-top:4px;word-break:break-all;';
       more.append(el('div', { textContent: `raw OCR: ${r.raw.replace(/\s+/g, ' ') || '(nothing)'}` }), el('div', { textContent: `parsed ${r.parsed || '-'}, final ${r.final || '-'}, conf ${r.conf}; aim ${n0(r.aimMs)} ms, compute ${n0(r.computeMs)} ms, ${r.frames ?? '-'} frames read, ${r.skipped ?? '-'} skipped, ${r.passes ?? '-'} passes; agreed ${r.agreed ?? '-'}, stopped on ${r.stop ?? '-'}, need two frames ${r.needAgree === undefined ? '-' : r.needAgree ? 'yes' : 'no'}` }));
@@ -94,7 +94,7 @@ export function mount(root: HTMLElement) {
     const r: Attempt = {
       at: new Date().toISOString(), engine: current.engine, ms: current.ms, raw: current.raw, parsed: current.parsed ? fmtMY(current.parsed) : '',
       final: current.value ? fmtMY(current.value) : '', outcome, conf: Math.round(current.conf * 100) / 100,
-      aimMs: Math.round(current.aimMs), computeMs: Math.round(current.computeMs), frames: current.frames, skipped: current.skipped, passes: current.passes, yearAssumed: current.yearAssumed, zoom: cam.zoom ?? undefined, agreed: current.agreed, stop: current.stop, needAgree: current.needAgree, glare: current.glare,
+      aimMs: Math.round(current.aimMs), computeMs: Math.round(current.computeMs), frames: current.frames, skipped: current.skipped, passes: current.passes, yearAssumed: current.yearAssumed, expired: current.expired, zoom: cam.zoom ?? undefined, agreed: current.agreed, stop: current.stop, needAgree: current.needAgree, glare: current.glare,
     };
     rows.push(r);
     if (current.crop) thumbs.set(r, current.crop);
@@ -120,7 +120,7 @@ export function mount(root: HTMLElement) {
     } else if (phase === 'result' && current) {
       const c = current;
       const detail = `${c.raw.replace(/\s+/g, ' ') || '(nothing)'} | ${c.engine} | ${Math.round(c.conf * 100)}%`;
-      area.append(resultCard({ crop: c.crop, value: c.value, yearAssumed: c.yearAssumed, detail }).row);
+      area.append(resultCard({ crop: c.crop, value: c.value, yearAssumed: c.yearAssumed, expired: c.expired, detail }).row);
       const row = el('div');
       row.style.cssText = 'display:flex;flex-wrap:wrap;';
       const adj = (n: number) => styleBtn(button(n > 0 ? '+1' : '-1', () => { c.value = addMonths(c.value!, n); c.touched = 'corrected'; render(); }));
@@ -139,19 +139,19 @@ export function mount(root: HTMLElement) {
     } else if (phase === 'pick') {
       cam.setStripVisible(false);
       area.append(el('div', { textContent: 'Pick the month and year' }), monthYearPicker(current?.value ?? null, (v) => {
-        if (!current) current = { parsed: null, value: null, raw: '', ms: 0, aimMs: 0, computeMs: 0, frames: 0, skipped: 0, passes: 0, conf: 0, engine: 'none', yearAssumed: false, agreed: 0, stop: '', needAgree: agree.checked, glare: 0, touched: 'picked', crop: null };
+        if (!current) current = { parsed: null, value: null, raw: '', ms: 0, aimMs: 0, computeMs: 0, frames: 0, skipped: 0, passes: 0, conf: 0, engine: 'none', yearAssumed: false, expired: false, agreed: 0, stop: '', needAgree: agree.checked, glare: 0, touched: 'picked', crop: null };
         current.value = v; current.touched = 'picked';
         logAttempt('picked');
       }), styleBtn(button('Log as not read', () => { if (current) { current.touched = 'none'; current.value = null; logAttempt('unread'); } }), '#888'));
     }
   }
 
-  function finish(g: { value: MonthYear | null; raw: string; ms: number; aimMs: number; computeMs: number; frames: number; skipped: number; passes: number; conf: number; yearAssumed: boolean; crop: Gray | null; agreed?: number; stop?: string | null; lone?: string; glare?: number }, engineName: string) {
-    current = { parsed: g.value, value: g.value, raw: g.raw, ms: g.ms, aimMs: g.aimMs, computeMs: g.computeMs, frames: g.frames, skipped: g.skipped, passes: g.passes, conf: g.conf, engine: engineName, yearAssumed: g.yearAssumed, agreed: g.agreed ?? 0, stop: g.stop ?? '', needAgree: agree.checked, glare: g.glare ?? 0, touched: g.value ? 'none' : 'picked', crop: g.crop };
+  function finish(g: { value: MonthYear | null; raw: string; ms: number; aimMs: number; computeMs: number; frames: number; skipped: number; passes: number; conf: number; yearAssumed: boolean; expired?: boolean; crop: Gray | null; agreed?: number; stop?: string | null; lone?: string; glare?: number }, engineName: string) {
+    current = { parsed: g.value, value: g.value, raw: g.raw, ms: g.ms, aimMs: g.aimMs, computeMs: g.computeMs, frames: g.frames, skipped: g.skipped, passes: g.passes, conf: g.conf, engine: engineName, yearAssumed: g.yearAssumed, expired: !!g.expired, agreed: g.agreed ?? 0, stop: g.stop ?? '', needAgree: agree.checked, glare: g.glare ?? 0, touched: g.value ? 'none' : 'picked', crop: g.crop };
     cam.video.pause(); // freeze the preview on the frame that was read
     if (g.value) {
       phase = 'result';
-      status.set('got', undefined, 'date', g.yearAssumed ? '(year assumed)' : '');
+      status.set('got', undefined, 'date', [g.yearAssumed ? '(year assumed)' : '', g.expired ? '(expired)' : ''].filter(Boolean).join(' '));
       navigator.vibrate?.(60);
     } else {
       phase = 'none';
@@ -180,12 +180,12 @@ export function mount(root: HTMLElement) {
         const t1 = performance.now();
         const res = await readDate(engine, crop, rot.checked ? { rotations: [0, 90, 270, 180] } : {});
         const ms = performance.now() - t1;
-        finish({ value: res.value, raw: res.text, ms, aimMs: 0, computeMs: ms, frames: 1, skipped: 0, passes: res.variants, conf: res.confidence, yearAssumed: res.yearAssumed, crop }, engine.name);
+        finish({ value: res.value, raw: res.text, ms, aimMs: 0, computeMs: ms, frames: 1, skipped: 0, passes: res.variants, conf: res.confidence, yearAssumed: res.yearAssumed, expired: res.expired, crop }, engine.name);
         return;
       }
       const lo = await scanUntil(cam, engine, auto.checked ? 10000 : 0, () => stopFlag, (s, i) => status.set(s, i), { ...(rot.checked ? { rotations: [0, 90, 270, 180] as (0 | 90 | 180 | 270)[] } : {}), needAgree: agree.checked });
       if (lo.outcome === 'stopped') { backToReady(); note.textContent = 'stopped'; return; }
-      finish({ value: lo.res?.value ?? null, raw: lo.res?.text ?? '', ms: lo.totalMs, aimMs: lo.aimMs, computeMs: lo.computeMs, frames: lo.frames, skipped: lo.skipped, passes: lo.res?.variants ?? 0, conf: lo.res?.confidence ?? 0, yearAssumed: lo.res?.yearAssumed ?? false, crop: lo.crop, agreed: lo.agreed, stop: lo.stop, lone: lo.lone ? fmtMY(lo.lone.value) : undefined, glare: lo.glare }, engine.name);
+      finish({ value: lo.res?.value ?? null, raw: lo.res?.text ?? '', ms: lo.totalMs, aimMs: lo.aimMs, computeMs: lo.computeMs, frames: lo.frames, skipped: lo.skipped, passes: lo.res?.variants ?? 0, conf: lo.res?.confidence ?? 0, yearAssumed: lo.res?.yearAssumed ?? false, expired: lo.res?.expired ?? false, crop: lo.crop, agreed: lo.agreed, stop: lo.stop, lone: lo.lone ? fmtMY(lo.lone.value) : undefined, glare: lo.glare }, engine.name);
     } catch (e) {
       backToReady(); note.textContent = String(e);
     } finally { reading = false; }

@@ -4,7 +4,7 @@ import { parseDates, fmtMY } from './parse.ts';
 const NOW = new Date(2026, 10, 15); // 15 Nov 2026
 
 // [ocr text, expected "MM/YYYY" or null (must NOT produce a date)]
-export const CASES: [string, string | null, boolean?][] = [
+export const CASES: [string, string | null, boolean?, boolean?][] = [ // [text, want, year assumed?, expired?]
   ['BB 06/2027', '06/2027'],
   ['L2314B 14:32 BB 06/2027', '06/2027'],
   ['BEST BEFORE END 03/2028', '03/2028'],
@@ -33,7 +33,7 @@ export const CASES: [string, string | null, boolean?][] = [
   ['BB 06/2020', null], // expired
   ['BB 06/2040', null], // >10 years
   ['BB 11/2026', '11/2026'], // this month counts
-  ['BB 10/2026', null], // last month
+  ['BB 10/2026', '10/2026', false, true], // last month, labelled: expired (round 4a; was none)
   ['BB 11/2036', '11/2036'], // exactly +10y
   ['BB 12/2036', null],
   ['BB O6/2O27', '06/2027'],
@@ -110,6 +110,47 @@ export const CASES: [string, string | null, boolean?][] = [
   ['11 NOVEMBER', '11/2026', true],
   ['11 NOVA', null],
   ['BB 06/2027 11 NOV', '06/2027'], // a real date beats an assumed-year one
+
+  // ---- round 4a: expired dates (decision 135). Up to 2 years back, only with a label or as a full day-month-year; today 15 Nov 2026
+  ['BEST BEFORE 09/2026', '09/2026', false, true], // labelled past
+  ['BB 06/2025', '06/2025', false, true], // 17 months back
+  ['USE BY 14 MAR 2026', '03/2026', false, true],
+  ['EXP 12.25', '12/2025', false, true],
+  ['BB 11/2024', '11/2024', false, true], // exactly 24 months back
+  ['BB 10/2024', null], // 25 months back
+  ['BB 06/2020', null], // far past
+  ['05.06.26', '06/2026', false, true], // unlabelled full DD.MM.YY
+  ['12/03/2026', '03/2026', false, true], // unlabelled full DD/MM/YYYY
+  ['14 MAR 26', '03/2026', false, true], // unlabelled DD MMM YY
+  ['22 03 2026', '03/2026', false, true], // spaced DD MM YYYY
+  ['22 03 26', null], // spaced DD MM YY still needs a label
+  ['BEST BEFORE 22 03 26', '03/2026', false, true],
+  ['09/2026', null], // bare past MM/YY: probably a code
+  ['09/26', null],
+  ['SEP 26', null], // bare past MMM YY
+  ['L2314B 09 26', null], // batch-code-looking runs
+  ['LOT 12 03 2026', null],
+  ['BATCH 05.06.26', null],
+  ['BATCH CODE: 22 03 2026', null],
+  ['PACKED 05.06.26', null], // a pack date is never an expiry date
+  ['PROD 10/2025 BB 10/2027', '10/2027'],
+  ['BB 06/2027 BB 06/2026', '06/2027'], // future and past both labelled: the future one
+  ['BB 09/2026 06/2027', '09/2026', false, true], // labelled past beats unlabelled future
+  ['09/2026 05.06.26', '06/2026', false, true], // two unlabelled: only the full past date counts
+  ['BB 12/2026 05.06.26', '12/2026'], // labelled future beats unlabelled full past
+  ['12/2027 05.06.26', '12/2027'], // future beats unlabelled past
+  ['05.06.26 11 NOV', '11/2026', true], // an assumed-year read beats an unlabelled past date
+  ['BB 09/2026 11 NOV', '09/2026', false, true], // ...but a labelled past date beats an assumed one
+  // the owner's 09/2026 misread: raw OCR '01:612229 . 12.26'. The 09/2026 is not in the text. 12.26 matched bare MM.YY,
+  // which reads like a price or weight, so a dotted two-digit-year MM.YY now needs a label
+  ['01:612229 . 12.26', null],
+  ['12.26', null],
+  ['BB 12.26', '12/2026'],
+  ['BB 06/27', '06/2027'],
+  ['12/26', '12/2026'], // a slash is still a date
+  // ---- round 4a: the crisp packet (12 Jun 2027, three printed lines, no label)
+  ['12 06 27 GBS 305 255 05:13 2004', null], // the printed lines joined
+  ['1206 27 089 306 390 05:13 2004 POPPED', null], // what the phone OCR returned
 ];
 
 // month-level year with a different today: the wide-crop milk read `1 NOV` on 5 Nov 2026 is 11/2026
@@ -120,12 +161,13 @@ const EXTRA: [string, Date, string | null][] = [
 ];
 let ok = 0;
 const fails: string[] = [];
-for (const [text, want, assumed] of CASES) {
+for (const [text, want, assumed, expired] of CASES) {
   const r = parseDates(text, NOW);
   const got = r.best ? fmtMY(r.best) : null;
   const gotAssumed = !!r.best?.yearAssumed;
-  if (got === want && gotAssumed === !!assumed) ok++;
-  else fails.push(`  "${text}" -> ${got}${gotAssumed ? ' (year assumed)' : ''} (want ${want}${assumed ? ' (year assumed)' : ''})`);
+  const gotExpired = !!r.best?.expired;
+  if (got === want && gotAssumed === !!assumed && gotExpired === !!expired) ok++;
+  else fails.push(`  "${text}" -> ${got}${gotAssumed ? ' (year assumed)' : ''}${gotExpired ? ' expired' : ''} (want ${want}${assumed ? ' (year assumed)' : ''}${expired ? ' expired' : ''})`);
 }
 for (const [text, now, want] of EXTRA) {
   const r = parseDates(text, now);

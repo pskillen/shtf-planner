@@ -54,6 +54,10 @@ const Y = String(NOW_YEAR + 2); // a printed year clear of the parser's limits
   const { out } = await run(['BEST BEFORE 11 NOV'], { needAgree: true, conf: 0.99 });
   check('on: assumed year needs two', out.outcome === 'got' && out.stop === 'agreement' && out.agreed === 2 && out.res?.yearAssumed === true, brief(out));
 }
+{ // an expired date, even labelled and clean, is never sure on its own: it needs two frames
+  const { out } = await run(['BEST BEFORE 06 10 ' + String(NOW_YEAR - 1)], { needAgree: true, conf: 0.99 });
+  check('on: expired needs two', out.outcome === 'got' && out.stop === 'agreement' && out.agreed === 2 && out.res?.expired === true, brief(out));
+}
 { // two frames that disagree never settle: none, with the first reported as seen once
   const { out } = await run(Array.from({ length: 40 }, (_, i) => 'BB ' + String((i % 12) + 1).padStart(2, '0') + '/' + Y), { needAgree: true, conf: 0.9, timeoutMs: 700 });
   check('on: disagreeing frames give none', out.outcome === 'none' && out.res?.value === null && !!out.lone, brief(out) + ' lone ' + JSON.stringify(out.lone));

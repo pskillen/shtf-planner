@@ -142,7 +142,7 @@ export async function scanUntil(
   const aborted = abort();
   // the last frame's read, minus its date: anything left unconfirmed is reported as `lone`, never as an answer
   const lone = [...seen.values()].sort((a, b) => b.n - a.n)[0];
-  const rest = lastRes ? { ...lastRes, value: null, yearAssumed: false } : null;
+  const rest = lastRes ? { ...lastRes, value: null, yearAssumed: false, expired: false } : null;
   return {
     outcome: aborted ? 'stopped' : 'none', res: rest, crop: last, frames, skipped, glare, totalMs: total, aimMs: total, computeMs: lastRes?.ms ?? 0, ms: total, aborted,
     agreed: 0, stop: null, lone: lone ? { value: lone.v, text: lone.text } : null,
