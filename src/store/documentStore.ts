@@ -6,6 +6,8 @@ import {
   MIGRATIONS,
   SCHEMA_VERSION,
   SchemaTooNewError,
+  SchemaTooOldError,
+  oldestOf,
   type Document,
   type Env,
   type MigrationStep,
@@ -22,6 +24,11 @@ export type StoreStatus =
   | { kind: 'ok' }
   /** The document is from a newer build: `change` throws `SchemaTooNewError`. Update this device. */
   | { kind: 'too-new'; found: number; supported: number; error: SchemaTooNewError }
+  /**
+   * The household is from before schema 4 (the stock model): nothing is read, written or
+   * reconciled; `change` throws `SchemaTooOldError`. The person starts a new household.
+   */
+  | { kind: 'too-old'; found: number; oldest: number; error: SchemaTooOldError }
   /** The document does not validate and could not be brought forward: read-only. */
   | { kind: 'invalid'; error: Error };
 
@@ -34,7 +41,8 @@ export interface DocumentStore {
   status(): StoreStatus;
   /**
    * Runs `fn` on a plain draft of the current document and writes only what changed, in one
-   * transaction labelled `label`. Throws `SchemaTooNewError` when the store is read-only. In dev
+   * transaction labelled `label`. Throws `SchemaTooNewError` or `SchemaTooOldError` when the
+   * store is read-only. In dev
    * builds the draft is validated against the schema first and nothing is written if it fails.
    */
   change(label: string, fn: (draft: Document) => void): void;
@@ -125,6 +133,9 @@ export async function openStore(options: OpenOptions = {}): Promise<DocumentStor
     if (typeof found === 'number' && found > target) {
       const error = new SchemaTooNewError(found, target);
       status = { kind: 'too-new', found, supported: target, error };
+    } else if (typeof found === 'number' && found < oldestOf(steps, target)) {
+      const oldest = oldestOf(steps, target);
+      status = { kind: 'too-old', found, oldest, error: new SchemaTooOldError(found, oldest) };
     } else if (invalid) status = { kind: 'invalid', error: invalid };
     else status = { kind: 'ok' };
     for (const l of Array.from(listeners)) l(snapshot, status);
@@ -153,6 +164,7 @@ export async function openStore(options: OpenOptions = {}): Promise<DocumentStor
         write(result.doc, 'reconcile');
       }
     } else if (result.kind === 'invalid') invalid = result.error;
+    // too-new and too-old: nothing is written; `refresh` reports the status.
     refresh();
   }
 
@@ -201,13 +213,13 @@ export async function openStore(options: OpenOptions = {}): Promise<DocumentStor
   }
 
   // First run: an empty document. Otherwise bring what is stored forward.
-  // A fresh device on a bumped build writes schema-1 content (frozen), then is brought forward
-  // like any other document, so its first snapshot is already at the target shape.
+  // A fresh device writes the frozen first-run content, then is brought forward like any other
+  // document, so its first snapshot is already at the target shape.
   if (root.size === 0) initialise();
   afterRemote();
 
   function readOnlyError(): Error {
-    if (status.kind === 'too-new') return status.error;
+    if (status.kind === 'too-new' || status.kind === 'too-old') return status.error;
     if (status.kind === 'invalid') return status.error;
     return new Error('The store is read-only.');
   }
@@ -233,10 +245,11 @@ export async function openStore(options: OpenOptions = {}): Promise<DocumentStor
     importJson(json, mode) {
       if (mode !== 'replace') throw new Error(`Unknown import mode "${String(mode)}".`);
       // A document from a newer build is never overwritten by an import: update this device
-      // first. An `invalid` store is the recovery case, so it may be replaced.
+      // first. An `invalid` or `too-old` store is the recovery case, so it may be replaced (by a
+      // document of this schema: an older file is refused).
       if (status.kind === 'too-new') throw status.error;
       const result = bringForward(JSON.parse(json), steps, target);
-      if (result.kind === 'too-new') throw result.error;
+      if (result.kind === 'too-new' || result.kind === 'too-old') throw result.error;
       if (result.kind === 'invalid') throw result.error;
       const next = result.doc;
       // The live document's identity survives a restore: its creation time, and the devices that

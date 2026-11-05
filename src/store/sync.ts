@@ -1,4 +1,4 @@
-import { SCHEMA_VERSION, type Env } from '../model';
+import { OLDEST_SCHEMA_VERSION, SCHEMA_VERSION, type Env } from '../model';
 import type { DocumentStore } from './documentStore';
 import {
   DriveAuthError,
@@ -66,6 +66,11 @@ export interface SyncState {
   buildEnv: string;
   /** This device has data and Drive has a household: ask before merging them. */
   firstConnect: boolean;
+  /**
+   * Drive holds a household from before schema 4 (the stock model), which this build cannot open.
+   * Nothing was merged. A question waits: replace it with this device's household, or leave it.
+   */
+  oldRemote: boolean;
   /** A one-line message to toast ("3 changes from your other device"). */
   notice: { id: number; text: string } | null;
   /** ISO time of the last look at Drive. */
@@ -118,6 +123,7 @@ export interface SyncOptions {
 
 export const NEWER_VERSION_MESSAGE = 'Your other device runs a newer version; update this one';
 export const RECONNECT_MESSAGE = 'Reconnect Google Drive';
+export const OLDER_REMOTE_MESSAGE = 'Google Drive has a household from an older version of the app';
 
 export interface Sync {
   state(): SyncState;
@@ -145,6 +151,11 @@ export interface Sync {
   resolveEnv(choice: 'continue' | 'dont-sync'): Promise<void>;
   /** The first-connect question. */
   resolveFirstConnect(choice: 'merge' | 'cancel'): Promise<void>;
+  /**
+   * The older-household question. `replace`: this device's household is pushed over Drive's old
+   * one (the base is forgotten). `cancel`: sync stays off until the app is reopened.
+   */
+  resolveOldRemote(choice: 'replace' | 'cancel'): Promise<void>;
   dismissNotice(): void;
   /** Resolves when no operation is running or queued (for tests and the e2e hook). */
   whenIdle(): Promise<void>;
@@ -172,6 +183,8 @@ export function createSync(options: SyncOptions): Sync {
   let fileEnv: string | null = null;
   let firstConnect = false;
   let firstConnectOk = false;
+  /** Set while Drive's copy is from before schema 4: the files as last looked at. */
+  let oldRemote: Remote | null = null;
   const envAccepted = new Set<string>();
   let notice: SyncState['notice'] = null;
   let noticeId = 0;
@@ -199,7 +212,7 @@ export function createSync(options: SyncOptions): Sync {
       if (problem.kind === 'offline') return { ...problem, edits: rec.edits };
       return problem;
     }
-    if (rec.conflicts.length > 0 || envWarning || firstConnect) {
+    if (rec.conflicts.length > 0 || envWarning || firstConnect || oldRemote) {
       return { kind: 'remoteNewer', at: checkedAt ?? iso() };
     }
     if (rec.dirty) return { kind: 'pending', since: rec.dirtySince ?? iso(), edits: rec.edits };
@@ -217,6 +230,7 @@ export function createSync(options: SyncOptions): Sync {
       fileEnv,
       buildEnv: env,
       firstConnect,
+      oldRemote: oldRemote !== null,
       notice,
       checkedAt,
     };
@@ -232,6 +246,7 @@ export function createSync(options: SyncOptions): Sync {
     fileEnv: null,
     buildEnv: env,
     firstConnect: false,
+    oldRemote: false,
     notice: null,
     checkedAt: null,
   };
@@ -326,7 +341,8 @@ export function createSync(options: SyncOptions): Sync {
       store.status().kind !== 'ok' ||
       rec.conflicts.length > 0 ||
       envWarning !== null ||
-      firstConnect
+      firstConnect ||
+      oldRemote !== null
     );
   }
 
@@ -482,7 +498,7 @@ export function createSync(options: SyncOptions): Sync {
         if (e instanceof DriveAuthError || e instanceof DriveNetworkError) throw e;
         meta = undefined; // unreadable sidecar: the CRDT's own meta is checked below
       }
-      if (meta && !guard(meta)) return 'blocked';
+      if (meta && !guard(meta, remote)) return 'blocked';
     }
 
     const bytes = await drive.readBytes(yjs.id);
@@ -494,7 +510,7 @@ export function createSync(options: SyncOptions): Sync {
       return 'blocked';
     }
     const remoteMeta = remotePlain.meta as { schemaVersion?: unknown; env?: unknown } | undefined;
-    if (!guard(remoteMeta)) return 'blocked';
+    if (!guard(remoteMeta, remote)) return 'blocked';
 
     const localDoc = store.get();
     const localBlank = isBlank(localDoc);
@@ -549,10 +565,18 @@ export function createSync(options: SyncOptions): Sync {
   }
 
   /** Returns false (and records why) when the file on Drive must not be merged. */
-  function guard(meta: { schemaVersion?: unknown; env?: unknown } | undefined): boolean {
+  function guard(
+    meta: { schemaVersion?: unknown; env?: unknown } | undefined,
+    remote: Remote,
+  ): boolean {
     const version = meta?.schemaVersion;
     if (typeof version === 'number' && version > SCHEMA_VERSION) {
       problem = { kind: 'error', message: NEWER_VERSION_MESSAGE };
+      return false;
+    }
+    if (typeof version === 'number' && version < OLDEST_SCHEMA_VERSION) {
+      // From before the stock model: nothing is merged, and a question waits.
+      oldRemote = remote;
       return false;
     }
     const seenEnv = typeof meta?.env === 'string' ? meta.env : undefined;
@@ -770,6 +794,7 @@ export function createSync(options: SyncOptions): Sync {
         envWarning = null;
         firstConnect = false;
         firstConnectOk = false;
+        oldRemote = null;
         paused = false;
         // Only the connection goes. The last synced state, the Drive ids and any which-copy
         // questions stay: connecting again on the same account compares against what both sides
@@ -848,6 +873,42 @@ export function createSync(options: SyncOptions): Sync {
       firstConnect = false;
       firstConnectOk = true;
       publish();
+      await requestSync();
+    },
+
+    async resolveOldRemote(choice) {
+      if (!oldRemote) return;
+      if (choice === 'cancel') {
+        oldRemote = null;
+        paused = true; // like "Don't sync": edits count as unsent, nothing is sent
+        problem = {
+          kind: 'error',
+          message: `${OLDER_REMOTE_MESSAGE}. Sync is off until the app is reopened`,
+        };
+        publish();
+        return;
+      }
+      await enqueue(async () => {
+        const old = oldRemote;
+        if (!old) return;
+        oldRemote = null;
+        const account = rec.account;
+        // The old file's history is not ours: forget the base, keep the Drive ids, and record the
+        // file's current modified time so the push's re-check sees nothing moved and writes over it.
+        base = undefined;
+        await persistence.clear();
+        rec = emptySyncRecord();
+        await save({
+          account,
+          folderId: old.folderId,
+          yjsFileId: old.yjs?.id,
+          jsonFileId: old.json?.id,
+          remoteModified: old.yjs?.modifiedTime,
+        });
+        await markDirty();
+        clearProblem();
+        publish();
+      });
       await requestSync();
     },
 

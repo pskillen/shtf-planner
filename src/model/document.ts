@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { ItemTypeSchema } from './packs';
 import {
   ConditionSchema,
   InsulationSchema,
@@ -7,6 +6,7 @@ import {
   LocalRiskSchema,
   RegionSchema,
   RiskTagSchema,
+  SizeSchema,
 } from './primitives';
 
 /**
@@ -17,7 +17,7 @@ import {
  * Ids are strings: `crypto.randomUUID()` for instances, `"<packId>:<localId>"` for pack things.
  * Dates are ISO `YYYY-MM-DD`, month-only dates `YYYY-MM`, timestamps ISO strings.
  */
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 /** The deploy targets (the footer shows one; `src/util/build-env.ts` re-exports this type). */
 export const ENVS = ['local', 'preview', 'dev', 'next', 'staging', 'prod'] as const;
@@ -154,20 +154,39 @@ export const AssetSchema = z.object({
 });
 export type Asset = z.infer<typeof AssetSchema>;
 
-export const ItemInstanceSchema = z.object({
+/** The household's own specific thing: what it is called, its size, what it counts as. */
+export const ProductSchema = z.object({
   id: Id,
-  /** A pack-namespaced item type id. */
-  typeId: Id,
-  qty: z.number().min(0),
+  name: z.string().min(1),
+  /** The pack item it counts as; absent: it counts towards nothing (kept, listed, scores nothing). */
+  itemId: Id.optional(),
+  size: SizeSchema,
+  /** kcal per 100 g or 100 ml from the label (Open Food Facts), when known; replaces the item's typical. */
+  labelKcalPer100: z.number().min(0).optional(),
+  added: IsoDateSchema,
+});
+export type Product = z.infer<typeof ProductSchema>;
+
+/** A quantity of one product in one place, with its best-before month. Quarters allowed (part-used packs). */
+export const StockSchema = z.object({
+  id: Id,
+  productId: Id,
+  qty: z
+    .number()
+    .positive()
+    .refine((q) => Number.isInteger(q * 4), 'whole packs or quarters'),
   locationId: Id,
   bestBefore: YearMonthSchema.optional(),
   added: IsoDateSchema,
   source: z.enum(['manual', 'barcode']),
 });
-export type ItemInstance = z.infer<typeof ItemInstanceSchema>;
+export type Stock = z.infer<typeof StockSchema>;
 
-/** Floors are keyed `${locationId}|${typeId}`. */
-export const floorKey = (locationId: string, typeId: string): string => `${locationId}|${typeId}`;
+/**
+ * Minimums are keyed `minimumKey(locationId, itemId)`: the least kept of an item in a rotating
+ * place, in packs of any of its products.
+ */
+export const minimumKey = (locationId: string, itemId: string): string => `${locationId}|${itemId}`;
 
 export const PlanItemSchema = z.object({
   doneAt: IsoDateSchema.optional(),
@@ -186,28 +205,30 @@ export const ReviewSchema = z.object({
 });
 export type Review = z.infer<typeof ReviewSchema>;
 
-/** A barcode the household has told the app about: which item type it is. Keyed by `normaliseGtin(code)`. */
+/** A barcode the household has met: which product it is. Keyed by `normaliseGtin(code)`. */
 export const BarcodeSchema = z.object({
-  /** A pack or custom item type id; never an equipment entry. */
-  typeId: Id,
-  /** What Open Food Facts called it, for display ("Heinz baked beans 415 g"). */
-  name: z.string().optional(),
+  productId: Id,
   /** First remembered (not updated on every scan: no churn). */
   seen: IsoDateSchema,
 });
 export type Barcode = z.infer<typeof BarcodeSchema>;
 
-/** What Open Food Facts said about a queued scan, once looked up. */
-export const ProductInfoSchema = z.object({
+/** What Open Food Facts said about a queued scan, once looked up: enough to make the product later. */
+export const OffFactsSchema = z.object({
   found: z.boolean(),
   name: z.string().optional(),
-  /** OFF's `quantity` text, e.g. "415 g". */
+  brand: z.string().optional(),
+  /** OFF's own `quantity` text, e.g. "24 x 330 ml". */
   quantity: z.string().optional(),
+  size: SizeSchema.optional(),
+  kcalPer100: z.number().min(0).optional(),
+  /** OFF categories_tags (at most 20). A value array merges as a set: order is not kept, and not used. */
+  categories: z.array(z.string()).max(20).optional(),
   checked: Timestamp,
 });
-export type ProductInfo = z.infer<typeof ProductInfoSchema>;
+export type OffFacts = z.infer<typeof OffFactsSchema>;
 
-/** A scan saved for later: the type isn't chosen yet, so it counts towards nothing. */
+/** A scan saved for later: the product isn't chosen yet, so it counts towards nothing. */
 export const ScanSchema = z.object({
   id: Id,
   code: z.string().regex(/^\d{8,14}$/),
@@ -215,7 +236,7 @@ export const ScanSchema = z.object({
   locationId: Id,
   bestBefore: YearMonthSchema.optional(),
   scanned: Timestamp,
-  product: ProductInfoSchema.optional(),
+  off: OffFactsSchema.optional(),
 });
 export type Scan = z.infer<typeof ScanSchema>;
 
@@ -238,19 +259,16 @@ export const DocumentSchema = z.object({
   home: HomeSchema,
   locations: z.record(Id, LocationSchema),
   assets: z.record(Id, AssetSchema),
-  items: z.record(Id, ItemInstanceSchema),
-  /**
-   * Item types the household made itself ("Add as a custom item"), keyed by id (`custom:<uuid>`).
-   * The packs are read-only content; these sit beside them as a pseudo-pack `custom`
-   * (`withCustomTypes` in `src/packs`). Added in schema 2.
-   */
-  customTypes: z.record(Id, ItemTypeSchema),
-  /** Remembered barcodes: normalised GTIN to the item type it is. Added in schema 3. */
+  /** The household's products, keyed by id. Added in schema 4. */
+  products: z.record(Id, ProductSchema),
+  /** Remembered barcodes: normalised GTIN to the product it is. */
   barcodes: z.record(z.string(), BarcodeSchema),
-  /** Scans waiting to be sorted into stock, keyed by id. Added in schema 3. */
+  /** Quantities of products in places, keyed by id. */
+  stock: z.record(Id, StockSchema),
+  /** Scans waiting to be sorted into stock, keyed by id. */
   scans: z.record(Id, ScanSchema),
-  /** Minimum level counted for rotating locations, keyed by `floorKey`. */
-  floors: z.record(z.string(), z.number().min(0)),
+  /** Minimum kept of an item in a rotating place, keyed by `minimumKey`. */
+  minimums: z.record(z.string(), z.number().int().min(1)),
   /** Keyed by pack-namespaced plan item id. */
   plans: z.record(z.string(), PlanItemSchema),
   reviews: z.record(Id, ReviewSchema),
@@ -279,11 +297,11 @@ export function emptyDocument(env: Env, now: string = new Date().toISOString()):
     },
     locations: {},
     assets: {},
-    items: {},
-    customTypes: {},
+    products: {},
     barcodes: {},
+    stock: {},
     scans: {},
-    floors: {},
+    minimums: {},
     plans: {},
     reviews: {},
     settings: {

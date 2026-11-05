@@ -14,6 +14,28 @@ export class SchemaTooNewError extends Error {
   }
 }
 
+/** The oldest schema this build opens. Older households are never migrated: start a new one. */
+export const OLDEST_SCHEMA_VERSION = 4;
+
+/** The household is from before schema 4 (the stock model): never migrated; start a new one. */
+export class SchemaTooOldError extends Error {
+  readonly found: number;
+  readonly oldest: number;
+  constructor(found: number, oldest: number = OLDEST_SCHEMA_VERSION) {
+    super(
+      `This household uses schema version ${found}, which this app can no longer open (the oldest it opens is ${oldest}). Start a new household.`,
+    );
+    this.name = 'SchemaTooOldError';
+    this.found = found;
+    this.oldest = oldest;
+  }
+}
+
+/** The oldest version a step list can bring forward: its first step's `from`, else `target`. */
+export function oldestOf(steps: readonly MigrationStep[], target: number): number {
+  return steps.length > 0 ? Math.min(...steps.map((s) => s.from)) : target;
+}
+
 type Raw = Record<string, unknown>;
 
 /**
@@ -32,36 +54,10 @@ export interface MigrationStep {
 }
 
 /**
- * Schema 2 adds `customTypes`, the household's own item types. The step only creates the empty
- * container (it is per record and idempotent: one that exists is kept). The store writes the
- * container under a fixed client id (`src/store/stepContainers.ts`) so two devices that migrate
- * before they sync still share one.
+ * Ordered `v(n)` to `v(n+1)` steps. Empty: schema 4 started afresh (the stock model), so nothing
+ * older is migrated; the step machinery stays for schema 5 and later.
  */
-const addCustomTypes: MigrationStep = {
-  from: 1,
-  to: 2,
-  name: 'custom item types',
-  up: (raw) => ({ ...raw, customTypes: (raw.customTypes as Raw | undefined) ?? {} }),
-};
-
-/**
- * Schema 3 adds `barcodes` (remembered barcode to item type) and `scans` (scans waiting to be
- * sorted). Like schema 2 it only creates the empty containers; the store writes each under a fixed
- * client id. The two optional expiry settings are absent until set, so no step writes them.
- */
-const addScanning: MigrationStep = {
-  from: 2,
-  to: 3,
-  name: 'barcodes and scans',
-  up: (raw) => ({
-    ...raw,
-    barcodes: (raw.barcodes as Raw | undefined) ?? {},
-    scans: (raw.scans as Raw | undefined) ?? {},
-  }),
-};
-
-/** Ordered `v(n)` to `v(n+1)` steps. */
-export const MIGRATIONS: readonly MigrationStep[] = [addCustomTypes, addScanning];
+export const MIGRATIONS: readonly MigrationStep[] = [];
 
 function versionOf(raw: unknown): number {
   const meta = (raw as { meta?: { schemaVersion?: unknown } } | null)?.meta;
@@ -82,7 +78,7 @@ function runSteps(
   let v = fromVersion;
   while (v < target) {
     const step = steps.find((s) => s.from === v);
-    if (!step) throw new Error(`No migration from schema version ${v} to ${v + 1}.`);
+    if (!step) throw new SchemaTooOldError(v, oldestOf(steps, target));
     doc = step.up(doc);
     v = step.to;
     doc = { ...doc, meta: { ...(doc.meta as Raw), schemaVersion: v } };
@@ -98,6 +94,7 @@ export function migrateWith(
 ): Document {
   const found = versionOf(raw);
   if (found > target) throw new SchemaTooNewError(found, target);
+  if (found < oldestOf(steps, target)) throw new SchemaTooOldError(found, oldestOf(steps, target));
   const input = structuredClone(raw) as Raw;
   return DocumentSchema.parse(runSteps(input, found, steps, target));
 }
@@ -121,9 +118,10 @@ export function reconcileWith(
 ): Document {
   const found = versionOf(raw);
   if (found > target) throw new SchemaTooNewError(found, target);
+  const first = oldestOf(steps, target);
+  if (found < first) throw new SchemaTooOldError(found, first);
   const input = structuredClone(raw) as Raw;
-  const first = steps.length > 0 ? Math.min(...steps.map((s) => s.from)) : target;
-  const all = runSteps(input, Math.min(found, first), steps, target);
+  const all = runSteps(input, first, steps, target);
   return DocumentSchema.parse({ ...all, meta: { ...(all.meta as Raw), schemaVersion: target } });
 }
 
@@ -145,13 +143,14 @@ export function traceSteps(
 ): StepTrace[] {
   const found = versionOf(raw);
   if (found > target) throw new SchemaTooNewError(found, target);
-  const first = steps.length > 0 ? Math.min(...steps.map((s) => s.from)) : target;
+  const first = oldestOf(steps, target);
+  if (found < first) throw new SchemaTooOldError(found, first);
   let doc = structuredClone(raw) as Raw;
-  let v = Math.min(found, first);
+  let v = first;
   const out: StepTrace[] = [];
   while (v < target) {
     const step = steps.find((s) => s.from === v);
-    if (!step) throw new Error(`No migration from schema version ${v} to ${v + 1}.`);
+    if (!step) throw new SchemaTooOldError(v, oldestOf(steps, target));
     const output = step.up(structuredClone(doc));
     out.push({ step, input: doc, output });
     v = step.to;

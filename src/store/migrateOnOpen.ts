@@ -2,6 +2,7 @@ import {
   MIGRATIONS,
   SCHEMA_VERSION,
   SchemaTooNewError,
+  SchemaTooOldError,
   reconcileWith,
   type Document,
   type Env,
@@ -12,6 +13,8 @@ import {
 export type Loaded =
   | { kind: 'ok'; doc: Document }
   | { kind: 'too-new'; error: SchemaTooNewError }
+  /** From before the stock model (schema 4): never migrated, the household starts afresh. */
+  | { kind: 'too-old'; error: SchemaTooOldError }
   | { kind: 'invalid'; error: Error };
 
 /**
@@ -30,6 +33,7 @@ export function bringForward(
     return { kind: 'ok', doc: reconcileWith(raw, steps, target) };
   } catch (e) {
     if (e instanceof SchemaTooNewError) return { kind: 'too-new', error: e };
+    if (e instanceof SchemaTooOldError) return { kind: 'too-old', error: e };
     return { kind: 'invalid', error: e instanceof Error ? e : new Error(String(e)) };
   }
 }

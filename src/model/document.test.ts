@@ -3,18 +3,21 @@ import {
   AssetSchema,
   DocumentSchema,
   ENVS,
-  ItemInstanceSchema,
   LocationSchema,
   MedicationSchema,
   MemberSchema,
   PetSchema,
   PlanItemSchema,
+  ProductSchema,
   ReviewSchema,
   SCHEMA_VERSION,
+  ScanSchema,
   SettingsSchema,
+  StockSchema,
   emptyDocument,
-  floorKey,
+  minimumKey,
 } from './document';
+import { SizeSchema } from './primitives';
 
 const roundTrip = <T>(schema: { parse: (v: unknown) => T }, value: T): T =>
   schema.parse(JSON.parse(JSON.stringify(value)));
@@ -77,16 +80,51 @@ describe('the document model', () => {
     };
     expect(roundTrip(AssetSchema, asset)).toEqual(asset);
 
-    const item = {
-      id: 'i',
-      typeId: 'items-base:water-can',
-      qty: 2,
+    const product = {
+      id: 'p1',
+      name: 'Heinz Beanz 415 g',
+      itemId: 'items-base:baked-beans',
+      size: { amount: 415, unit: 'g' as const },
+      labelKcalPer100: 75,
+      added: '2026-01-02',
+    };
+    expect(roundTrip(ProductSchema, product)).toEqual(product);
+    const nothing = {
+      id: 'p2',
+      name: 'Garden twine',
+      size: { amount: 1, unit: 'pieces' as const },
+      added: '2026-01-02',
+    };
+    expect(roundTrip(ProductSchema, nothing)).toEqual(nothing);
+
+    const stock = {
+      id: 's',
+      productId: 'p1',
+      qty: 2.5,
       locationId: 'l',
       bestBefore: '2027-06',
       added: '2026-01-02',
       source: 'barcode' as const,
     };
-    expect(roundTrip(ItemInstanceSchema, item)).toEqual(item);
+    expect(roundTrip(StockSchema, stock)).toEqual(stock);
+
+    const scan = {
+      id: 'q',
+      code: '5449000000996',
+      qty: 1,
+      locationId: 'l',
+      scanned: '2026-01-02T10:00:00.000Z',
+      off: {
+        found: true,
+        name: 'Zx Cola',
+        quantity: '24 x 330 ml',
+        size: { count: 24, amount: 330, unit: 'ml' as const },
+        kcalPer100: 42,
+        categories: ['en:sodas'],
+        checked: '2026-01-02T10:00:01.000Z',
+      },
+    };
+    expect(roundTrip(ScanSchema, scan)).toEqual(scan);
 
     expect(roundTrip(PlanItemSchema, { doneAt: '2026-01-01', note: 'done' })).toEqual({
       doneAt: '2026-01-01',
@@ -112,9 +150,9 @@ describe('the document model', () => {
       MemberSchema.parse({ id: 'a', name: 'A', dob: '12/03/1984', tags: [], medication: [] }),
     ).toThrow();
     expect(() =>
-      ItemInstanceSchema.parse({
+      StockSchema.parse({
         id: 'i',
-        typeId: 't',
+        productId: 'p',
         qty: 1,
         locationId: 'l',
         bestBefore: '2027-06-01',
@@ -127,7 +165,40 @@ describe('the document model', () => {
     ).toThrow();
   });
 
-  it('keys floors by location and type', () => {
-    expect(floorKey('loc', 'items-base:tinned-food')).toBe('loc|items-base:tinned-food');
+  it('stock quantities are whole packs or quarters', () => {
+    const base = {
+      id: 's',
+      productId: 'p',
+      locationId: 'l',
+      added: '2026-01-02',
+      source: 'manual',
+    };
+    for (const qty of [0.25, 0.5, 0.75, 1, 1.5, 12]) {
+      expect(StockSchema.safeParse({ ...base, qty }).success, String(qty)).toBe(true);
+    }
+    for (const qty of [1 / 3, 0.1, 0, -1, 2.2]) {
+      expect(StockSchema.safeParse({ ...base, qty }).success, String(qty)).toBe(false);
+    }
+  });
+
+  it('sizes are an amount and a unit, with an optional multipack count of two or more', () => {
+    expect(SizeSchema.safeParse({ amount: 500, unit: 'ml' }).success).toBe(true);
+    expect(SizeSchema.safeParse({ count: 24, amount: 500, unit: 'ml' }).success).toBe(true);
+    expect(SizeSchema.safeParse({ count: 1, amount: 500, unit: 'ml' }).success).toBe(false);
+    expect(SizeSchema.safeParse({ amount: 0, unit: 'g' }).success).toBe(false);
+    expect(SizeSchema.safeParse({ amount: 5, unit: 'oz' }).success).toBe(false);
+    expect(SizeSchema.safeParse({ amount: 5, unit: 'g', extra: 1 }).success).toBe(false);
+  });
+
+  it('keys minimums by location and item', () => {
+    expect(minimumKey('loc', 'items-base:baked-beans')).toBe('loc|items-base:baked-beans');
+  });
+
+  it('has no items, customTypes or floors any more', () => {
+    const doc = emptyDocument('local');
+    for (const gone of ['items', 'customTypes', 'floors']) expect(doc).not.toHaveProperty(gone);
+    for (const kept of ['products', 'barcodes', 'stock', 'scans', 'minimums']) {
+      expect(doc).toHaveProperty(kept);
+    }
   });
 });

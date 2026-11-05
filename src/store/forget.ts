@@ -6,7 +6,13 @@ import { deleteSyncDatabase, type SyncPersistence } from './syncPersistence';
  * Per-device choices the Stores screens remember in localStorage (`src/app/screens/stores/stock.ts`
  * owns them; the store layer may not import it, so the names are repeated here).
  */
-const DEVICE_KEYS = ['shtf.lastLocationId', 'shtf.recentItemTypes'] as const;
+const DEVICE_KEYS = [
+  'shtf.lastLocationId',
+  'shtf.recentItems',
+  'shtf.recentProducts',
+  // The key schema 3 used for recent item types; removed once, harmlessly.
+  'shtf.recentItemTypes',
+] as const;
 
 function clearDeviceKeys(): void {
   for (const key of DEVICE_KEYS) {
@@ -52,17 +58,22 @@ async function revokeBestEffort(drive?: Pick<DrivePort, 'disconnect'>): Promise<
  * IndexedDB, forgets the remembered per-device choices, revokes the Drive token (best effort: offline or a slow Google must not stop the
  * forgetting) and drops the Drive sign-in. Nothing on Drive is touched. The caller reloads the
  * page afterwards, which starts from an empty household.
+ *
+ * With `keepDrive` (a household from an older version is being replaced) the Drive token is not
+ * revoked and the sign-in stays, so the person remains connected; the sync database, which holds
+ * the old base and file ids, is still deleted.
  */
 export async function forgetDeviceData(
   store?: DocumentStore,
   persistence?: SyncPersistence,
   drive?: Pick<DrivePort, 'disconnect'>,
+  opts: { keepDrive?: boolean } = {},
 ): Promise<void> {
-  await revokeBestEffort(drive);
+  if (!opts.keepDrive) await revokeBestEffort(drive);
   await store?.close();
   await persistence?.close();
   await deleteDatabase(DOCUMENT_DB_NAME);
   await deleteSyncDatabase();
-  clearDriveSession();
+  if (!opts.keepDrive) clearDriveSession();
   clearDeviceKeys();
 }
