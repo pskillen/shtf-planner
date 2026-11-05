@@ -574,15 +574,15 @@ export function createSync(options: SyncOptions): Sync {
       problem = { kind: 'error', message: NEWER_VERSION_MESSAGE };
       return false;
     }
-    if (typeof version === 'number' && version < OLDEST_SCHEMA_VERSION) {
-      // From before the stock model: nothing is merged, and a question waits.
-      oldRemote = remote;
-      return false;
-    }
     const seenEnv = typeof meta?.env === 'string' ? meta.env : undefined;
     if (seenEnv) fileEnv = seenEnv;
     if (seenEnv && seenEnv !== env && !envAccepted.has(seenEnv)) {
       envWarning = { fileEnv: seenEnv, buildEnv: env };
+      return false;
+    }
+    if (typeof version === 'number' && version < OLDEST_SCHEMA_VERSION) {
+      // From before the stock model: nothing is merged, and a question waits.
+      oldRemote = remote;
       return false;
     }
     return true;

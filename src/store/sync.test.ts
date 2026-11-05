@@ -977,6 +977,22 @@ describe('guards', () => {
     expect(b.sync.state().envWarning).toBeNull();
     expect(b.store.get().stock.a).toBeDefined();
   });
+
+  it('asks which build before offering to replace a schema-3 household from another environment', async () => {
+    const cloud = createFakeCloud();
+    const old = await device(cloud, { env: 'dev' });
+    setItem(old, 'old', 1);
+    await old.sync.connect();
+    const sidecar = JSON.parse(cloud.text(JSON_FILE_NAME)!);
+    sidecar.meta.schemaVersion = 3;
+    cloud.put(JSON_FILE_NAME, JSON.stringify(sidecar));
+    cloud.put(YJS_FILE_NAME, old.store.bytes());
+
+    const b = await device(cloud, { env: 'prod' });
+    await b.sync.connect();
+    expect(b.sync.state().envWarning).toEqual({ fileEnv: 'dev', buildEnv: 'prod' });
+    expect(b.sync.state().oldRemote).toBe(false);
+  });
 });
 
 describe('a household on Drive from before schema 4', () => {
