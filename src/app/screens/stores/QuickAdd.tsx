@@ -1,15 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  CATEGORIES,
-  STORE_INFO,
-  type AssetType,
-  type Category,
-  type ItemType,
-  type StoreId,
-} from '../../../model';
+import type { AssetType, Category, ItemType, ProductInfo } from '../../../model';
 import { today } from '../../../util';
-import { Field, NumberInput } from '../../components/controls';
+import { Field } from '../../components/controls';
 import { ExpiryBadge } from '../../components/ExpiryBadge';
 import { Sheet } from '../../components/Sheet';
 import { Stepper } from '../../components/Stepper';
@@ -17,13 +10,8 @@ import { CATEGORY_LABEL, labelOf } from '../../labels';
 import { useChange, useDocument } from '../../state';
 import { EQUIPMENT_PATH, equipmentAddPath } from '../assets/route';
 import { usePacks } from '../../usePacks';
-import {
-  DEFAULT_STORE,
-  GIVEABLE_STORES,
-  NEEDS_GIVES,
-  buildCustomType,
-  givesPrompt,
-} from './customType';
+import { CustomItemForm } from './CustomItemForm';
+import { ScanSheet } from './ScanSheet';
 import { MonthField } from './MonthField';
 import {
   addStock,
@@ -67,7 +55,7 @@ const COMMON = [
   'aa-cells-8',
 ];
 
-type Step = 'search' | 'form' | 'custom';
+type Step = 'search' | 'form' | 'custom' | 'scan';
 
 /**
  * Quick add: search for what you are putting away, pick it, then Add. The place is the last one
@@ -114,6 +102,8 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
   const [bestBefore, setBestBefore] = useState<string | undefined>(undefined);
   const [added, setAdded] = useState(0);
   const [last, setLast] = useState<string | null>(null);
+  /** The item in the form came from a barcode scan: it is saved as `barcode` and Next item scans again. */
+  const [viaScan, setViaScan] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -193,7 +183,17 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
   function put(): void {
     if (!type || !location) return;
     change('add stock', (d) => {
-      addStock(d, { typeId: type.id, qty, locationId, bestBefore }, today());
+      addStock(
+        d,
+        {
+          typeId: type.id,
+          qty,
+          locationId,
+          bestBefore,
+          ...(viaScan ? { source: 'barcode' as const } : {}),
+        },
+        today(),
+      );
     });
     writeLastLocation(locationId);
     pushRecent(type.id);
@@ -202,7 +202,8 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
     setLast(`Added ${qty} × ${type.name} to ${location.name}`);
   }
 
-  function pick(t: ItemType): void {
+  function pick(t: ItemType, scanned = false): void {
+    setViaScan(scanned);
     setType(t);
     setLocationId(defaultLocationId(doc, t.id, readLastLocation()));
     setQty(1);
@@ -215,7 +216,24 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
     setType(undefined);
     setLast(null);
     setQuery('');
-    setStep('search');
+    setStep(viaScan ? 'scan' : 'search');
+  }
+
+  /** Sort later: keep the scan in the queue with the place last used. */
+  function sortLater(code: string, product: ProductInfo | undefined): void {
+    const place = defaultLocationId(doc, '', readLastLocation());
+    if (!place) return;
+    change('keep scan to sort', (d) => {
+      const id = crypto.randomUUID();
+      d.scans[id] = {
+        id,
+        code,
+        qty: 1,
+        locationId: place,
+        scanned: new Date().toISOString(),
+        ...(product ? { product } : {}),
+      };
+    });
   }
 
   const counter =
@@ -224,6 +242,20 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
         Added this session: {added}
       </p>
     ) : null;
+
+  if (step === 'scan') {
+    return (
+      <ScanSheet
+        onClose={onClose}
+        onBack={() => {
+          setViaScan(false);
+          setStep('search');
+        }}
+        onType={(t) => pick(t, true)}
+        onSortLater={locations.length > 0 ? sortLater : undefined}
+      />
+    );
+  }
 
   if (step === 'custom') {
     return (
@@ -273,6 +305,9 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
         <>
           {counter}
           <div className="search-row">
+            <button type="button" className="secondary" onClick={() => setStep('scan')}>
+              Scan a barcode
+            </button>
             <Field label="What are you adding?">
               <input
                 ref={searchRef}
@@ -382,149 +417,6 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
           />
           {bestBefore ? <ExpiryBadge bestBefore={bestBefore} /> : null}
         </>
-      ) : null}
-    </Sheet>
-  );
-}
-
-/** "Add as a custom item": a name, a category and, for food and water, what one piece gives. */
-function CustomItemForm({
-  initialName,
-  onClose,
-  onBack,
-  onMade,
-}: {
-  initialName: string;
-  onClose: () => void;
-  onBack: () => void;
-  onMade: (type: ItemType) => void;
-}) {
-  const [name, setName] = useState(initialName);
-  const [category, setCategory] = useState<Category>('food');
-  const [unit, setUnit] = useState('each');
-  const [store, setStore] = useState<StoreId | ''>(DEFAULT_STORE.food ?? '');
-  const [amount, setAmount] = useState<number | undefined>(undefined);
-  const [problem, setProblem] = useState<string | null>(null);
-  // The amount is what is usually missing: say so beside it and put the cursor there.
-  const [amountMissing, setAmountMissing] = useState(false);
-  const amountBox = useRef<HTMLDivElement>(null);
-
-  function pickCategory(c: Category): void {
-    setCategory(c);
-    setStore(DEFAULT_STORE[c] ?? '');
-  }
-
-  const prompt = store
-    ? givesPrompt(store, unit)
-    : 'It will be listed but will not count towards the plan.';
-
-  return (
-    <Sheet
-      title="Add a custom item"
-      onClose={onClose}
-      dirty={name.trim() !== initialName.trim() || amount !== undefined}
-      actions={
-        <>
-          <button type="button" className="secondary" onClick={onBack}>
-            Back
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              const r = buildCustomType(
-                { name, category, unit, store: store || undefined, amount },
-                crypto.randomUUID(),
-              );
-              if (r.ok) return onMade(r.type);
-              const missing = Boolean(store) && !(amount !== undefined && amount > 0);
-              setAmountMissing(missing && name.trim() !== '');
-              setProblem(r.problem);
-              if (missing && name.trim() !== '') amountBox.current?.querySelector('input')?.focus();
-            }}
-          >
-            Save item
-          </button>
-        </>
-      }
-    >
-      <p className="muted">
-        For something the lists do not have. It is kept in your plan only, on this household’s
-        devices.
-      </p>
-      <Field label="Name">
-        <input
-          type="text"
-          autoComplete="off"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-      </Field>
-      <Field label="Category">
-        <select value={category} onChange={(e) => pickCategory(e.target.value as Category)}>
-          {CATEGORIES.map((c) => (
-            <option key={c} value={c}>
-              {labelOf(CATEGORY_LABEL, c)}
-            </option>
-          ))}
-        </select>
-      </Field>
-      <Field label="One piece is a…" hint="Tin, bottle, pack, each.">
-        <input
-          type="text"
-          autoComplete="off"
-          value={unit}
-          onChange={(e) => setUnit(e.target.value)}
-        />
-      </Field>
-      {NEEDS_GIVES.has(category) ? null : (
-        <Field label="What does it give?">
-          <select value={store} onChange={(e) => setStore(e.target.value as StoreId | '')}>
-            <option value="">Nothing the plan counts</option>
-            {GIVEABLE_STORES.map((s) => (
-              <option key={s} value={s}>
-                {STORE_INFO[s].name} ({STORE_INFO[s].unit})
-              </option>
-            ))}
-          </select>
-        </Field>
-      )}
-      {store ? (
-        <div ref={amountBox}>
-          <Field
-            label={
-              store === 'foodKcal'
-                ? 'About how many kcal?'
-                : store === 'waterL'
-                  ? 'About how many litres?'
-                  : prompt
-            }
-            hint={
-              amountMissing ? (
-                <span className="warn" role="alert">
-                  {problem}
-                </span>
-              ) : store === 'foodKcal' || store === 'waterL' ? (
-                prompt
-              ) : undefined
-            }
-          >
-            <NumberInput
-              value={amount}
-              min={0}
-              onChange={(v) => {
-                setAmount(v);
-                setAmountMissing(false);
-              }}
-            />
-          </Field>
-        </div>
-      ) : (
-        <p className="muted">{prompt}</p>
-      )}
-      {problem && !amountMissing ? (
-        <p className="warn" role="alert">
-          {problem}
-        </p>
       ) : null}
     </Sheet>
   );
