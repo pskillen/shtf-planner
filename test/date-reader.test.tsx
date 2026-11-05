@@ -191,6 +191,7 @@ describe('Quick add: Read the date', () => {
     render(
       s.wrap(<QuickAdd onClose={() => undefined} prefill={{ itemId: 'items-base:tinned-soup' }} />),
     );
+    fireEvent.click(screen.getByRole('button', { name: '400 g' }));
     return s;
   };
   const withDate = (s: ReturnType<typeof liveStore>, ym: string) =>

@@ -1,30 +1,28 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import type { AssetType, Category, Item, OffFacts, Product } from '../../../model';
+import type { Item, OffFacts, Product } from '../../../model';
 import { today } from '../../../util';
 import { Field } from '../../components/controls';
 import { ExpiryBadge } from '../../components/ExpiryBadge';
+import { QtyField } from '../../components/QtyField';
 import { Sheet } from '../../components/Sheet';
-import { Stepper } from '../../components/Stepper';
-import { CATEGORY_LABEL, labelOf } from '../../labels';
 import { useChange, useDocument } from '../../state';
-import { EQUIPMENT_PATH, equipmentAddPath } from '../assets/route';
 import { usePacks } from '../../usePacks';
-import { ScanSheet } from './ScanSheet';
+import { ItemPicker } from './ItemPicker';
 import { MonthField } from './MonthField';
-import { hasCamera } from './dateSettings';
 import { ReadDateSheet } from './ReadDateSheet';
-import { useStockItems } from './scanHelpers';
+import { ScanSheet } from './ScanSheet';
+import { SizeStep, type SizeStepDone } from './SizeStep';
+import { hasCamera } from './dateSettings';
 import {
   addStock,
   defaultLocationId,
   ensureProduct,
-  matchItems,
   pushRecent,
+  pushRecentProduct,
   readLastLocation,
-  readRecent,
   suitabilityWarning,
-  usualSize,
+  type NewProduct,
   writeLastLocation,
 } from './stock';
 
@@ -34,62 +32,29 @@ export interface QuickAddPrefill {
   qty?: number;
 }
 
-/** How many recent items sit above the list when nothing is typed. */
-const RECENT_SHOWN = 8;
-
-/** Common item ids (suffix in the items pack) when nothing has been added on this device yet. */
-const COMMON = [
-  'bottled-water',
-  'baked-beans',
-  'dried-pasta',
-  'rice',
-  'porridge-oats',
-  'peanut-butter',
-  'uht-milk',
-  'gas-canisters',
-  'propane-bottle',
-  'power-bank-20k',
-  'torch-aa',
-  'first-aid-kit',
-  'candles',
-  'hygiene-kit',
-  'toilet-bags',
-  'aa-cells',
-];
-
-type Step = 'search' | 'form' | 'scan' | 'repick' | 'readdate';
+type Step = 'search' | 'size' | 'form' | 'scan' | 'repick' | 'readdate';
 
 /**
- * Quick add: search for what you are putting away, pick it, then Add. The place is the last one
- * you used and the quantity is one, so a plain item is a search, a tap on the item and a tap on
- * Add.
+ * Quick add: pick an item and size (or a recent product), then Add. The place is the last one
+ * you used and the quantity is one unless you change it.
  */
 export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: QuickAddPrefill }) {
   const doc = useDocument();
   const change = useChange();
   const packs = usePacks();
-  const items = useStockItems();
-
-  const equipmentTypes = useMemo(
-    () =>
-      Object.values(packs.assets).filter((t) =>
-        packs.enabledPacks(doc.settings).some((p) => t.id.startsWith(`${p.id}:`)),
-      ),
-    [packs, doc.settings],
-  );
-  const locations = useMemo(
-    () => Object.values(doc.locations).sort((a, b) => a.name.localeCompare(b.name)),
-    [doc.locations],
-  );
-  const [recent, setRecent] = useState(readRecent);
 
   const prefItem = prefill ? packs.items[prefill.itemId] : undefined;
   const prefProduct = prefill?.productId ? doc.products[prefill.productId] : undefined;
   const startItem = prefItem?.assetTypeId === undefined ? prefItem : undefined;
-  const [step, setStep] = useState<Step>(startItem || prefProduct ? 'form' : 'search');
-  const [query, setQuery] = useState('');
+
+  const [step, setStep] = useState<Step>(() => {
+    if (prefProduct) return 'form';
+    if (startItem) return 'size';
+    return 'search';
+  });
   const [item, setItem] = useState<Item | undefined>(startItem);
   const [productId, setProductId] = useState<string | undefined>(prefill?.productId);
+  const [pendingNew, setPendingNew] = useState<NewProduct | undefined>(undefined);
   const [qty, setQty] = useState(Math.max(1, prefill?.qty ?? 1));
   const [locationId, setLocationId] = useState(() =>
     defaultLocationId(doc, startItem?.id ?? prefItem?.id ?? '', readLastLocation()),
@@ -100,11 +65,16 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
   const [putOnce, setPutOnce] = useState(false);
   const [viaScan, setViaScan] = useState(false);
   const [scannedCode, setScannedCode] = useState<string | null>(null);
-  const searchRef = useRef<HTMLInputElement>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  const locations = useMemo(
+    () => Object.values(doc.locations).sort((a, b) => a.name.localeCompare(b.name)),
+    [doc.locations],
+  );
 
   useEffect(() => {
     if (step !== 'search') return;
-    const t = setTimeout(() => searchRef.current?.focus(), 0);
+    const t = setTimeout(() => searchRef.current?.querySelector('input')?.focus(), 0);
     return () => clearTimeout(t);
   }, [step]);
 
@@ -112,56 +82,7 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
   const activeItem = item ?? (product?.itemId ? packs.items[product.itemId] : undefined);
   const location = doc.locations[locationId];
   const warning = activeItem && location ? suitabilityWarning(activeItem, location) : undefined;
-  const shown = useMemo(() => matchItems(items, query, recent), [items, query, recent]);
-  const searching = query.trim() !== '';
-  const recentItems = useMemo(
-    () =>
-      recent
-        .map((id) => items.find((t) => t.id === id))
-        .filter((t): t is Item => t !== undefined)
-        .slice(0, RECENT_SHOWN),
-    [recent, items],
-  );
-  const common = useMemo(
-    () =>
-      COMMON.map((slug) => items.find((t) => t.id === `items-base:${slug}`)).filter(
-        (t): t is Item => t !== undefined,
-      ),
-    [items],
-  );
-  const [browsing, setBrowsing] = useState(false);
-  const equipmentShown = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (q === '') return [];
-    const linked = (t: AssetType) =>
-      Object.values(packs.items)
-        .filter((i) => i.assetTypeId === t.id)
-        .map((i) => i.name);
-    return equipmentTypes.filter((t) =>
-      [t.name, ...linked(t)].some((n) => n.toLowerCase().includes(q)),
-    );
-  }, [equipmentTypes, packs, query]);
-  const byCategory = useMemo(() => {
-    const skip = new Set(recentItems.map((t) => t.id));
-    const groups = new Map<Category, Item[]>();
-    for (const t of items)
-      if (!skip.has(t.id)) groups.set(t.category, [...(groups.get(t.category) ?? []), t]);
-    return [...groups.entries()]
-      .map(
-        ([category, list]) =>
-          [category, list.sort((a, b) => a.name.localeCompare(b.name))] as const,
-      )
-      .sort(([a], [b]) => labelOf(CATEGORY_LABEL, a).localeCompare(labelOf(CATEGORY_LABEL, b)));
-  }, [items, recentItems]);
-
-  const itemRow = (t: Item) => (
-    <li className="row-item" key={t.id}>
-      <button type="button" className="row-main" onClick={() => pickItem(t)}>
-        <strong>{t.name}</strong>
-        <span className="muted">{t.countsAs}</span>
-      </button>
-    </li>
-  );
+  const unit = activeItem?.unit ?? 'packs';
 
   const edit =
     <T,>(set: (v: T) => void) =>
@@ -173,18 +94,15 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
   function put(): void {
     if (!location || qty < 1) return;
     let ensured: string | undefined;
+    let savedId: string | undefined;
     change('add stock', (d) => {
       let pid = productId;
-      if (!pid && activeItem) {
-        pid = ensureProduct(
-          d,
-          { itemId: activeItem.id, size: usualSize(activeItem) },
-          packs,
-          today(),
-        ).id;
+      if (!pid && pendingNew) {
+        pid = ensureProduct(d, pendingNew, packs, today()).id;
         ensured = pid;
       }
       if (!pid) return;
+      savedId = pid;
       addStock(
         d,
         {
@@ -198,12 +116,12 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
       );
     });
     if (ensured) setProductId(ensured);
+    if (savedId) pushRecentProduct(savedId);
     if (activeItem) {
       writeLastLocation(locationId);
       pushRecent(activeItem.id);
-      setRecent(readRecent());
     }
-    const label = product?.name ?? activeItem?.name ?? 'item';
+    const label = product?.name ?? doc.products[savedId ?? '']?.name ?? activeItem?.name ?? 'item';
     setAdded((n) => n + qty);
     setLast(`Added ${qty} × ${label} to ${location.name}`);
     setPutOnce(true);
@@ -213,7 +131,24 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
     setViaScan(false);
     setItem(t);
     setProductId(undefined);
+    setPendingNew(undefined);
     setLocationId(defaultLocationId(doc, t.id, readLastLocation()));
+    setQty(1);
+    setBestBefore(undefined);
+    setLast(null);
+    setPutOnce(false);
+    setStep('size');
+  }
+
+  function onSizeDone(result: SizeStepDone): void {
+    if ('productId' in result) {
+      setProductId(result.productId);
+      setPendingNew(undefined);
+    } else {
+      setProductId(undefined);
+      setPendingNew(result);
+    }
+    setLocationId(defaultLocationId(doc, item!.id, readLastLocation()));
     setQty(1);
     setBestBefore(undefined);
     setLast(null);
@@ -225,6 +160,7 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
     const p = doc.products[pid];
     setViaScan(scanned);
     setProductId(pid);
+    setPendingNew(undefined);
     setItem(p?.itemId ? packs.items[p.itemId] : undefined);
     setLocationId(defaultLocationId(doc, p?.itemId ?? '', readLastLocation()));
     setQty(1);
@@ -235,12 +171,25 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
     setStep('form');
   }
 
+  function pickRecentProduct(pid: string): void {
+    pickProduct(pid, '', false);
+  }
+
+  function backToSearch(): void {
+    setItem(undefined);
+    setProductId(undefined);
+    setPendingNew(undefined);
+    setLast(null);
+    setPutOnce(false);
+    setStep('search');
+  }
+
   function next(): void {
     setItem(undefined);
     setProductId(undefined);
+    setPendingNew(undefined);
     setLast(null);
     setPutOnce(false);
-    setQuery('');
     setStep(viaScan ? 'scan' : 'search');
   }
 
@@ -261,6 +210,7 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
   }
 
   const formTitle = product?.name ?? activeItem?.name ?? '';
+  const canAdd = Boolean(location && qty >= 1 && (productId || pendingNew));
   const counter =
     added > 0 ? (
       <p className="muted" role="status" data-testid="added-count">
@@ -312,20 +262,26 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
     );
   }
 
+  const sheetTitle =
+    step === 'search'
+      ? 'Add stock'
+      : step === 'size'
+        ? `Add ${item?.name ?? ''}`
+        : `Add ${formTitle}`;
+
   return (
     <Sheet
-      title={step === 'search' ? 'Add stock' : `Add ${formTitle}`}
+      title={sheetTitle}
       onClose={onClose}
       actions={
-        step === 'form' ? (
+        step === 'size' ? (
+          <button type="button" className="secondary" onClick={backToSearch}>
+            Back
+          </button>
+        ) : step === 'form' ? (
           putOnce ? (
             <>
-              <button
-                type="button"
-                className="secondary"
-                disabled={!location || qty < 1}
-                onClick={put}
-              >
+              <button type="button" className="secondary" disabled={!canAdd} onClick={put}>
                 Add another
               </button>
               <button type="button" onClick={next}>
@@ -337,11 +293,7 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
               <button type="button" className="secondary" onClick={next}>
                 Back
               </button>
-              <button
-                type="button"
-                disabled={!location || qty < 1 || (!productId && !activeItem)}
-                onClick={put}
-              >
+              <button type="button" disabled={!canAdd} onClick={put}>
                 Add
               </button>
             </>
@@ -352,80 +304,23 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
       {step === 'search' ? (
         <>
           {counter}
-          <div className="search-row">
+          <div className="search-row" ref={searchRef}>
             <button type="button" className="secondary" onClick={() => setStep('scan')}>
               Scan a barcode
             </button>
             <Link className="button secondary" to="/app/stores/stocktake" onClick={onClose}>
               Stocktake a pile
             </Link>
-            <Field label="What are you adding?">
-              <input
-                ref={searchRef}
-                type="search"
-                value={query}
-                autoComplete="off"
-                placeholder="Water, tinned soup, torch…"
-                onChange={(e) => setQuery(e.target.value)}
-              />
-            </Field>
-            {equipmentShown.length > 0 ? (
-              <section aria-label="Equipment: add to your home" className="equipment-route">
-                <h3>Equipment: add to your home</h3>
-                <ul className="row-list">
-                  {equipmentShown.map((t) => (
-                    <li className="row-item" key={t.id}>
-                      <Link className="row-main" to={equipmentAddPath(t.id)}>
-                        <strong>{t.name}</strong>
-                        <span className="muted">Opens the equipment form, not stock</span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ) : null}
+            <ItemPicker
+              searchLabel="What are you adding?"
+              onItem={pickItem}
+              onProduct={pickRecentProduct}
+            />
           </div>
-          {searching ? (
-            <>
-              {shown.length === 0 && equipmentShown.length === 0 ? (
-                <p className="muted">Nothing matches “{query}”.</p>
-              ) : null}
-              <ul className="row-list">{shown.map(itemRow)}</ul>
-            </>
-          ) : (
-            <>
-              {recentItems.length > 0 ? (
-                <section aria-label="Recent" className="recent">
-                  <h3>Recent</h3>
-                  <ul className="row-list">{recentItems.map(itemRow)}</ul>
-                </section>
-              ) : (
-                <section aria-label="Common" className="recent">
-                  <h3>Common</h3>
-                  <ul className="row-list">{common.map(itemRow)}</ul>
-                </section>
-              )}
-              <Link className="row-main equipment-route" to={EQUIPMENT_PATH}>
-                <strong>Equipment: add to your home</strong>
-                <span className="muted">Stoves, heaters, generators, batteries and panels</span>
-              </Link>
-              <details className="type-group" onToggle={(e) => setBrowsing(e.currentTarget.open)}>
-                <summary>Browse everything by category</summary>
-                {browsing
-                  ? byCategory.map(([category, list]) => (
-                      <details className="type-group" key={category}>
-                        <summary>
-                          {labelOf(CATEGORY_LABEL, category)} ({list.length})
-                        </summary>
-                        <ul className="row-list">{list.map(itemRow)}</ul>
-                      </details>
-                    ))
-                  : null}
-              </details>
-            </>
-          )}
         </>
-      ) : activeItem || product ? (
+      ) : null}
+      {step === 'size' && item ? <SizeStep item={item} onDone={onSizeDone} /> : null}
+      {step === 'form' && (activeItem || product) ? (
         <>
           {last ? (
             <p className="note" role="status">
@@ -433,13 +328,8 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
             </p>
           ) : null}
           {counter}
-          <Field label={`How many (${activeItem?.unit ?? 'packs'})?`}>
-            <Stepper
-              label={`How many ${activeItem?.unit ?? 'packs'}`}
-              value={qty}
-              min={1}
-              onChange={edit(setQty)}
-            />
+          <Field label={`How many (${unit})?`}>
+            <QtyField value={qty} onChange={edit(setQty)} label={`How many ${unit}`} />
           </Field>
           {locations.length === 0 ? (
             <p className="note">

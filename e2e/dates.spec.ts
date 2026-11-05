@@ -11,6 +11,20 @@ type Shtf = { doc: () => Promise<Doc>; loadFixture: () => Promise<void> };
 
 const doc = (page: Page) =>
   page.evaluate(() => (window as unknown as { __shtf: Shtf }).__shtf.doc());
+
+async function maybePickSize(page: Page): Promise<void> {
+  const dialog = page.getByRole('dialog');
+  const yours = dialog.getByRole('region', { name: 'Your products' });
+  if (await yours.isVisible().catch(() => false)) {
+    await yours.getByRole('button').first().click();
+    return;
+  }
+  const suggested = dialog.getByRole('region', { name: 'Suggested sizes' });
+  if (await suggested.isVisible().catch(() => false)) {
+    await suggested.getByRole('button').first().click();
+  }
+}
+
 const show = (page: Page, what: { ean?: string; text?: string }) =>
   page.evaluate((w) => (window as unknown as { __fakeCam: FakeCam }).__fakeCam.show(w), what);
 
@@ -150,6 +164,7 @@ test.describe('camera dates', () => {
     await page.getByRole('button', { name: 'Add stock' }).click();
     await page.getByLabel('What are you adding?').fill('peanut');
     await page.getByRole('button', { name: /^Peanut butter/ }).click();
+    await maybePickSize(page);
     await page.getByRole('button', { name: 'Read the date' }).click();
     await show(page, { text: 'BEST BEFORE 06/2027' });
     await expect(page.getByTestId('date-result')).toContainText('Jun 2027', READ);
