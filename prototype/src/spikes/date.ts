@@ -59,6 +59,7 @@ export function mount(root: HTMLElement) {
   sel.onchange = () => { engineId = sel.value as EngineId; };
   sel.style.cssText = 'font-size:14px;padding:4px;max-width:60vw;';
   const auto = el('input', { type: 'checkbox', checked: true });
+  const rot = el('input', { type: 'checkbox', checked: false }); // off: each extra rotation multiplies the work
   const area = el('div'); // the controls / frozen result, re-rendered per phase
   const table = el('pre');
   const logList = el('div');
@@ -175,12 +176,12 @@ export function mount(root: HTMLElement) {
       if (crop) {
         status.set('reading', { frames: 0, skipped: 0 });
         const t1 = performance.now();
-        const res = await readDate(engine, crop);
+        const res = await readDate(engine, crop, rot.checked ? { rotations: [0, 90, 270, 180] } : {});
         const ms = performance.now() - t1;
         finish({ value: res.value, raw: res.text, ms, aimMs: 0, computeMs: ms, frames: 1, skipped: 0, passes: res.variants, conf: res.confidence, yearAssumed: res.yearAssumed, crop }, engine.name);
         return;
       }
-      const lo = await scanUntil(cam, engine, auto.checked ? 10000 : 0, () => stopFlag, (s, i) => status.set(s, i));
+      const lo = await scanUntil(cam, engine, auto.checked ? 10000 : 0, () => stopFlag, (s, i) => status.set(s, i), rot.checked ? { rotations: [0, 90, 270, 180] } : {});
       if (lo.outcome === 'stopped') { backToReady(); note.textContent = 'stopped'; return; }
       finish({ value: lo.res?.value ?? null, raw: lo.res?.text ?? '', ms: lo.totalMs, aimMs: lo.aimMs, computeMs: lo.computeMs, frames: lo.frames, skipped: lo.skipped, passes: lo.res?.variants ?? 0, conf: lo.res?.confidence ?? 0, yearAssumed: lo.res?.yearAssumed ?? false, crop: lo.crop }, engine.name);
     } catch (e) {
@@ -197,7 +198,7 @@ export function mount(root: HTMLElement) {
   }), '', '', 15);
   const torchBtn = styleBtn(button('Torch', async () => { await cam.setTorch(!cam.torchOn); torchBtn.textContent = cam.torchOn ? 'Torch off' : 'Torch'; }), '', '', 15);
   camBtn.style.minHeight = torchBtn.style.minHeight = '38px';
-  const cfg = el('div', {}, camBtn, torchBtn, sel, el('label', {}, ' ', auto, ' auto'));
+  const cfg = el('div', {}, camBtn, torchBtn, sel, el('label', {}, ' ', auto, ' auto'), el('label', {}, ' ', rot, ' sideways too'));
   cfg.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;';
 
   root.append(
