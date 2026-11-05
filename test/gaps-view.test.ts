@@ -4,8 +4,10 @@ import {
   buildGapsView,
   closesText,
   formatPrice,
+  groupShoppingByAisle,
   type ShoppingSort,
 } from '../src/app/screens/gaps/view';
+import { groupItemsForPicker } from '../src/app/screens/stores/pickerHelpers';
 import { biggarDocument } from '../src/fixtures/household-biggar';
 import { minimumKey } from '../src/model';
 import { bundledPacks } from '../src/packs';
@@ -25,6 +27,7 @@ function view(
     horizonDays,
     region: 'UK',
     sort,
+    packs,
   });
 }
 
@@ -170,6 +173,25 @@ describe('the gaps view on the fixture household', () => {
     }
   });
 
+  it('sorts by aisle in pack order and keeps detail on rows', () => {
+    const rows = view(14, 'aisle').shopping.filter((r) => r.kind === 'acquire');
+    expect(rows.some((r) => r.detail)).toBe(true);
+    const orderOf = (itemId: string) => {
+      let i = 0;
+      for (const g of groupItemsForPicker(Object.values(packs.items))) {
+        for (const item of g.items) {
+          if (item.id === itemId) return i;
+          i += 1;
+        }
+      }
+      return Number.MAX_SAFE_INTEGER;
+    };
+    const keys = rows.map((r) => orderOf(r.itemId!)).filter((n) => n < Number.MAX_SAFE_INTEGER);
+    for (let i = 1; i < keys.length; i++) expect(keys[i]!).toBeGreaterThanOrEqual(keys[i - 1]!);
+    const groups = groupShoppingByAisle(rows, packs);
+    expect(groups.some((g) => g.heading.includes('›'))).toBe(true);
+  });
+
   it('keeps tasks and plan items in the to-do list, with the plan item to mark done', () => {
     const todo = view(3).todo;
     expect(
@@ -215,6 +237,7 @@ describe('the gaps view on the fixture household', () => {
       horizonDays: 3,
       region: 'UK',
       sort: 'capability',
+      packs,
     });
     expect(empty.shopping).toEqual([]);
     expect(empty.todo).toEqual([]);

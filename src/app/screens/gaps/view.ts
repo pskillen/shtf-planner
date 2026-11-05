@@ -1,11 +1,12 @@
 import { ANSWERED_BY_ASSET } from '../../../engine';
 import type { BlockedAsset, Coverage, Gap, Score, Suggestion } from '../../../engine';
-import type { CapabilityId } from '../../../model';
+import type { CapabilityId, Packs } from '../../../model';
 import { formatVolume } from '../../../util';
 import { blockedLine } from '../../blocked';
-import { CAPABILITY_LABEL } from '../../labels';
+import { CAPABILITY_LABEL, CATEGORY_LABEL, labelOf } from '../../labels';
+import { groupItemsForPicker } from '../stores/pickerHelpers';
 
-export type ShoppingSort = 'capability' | 'cost';
+export type ShoppingSort = 'capability' | 'cost' | 'aisle';
 
 /** One line to buy. `alternatives` are other ways to close the same shortfall (store gaps). */
 export interface ShoppingRow {
@@ -58,6 +59,43 @@ export interface GapsView {
 }
 
 const round1 = (n: number): string => String(Math.round(n * 10) / 10);
+
+/** Pack aisle order for an item; rows with no item sort last. */
+function itemAisleOrder(packs: Packs, itemId: string | undefined): number {
+  if (!itemId) return Number.MAX_SAFE_INTEGER;
+  const groups = groupItemsForPicker(Object.values(packs.items));
+  let i = 0;
+  for (const g of groups) {
+    for (const item of g.items) {
+      if (item.id === itemId) return i;
+      i += 1;
+    }
+  }
+  return Number.MAX_SAFE_INTEGER;
+}
+
+/** "Food › Tins" for grouping when sorting by aisle. */
+export function aisleHeading(packs: Packs, itemId: string | undefined): string {
+  if (!itemId) return 'Other';
+  const item = packs.items[itemId];
+  if (!item) return 'Other';
+  const cat = labelOf(CATEGORY_LABEL, item.category);
+  return item.heading ? `${cat} › ${item.heading}` : cat;
+}
+
+export type ShoppingAisleGroup = { heading: string; rows: ShoppingRow[] };
+
+/** Consecutive rows with the same aisle heading (rows must already be in aisle order). */
+export function groupShoppingByAisle(rows: readonly ShoppingRow[], packs: Packs): ShoppingAisleGroup[] {
+  const out: ShoppingAisleGroup[] = [];
+  for (const row of rows) {
+    const heading = aisleHeading(packs, row.itemId);
+    const last = out.at(-1);
+    if (last && last.heading === heading) last.rows.push(row);
+    else out.push({ heading, rows: [row] });
+  }
+  return out;
+}
 
 /** An amount in its unit; litres follow the household's region. */
 export function formatAmount(amount: number, unit: string, region: 'UK' | 'US'): string {
@@ -155,8 +193,9 @@ export function buildGapsView(input: {
   horizonDays: number;
   region: 'UK' | 'US';
   sort: ShoppingSort;
+  packs: Packs;
 }): GapsView {
-  const { gaps, score, coverage, horizonDays, region, sort } = input;
+  const { gaps, score, coverage, horizonDays, region, sort, packs } = input;
   const weakest = weakestFirst(score);
 
   const shopping = gaps.flatMap((g, at) => shoppingRowsFor(g, horizonDays, region, at));
@@ -169,6 +208,12 @@ export function buildGapsView(input: {
   const capOrder = (r: ShoppingRow) => weakest.indexOf(r.capability);
   shopping.sort((a, b) => {
     if (kindOrder(a) !== kindOrder(b)) return kindOrder(a) - kindOrder(b);
+    if (sort === 'aisle') {
+      const oa = itemAisleOrder(packs, a.itemId);
+      const ob = itemAisleOrder(packs, b.itemId);
+      if (oa !== ob) return oa - ob;
+      return a.label.localeCompare(b.label);
+    }
     if (sort === 'cost') {
       // The row's own price, cheapest first (units differ across needs, so a per-unit price
       // would not compare); what has no price comes last. A tie keeps the weakest first.

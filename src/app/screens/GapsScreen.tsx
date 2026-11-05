@@ -8,7 +8,7 @@ import { Segmented } from '../components/controls';
 import { CAPABILITY_LABEL } from '../labels';
 import { useChange, useDocument } from '../state';
 import { usePacks } from '../usePacks';
-import { buildGapsView, formatPrice, type ShoppingRow, type ShoppingSort } from './gaps/view';
+import { buildGapsView, formatPrice, groupShoppingByAisle, type ShoppingRow, type ShoppingSort } from './gaps/view';
 import { equipmentAddPath } from './assets/route';
 import { QuickAdd, type QuickAddPrefill } from './stores/QuickAdd';
 
@@ -35,6 +35,7 @@ export function GapsScreen() {
         horizonDays,
         region: doc.settings.region,
         sort,
+        packs,
       }),
     [doc, packs, now, horizonDays, sort],
   );
@@ -107,6 +108,20 @@ export function GapsScreen() {
     </ul>
   );
 
+  const aisleShoppingList = (rows: ShoppingRow[]) => (
+    <>
+      {groupShoppingByAisle(rows, packs).map((g) => (
+        <div key={g.heading}>
+          <h3>{g.heading}</h3>
+          {shoppingList(g.rows)}
+        </div>
+      ))}
+    </>
+  );
+
+  const listFor = (rows: ShoppingRow[]) =>
+    sort === 'aisle' ? aisleShoppingList(rows) : shoppingList(rows);
+
   return (
     <section className="screen gaps">
       <h1>Gaps</h1>
@@ -126,6 +141,7 @@ export function GapsScreen() {
             options={[
               { value: 'capability' as const, label: 'Weakest first' },
               { value: 'cost' as const, label: 'Cheapest cover' },
+              { value: 'aisle' as const, label: 'By aisle' },
             ]}
             onChange={setSort}
           />
@@ -133,11 +149,11 @@ export function GapsScreen() {
             {restock.length > 0 ? (
               <>
                 <h3>Back to your minimums</h3>
-                {shoppingList(restock)}
+                {listFor(restock)}
               </>
             ) : null}
             {restock.length > 0 && buy.length > 0 ? <h3>To buy</h3> : null}
-            {buy.length > 0 ? shoppingList(buy) : null}
+            {buy.length > 0 ? listFor(buy) : null}
           </EditArea>
         </>
       )}
