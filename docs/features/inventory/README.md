@@ -35,8 +35,10 @@ The Stores tab: what the household has, by where it is kept, and the quick way t
   category", closed and not built until opened; a search lists matches flat. Equipment is never
   stock: a search that matches a stove, generator or battery lists it under "Equipment: add to
   your home", which opens the equipment form with that type chosen, and with nothing typed there is
-  one such route to the equipment screen.
-  "Add as a custom item" sits beside the search box. The place starts as where that type already
+  one such route to the equipment screen. The
+  equipment matches sit between the search box and "Add as a custom item", so a stove is not saved
+  as a custom stock item by mistake.
+  "Add as a custom item" is under the search box. The place starts as where that type already
   lives, else the last place used, else the fullest place. Stock of the same type, place and best-before is added to rather than listed twice. The
   best-before is optional; the chips follow how long the type keeps (+1 y, +2 y, +5 y for things that
   keep for years). A counter shows what was added this session.
