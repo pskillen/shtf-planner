@@ -124,6 +124,14 @@ describe('coverage: stores from items', () => {
     }
   });
 
+  it('does not let a PMR446 pair meet the need for a receiver that works without mains', () => {
+    const doc = biggarDocument();
+    doc.assets['asset-pmr'] = asset('asset-pmr', 'pmr446-radio');
+    expect(cov(doc, 'comms:radio').amount).toBe(0);
+    doc.assets['asset-hh'] = asset('asset-hh', 'handheld-radio');
+    expect(cov(doc, 'comms:radio').amount).toBe(1);
+  });
+
   it('does not count a leisure battery twice, as stock and as equipment', () => {
     const doc = biggarDocument();
     const before = cov(doc, 'power:batteryWh').amount;

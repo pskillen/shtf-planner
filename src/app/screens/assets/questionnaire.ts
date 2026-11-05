@@ -12,7 +12,8 @@ export function defaultAnswers(type: AssetType): Answers {
   const out: Answers = {};
   for (const q of type.questions) {
     if (q.kind === 'bool') out[q.id] = false;
-    else if (q.kind === 'choice' && q.choices?.[0] !== undefined) out[q.id] = q.choices[0];
+    else if (q.kind === 'choice' && !q.noDefault && q.choices?.[0] !== undefined)
+      out[q.id] = q.choices[0];
   }
   return out;
 }

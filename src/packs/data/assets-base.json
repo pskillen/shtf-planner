@@ -2,7 +2,7 @@
   "format": 1,
   "id": "assets-base",
   "kind": "assets",
-  "version": 3,
+  "version": 4,
   "name": "Base household assets",
   "sources": [
     {
@@ -564,14 +564,15 @@
     },
     {
       "id": "assets-base:handheld-radio",
-      "name": "Handheld radio",
+      "name": "Handheld radio (amateur or CB)",
       "category": "comms",
       "questions": [
         {
           "id": "kind",
           "text": "What kind?",
           "kind": "choice",
-          "choices": ["pmr446", "amateur", "cb"]
+          "choices": ["Amateur (2 m/70 cm)", "CB"],
+          "noDefault": true
         }
       ],
       "contributes": [
@@ -589,6 +590,20 @@
       ]
     },
     {
+      "id": "assets-base:pmr446-radio",
+      "name": "PMR446 walkie-talkies",
+      "category": "comms",
+      "questions": [],
+      "contributes": [],
+      "maintenance": [
+        {
+          "id": "charge",
+          "text": "Charge the radios and check they work",
+          "everyMonths": 3
+        }
+      ]
+    },
+    {
       "id": "assets-base:radio-station",
       "name": "Mobile or base radio station",
       "category": "comms",
@@ -597,7 +612,8 @@
           "id": "kind",
           "text": "What kind?",
           "kind": "choice",
-          "choices": ["cb-mobile", "amateur-mobile", "amateur-hf"]
+          "choices": ["CB mobile", "Amateur mobile", "Amateur HF"],
+          "noDefault": true
         }
       ],
       "contributes": [

@@ -174,6 +174,8 @@ export const QuestionSchema = z.strictObject({
   kind: z.enum(['bool', 'number', 'choice']),
   choices: z.array(Text).optional(),
   unit: z.string().optional(),
+  /** A choice question that starts unanswered, when no option is a fair first guess. */
+  noDefault: z.boolean().optional(),
 });
 export type Question = z.infer<typeof QuestionSchema>;
 

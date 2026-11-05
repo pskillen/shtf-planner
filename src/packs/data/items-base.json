@@ -2,7 +2,7 @@
   "format": 1,
   "id": "items-base",
   "kind": "items",
-  "version": 7,
+  "version": 8,
   "name": "Base household items",
   "sources": [
     {
@@ -1115,7 +1115,7 @@
       "shelfLife": "none",
       "typicalPricePence": 5000,
       "tags": ["radio-tx"],
-      "assetTypeId": "assets-base:handheld-radio"
+      "assetTypeId": "assets-base:pmr446-radio"
     },
     {
       "id": "items-base:cb-rig",

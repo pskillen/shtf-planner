@@ -49,8 +49,8 @@ shelfLife, ageBand?, typicalPricePence?, tags, barcodes?, assetTypeId?, source? 
   tick opens the equipment form, and a stock row of such a type (a document made before the split)
   counts nothing, with a note saying so. The linked entries are the camping, rocket, paraffin,
   catalytic and cabinet gas stoves and heaters, the power station, leisure battery, generators,
-  solar panel and kit, wind-up radios, handheld radios (PMR446, 2 m/70 cm, CB; the `handheld-radio`
-  asset), mobile and HF stations (the `radio-station` asset), water butt, CO alarm and fire
+  solar panel and kit, wind-up radios, handheld radios (2 m/70 cm and CB: the `handheld-radio` asset; PMR446 walkie-talkies
+  are their own `pmr446-radio` asset, which gives no comms because they cannot receive broadcasts), mobile and HF stations (the `radio-station` asset), water butt, CO alarm and fire
   extinguisher. Power banks,
   fuels, gas bottles, cells, candles, food, water and hygiene are stock. `source` is where the
   numbers on a type come from: an `https` URL listed in the pack's `sources`, or `"assumption"`.
