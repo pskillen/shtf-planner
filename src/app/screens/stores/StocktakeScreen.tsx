@@ -68,6 +68,9 @@ interface Saved {
   qty: number;
   bestBefore: string | undefined;
   label: string;
+  /** How its date was set, and how long the date step took: undone with the item. */
+  source: DateSource | null;
+  dateMs: number;
 }
 
 /** How the date in the card got there. */
@@ -114,6 +117,10 @@ export function StocktakeScreen() {
   const [started] = useState(() => Date.now());
   const [finishedAfter, setFinishedAfter] = useState(0);
   const [cam, setCam] = useState<CameraStream | null>(null);
+  // The date reader is loading or looking: the strip stays tall so the box is a good size.
+  const [looking, setLooking] = useState(false);
+  // The date was set by hand: the camera stops looking and cannot overwrite it.
+  const [handPicked, setHandPicked] = useState(false);
   const [useCamera, setUseCamera] = useState(readUseCamera);
   // Bumped when the graphics-chip switch changes, so the date step starts a fresh reader.
   const [readerKey, setReaderKey] = useState(0);
@@ -146,6 +153,7 @@ export function StocktakeScreen() {
     setFinding(false);
     dateSource.current = null;
     dateStarted.current = Date.now();
+    setHandPicked(false);
     setPhase('date');
   }
 
@@ -193,13 +201,16 @@ export function StocktakeScreen() {
     if (!addition) return;
     pushRecent(counting.type.id);
     setItems((n) => n + qty);
+    const took = Date.now() - dateStarted.current;
     if (date && source) setDateCounts((c) => ({ ...c, [source]: c[source] + 1 }));
-    setDateMs((l) => [...l, Date.now() - dateStarted.current]);
+    setDateMs((l) => [...l, took]);
     setSaved({
       addition,
       counting,
       qty,
       bestBefore: date,
+      source: date ? source : null,
+      dateMs: took,
       label: savedText(qty, counting.type.name, place.name),
     });
     backToBarcode();
@@ -211,13 +222,21 @@ export function StocktakeScreen() {
     if (!saved) return;
     change('undo stocktake', (d) => undoAddStock(d, saved.addition));
     setItems((n) => Math.max(0, n - saved.qty));
+    // The date counts and time go with the item; saving it again counts once.
+    if (saved.source)
+      setDateCounts((c) => ({ ...c, [saved.source!]: Math.max(0, c[saved.source!] - 1) }));
+    setDateMs((l) => {
+      const at = l.lastIndexOf(saved.dateMs);
+      return at < 0 ? l : l.filter((_, i) => i !== at);
+    });
     // The undone item's card comes back only when nothing else is being worked on: an item
     // already in progress (or a code just read) is left exactly as it is.
     if (phase === 'barcode' && code === null) {
       setCounting(saved.counting);
       setQty(saved.qty);
       setBestBefore(saved.bestBefore);
-      dateSource.current = saved.bestBefore ? 'picked' : null;
+      dateSource.current = saved.source;
+      setHandPicked(Boolean(saved.bestBefore));
       dateStarted.current = Date.now();
       setPhase('date');
     }
@@ -227,6 +246,7 @@ export function StocktakeScreen() {
   function changeDate(next: string | undefined): void {
     if (next && next !== bestBefore) buzz('date');
     dateSource.current = next ? 'picked' : null;
+    setHandPicked(true);
     setBestBefore(next);
   }
 
@@ -284,13 +304,13 @@ export function StocktakeScreen() {
 
   return (
     <section className="screen stocktake">
-      <h1>Stocktake</h1>
+      <h1 className={phase === 'date' ? 'visually-hidden' : undefined}>Stocktake</h1>
       {locations.length === 0 ? (
         <p className="note">
           You have no places yet. <Link to="/app/locations">Add a place</Link> first, then come
           back.
         </p>
-      ) : (
+      ) : phase === 'date' ? null : (
         <Field label="Counting into">
           <select
             value={locationId}
@@ -326,31 +346,13 @@ export function StocktakeScreen() {
       ) : null}
 
       <CameraStrip
-        compact={phase === 'date' || code !== null}
+        compact={phase === 'date' ? !looking : code !== null}
         mode={phase === 'barcode' ? 'barcode' : 'date'}
         chip={phase === 'barcode' ? '1 BARCODE' : '2 DATE'}
         scanning={phase === 'barcode' && code === null && Boolean(place)}
         onCode={got}
         onReady={setCam}
       />
-      <Switch
-        label="Read dates with the camera"
-        checked={useCamera}
-        onChange={(next) => {
-          setUseCamera(next);
-          writeUseCamera(next);
-          if (!next) terminateDateReader();
-        }}
-      />
-      {useCamera ? (
-        <DateAbout
-          onChange={() => {
-            terminateDateReader();
-            setReaderKey((n) => n + 1);
-          }}
-        />
-      ) : null}
-
       {phase === 'barcode' ? (
         code === null ? (
           <>
@@ -426,35 +428,37 @@ export function StocktakeScreen() {
           </>
         ) : (
           <>
+            {useCamera ? (
+              <DateReader
+                key={`${counting.type.id}:${counting.code ?? ''}:${readerKey}:${items}`}
+                cam={cam}
+                todayIso={today()}
+                paused={handPicked}
+                onAgain={() => {
+                  setHandPicked(false);
+                  dateSource.current = null;
+                }}
+                onBusy={setLooking}
+                onResult={cameraRead}
+                onSuggestion={(ym) => save(ym, 'suggestion')}
+              />
+            ) : null}
             <div className="scan-card" aria-label="This item">
-              <h2>{name}</h2>
-              {productName ? <p className="muted">{productName}</p> : null}
-              {counting.code ? (
-                <button type="button" className="link" onClick={() => setRepicking(true)}>
-                  Not this item?
-                </button>
-              ) : null}
+              <div className="item-head">
+                <h2>{name}</h2>
+                {counting.code ? (
+                  <button type="button" className="link" onClick={() => setRepicking(true)}>
+                    Not this item?
+                  </button>
+                ) : null}
+              </div>
+              <p className="muted">
+                {productName ? `${productName} · ` : ''}into {place?.name ?? '?'}
+              </p>
               {warning ? (
                 <p className="warn" role="status">
                   ⚠ {warning}
                 </p>
-              ) : null}
-              <Field label={`How many (${counting.type.unit})?`}>
-                <Stepper
-                  label={`How many ${counting.type.unit}`}
-                  value={qty}
-                  min={1}
-                  onChange={setQty}
-                />
-              </Field>
-              {useCamera ? (
-                <DateReader
-                  key={`${counting.type.id}:${counting.code ?? ''}:${readerKey}:${items}`}
-                  cam={cam}
-                  todayIso={today()}
-                  onResult={cameraRead}
-                  onSuggestion={(ym) => save(ym, 'suggestion')}
-                />
               ) : null}
               <MonthField
                 value={bestBefore}
@@ -463,6 +467,14 @@ export function StocktakeScreen() {
                 today={today()}
               />
               {bestBefore ? <ExpiryBadge bestBefore={bestBefore} /> : null}
+              <Field label={`How many (${counting.type.unit})?`}>
+                <Stepper
+                  label={`How many ${counting.type.unit}`}
+                  value={qty}
+                  min={1}
+                  onChange={setQty}
+                />
+              </Field>
             </div>
             <div className="sticky-bar">
               <button type="button" className="secondary" onClick={backToBarcode}>
@@ -474,6 +486,24 @@ export function StocktakeScreen() {
             </div>
           </>
         )
+      ) : null}
+
+      <Switch
+        label="Read dates with the camera"
+        checked={useCamera}
+        onChange={(next) => {
+          setUseCamera(next);
+          writeUseCamera(next);
+          if (!next) terminateDateReader();
+        }}
+      />
+      {useCamera ? (
+        <DateAbout
+          onChange={() => {
+            terminateDateReader();
+            setReaderKey((n) => n + 1);
+          }}
+        />
       ) : null}
 
       {saved ? (

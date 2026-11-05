@@ -1226,8 +1226,20 @@ button.scans-note {
 /* Reading the best-before date with the camera (stocktake date step, quick add's sheet). */
 .date-reader {
   display: grid;
+  gap: 6px;
+  margin: 4px 0;
+}
+
+/* The status and its one button share a line, so the card under the strip stays short. */
+.date-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 8px;
-  margin: 8px 0;
+}
+
+.date-head button {
+  flex: none;
 }
 
 .date-status {
@@ -1236,22 +1248,32 @@ button.scans-note {
 }
 
 .date-result {
-  display: grid;
-  gap: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .date-month {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   line-height: 1.2;
 }
 
 .date-crop {
-  max-width: 100%;
+  max-width: 45%;
   height: auto;
-  max-height: 72px;
+  max-height: 40px;
   border: 1px solid var(--border);
   border-radius: 4px;
-  justify-self: start;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
 .date-about {
@@ -1263,4 +1285,15 @@ button.scans-note {
   min-height: 44px;
   display: flex;
   align-items: center;
+}
+
+.item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.item-head h2 {
+  margin: 0;
 }

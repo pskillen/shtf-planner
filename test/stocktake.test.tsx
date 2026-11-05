@@ -48,7 +48,7 @@ describe('Stocktake: the step machine', () => {
     expect(screen.getByText('1 BARCODE')).toBeTruthy();
     await read(KNOWN);
     expect(await screen.findByText('Peanut butter (340 g jar)')).toBeTruthy();
-    expect(screen.getByText('Test spread 400 g')).toBeTruthy(); // the remembered product name
+    expect(screen.getByText(/Test spread 400 g/)).toBeTruthy(); // the remembered product name
     expect(screen.getByText('2 DATE', { selector: '.camera-chip' })).toBeTruthy();
     chip('+1 y');
     ok();

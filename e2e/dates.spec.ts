@@ -147,3 +147,60 @@ test.describe('the reader cannot load', () => {
     expect(saved[0]!.bestBefore).toMatch(/^\d{4}-\d{2}$/);
   });
 });
+
+for (const size of [
+  { width: 360, height: 740 },
+  { width: 412, height: 915 },
+]) {
+  test.describe(`layout at ${size.width}x${size.height}`, () => {
+    test.use({ viewport: size });
+
+    test('aiming and after Got it, the strip, status, card and month field are all above OK', async ({
+      page,
+    }) => {
+      await page.addInitScript(() => localStorage.setItem('shtf.stocktake.hintSeen', '1'));
+      await setUp(page);
+      await toDateStep(page);
+      await page.evaluate(() => window.scrollTo(0, 0));
+      const box = async (loc: ReturnType<Page['locator']>) => (await loc.boundingBox())!;
+      const strip = page.getByTestId('camera-strip');
+      const status = page.getByTestId('date-status');
+      const month = page.locator('input[type="month"]');
+      const okBtn = page.getByRole('button', { name: 'OK', exact: true });
+      const above = async (label: string) => {
+        const barTop = (await box(okBtn)).y - 8;
+        for (const [name, loc] of [
+          ['strip', strip],
+          ['status', status],
+          ['month field', month],
+        ] as const) {
+          const b = await box(loc);
+          expect(b.y, `${label}: ${name} top`).toBeGreaterThanOrEqual(0);
+          expect(b.y + b.height, `${label}: ${name} above the OK bar`).toBeLessThanOrEqual(
+            barTop + 1,
+          );
+        }
+        return box(strip);
+      };
+      // Aiming: the reader is looking, the strip is the tall one.
+      await show(page, { text: '   ' });
+      await expect(status).toBeVisible();
+      const aiming = await above('aiming');
+      // The date box on the screen is 88% by 56% of the strip.
+      test.info().annotations.push({
+        type: 'layout',
+        description: `${size.width}x${size.height} aiming strip ${Math.round(aiming.width)}x${Math.round(aiming.height)}, date box ${Math.round(aiming.width * 0.88)}x${Math.round(aiming.height * 0.56)}`,
+      });
+      // After Got it: the card is there too.
+      await show(page, { text: 'BEST BEFORE 06/2027' });
+      const card = page.getByTestId('date-result');
+      await expect(card).toContainText('Jun 2027', READ);
+      await page.evaluate(() => window.scrollTo(0, 0));
+      const barTop = (await box(okBtn)).y - 8;
+      const cb = await box(card);
+      expect(cb.y).toBeGreaterThanOrEqual(0);
+      expect(cb.y + cb.height).toBeLessThanOrEqual(barTop + 1);
+      await above('after Got it');
+    });
+  });
+}

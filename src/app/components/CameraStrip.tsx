@@ -224,7 +224,7 @@ export function CameraStrip({
                 </button>
               </div>
             ) : null}
-            {caps.pointsOfInterest ? (
+            {caps.pointsOfInterest && mode === 'barcode' ? (
               <span className="muted">Tap the picture to focus.</span>
             ) : null}
           </div>

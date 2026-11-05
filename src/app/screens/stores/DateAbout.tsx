@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { Switch } from '../../components/controls';
-import { peekDateReader } from '../../../scan/ocr/client';
+import { onReaderChange, peekDateReader } from '../../../scan/ocr/client';
 import { aboutLine, readUseWebGpu, writeUseWebGpu } from './dateSettings';
 
 /**
@@ -9,11 +9,13 @@ import { aboutLine, readUseWebGpu, writeUseWebGpu } from './dateSettings';
  */
 export function DateAbout({ onChange }: { onChange: () => void }) {
   const [on, setOn] = useState(readUseWebGpu);
+  // Live: the line follows the reader (loading, ready, each read's time, stopped).
+  const line = useSyncExternalStore(onReaderChange, () => aboutLine(peekDateReader()?.status()));
   return (
     <details className="date-about">
       <summary>About the date reader</summary>
       <p className="muted" data-testid="date-about">
-        {aboutLine(peekDateReader()?.status())}
+        {line}
       </p>
       <Switch
         label="Use the graphics chip (WebGPU) when available"

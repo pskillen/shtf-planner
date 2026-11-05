@@ -92,6 +92,9 @@ export function DateReader({
   onResult,
   onSuggestion,
   onSearched,
+  paused = false,
+  onAgain,
+  onBusy,
 }: {
   cam: DateCamera | null;
   todayIso: string;
@@ -100,6 +103,12 @@ export function DateReader({
   /** A tap on a suggestion, as `YYYY-MM`. */
   onSuggestion: (bestBefore: string) => void;
   onSearched?: (search: DateSearch) => void;
+  /** The person set the date by hand: stop looking (a late read must not overwrite it). */
+  paused?: boolean;
+  /** Read again was tapped. */
+  onAgain?: () => void;
+  /** True while the reader is loading or looking (the strip stays tall then), false otherwise. */
+  onBusy?: (busy: boolean) => void;
 }) {
   const { settings } = useDocument();
   const windows = expiryWindows(settings);
@@ -111,13 +120,19 @@ export function DateReader({
   );
   const [suggestions, setSuggestions] = useState<OfferedSuggestion[]>([]);
   const loopRef = useRef<DateLoop | null>(null);
-  const live = useRef({ onResult, onSearched, todayIso });
+  const live = useRef({ onResult, onSearched, todayIso, onAgain, onBusy });
   useEffect(() => {
-    live.current = { onResult, onSearched, todayIso };
+    live.current = { onResult, onSearched, todayIso, onAgain, onBusy };
+  });
+  // What the card shows now, so a new camera stream (hide and show) does not redo a finished read.
+  const phaseRef = useRef<Phase>('idle');
+  useEffect(() => {
+    phaseRef.current = phaseState;
   });
 
   useEffect(() => {
-    if (!cam || !autoStart) return;
+    if (!cam || !autoStart || paused) return;
+    if (phaseRef.current === 'got' || phaseRef.current === 'none') return;
     let gone = false;
     // A browser with no Worker throws here: that is "not available", like a failed load.
     const loaded = Promise.resolve()
@@ -178,7 +193,7 @@ export function DateReader({
       loopRef.current?.abort();
       loopRef.current = null;
     };
-  }, [cam, autoStart, run]);
+  }, [cam, autoStart, run, paused]);
 
   /** Starts the search over: the old card and suggestions go. */
   const again = (): void => {
@@ -187,9 +202,23 @@ export function DateReader({
     setLine('');
     setPhase('loading');
     setRun((n) => n + 1);
+    live.current.onAgain?.();
   };
   // Before the first status arrives the line says what the wait is: the reader's first load, or the start.
-  const phase = !cam || !autoStart ? 'idle' : phaseState === 'idle' ? 'loading' : phaseState;
+  const looking = phaseState === 'idle' || phaseState === 'loading' || phaseState === 'running';
+  const phase: Phase | 'paused' =
+    !cam || !autoStart
+      ? 'idle'
+      : paused && looking
+        ? 'paused'
+        : phaseState === 'idle'
+          ? 'loading'
+          : phaseState;
+  const busy = phase === 'loading' || phase === 'running';
+  useEffect(() => {
+    live.current.onBusy?.(busy);
+    return () => live.current.onBusy?.(false);
+  }, [busy]);
   const shownLine =
     line ||
     (peekDateReader()?.status().state === 'ready'
@@ -206,17 +235,38 @@ export function DateReader({
     );
   }
   if (phase === 'idle') return null;
+  if (phase === 'paused') {
+    return (
+      <div className="date-reader">
+        <div className="date-head">
+          <p role="status" aria-live="polite" className="date-status" data-testid="date-status">
+            Date set by hand
+          </p>
+          <button type="button" className="secondary" onClick={again}>
+            Read again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="date-reader">
-      <p role="status" aria-live="polite" className="date-status" data-testid="date-status">
-        {shownLine}
-      </p>
-      {phase === 'loading' || phase === 'running' ? (
-        <button type="button" className="secondary" onClick={() => loopRef.current?.stop()}>
-          Stop
-        </button>
-      ) : null}
+      <div className="date-head">
+        <p role="status" aria-live="polite" className="date-status" data-testid="date-status">
+          {shownLine}
+        </p>
+        {phase === 'loading' || phase === 'running' ? (
+          <button type="button" className="secondary" onClick={() => loopRef.current?.stop()}>
+            Stop
+          </button>
+        ) : null}
+        {phase === 'got' || phase === 'none' ? (
+          <button type="button" className="secondary" onClick={again}>
+            Read again
+          </button>
+        ) : null}
+      </div>
       {phase === 'got' && read ? (
         <div className="date-result" data-testid="date-result">
           <div>
@@ -242,11 +292,6 @@ export function DateReader({
             );
           })}
         </div>
-      ) : null}
-      {phase === 'got' || phase === 'none' ? (
-        <button type="button" className="secondary" onClick={again}>
-          Read again
-        </button>
       ) : null}
     </div>
   );

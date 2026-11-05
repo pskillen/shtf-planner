@@ -242,3 +242,71 @@ describe('Quick add: Read the date', () => {
     expect(Object.keys(s.doc().items).length).toBe(before);
   });
 });
+
+describe('Stocktake: the date step stays what the person sees', () => {
+  const setVisibility = (state: 'hidden' | 'visible') => {
+    Object.defineProperty(document, 'visibilityState', { value: state, configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  };
+
+  it('a finished read survives the page being hidden and shown again', async () => {
+    await toDateStep();
+    await act(async () => dateState.finish(gotRead(6, 2028)));
+    await screen.findByTestId('date-result');
+    fireEvent.click(screen.getByRole('button', { name: '+1 y' }));
+    const picked = monthBox().value;
+    await act(async () => setVisibility('hidden'));
+    await act(async () => setVisibility('visible'));
+    await new Promise((r) => setTimeout(r, 20));
+    expect(dateState.starts).toBe(1); // no new search, no new answer
+    expect(monthBox().value).toBe(picked);
+    expect(screen.getByTestId('date-result')).toBeTruthy();
+  });
+
+  it('a date set by hand stops the search and is never overwritten by a late read', async () => {
+    await toDateStep();
+    fireEvent.click(screen.getByRole('button', { name: '+6 m' }));
+    const picked = monthBox().value;
+    expect(dateState.aborts).toBeGreaterThan(0);
+    expect(screen.getByTestId('date-status').textContent).toBe('Date set by hand');
+    await act(async () => dateState.finish(gotRead(6, 2031)));
+    expect(monthBox().value).toBe(picked);
+    fireEvent.click(screen.getByRole('button', { name: 'Read again' }));
+    await waitFor(() => expect(dateState.starts).toBe(2));
+  });
+
+  it('Undo takes the item out of the Done counts, and saving it again counts it once', async () => {
+    await toDateStep();
+    await act(async () => dateState.finish(gotRead(6, 2028)));
+    await screen.findByTestId('date-result');
+    ok();
+    fireEvent.click(
+      within(screen.getByTestId('stocktake-saved')).getByRole('button', { name: 'Undo' }),
+    );
+    ok();
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+    expect(screen.getByTestId('stocktake-date-summary').textContent).toMatch(
+      /dates by camera 1 · picked 0/,
+    );
+    expect(screen.getByTestId('stocktake-summary').textContent).toMatch(/^1 item /);
+  });
+
+  it('the About line follows the reader live', async () => {
+    const s = liveStore(biggarDocument());
+    render(s.wrap(<StocktakeScreen />));
+    dateState.status = { state: 'loading' };
+    await act(async () => dateState.listeners.forEach((l) => l()));
+    expect(screen.getByTestId('date-about').textContent).toBe('Getting ready…');
+    dateState.status = { state: 'ready', ep: 'webgpu', loadMs: 9, reason: '', lastReadMs: 400 };
+    await act(async () => dateState.listeners.forEach((l) => l()));
+    expect(screen.getByTestId('date-about').textContent).toBe('WebGPU · last read 0.4 s');
+  });
+
+  it('keeps the strip tall while the reader looks, and compact once it has an answer', async () => {
+    await toDateStep();
+    expect(screen.getByTestId('camera-strip').className).not.toMatch(/compact/);
+    await act(async () => dateState.finish(gotRead(6, 2028)));
+    await screen.findByTestId('date-result');
+    expect(screen.getByTestId('camera-strip').className).toMatch(/compact/);
+  });
+});

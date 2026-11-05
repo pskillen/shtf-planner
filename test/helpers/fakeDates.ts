@@ -35,6 +35,9 @@ export const dateState: {
   stops: number;
   aborts: number;
   terminated: number;
+  /** What the reader's status() says (the About line). */
+  status: unknown;
+  listeners: Set<() => void>;
   resolvers: Array<(out: FakeLoopOut) => void>;
   /** Settles the latest loop. */
   finish(out: Partial<FakeLoopOut>): void;
@@ -44,6 +47,8 @@ export const dateState: {
   stops: 0,
   aborts: 0,
   terminated: 0,
+  status: { state: 'ready', ep: 'wasm', loadMs: 1, reason: '', lastReadMs: 400 },
+  listeners: new Set(),
   resolvers: [],
   finish(out) {
     dateState.resolvers.at(-1)!({
@@ -70,6 +75,8 @@ export function resetDates(): void {
   dateState.stops = 0;
   dateState.aborts = 0;
   dateState.terminated = 0;
+  dateState.status = { state: 'ready', ep: 'wasm', loadMs: 1, reason: '', lastReadMs: 400 };
+  dateState.listeners = new Set();
   dateState.resolvers = [];
 }
 
@@ -90,9 +97,11 @@ export const fakeDateClientModule = () => ({
     },
     terminate: () => undefined,
   }),
-  peekDateReader: () => ({
-    status: () => ({ state: 'ready', ep: 'wasm', loadMs: 1, reason: '', lastReadMs: 400 }),
-  }),
+  peekDateReader: () => ({ status: () => dateState.status }),
+  onReaderChange: (l: () => void) => {
+    dateState.listeners.add(l);
+    return () => void dateState.listeners.delete(l);
+  },
   terminateDateReader: () => {
     dateState.terminated++;
   },
