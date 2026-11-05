@@ -108,7 +108,7 @@ describe('Quick add: Scan a barcode', () => {
     await read(UNKNOWN);
     expect(await screen.findByText(/You are offline/)).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Pick what it is' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /^New item/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'New item' })).toBeTruthy(); // no name offline
     fireEvent.click(screen.getByRole('button', { name: 'Decide later' }));
     const scans = Object.values(s.doc().scans);
     expect(scans).toHaveLength(1);
@@ -131,11 +131,12 @@ describe('Quick add: Scan a barcode', () => {
     expect(Object.keys(s.doc().items)).toHaveLength(before);
   });
 
-  it('"Save as its own item" fills the name and the kcal from Open Food Facts', async () => {
+  it('"New item: <name>" fills the name and the kcal from Open Food Facts', async () => {
     fakeOff({ [UNKNOWN]: beans });
     const s = await openScanner();
     await read(UNKNOWN);
-    fireEvent.click(await screen.findByRole('button', { name: /^New item/ }));
+    // The button carries the name Open Food Facts gave it.
+    fireEvent.click(await screen.findByRole('button', { name: 'New item: Test beans' }));
     expect((screen.getByLabelText('Name') as HTMLInputElement).value).toBe('Test beans');
     expect((screen.getByLabelText(/kcal/) as HTMLInputElement).value).toBe('332'); // 80 per 100 g x 415 g
     fireEvent.click(screen.getByRole('button', { name: 'Save item' }));

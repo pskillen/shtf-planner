@@ -58,7 +58,6 @@ export function ScanSheet({
     >
       {reidentify ? null : (
         <CameraStrip
-          compact={code !== null}
           mode="barcode"
           chip="1 BARCODE"
           scanning={code === null}

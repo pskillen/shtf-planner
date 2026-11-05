@@ -306,14 +306,16 @@ export function StocktakeScreen() {
 
   return (
     <section className="screen stocktake">
-      <h1 className={phase === 'date' ? 'visually-hidden' : undefined}>Stocktake</h1>
+      <h1 className="visually-hidden">Stocktake</h1>
       {locations.length === 0 ? (
         <p className="note">
           You have no places yet. <Link to="/app/locations">Add a place</Link> first, then come
           back.
         </p>
-      ) : phase === 'date' ? null : (
-        <Field label="Counting into">
+      ) : (
+        // One compact line on both steps, so the strip stays exactly where it is.
+        <label className="place-row">
+          <span className="field-label">Counting into</span>
           <select
             value={locationId}
             onChange={(e) => {
@@ -327,7 +329,7 @@ export function StocktakeScreen() {
               </option>
             ))}
           </select>
-        </Field>
+        </label>
       )}
 
       {hint ? (
@@ -461,9 +463,7 @@ export function StocktakeScreen() {
                   </button>
                 ) : null}
               </div>
-              <p className="muted">
-                {productName ? `${productName} · ` : ''}into {place?.name ?? '?'}
-              </p>
+              {productName ? <p className="muted">{productName}</p> : null}
               {warning ? (
                 <p className="warn" role="status">
                   ⚠ {warning}

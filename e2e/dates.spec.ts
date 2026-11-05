@@ -205,13 +205,21 @@ for (const size of [
         // One camera size for both steps: it never changes.
         expect(stripAiming.height).toBeCloseTo(stripBarcode.height, 0);
         expect(stripAiming.width).toBeCloseTo(stripBarcode.width, 0);
-        // The status is drawn on the strip, at its centre.
+        // The strip's top is in the same place on both steps (the page does not jump at the catch).
+        expect(stripAiming.y).toBeCloseTo(stripBarcode.y, 0);
+        // While aiming, the status sits at the top edge of the date box, clear of its middle.
         const s = await box(status);
-        expect(s.y).toBeGreaterThanOrEqual(stripAiming.y);
-        expect(s.y + s.height).toBeLessThanOrEqual(stripAiming.y + stripAiming.height);
-        expect(Math.abs(s.x + s.width / 2 - (stripAiming.x + stripAiming.width / 2))).toBeLessThan(
-          8,
-        );
+        const boxTop = stripAiming.y + stripAiming.height * 0.22;
+        const boxMid = stripAiming.y + stripAiming.height * 0.5;
+        expect(s.y).toBeGreaterThanOrEqual(boxTop - 2);
+        expect(s.y + s.height).toBeLessThan(boxMid - stripAiming.height * 0.1);
+        test.info().annotations.push({
+          type: 'pill',
+          description: `${size.width}x${size.height}: pill y ${Math.round(s.y - stripAiming.y)}..${Math.round(s.y + s.height - stripAiming.y)} of a ${Math.round(stripAiming.height)} px strip; date box ${Math.round(boxTop - stripAiming.y)}..${Math.round(stripAiming.y + stripAiming.height * 0.78 - stripAiming.y)}`,
+        });
+        await page.screenshot({
+          path: `test-results/p9b-aiming-${size.width}x${size.height}-hint-${hintShown ? 'on' : 'off'}.png`,
+        });
 
         const month = page.locator('input[type="month"]');
         const okBtn = page.getByRole('button', { name: 'OK', exact: true });
@@ -239,6 +247,9 @@ for (const size of [
         await page.evaluate(() => window.scrollTo(0, 0));
         const after = await box(strip);
         expect(after.height).toBeCloseTo(stripBarcode.height, 0);
+        await page.screenshot({
+          path: `test-results/p9b-got-${size.width}x${size.height}-hint-${hintShown ? 'on' : 'off'}.png`,
+        });
         const c = await box(card);
         expect(c.y).toBeGreaterThanOrEqual(after.y);
         expect(c.y + c.height).toBeLessThanOrEqual(after.y + after.height);
