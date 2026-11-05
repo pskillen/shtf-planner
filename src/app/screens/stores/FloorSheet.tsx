@@ -40,7 +40,7 @@ export function FloorSheet({
 
   return (
     <Sheet
-      title={`Floors in the ${location.name}`}
+      title={`Always keep at least, in the ${location.name}`}
       onClose={onClose}
       dirty={isDirty(levels, start)}
       actions={
@@ -49,13 +49,13 @@ export function FloorSheet({
             Cancel
           </button>
           <button type="button" onClick={() => onSave(levels)}>
-            Save floors
+            Save minimums
           </button>
         </>
       }
     >
       <p className="muted">
-        The level you never go below. The plan counts the floor, not what is on the shelf today.
+        The least you always keep. The plan counts this minimum, not what is on the shelf today.
       </p>
       {rows.length === 0 ? <p className="muted">Nothing is kept here yet.</p> : null}
       <ul className="row-list">
@@ -68,7 +68,7 @@ export function FloorSheet({
               </span>
             </div>
             <Stepper
-              label={`Floor for ${r.name}`}
+              label={`Minimum for ${r.name}`}
               value={levels[r.typeId] ?? 0}
               onChange={(n) => setLevels({ ...levels, [r.typeId]: n })}
             />

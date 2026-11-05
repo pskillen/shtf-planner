@@ -123,11 +123,11 @@ export function StoresScreen() {
         <button
           type="button"
           className="row-main"
-          aria-label={`${row.item ? 'Edit' : 'Set floor for'} ${name}`}
+          aria-label={`${row.item ? 'Edit' : 'Set minimum for'} ${name}`}
           onClick={() => (row.item ? setEditing(row.item) : location && setFlooring(location.id))}
         >
           <strong>
-            {name} {floor !== undefined ? <span className="badge">floor {floor}</span> : null}
+            {name} {floor !== undefined ? <span className="badge">min {floor}</span> : null}
           </strong>
           <span className="muted">
             {row.qty} × {type?.unit ?? 'each'}
@@ -241,10 +241,10 @@ export function StoresScreen() {
               <>
                 {l.kind === 'rotating' ? (
                   <div className="note rotating-note">
-                    This place rotates: the floor counts, not today’s stock.{' '}
+                    This place rotates: the minimum counts, not today’s stock.{' '}
                     <EditArea>
                       <button type="button" className="link" onClick={() => setFlooring(l.id)}>
-                        Set floors
+                        Set minimums
                       </button>
                     </EditArea>
                   </div>

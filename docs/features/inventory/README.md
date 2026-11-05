@@ -7,19 +7,19 @@ The Stores tab: what the household has, by where it is kept, and the quick way t
 
 ## Map
 
-| Piece           | Where                                                                    | What                                                                                                |
-| --------------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
-| Stores tab      | `/app/stores`, `StoresScreen.tsx`                                        | Stock grouped by place (collapsible), search across places, a floating + for Quick add.             |
-| Quick add       | `screens/stores/QuickAdd.tsx`                                            | Search, pick, Add; then Add another or Next item. Also opened from the Gaps tab.                    |
-| Edit and floors | `screens/stores/ItemSheet.tsx`, `FloorSheet.tsx`                         | Quantity stepper, place, best-before, delete with undo; the floor of each type in a rotating place. |
-| Month field     | `screens/stores/MonthField.tsx`                                          | A month box and one-tap chips for the best-before.                                                  |
-| Scanning        | `screens/stores/ScanSheet.tsx`, `StocktakeScreen.tsx`, `ScansToSort.tsx` | Scan a barcode in Quick add, stocktake mode, scans to sort. See [Scanning](../scanning/README.md).  |
-| Pure helpers    | `screens/stores/stock.ts`, `customType.ts`                               | Suitability warning, month parsing, search, adding stock, custom item types.                        |
-| Custom types    | `customTypes` in the document, `src/packs/custom.ts`                     | `withCustomTypes` merges them into the packs as a pseudo-pack `custom`; `usePacks()` in screens.    |
+| Piece             | Where                                                                    | What                                                                                                  |
+| ----------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| Stores tab        | `/app/stores`, `StoresScreen.tsx`                                        | Stock grouped by place (collapsible), search across places, a floating + for Quick add.               |
+| Quick add         | `screens/stores/QuickAdd.tsx`                                            | Search, pick, Add; then Add another or Next item. Also opened from the Gaps tab.                      |
+| Edit and minimums | `screens/stores/ItemSheet.tsx`, `FloorSheet.tsx`                         | Quantity stepper, place, best-before, delete with undo; the minimum of each type in a rotating place. |
+| Month field       | `screens/stores/MonthField.tsx`                                          | A month box and one-tap chips for the best-before.                                                    |
+| Scanning          | `screens/stores/ScanSheet.tsx`, `StocktakeScreen.tsx`, `ScansToSort.tsx` | Scan a barcode in Quick add, stocktake mode, scans to sort. See [Scanning](../scanning/README.md).    |
+| Pure helpers      | `screens/stores/stock.ts`, `customType.ts`                               | Suitability warning, month parsing, search, adding stock, custom item types.                          |
+| Custom types      | `customTypes` in the document, `src/packs/custom.ts`                     | `withCustomTypes` merges them into the packs as a pseudo-pack `custom`; `usePacks()` in screens.      |
 
 ## Behaviour worth knowing
 
-- **Rows.** Name, quantity and unit, the best-before as "Mar 2027" with a word beside it, a "floor
+- **Rows.** Name, quantity and unit, the best-before as "Mar 2027" with a word beside it, a "min
   6" badge in a rotating place. Tapping a row edits it.
 - **Expiry colours.** A best-before is always a colour and a word together (`ExpiryBadge`, from
   `expiryLevel` in `src/engine/expiry.ts`): **Expired** (red) once its month has gone;
@@ -32,9 +32,9 @@ The Stores tab: what the household has, by where it is kept, and the quick way t
 - **Equipment in a place.** Under a place's stock, the equipment kept there (its "Where is it
   kept?" answer) is listed read-only with an Equipment badge, its name, type and key answer
   ("110 Ah"); tapping it opens its edit form on the Equipment screen. Equipment with no place, or whose place no longer exists, is listed after the places under "Equipment, no place", with the same rows. Search matches equipment names too.
-- **Rotating places.** "The floor counts, not today's stock": the engine counts the lower of what is
-  on the shelf and the floor. "Set floors" lists the types in that place with a stepper each; 0
-  removes the floor. A floor with nothing on the shelf is still listed, at 0.
+- **Rotating places.** "The minimum counts, not today's stock": the engine counts the lower of what is
+  on the shelf and the minimum. "Set minimums" opens "Always keep at least", which lists the types in that place with a stepper each; 0
+  removes the minimum. A minimum with nothing on the shelf is still listed, at 0.
 - **Suitability.** An item whose type does not tolerate every condition of its place (frost, heat,
   damp; indoor and stable asks for nothing) shows a warning such as "Water can (10 L) may freeze in
   the Shed", on the row and in Quick add. Quick add still allows it.
@@ -70,4 +70,4 @@ The Stores tab: what the household has, by where it is kept, and the quick way t
 
 - Review of items that are about to expire: the colouring and words are display only.
 - Editing or deleting a custom type.
-- Adding a type to a place's floors without stock in it.
+- Adding a type to a place's minimums without stock in it.

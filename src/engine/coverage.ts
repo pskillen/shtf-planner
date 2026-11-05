@@ -272,9 +272,9 @@ export function analyse(
           ...(unfit
             ? { note: unfit }
             : floor === undefined
-              ? { note: `rotating location with no floor: ${fmt(liveQty)} held, none relied on` }
+              ? { note: `rotating location with no minimum: ${fmt(liveQty)} held, none relied on` }
               : counted < liveQty
-                ? { note: `counted at the floor of ${fmt(floor)}, ${fmt(liveQty)} held` }
+                ? { note: `counted at the minimum of ${fmt(floor)}, ${fmt(liveQty)} held` }
                 : {}),
         });
       }

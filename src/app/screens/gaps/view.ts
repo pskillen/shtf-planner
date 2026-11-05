@@ -16,8 +16,8 @@ export interface ShoppingRow {
   kind: 'acquire' | 'replenish';
   label: string;
   /**
-   * What it closes: "water: 20 L short of 14 days"; for a restock, worded from the floor ("Pantry:
-   * UHT milk is 3 below its floor of 6"), with no days.
+   * What it closes: "water: 20 L short of 14 days"; for a restock, worded from the minimum ("Pantry:
+   * UHT milk is 3 below its minimum of 6"), with no days.
    */
   closes: string;
   pricePence?: number;
@@ -77,12 +77,12 @@ export function closesText(gap: Gap, horizonDays: number, region: 'UK' | 'US'): 
     : `${label}: ${short} short of ${horizonDays} days`;
 }
 
-/** "Pantry: UHT milk is 3 below its floor of 6", or, with none in date, "... has none in date (floor 3)". */
+/** "Pantry: UHT milk is 3 below its minimum of 6", or, with none in date, "... has none in date (minimum 3)". */
 function restockText(r: NonNullable<Gap['restock']>): string {
   const lead = `${r.place}: ${r.typeName}`;
   return r.actual <= 0
-    ? `${lead} has none in date (floor ${round1(r.floor)})`
-    : `${lead} is ${round1(r.floor - r.actual)} below its floor of ${round1(r.floor)}`;
+    ? `${lead} has none in date (minimum ${round1(r.floor)})`
+    : `${lead} is ${round1(r.floor - r.actual)} below its minimum of ${round1(r.floor)}`;
 }
 
 /**

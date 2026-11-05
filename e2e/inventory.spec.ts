@@ -52,10 +52,10 @@ test('the fixture household: the Stores tab groups stock by place, flags the odd
   // grouped by place, with a floor badge on the rotating pantry and a past best-before
   await expect(page.getByRole('region', { name: 'Pantry' })).toBeVisible();
   await expect(
-    page.getByRole('region', { name: 'Pantry' }).getByText('floor 2').first(),
+    page.getByRole('region', { name: 'Pantry' }).getByText('min 2').first(),
   ).toBeVisible();
   await expect(
-    page.getByText('This place rotates: the floor counts, not today’s stock.'),
+    page.getByText('This place rotates: the minimum counts, not today’s stock.'),
   ).toBeVisible();
   await expect(page.locator('.bb-expired').first()).toBeVisible();
   // search narrows across places
@@ -190,9 +190,9 @@ test('a pantry floor counts towards food, and Gaps hands a ticked row to Quick a
     ).find((c) => c.targetId === 'food:foodKcal')!.amount;
   const before = await food();
 
-  await page.getByRole('button', { name: 'Set floors' }).click();
-  await page.getByRole('button', { name: /^One more: Floor for Tinned food/ }).click();
-  await page.getByRole('button', { name: 'Save floors' }).click();
+  await page.getByRole('button', { name: 'Set minimums' }).click();
+  await page.getByRole('button', { name: /^One more: Minimum for Tinned food/ }).click();
+  await page.getByRole('button', { name: 'Save minimums' }).click();
   expect((await food()) - before).toBeGreaterThan(0);
 
   // Ticking a shopping row opens Quick add with that item.
