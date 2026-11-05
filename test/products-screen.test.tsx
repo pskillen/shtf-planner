@@ -93,7 +93,7 @@ describe('ProductsScreen', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Merge into…' }));
     const merge = screen.getByRole('dialog', { name: 'Merge into…' });
     fireEvent.click(within(merge).getByRole('button', { name: /Test beans 415 g/i }));
-    expect(screen.getByRole('alert').textContent).toMatch(/1 stock row and 1 barcode/i);
+    expect(screen.getByRole('alert').textContent).toMatch(/3 tins and 1 barcode/i);
     fireEvent.click(screen.getByRole('button', { name: 'Merge' }));
     expect(s2.doc().products['prod-other']).toBeUndefined();
     expect(s2.doc().stock['stock-beans']!.qty).toBe(15);

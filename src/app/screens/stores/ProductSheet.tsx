@@ -23,10 +23,11 @@ type Mode = 'main' | 'countsAs' | 'size' | 'merge' | 'mergeConfirm';
 function mergePreview(
   doc: Pick<import('../../../model').Document, 'stock' | 'barcodes'>,
   dropId: string,
+  unit: string,
 ) {
-  const stockRows = Object.values(doc.stock).filter((s) => s.productId === dropId).length;
+  const packs = sumProductPacks(doc, dropId, 'all', new Set());
   const barcodes = Object.values(doc.barcodes).filter((b) => b.productId === dropId).length;
-  return { stockRows, barcodes };
+  return { packs, unit, barcodes };
 }
 
 /** Edit one product: name, counts-as, size, merge, delete. */
@@ -182,14 +183,14 @@ export function ProductSheet({
 
   const keep = mergeKeepId ? doc.products[mergeKeepId] : undefined;
   if (mode === 'mergeConfirm' && keep) {
-    const { stockRows, barcodes: bc } = mergePreview(doc, productId);
-    const rowWord = stockRows === 1 ? 'stock row' : 'stock rows';
+    const { packs, unit: mergeUnit, barcodes: bc } = mergePreview(doc, productId, unit);
     const bcWord = bc === 1 ? 'barcode' : 'barcodes';
     return (
       <Sheet title="Merge into…" onClose={() => setMode('merge')}>
         <div className="sheet-confirm" role="alert">
           <p>
-            Move {stockRows} {rowWord} and {bc} {bcWord} to {keep.name} and delete this one?
+            Move {formatPackTotal(packs, mergeUnit)} and {bc} {bcWord} to {keep.name}, and delete this
+            product?
           </p>
           <button type="button" className="secondary" onClick={() => setMode('merge')}>
             Cancel
