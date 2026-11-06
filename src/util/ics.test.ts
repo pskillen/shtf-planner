@@ -35,12 +35,10 @@ describe('generateIcs', () => {
     expect(output).toContain('DESCRIPTION:Line 1\\nLine 2\r\n');
   });
 
-  it('is stable for identical input and serializes an empty calendar', () => {
+  it('is stable for identical input and rejects an empty calendar', () => {
     const events = [{ uid: 'stable', date: '2027-01-05', summary: 'Review' }];
     expect(generateIcs(events, stamp)).toBe(generateIcs(events, stamp));
-    expect(generateIcs([], stamp)).toBe(
-      'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//SHTF Planner//Review Calendar//EN\r\nEND:VCALENDAR\r\n',
-    );
+    expect(() => generateIcs([], stamp)).toThrow(TypeError);
   });
 
   it('folds ASCII and Unicode lines within 75 octets and unfolds losslessly', () => {
