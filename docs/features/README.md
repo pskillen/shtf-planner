@@ -25,7 +25,7 @@ The stock model names six levels, then a few everyday words the screens use besi
 | [Data model](data-model/README.md)         | The household document, its store, migrations and the test household                   |
 | [Content packs](content-packs/README.md)   | Versioned JSON packs: items, assets, guidance, plans, regions                          |
 | [Engine](engine/README.md)                 | Targets, coverage, gaps, score and horizon preview as pure functions                   |
-| [Review](review/README.md)                 | Equipment maintenance dates and the planned review queue                               |
+| [Review](review/README.md)                 | Equipment maintenance and review reminders                                             |
 | [Setup screens](setup/README.md)           | Onboarding, the home hub, people, home, locations, equipment, risks, horizon, settings |
 | [Inventory](inventory/README.md)           | Stores tab, Quick add, minimums, suitability warnings                                  |
 | [Scanning](scanning/README.md)             | Barcode scanning, stocktake mode, camera date reading, scans to sort, Open Food Facts  |

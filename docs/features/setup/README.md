@@ -103,9 +103,10 @@ leaving half-way.
   location means less to protect.
 - **Risks are self-declared** from a checklist, with links to the official checkers. Nothing is
   looked up, because a lookup would send the location out of the browser.
-- **Stored, not yet read.** The review reminder (3 or 6 months) and anonymise names are saved in the
-  document but nothing uses them yet: the first waits for the review queue, the second for any
-  feature that sends household text out (there is none).
+- **Review reminder.** Choose every 3 or 6 months and see the next date immediately. Home shows
+  when a review is due; see [review](../review/README.md).
+- **Stored, not yet read.** Anonymise names is saved for a future feature that sends household text
+  out (there is none).
 
 ## Known gaps
 
