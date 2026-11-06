@@ -1,4 +1,4 @@
-import type { CapabilityId, Category, Document, Packs } from '../model';
+import type { CapabilityId, Category, Document, Packs, Stock } from '../model';
 import { compareText } from '../util';
 import { CAPABILITY_ORDER, guidanceRules } from './context';
 import { addMonths, ageInMonths } from './dates';
@@ -22,11 +22,20 @@ export type ReviewItem = Common &
         productId: string;
         locationId: string;
         expiryLevel: ExpiryLevel;
+        stock: Stock;
+        itemId?: string;
       }
-    | { kind: 'maintenance'; assetId: string; jobId: string }
+    | {
+        kind: 'maintenance';
+        assetId: string;
+        jobId: string;
+        lastDone?: string;
+        purchased?: string;
+        typeId: string;
+      }
     | { kind: 'age'; memberId: string; sourceId: string; transitionId: string }
     | { kind: 'recount'; locationId: string }
-    | { kind: 'plan'; planId: string }
+    | { kind: 'plan'; planId: string; doneAt?: string; expires?: string }
   );
 const categoryCapability: Partial<Record<Category, CapabilityId>> = {
   water: 'water',
@@ -78,6 +87,8 @@ export function reviewItems(
         kind: 'expiry',
         key: `stock:${stock.id}`,
         stockId: stock.id,
+        stock: { ...stock },
+        itemId: product?.itemId,
         productId: stock.productId,
         locationId: stock.locationId,
         due,
@@ -96,6 +107,9 @@ export function reviewItems(
       key: `maint:${component(job.assetId)}:${component(job.jobId)}`,
       assetId: job.assetId,
       jobId: job.jobId,
+      lastDone: job.lastDone,
+      purchased: asset.purchased,
+      typeId: asset.typeId,
       due: job.due,
       urgency: urgency(job.due, asOf),
       capability: type ? categoryCapability[type.category] : undefined,
@@ -139,6 +153,8 @@ export function reviewItems(
         kind: 'plan',
         key: `plan:${planId}`,
         planId,
+        doneAt: entry.doneAt,
+        expires: entry.expires,
         due,
         urgency: urgency(due, asOf),
         capability: plan.capability,

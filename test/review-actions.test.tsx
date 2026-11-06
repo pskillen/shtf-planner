@@ -100,7 +100,7 @@ it('answers every kind and undo restores the latest answer', () => {
     fireEvent.click(within(row).getByRole('button', { name: new RegExp(`^${label}:`) }));
   }
   expect(Object.values(store.store.get().reviews)[0]!.resolved).toHaveLength(5);
-  fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+  fireEvent.click(screen.getAllByRole('button', { name: 'Undo' })[4]!);
   expect(Object.values(store.store.get().reviews)[0]!.resolved).toHaveLength(4);
 });
 it('keeps replacement choice when the sheet is cancelled', () => {
@@ -127,4 +127,78 @@ it('disables answers in a read-only document', () => {
   ).toBe(true);
   fireEvent.click(within(row).getByRole('button', { name: /^Used:/ }));
   expect(Object.keys(store.store.get().reviews)).toHaveLength(0);
+});
+
+it('keeps independent undo windows for rapid answers', () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date(`${day}T12:00:00Z`));
+  const store = liveStore(setup());
+  render(store.wrap(<ReviewScreen />));
+  const first = document.querySelector<HTMLElement>('[data-review-kind="expiry"]')!;
+  fireEvent.click(within(first).getByRole('button', { name: /^Fine:/ }));
+  vi.advanceTimersByTime(1000);
+  const second = document.querySelector<HTMLElement>('[data-review-kind="maintenance"]')!;
+  fireEvent.click(within(second).getByRole('button', { name: /^Done:/ }));
+  expect(screen.getAllByRole('button', { name: 'Undo' })).toHaveLength(2);
+  fireEvent.click(screen.getAllByRole('button', { name: 'Undo' })[0]!);
+  expect(Object.values(store.store.get().reviews)[0]!.resolved).toHaveLength(1);
+  fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+  expect(Object.values(store.store.get().reviews)[0]!.resolved).toHaveLength(0);
+});
+it('rejects stale stock, maintenance and plan answers without changing the document', () => {
+  for (const kind of ['expiry', 'maintenance', 'plan'] as const) {
+    const doc = setup();
+    const item = reviewItems(doc, packs, day, reviewPeriod(doc, day).until).find(
+      (i) => i.kind === kind,
+    )!;
+    if (item.kind === 'expiry') doc.stock[item.stockId]!.qty += 1;
+    if (item.kind === 'maintenance') doc.assets[item.assetId]!.maintenance[item.jobId] = day;
+    if (item.kind === 'plan') doc.plans[item.planId]!.doneAt = day;
+    const before = structuredClone(doc);
+    expect(
+      answerReview(
+        doc,
+        packs,
+        item,
+        kind === 'expiry' ? 'replace' : kind === 'maintenance' ? 'done' : 'no-longer',
+        day,
+        `${day}T12:00:00Z`,
+        'review',
+        'op',
+      ),
+    ).toBeUndefined();
+    expect(doc).toEqual(before);
+  }
+});
+it('rejects removed stock parents before replacement', () => {
+  const doc = setup();
+  const item = reviewItems(doc, packs, day, reviewPeriod(doc, day).until).find(
+    (i) => i.kind === 'expiry',
+  )!;
+  if (item.kind !== 'expiry') throw new Error('expected expiry');
+  delete doc.products[item.productId];
+  expect(
+    answerReview(doc, packs, item, 'replace', day, `${day}T12:00:00Z`, 'review', 'op'),
+  ).toBeUndefined();
+  expect(doc.stock[item.stockId]).toBeDefined();
+});
+
+it('opens replacement for an unclassified product and preserves the answer after cancel and remount', () => {
+  vi.setSystemTime(new Date(`${day}T12:00:00Z`));
+  const doc = setup();
+  const item = reviewItems(doc, packs, day, reviewPeriod(doc, day).until).find(
+    (i) => i.kind === 'expiry',
+  )!;
+  if (item.kind !== 'expiry') throw new Error('expected expiry');
+  delete doc.products[item.productId]!.itemId;
+  const store = liveStore(doc);
+  const view = render(store.wrap(<ReviewScreen />));
+  const row = document.querySelector<HTMLElement>('[data-review-kind="expiry"]')!;
+  fireEvent.click(within(row).getByRole('button', { name: /^Replace:/ }));
+  expect(screen.getByRole('dialog')).toBeTruthy();
+  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /close/i }));
+  view.unmount();
+  render(store.wrap(<ReviewScreen />));
+  expect(store.store.get().stock[item.stockId]).toBeUndefined();
+  expect(Object.values(store.store.get().reviews)[0]!.resolved[0]).toContain('replace');
 });
