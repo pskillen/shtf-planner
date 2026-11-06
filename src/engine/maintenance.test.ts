@@ -20,12 +20,12 @@ describe('maintenanceDue', () => {
     expect(jobs.find((j) => j.jobId === 'test')).toMatchObject({
       lastDone: '2026-01-31',
       due: '2026-02-28',
-      overdue: true,
+      overdue: false,
     });
     expect(jobs.some((j) => j.jobId === 'obsolete')).toBe(false);
     expect(jobs.find((j) => j.jobId !== 'test')).toMatchObject({
       due: '2026-02-28',
-      overdue: true,
+      overdue: false,
     });
     doc.assets.a!.purchased = '2026-01-31';
     expect(maintenanceDue(doc, packs, '2026-02-01').find((j) => j.jobId === 'test')).toMatchObject({
@@ -35,6 +35,11 @@ describe('maintenanceDue', () => {
     expect(maintenanceDue(doc, packs, '2026-02-01').find((j) => j.jobId !== 'test')?.due).toBe(
       '2036-01-31',
     );
+    expect(maintenanceDue(doc, packs, '2026-03-01').find((j) => j.jobId === 'test')?.overdue).toBe(
+      true,
+    );
+    doc.assets.a!.typeId = 'assets-base:rocket-stove';
+    expect(maintenanceDue(doc, packs, '2026-02-01')).toEqual([]);
     doc.assets.a!.typeId = 'unknown';
     expect(maintenanceDue(doc, packs, '2026-02-01')).toEqual([]);
   });
