@@ -155,7 +155,7 @@ export function Shell() {
                 {t.icon}
               </span>
               <span>{t.label}</span>
-              {t.path === '' ? <ReviewBadge /> : null}
+              {t.path === '' && storeStatus.kind === 'ok' ? <ReviewBadge /> : null}
             </Link>
           ))}
         </nav>
