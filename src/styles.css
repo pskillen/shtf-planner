@@ -176,6 +176,13 @@ button.quiet {
   line-height: 1;
 }
 
+.tab-badge {
+  color: var(--accent);
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
 /* The landing page. */
 .landing {
   max-width: 40rem;
