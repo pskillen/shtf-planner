@@ -7,6 +7,7 @@ import { ScreenBoundary } from './ScreenBoundary';
 import { StoreBanner } from './StoreBanner';
 import { TABS, activeTab, showsTabs } from './tabs';
 import { HomeHub } from './screens/HomeHub';
+import { ReviewScreen } from './screens/ReviewScreen';
 import { Onboarding } from './screens/Onboarding';
 import { AssetsScreen } from './screens/AssetsScreen';
 import { HomeScreen } from './screens/HomeScreen';
@@ -131,6 +132,7 @@ export function Shell() {
                   </Screen>
                 }
               />
+              <Route path="review" element={<ReviewScreen />} />
               <Route path="stores" element={<StoresScreen />} />
               <Route path="stores/products" element={<ProductsScreen />} />
               <Route path="stores/stocktake" element={<StocktakeScreen />} />

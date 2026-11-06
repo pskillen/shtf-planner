@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { nextReviewDue, reviewIsDue } from '../../engine';
+import { nextReviewDue, reviewIsDue, reviewItems, reviewPeriod } from '../../engine';
 import { today } from '../../util';
 import { formatReviewDate } from '../reviewDisplay';
 import { Link, Navigate } from 'react-router-dom';
@@ -11,6 +11,7 @@ import {
   labelOf,
 } from '../labels';
 import { useDocument } from '../state';
+import { usePacks } from '../usePacks';
 import { firstStepPath } from './onboardingSteps';
 
 function Card({ to, title, children }: { to: string; title: string; children: ReactNode }) {
@@ -33,6 +34,9 @@ const HORIZON_LABEL = { 3: '3 days', 7: '7 days', 14: '14 days', 28: '28 days' }
  */
 export function HomeHub() {
   const doc = useDocument();
+  const packs = usePacks();
+  const asOf = today();
+  const count = reviewItems(doc, packs, asOf, reviewPeriod(doc, asOf).until).length;
   const { members, pets } = doc.household;
   if (members.length === 0) return <Navigate to={firstStepPath} replace />;
 
@@ -45,14 +49,12 @@ export function HomeHub() {
       <h1>Your household</h1>
       <p className="muted">Everything the plan is built from. Tap a card to change it.</p>
       <div className="cards">
-        <div className="card">
-          <span className="card-title">Review</span>
-          <span className="card-body">
-            {reviewIsDue(doc, today())
-              ? 'Review due'
-              : `Next review ${formatReviewDate(nextReviewDue(doc))}`}
-          </span>
-        </div>
+        <Card to="/app/review" title="Review">
+          {count ? `${count} to check` : 'Nothing to check'} ·{' '}
+          {reviewIsDue(doc, asOf)
+            ? 'Review due'
+            : `Next review ${formatReviewDate(nextReviewDue(doc))}`}
+        </Card>
         <Card to="/app/people" title="People">
           {members.length} {members.length === 1 ? 'person' : 'people'}
           {pets.length > 0 ? `, ${pets.length} ${pets.length === 1 ? 'pet' : 'pets'}` : ''}

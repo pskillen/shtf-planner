@@ -1496,3 +1496,17 @@ button.scans-note {
   color: #1a1a1a;
   border-color: #fff;
 }
+
+/* Review urgency is always written as well as coloured. */
+.review-overdue {
+  background: var(--warn);
+  color: var(--bg);
+}
+.review-due {
+  background: var(--accent);
+  color: var(--bg);
+}
+.review-soon {
+  background: var(--border);
+  color: var(--text);
+}
