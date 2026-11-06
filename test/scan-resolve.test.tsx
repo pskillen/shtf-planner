@@ -69,7 +69,7 @@ describe('Quick add: Scan a barcode', () => {
     await read(KNOWN);
     await screen.findByText('Add Test spread 400 g');
     fireEvent.click(screen.getByRole('button', { name: 'Not this item?' }));
-    fireEvent.change(await screen.findByLabelText('What is it?'), {
+    fireEvent.change(await screen.findByLabelText('Search for what it counts as'), {
       target: { value: 'soup' },
     });
     fireEvent.click(screen.getByRole('button', { name: /Tinned soup/ }));
@@ -101,7 +101,7 @@ describe('Quick add: Scan a barcode', () => {
     const s = await openScanner();
     await read(UNKNOWN);
     expect(await screen.findByText(/You are offline/)).toBeTruthy();
-    expect(screen.getByLabelText('What is it?')).toBeTruthy();
+    expect(screen.getByLabelText('Search for what it counts as')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Counts towards nothing' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Decide later' }));
     const scans = Object.values(s.doc().scans);
@@ -116,7 +116,7 @@ describe('Quick add: Scan a barcode', () => {
     const s = await openScanner();
     const before = Object.keys(s.doc().stock).length;
     await read(UNKNOWN);
-    fireEvent.change(await screen.findByLabelText('What is it?'), {
+    fireEvent.change(await screen.findByLabelText('Search for what it counts as'), {
       target: { value: 'camping stove' },
     });
     const route = screen.getByRole('region', { name: 'Equipment: add to your home' });

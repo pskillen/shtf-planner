@@ -108,6 +108,9 @@ test.describe('camera dates', () => {
     const hosts = await setUp(page);
     await toDateStep(page);
     await show(page, { text: '12.26' });
+    // The search has no time limit: it keeps looking until Stop.
+    await expect(page.getByTestId('date-status')).toHaveText('Reading…', READ);
+    await page.getByRole('button', { name: 'Stop' }).click();
     await expect(page.getByTestId('date-status')).toHaveText('No date found', READ);
     await expect(page.getByTestId('date-result')).toHaveCount(0);
     expect(await spreadStock(page)).toHaveLength(0);

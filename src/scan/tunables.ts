@@ -48,8 +48,11 @@ export const DATE_COLOUR = '#fc0';
 // ---- Reading the date (src/scan/dateLoop.ts, src/scan/ocr). The agreement and confidence
 // numbers are in src/engine/datecode/tally.ts; the parser's ranges in src/engine/datecode/parse.ts.
 
-/** A date step gives up and offers suggestions after this long, in milliseconds. */
-export const DATE_TIMEOUT_MS = 8000;
+/**
+ * A date step gives up and offers suggestions after this long, in milliseconds. Never by default:
+ * like the barcode step it keeps looking until it reads a date or the person taps Stop.
+ */
+export const DATE_TIMEOUT_MS = Number.POSITIVE_INFINITY;
 
 /** One frame stops trying more pictures after this long, in milliseconds. */
 export const FRAME_MAX_MS = 3000;

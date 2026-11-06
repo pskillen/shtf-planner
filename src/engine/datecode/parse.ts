@@ -74,7 +74,12 @@ const FULL_DATE = new Set([
   'YYYY-MM-DD',
 ]);
 /** Shapes that are too weak to be a result unless a label claims them. */
-const WEAK_KINDS = new Set(['DD MM YY (label)', 'DDMM YY (label)', 'MM/YY (label)']);
+const WEAK_KINDS = new Set([
+  'DD MM YY (label)',
+  'DDMM YY (label)',
+  'MM/YY (label)',
+  'MM YYYY (label)',
+]);
 
 const sep = '[\\/.\\-]';
 
@@ -167,6 +172,10 @@ function scan(t: string): Raw[] {
   run(
     new RegExp(`(?<![0-9./\\-])(\\d{1,2})\\s?${sep}\\s?(\\d{4}|\\d{2})(?![0-9]|${sep}\\d)`, 'g'),
     (m) => add(m, +g(m, 1), toYear(g(m, 2)), g(m, 2).length === 2 ? 'MM/YY (label)' : 'MM/YY'),
+  );
+  // MM YYYY with a space only ("EXP 12 2027", the month and year on their own line): weak, a label must claim it
+  run(/(?<![0-9./-])(0?[1-9]|1[0-2]) (20\d{2})(?![0-9]|[./-]\d)/g, (m) =>
+    add(m, +g(m, 1), +g(m, 2), 'MM YYYY (label)'),
   );
   // DDMM YY: the reader glued the day and month and kept the space ("1206 27"); weak, a label must claim it
   run(/(?<![0-9])(0[1-9]|[12]\d|3[01])(0[1-9]|1[0-2]) (\d{2})(?![0-9])/g, (m) =>

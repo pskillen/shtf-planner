@@ -157,6 +157,23 @@ describe('the date loop: what it answers', () => {
     expect(t.captured()).toBe(n);
   });
 
+  it('keeps looking with no time limit unless one is given, until stopped', async () => {
+    let stop = (): void => undefined;
+    const t = setup(
+      [SHARP()],
+      (n) => {
+        if (n === 100) stop();
+        return verdict();
+      },
+      { timeoutMs: undefined },
+    );
+    stop = () => t.loop.stop();
+    const out = await t.loop.result;
+    expect(out.outcome).toBe('none');
+    expect(out.totalMs).toBeGreaterThan(8000);
+    expect(t.reads.length).toBeGreaterThanOrEqual(100);
+  });
+
   it('times out with none, and offers suggestions from weak reads', async () => {
     const weak = verdict({
       suggestions: [{ month: 12, year: 2026, text: '12.26', expired: false }],
