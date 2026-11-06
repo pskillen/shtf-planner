@@ -108,26 +108,57 @@ test('finishes two answers and reopens the summary on a phone', async ({ page })
   await page.clock.setFixedTime(new Date('2026-11-04T12:00:00Z'));
   await page.goto('/?debug=1');
   await page.evaluate(async () => {
-    await (
-      window as unknown as { __shtf: { loadFixture: () => Promise<void> } }
-    ).__shtf.loadFixture();
+    const hook = (
+      window as unknown as {
+        __shtf: {
+          loadFixture: () => Promise<void>;
+          change: (fn: (doc: Document) => void) => Promise<void>;
+        };
+      }
+    ).__shtf;
+    await hook.loadFixture();
+    await hook.change((doc) => {
+      doc.stock['stock-water']!.bestBefore = '2026-11';
+    });
   });
   await page.goto('/app/review?debug=1');
+  const before = await page.evaluate(
+    async () =>
+      (
+        await (
+          window as unknown as { __shtf: { engine: { score: () => Promise<{ overall: number }> } } }
+        ).__shtf.engine.score()
+      ).overall,
+  );
   await page
     .locator('[data-review-kind="expiry"]')
-    .first()
-    .getByRole('button', { name: /^Fine:/ })
+    .filter({ hasText: 'Spring water' })
+    .getByRole('button', { name: /^Binned:/ })
     .click();
   await page
     .locator('[data-review-kind="maintenance"]')
     .first()
     .getByRole('button', { name: /^Done:/ })
     .click();
+  const after = await page.evaluate(
+    async () =>
+      (
+        await (
+          window as unknown as { __shtf: { engine: { score: () => Promise<{ overall: number }> } } }
+        ).__shtf.engine.score()
+      ).overall,
+  );
+  const beforePercent = Math.round(before);
+  const afterPercent = Math.round(after);
+  const delta = afterPercent - beforePercent;
+  expect(delta).not.toBe(0);
+  const scoreText = `Score at finish ${beforePercent} % → ${afterPercent} % (${delta >= 0 ? '+' : ''}${delta})`;
   await page.getByRole('button', { name: 'Finish review' }).click();
   await expect(page.getByText(/Checked 2/)).toBeVisible();
-  await expect(page.getByText(/Score at finish.*→/)).toBeVisible();
+  await expect(page.getByText(scoreText)).toBeVisible();
   await expect(page.getByText(/Next review/)).toBeVisible();
   await page.reload();
   await page.getByRole('button', { name: /Last review/ }).click();
   await expect(page.getByText(/Checked 2/)).toBeVisible();
+  await expect(page.getByText(scoreText)).toBeVisible();
 });
