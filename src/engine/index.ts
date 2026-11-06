@@ -47,3 +47,4 @@ export {
   type ReviewSummary,
 } from './reviewSession';
 export { reviewItems, type ReviewItem } from './reviewItems';
+export { calendarCandidates, type CalendarCandidate, type CalendarIdentity } from './calendar';
