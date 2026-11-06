@@ -19,6 +19,9 @@ export function CalendarExport({
     () =>
       new Set(candidates.filter((c) => c.selectedByDefault).map((c) => JSON.stringify(c.identity))),
   );
+  const effectiveSelection = candidates.filter((candidate) =>
+    selected.has(JSON.stringify(candidate.identity)),
+  );
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(false);
   const live = useRef(true);
@@ -34,16 +37,12 @@ export function CalendarExport({
     onClose();
   };
   const download = async () => {
-    if (busy.current || selected.size === 0) return;
+    if (busy.current || effectiveSelection.length === 0) return;
     busy.current = true;
     setPending(true);
     setError(false);
     try {
-      const text = await calendarFile(
-        createdAt,
-        candidates.filter((c) => selected.has(JSON.stringify(c.identity))),
-        new Date().toISOString(),
-      );
+      const text = await calendarFile(createdAt, effectiveSelection, new Date().toISOString());
       if (!live.current) return;
       const url = URL.createObjectURL(new Blob([text], { type: 'text/calendar;charset=utf-8' }));
       try {
@@ -72,7 +71,7 @@ export function CalendarExport({
           </button>
           <button
             type="button"
-            disabled={pending || selected.size === 0}
+            disabled={pending || effectiveSelection.length === 0}
             onClick={() => void download()}
           >
             Download calendar
@@ -90,6 +89,7 @@ export function CalendarExport({
           <label key={key}>
             <input
               type="checkbox"
+              disabled={pending}
               checked={selected.has(key)}
               onChange={(event) => {
                 const checked = event.target.checked;
@@ -109,7 +109,7 @@ export function CalendarExport({
       {!candidates.some((candidate) => candidate.kind === 'maintenance') && (
         <p className="muted">No equipment reminders due in this period.</p>
       )}
-      <p>{selected.size} selected</p>
+      <p>{effectiveSelection.length} selected</p>
       {error && <p role="alert">Could not prepare the calendar. Please try again.</p>}
     </Sheet>
   );
