@@ -14,3 +14,12 @@ export function nextReviewDue(doc: Document): string {
 export function reviewIsDue(doc: Document, asOf: string): boolean {
   return nextReviewDue(doc) <= asOf;
 }
+
+/** Keep the scheduled badge date even when the queue needs a fresh look-ahead. */
+export function reviewPeriod(doc: Document, asOf: string): { scheduledDue: string; until: string } {
+  const scheduledDue = nextReviewDue(doc);
+  return {
+    scheduledDue,
+    until: scheduledDue > asOf ? scheduledDue : addMonths(asOf, doc.settings.reviewCadenceMonths),
+  };
+}
