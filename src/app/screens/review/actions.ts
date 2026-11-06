@@ -2,6 +2,8 @@ import {
   addMonths,
   encodeReviewAnswer,
   reviewSession,
+  reviewItems,
+  reviewPeriod,
   score,
   type ReviewAction,
   type ReviewItem,
@@ -54,7 +56,37 @@ export function answerReview(
 ): Receipt | undefined {
   const session = reviewSession(doc);
   if (session.resolvedKeys.has(item.key)) return;
-  if (item.kind === 'expiry' && !doc.stock[item.stockId]) return;
+  const current = reviewItems(doc, packs, day, reviewPeriod(doc, day).until).find(
+    (candidate) => candidate.key === item.key,
+  );
+  if (!current || current.kind !== item.kind || current.due !== item.due) return;
+  if (
+    item.kind === 'expiry' &&
+    current.kind === 'expiry' &&
+    (JSON.stringify(current.stock) !== JSON.stringify(item.stock) ||
+      current.itemId !== item.itemId ||
+      current.text !== item.text)
+  )
+    return;
+  if (
+    item.kind === 'maintenance' &&
+    current.kind === 'maintenance' &&
+    (current.lastDone !== item.lastDone ||
+      current.purchased !== item.purchased ||
+      current.typeId !== item.typeId)
+  )
+    return;
+  if (
+    item.kind === 'plan' &&
+    current.kind === 'plan' &&
+    (current.doneAt !== item.doneAt || current.expires !== item.expires)
+  )
+    return;
+  if (
+    item.kind === 'expiry' &&
+    (!doc.stock[item.stockId] || !doc.products[item.productId] || !doc.locations[item.locationId])
+  )
+    return;
   if (item.kind === 'maintenance' && !doc.assets[item.assetId]) return;
   if (item.kind === 'plan' && !doc.plans[item.planId]) return;
   if (item.kind === 'recount' && !doc.locations[item.locationId]) return;

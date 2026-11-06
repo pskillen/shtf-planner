@@ -64,3 +64,5 @@ The person and stock destinations follow changes to their query IDs, including b
 forward. Changing the destination discards the previous sheet's draft; a missing or deleted record
 closes the sheet. The place filter falls back to all places when its query ID is missing or invalid.
 Closing a linked sheet removes its own query parameter and retains unrelated parameters.
+
+Each answer has its own five-second Undo window, including when answers are made in quick succession. If a stock batch, maintenance job or plan has changed since its row was shown, the answer is rejected and the person is asked to check the refreshed review. Replacement opens Quick add only after the batch has been checked and removed.
