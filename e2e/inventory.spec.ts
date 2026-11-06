@@ -245,8 +245,11 @@ test('Quick add warns when the place does not suit the item, and still allows it
   await page.getByRole('button', { name: 'Close' }).click();
   await page.getByLabel('Place filter').selectOption({ label: 'Shed' });
   await page.getByLabel('Search stock').fill('uht');
-  await page.getByRole('button', { name: /UHT milk ·/i }).click();
-  await expect(page.getByText(/⚠/).first()).toBeVisible();
+  const box = page.locator('details.place-warning');
+  await expect(box).toHaveCount(1);
+  await expect(box.locator('summary')).toContainText('in the Shed');
+  await box.locator('summary').click();
+  await expect(box.getByRole('listitem').first()).toBeVisible();
 });
 
 test('Equipment marks solar with no EPS as blocked', async ({ page }) => {
