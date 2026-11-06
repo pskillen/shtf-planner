@@ -304,3 +304,25 @@ describe('naming records the person recognises', () => {
     }
   });
 });
+
+describe('review answer conflicts', () => {
+  it('retains conflicts for removal versus addition and for finish disagreements', () => {
+    const b = withDoc((d) => {
+      d.reviews.r = { id: 'r', started: '2026-01-01T00:00:00Z', resolved: ['a'] };
+    });
+    const l = structuredClone(b);
+    const r = structuredClone(b);
+    l.reviews.r!.resolved = [];
+    r.reviews.r!.resolved.push('b');
+    expect(
+      classify(plain(b), plain(l), plain(r)).conflicts[0]?.fields.map((f) => f.field),
+    ).toContain('resolved');
+    l.reviews.r!.finished = '2026-02-01T00:00:00Z';
+    r.reviews.r!.finished = '2026-03-01T00:00:00Z';
+    l.reviews.r!.scoreAfter = 1;
+    r.reviews.r!.scoreAfter = 2;
+    expect(classify(plain(b), plain(l), plain(r)).conflicts[0]?.fields.map((f) => f.field)).toEqual(
+      expect.arrayContaining(['finished', 'scoreAfter']),
+    );
+  });
+});

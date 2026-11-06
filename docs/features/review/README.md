@@ -17,13 +17,38 @@ are in the app; there are no push notifications.
 
 The screen shows a single engine-ordered list with an urgency word and colour on every row. Rows open
 the stock batch, equipment, person, filtered place in Stores or selected plan in Gaps. A read-only
-document keeps navigation available while the existing edit sheets disable changes. An empty list
+document keeps navigation available while answer buttons and edit sheets disable changes. An empty list
 shows the end of the current look-ahead window.
 
 The engine builds a dated queue of stock expiry, maintenance, age transitions, places to
 recount and applicable plans to reconfirm. It excludes items resolved in any unfinished review.
 The scheduled reminder remains overdue until a review finishes, while the queue looks ahead one
 cadence from today. Maintenance remains unscored.
+
+## Answers and Undo
+
+Each row has named buttons; swiping right chooses the first answer and swiping left the last.
+Stock can be kept, used, marked for replacement or binned. The latter three remove the entire
+batch. Replace opens Quick add with the same product and place, including unclassified products.
+Cancelling keeps the removal and replacement choice; adding new stock is a separate action.
+
+Maintenance Done updates that job's date; Not now defers it. Age Noted acknowledges a transition;
+Open person only navigates. Open place leads to Stores for a recount, and Recounted confirms the
+check; Not now does not advance recount history. Still true refreshes the plan completion and
+expiry, using the pack interval where available; No longer clears both dates and preserves the note.
+
+The first answer creates an unfinished review and captures the score before its change. Answers
+are versioned tokens in its resolved list. All unfinished records form one logical session after
+sync; their resolved keys are combined. Additions to the same resolved list merge without a
+conflict prompt, while removals and other conflicting changes retain the normal copy choice.
+
+Undo is available locally for five seconds, including while Quick add is open. Reload keeps the
+answer but not the toast. Undo checks that the review is unfinished, its token remains, and touched
+fields have not changed. It restores only those fields. A removed batch is restored exactly only
+if its product and place still exist and no matching batch has appeared. If the check fails, Undo
+leaves everything as it is and asks the person to check Stores. These checks use the current local
+document; later unseen edits follow normal sync conflict handling. Review answers and camera-free
+stock details remain in the household document and its own Drive sync.
 
 ## Documentation map
 
@@ -33,7 +58,7 @@ cadence from today. Maintenance remains unscored.
 
 ## Known gaps
 
-- Review answers, finish and summary, and calendar export are planned. Opening a row does not resolve it.
+- Review finish and summary, and calendar export are planned. Opening a row does not resolve it.
 
 The person and stock destinations follow changes to their query IDs, including browser back and
 forward. Changing the destination discards the previous sheet's draft; a missing or deleted record
