@@ -35,3 +35,14 @@ export { preview, type PreviewHorizon, type PreviewRow } from './preview';
 
 export { maintenanceDue, type MaintenanceDue } from './maintenance';
 export { nextReviewDue, reviewIsDue } from './review';
+export { reviewPeriod } from './review';
+export {
+  encodeReviewAnswer,
+  decodeReviewAnswer,
+  reviewSession,
+  reviewSummary,
+  type ReviewAction,
+  type ReviewAnswer,
+  type ReviewSession,
+  type ReviewSummary,
+} from './reviewSession';
