@@ -104,7 +104,7 @@ leaving half-way.
 - **Risks are self-declared** from a checklist, with links to the official checkers. Nothing is
   looked up, because a lookup would send the location out of the browser.
 - **Review reminder.** Choose every 3 or 6 months and see the next date immediately. Home shows
-  when a review is due; see [review](../review/README.md).
+  when a review is due; Add to calendar opens a selection preview for a local snapshot. See [review](../review/README.md).
 - **Stored, not yet read.** Anonymise names is saved for a future feature that sends household text
   out (there is none).
 
@@ -114,7 +114,6 @@ leaving half-way.
 
 ## Not built yet
 
-- Review calendar export: [#20](https://github.com/pskillen/shtf-planner/issues/20).
 - Equipment linked to its exact fuel: [#28](https://github.com/pskillen/shtf-planner/issues/28).
 - Natural Resources Wales and DfI flood links, diesel, vehicles as assets:
   [#49](https://github.com/pskillen/shtf-planner/issues/49).

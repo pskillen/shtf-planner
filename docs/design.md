@@ -1,6 +1,6 @@
 # Design
 
-What SHTF Planner is and how it hangs together, as built in 0.1.0. The words are in
+What SHTF Planner is and how it hangs together, as built today. The words are in
 [GLOSSARY.md](../GLOSSARY.md), the rules and their reasons in [decisions/](decisions/README.md),
 and each feature's detail in its [feature hub](features/README.md).
 
@@ -153,12 +153,11 @@ The lint fence keeps the model, engine and scan code free of React, storage and 
 
 ## Not built yet
 
-Agreed in the design, not in 0.1.0. Each has an epic; the agreed rules are in
+Agreed in the design, not yet built. Each has an epic; the agreed rules are in
 [planned features](decisions/planned-features.md).
 
 | What                                                                                        | Epic                                                      |
 | ------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| Review actions, summary and calendar export                                                 | [#20](https://github.com/pskillen/shtf-planner/issues/20) |
 | Equipment linked to its exact fuel, and what is left per piece                              | [#28](https://github.com/pskillen/shtf-planner/issues/28) |
 | Scanning round 2: stocktake tuning, a lazily cached date model                              | [#33](https://github.com/pskillen/shtf-planner/issues/33) |
 | Scenario checklists, tracked and printable                                                  | [#40](https://github.com/pskillen/shtf-planner/issues/40) |
