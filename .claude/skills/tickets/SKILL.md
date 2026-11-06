@@ -10,9 +10,13 @@ this says what a ticket looks like here. GitHub issues are the backlog, and issu
 
 ## Shape
 
-- **Epic**: a themed group of features. Title `Epic: <theme>`, label `epic`, body = a one-paragraph summary and a task list (`- [ ] #n title`) under
-  `## Features`. It is closed when every feature is closed.
-- **Feature**: one PR, or a short stack. Title is the outcome in plain words, no `feat:` prefix, no phase number. Body opens with `Part of #<epic>.`
+- **Epic**: a themed group of features. Title `Epic: <theme>`, label `epic`, body = a one-paragraph summary. Its features are its GitHub
+  **sub-issues**, which the issue page lists with progress. It is closed when every feature is closed.
+- **Feature**: one PR, or a short stack. Title is the outcome in plain words, no `feat:` prefix, no phase number. Link it as a sub-issue of its
+  epic (the API wants the issue's id, not its number):
+  `gh api -X POST repos/pskillen/shtf-planner/issues/<epic>/sub_issues -F sub_issue_id=$(gh api repos/pskillen/shtf-planner/issues/<n> -q .id)`.
+  Dependencies between features go in the body's **Depends on**, or use GitHub's issue dependencies. A `Part of #<epic>` line or a task list in
+  the epic body is fine where it helps a reader, but the GitHub links are the record.
 - **Bug / debt**: same shape; label `bug` (wrong behaviour) or `debt` (internal, nothing user-visible changes). Body gives the failure scenario
   for a bug.
 - **Not tickets**: objectives (tagging a release, "get to 0.1.0"), clean-up chores, and anything that is one command.
@@ -22,8 +26,8 @@ this says what a ticket looks like here. GitHub issues are the backlog, and issu
 - Type: `epic`, `feature`, `bug`, `debt`, `content` (pack or guidance data, not code), `accessibility`, `documentation`. Exactly one type per issue
   (`content` and `accessibility` may sit beside `feature`).
 - Area: one `area:<name>` per issue. The names are the hubs in `docs/features/` (`app-shell`, `data-model`, `content-packs`, `engine`, `setup`,
-  `inventory`, `gaps-and-score`, `drive-sync`) plus `scanning`, `review`, `checklists`, `platform`. A new feature hub earns a new area label.
-- Every issue has a milestone: `0.1.0`, `0.2.0`, `0.3.0` or `Backlog`. A milestone is a release that ships to prod; `Backlog` is unscheduled. The
+  `inventory`, `gaps-and-score`, `drive-sync`) plus `scanning`, `review`, `checklists`, `contacts`, `platform`. A new feature hub earns a new area label.
+- Every issue has a milestone: a release milestone (`0.2.0`, `0.3.0` and so on) or `Backlog`. A milestone is a release that ships to prod; `Backlog` is unscheduled. The
   open issues of the next milestone are the work to pick from.
 
 ## Working a ticket
