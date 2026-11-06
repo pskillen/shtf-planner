@@ -60,11 +60,11 @@ The Stores tab: what the household has, grouped by **item** (the generic from th
 - Editing pack **items** in the app (items come only from content packs).
 - **Custom items** by design; a recurring "nothing fits" is a pack change.
 
+The [review queue](../review/README.md) links expiring stock to its batch sheet and places to a
+filtered Stores view. A stocktake only adds stock; it does not record a place recount.
+
 ## Not built yet
 
-- A review queue for expiring stock and places not recounted, beyond the colours and words on screen:
-  [#20](https://github.com/pskillen/shtf-planner/issues/20). Until then a stocktake only adds stock;
-  it never recounts a place.
 - Water containers are stock "kept filled" for now, counting what they hold; whether they should be
   equipment that holds a resource up to a capacity is open
   ([#91](https://github.com/pskillen/shtf-planner/issues/91), under
