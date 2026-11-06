@@ -18,6 +18,14 @@ describe('review answer codec and sessions', () => {
     ])
       expect(decodeReviewAnswer(value)).toBeUndefined();
   });
+  it('orders started timestamps by instant even with offsets', () => {
+    const doc = emptyDocument('local', '2026-01-01T00:00:00Z');
+    doc.reviews = {
+      later: { id: 'later', started: '2026-05-01T23:30:00Z', resolved: [] },
+      earlier: { id: 'earlier', started: '2026-05-02T00:30:00+02:00', resolved: [] },
+    };
+    expect(reviewSession(doc).ids).toEqual(['earlier', 'later']);
+  });
   it('unions unfinished sessions and counts duplicate or conflicting answers once', () => {
     const doc = emptyDocument('local', '2026-01-01T00:00:00Z');
     const first = encodeReviewAnswer({ opId: '1', key: 'stock:a:b', action: 'used' });

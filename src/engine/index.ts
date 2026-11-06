@@ -46,3 +46,4 @@ export {
   type ReviewSession,
   type ReviewSummary,
 } from './reviewSession';
+export { reviewItems, type ReviewItem } from './reviewItems';
