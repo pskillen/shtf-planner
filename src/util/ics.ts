@@ -58,6 +58,9 @@ function foldLine(line: string): string {
 
 /** Serialize all-day calendar events using RFC 5545 content-line rules. */
 export function generateIcs(events: IcsEvent[], dtstamp: string): string {
+  if (events.length === 0) {
+    throw new TypeError('Calendars require at least one event');
+  }
   const stamp = compactTimestamp(dtstamp);
   const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//SHTF Planner//Review Calendar//EN'];
 
