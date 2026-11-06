@@ -314,14 +314,33 @@ export function PeopleScreen({ embedded = false }: { embedded?: boolean }) {
   const doc = useDocument();
   const change = useChange();
   const [params, setParams] = useSearchParams();
+  const memberId = params.get('member');
+  const [lastMemberId, setLastMemberId] = useState(memberId);
   const [editing, setEditing] = useState<Editing>(() => {
-    const member = doc.household.members.find((m) => m.id === params.get('member'));
+    const member = doc.household.members.find((m) => m.id === memberId);
     return member ? { kind: 'member', member, isNew: false } : null;
   });
+  // Only a change of destination replaces the local draft; document updates do not.
+  if (memberId !== lastMemberId) {
+    setLastMemberId(memberId);
+    const member = doc.household.members.find((m) => m.id === memberId);
+    setEditing(member ? { kind: 'member', member, isNew: false } : null);
+  }
+  if (
+    editing?.kind === 'member' &&
+    !editing.isNew &&
+    !doc.household.members.some((m) => m.id === editing.member.id)
+  ) {
+    setEditing(null);
+  }
   const now = today();
   const closeEditing = () => {
     setEditing(null);
-    if (params.has('member')) setParams({}, { replace: true });
+    if (params.has('member')) {
+      const next = new URLSearchParams(params);
+      next.delete('member');
+      setParams(next, { replace: true });
+    }
   };
 
   const removeMember = useDeferredDelete((id) =>
@@ -342,7 +361,7 @@ export function PeopleScreen({ embedded = false }: { embedded?: boolean }) {
     change(editing?.kind === 'member' && editing.isNew ? 'add person' : 'edit person', (d) => {
       const i = d.household.members.findIndex((x) => x.id === m.id);
       if (i >= 0) d.household.members[i] = m;
-      else d.household.members.push(m);
+      else if (editing?.kind === 'member' && editing.isNew) d.household.members.push(m);
     });
     closeEditing();
   };
@@ -420,6 +439,7 @@ export function PeopleScreen({ embedded = false }: { embedded?: boolean }) {
 
       {editing?.kind === 'member' ? (
         <MemberSheet
+          key={editing.member.id}
           initial={editing.member}
           isNew={editing.isNew}
           onSave={saveMember}
