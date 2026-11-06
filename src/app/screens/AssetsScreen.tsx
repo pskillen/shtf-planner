@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { CATEGORIES, type Asset, type AssetType, type Category } from '../../model';
-import { coverage, type BlockedAsset } from '../../engine';
+import { coverage, maintenanceDue, addMonths, type BlockedAsset } from '../../engine';
 import { blockedBadge } from '../blocked';
 import { formatVolume, today } from '../../util';
 import { Field } from '../components/controls';
 import { EditArea } from '../components/EditArea';
+import { useSavedChange } from '../components/SavedNote';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { isDirty } from '../components/isDirty';
 import { Sheet } from '../components/Sheet';
@@ -75,6 +76,8 @@ function AssetForm({
   onSave,
   onDelete,
   onClose,
+  onMaintenance,
+  note,
 }: {
   type: AssetType;
   initial: Asset;
@@ -82,6 +85,8 @@ function AssetForm({
   onSave: (a: Asset) => void;
   onDelete?: () => void;
   onClose: () => void;
+  onMaintenance: (job: string, date: string) => void;
+  note: React.ReactNode;
 }) {
   const doc = useDocument();
   const [a, setA] = useState<Asset>(initial);
@@ -165,6 +170,52 @@ function AssetForm({
           onChange={(e) => setA({ ...a, purchased: e.target.value || undefined })}
         />
       </Field>
+      {type.maintenance.length ? (
+        <section>
+          <h3>Maintenance</h3>
+          {note}
+          {type.maintenance.map((job) => {
+            const last = a.maintenance[job.id];
+            const start = last ?? a.purchased;
+            const due = start ? addMonths(start, job.everyMonths) : today();
+            const format = (date: string, options: Intl.DateTimeFormatOptions) =>
+              new Date(`${date}T00:00:00Z`).toLocaleDateString('en-GB', {
+                ...options,
+                timeZone: 'UTC',
+              });
+            const setDate = (date: string) => {
+              setA((current) => ({
+                ...current,
+                maintenance: { ...current.maintenance, [job.id]: date },
+              }));
+              onMaintenance(job.id, date);
+            };
+            return (
+              <div key={job.id}>
+                <strong>{job.text}</strong>
+                <p>
+                  {last
+                    ? `Last done ${format(last, { day: 'numeric', month: 'short', year: 'numeric' })} · next due ${format(due, { month: 'short', year: 'numeric' })}`
+                    : 'Not recorded'}
+                </p>
+                <button type="button" onClick={() => setDate(today())}>
+                  Done today
+                </button>
+                <Field label={`Last done: ${job.text}`}>
+                  <input
+                    type="date"
+                    max={today()}
+                    value={last ?? ''}
+                    onChange={(e) => {
+                      if (e.target.value && e.target.value <= today()) setDate(e.target.value);
+                    }}
+                  />
+                </Field>
+              </div>
+            );
+          })}
+        </section>
+      ) : null}
       <Field label="Notes">
         <textarea value={a.notes ?? ''} onChange={(e) => setA({ ...a, notes: e.target.value })} />
       </Field>
@@ -179,6 +230,7 @@ type Editing =
 export function AssetsScreen() {
   const doc = useDocument();
   const change = useChange();
+  const saved = useSavedChange();
   const packs = usePacks();
   const [params, setParams] = useSearchParams();
   // Deep links from elsewhere: ?add=<asset type id> opens the add form for that type (Quick add,
@@ -230,6 +282,11 @@ export function AssetsScreen() {
     }),
   );
 
+  const dueAssets = new Set(
+    maintenanceDue(doc, packs, today())
+      .filter((job) => job.overdue)
+      .map((job) => job.assetId),
+  );
   const assets = Object.values(doc.assets).filter((a) => !remove.pending.has(a.id));
   const groups = new Map<string, Asset[]>();
   for (const a of assets) {
@@ -269,6 +326,9 @@ export function AssetsScreen() {
                     <strong>
                       {a.name || type?.name || a.typeId}{' '}
                       {why ? <span className="badge badge-warn">Blocked</span> : null}
+                      {dueAssets.has(a.id) ? (
+                        <span className="badge badge-warn">Maintenance due</span>
+                      ) : null}
                     </strong>
                     <span className="muted">
                       {a.name && type ? `${type.name} · ` : ''}
@@ -324,9 +384,28 @@ export function AssetsScreen() {
           type={editing.type}
           initial={editing.asset}
           isNew={editing.isNew}
+          note={saved.note}
+          onMaintenance={(job, date) => {
+            if (!editing.isNew)
+              saved.change('record maintenance', (d) => {
+                const asset = d.assets[editing.asset.id];
+                if (asset) asset.maintenance[job] = date;
+              });
+          }}
           onSave={(a) => {
             change(editing.isNew ? 'add asset' : 'edit asset', (d) => {
-              d.assets[a.id] = a;
+              if (editing.isNew) d.assets[a.id] = a;
+              else {
+                const current = d.assets[a.id];
+                if (!current) return;
+                for (const key of ['name', 'notes', 'locationId', 'purchased'] as const) {
+                  if (a[key] !== editing.asset[key]) current[key] = a[key];
+                }
+                for (const key of Object.keys(a.answers)) {
+                  if (a.answers[key] !== editing.asset.answers[key])
+                    current.answers[key] = a.answers[key]!;
+                }
+              }
             });
             setEditing(null);
           }}
