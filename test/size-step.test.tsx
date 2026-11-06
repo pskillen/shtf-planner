@@ -24,6 +24,28 @@ describe('shouldSkipSizeStep', () => {
   });
 });
 
+describe('SizeStep as a new product form (confirm)', () => {
+  it('has the name first, a size already chosen, and saves only on Save product', () => {
+    const onDone = vi.fn();
+    const s = liveStore(biggarDocument());
+    render(s.wrap(<SizeStep confirm item={beans()} initialName="Calpol" onDone={onDone} />));
+    const name = screen.getByLabelText(/^Product name/);
+    const first = screen.getByRole('button', { pressed: true });
+    expect(name.compareDocumentPosition(first) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: '415 g' }));
+    expect(onDone).not.toHaveBeenCalled();
+    fireEvent.change(name, { target: { value: '' } });
+    expect(
+      (screen.getByRole('button', { name: 'Save product' }) as HTMLButtonElement).disabled,
+    ).toBe(true);
+    fireEvent.change(name, { target: { value: 'Calpol' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save product' }));
+    expect(onDone).toHaveBeenCalledWith(
+      expect.objectContaining({ itemId: beans().id, name: 'Calpol' }),
+    );
+  });
+});
+
 describe('SizeStep', () => {
   it('reuses an existing product for the same item, name and size', () => {
     const onDone = vi.fn();

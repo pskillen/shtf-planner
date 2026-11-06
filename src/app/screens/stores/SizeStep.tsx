@@ -18,12 +18,18 @@ export function SizeStep({
   item,
   labelKcalPer100,
   initialName,
+  confirm = false,
   onDone,
 }: {
   item: Item;
   labelKcalPer100?: number;
   /** Prefill the optional name field (e.g. from Open Food Facts on a scan). */
   initialName?: string;
+  /**
+   * A new product's form: the name first, the size a choice already made (the first suggestion),
+   * and a Save product button. Off, tapping a size is the save.
+   */
+  confirm?: boolean;
   onDone: (result: SizeStepDone) => void;
 }) {
   const doc = useDocument();
@@ -37,18 +43,19 @@ export function SizeStep({
   const [unit, setUnit] = useState<SizeUnit>(defaultUnit);
   const [multipack, setMultipack] = useState<number | undefined>(undefined);
   const [name, setName] = useState(initialName ?? '');
+  const [chosen, setChosen] = useState<Size | undefined>(item.sizes[0]);
 
   useLayoutEffect(() => {
-    if (!shouldSkipSizeStep(doc, item) || skipped.current) return;
+    if (confirm || !shouldSkipSizeStep(doc, item) || skipped.current) return;
     skipped.current = true;
     onDone({
       itemId: item.id,
       size: item.sizes[0]!,
       ...(labelKcalPer100 !== undefined ? { labelKcalPer100 } : {}),
     });
-  }, [doc, item, labelKcalPer100, onDone]);
+  }, [doc, item, labelKcalPer100, onDone, confirm]);
 
-  if (shouldSkipSizeStep(doc, item)) return null;
+  if (!confirm && shouldSkipSizeStep(doc, item)) return null;
 
   const pickSize = (size: Size) => {
     const draftName = name.trim() || defaultProductName(item, size);
@@ -68,38 +75,75 @@ export function SizeStep({
     if (!Number.isFinite(amount) || amount <= 0) return;
     const count = multipack !== undefined && multipack >= 2 ? Math.round(multipack) : undefined;
     const size: Size = { amount, unit, ...(count ? { count } : {}) };
+    if (confirm) {
+      setChosen(size);
+      setCustom(false);
+      return;
+    }
     pickSize(size);
   };
 
   const placeholder = defaultProductName(item, item.sizes[0] ?? { amount: 1, unit: units[0]! });
 
+  const same = (a: Size, b: Size | undefined): boolean =>
+    b !== undefined && formatSize(a) === formatSize(b);
+  const chips =
+    confirm && chosen && !item.sizes.some((z) => same(z, chosen))
+      ? [...item.sizes, chosen]
+      : item.sizes;
+
+  const nameField = (
+    <Field
+      label={confirm ? 'Product name' : 'Name (optional)'}
+      hint={confirm ? 'As on the pack, for example “Calpol 250 ml”. Required.' : undefined}
+    >
+      <input
+        type="text"
+        value={name}
+        placeholder={confirm ? 'Brand and product' : placeholder}
+        onChange={(e) => setName(e.target.value)}
+      />
+    </Field>
+  );
+
+  const yoursList =
+    yours.length > 0 ? (
+      <section aria-label="Your products">
+        {confirm ? null : <h3>Yours</h3>}
+        <ul className="row-list chip-list">
+          {yours.map((p) => (
+            <li key={p.id}>
+              <button type="button" className="chip" onClick={() => onDone({ productId: p.id })}>
+                {p.name}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ) : null;
+
   return (
     <>
-      {yours.length > 0 ? (
-        <section aria-label="Your products">
-          <h3>Yours</h3>
-          <ul className="row-list chip-list">
-            {yours.map((p) => (
-              <li key={p.id}>
-                <button type="button" className="chip" onClick={() => onDone({ productId: p.id })}>
-                  {p.name}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-      {item.sizes.length > 0 ? (
+      {confirm ? nameField : yoursList}
+      {chips.length > 0 ? (
         <section aria-label="Suggested sizes">
-          <h3>Suggested sizes</h3>
+          <h3>{confirm ? 'Size' : 'Suggested sizes'}</h3>
           <ul className="row-list chip-list">
-            {item.sizes.map((size) => (
-              <li key={formatSize(size)}>
-                <button type="button" className="chip" onClick={() => pickSize(size)}>
-                  {formatSize(size)}
-                </button>
-              </li>
-            ))}
+            {chips.map((size) => {
+              const on = confirm && same(size, chosen);
+              return (
+                <li key={formatSize(size)}>
+                  <button
+                    type="button"
+                    className={on ? 'chip on' : 'chip'}
+                    aria-pressed={confirm ? on : undefined}
+                    onClick={() => (confirm ? setChosen(size) : pickSize(size))}
+                  >
+                    {formatSize(size)}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </section>
       ) : null}
@@ -147,14 +191,22 @@ export function SizeStep({
           </button>
         </section>
       )}
-      <Field label="Name (optional)">
-        <input
-          type="text"
-          value={name}
-          placeholder={placeholder}
-          onChange={(e) => setName(e.target.value)}
-        />
-      </Field>
+      {confirm ? null : nameField}
+      {confirm && yoursList ? (
+        <details className="type-group">
+          <summary>Same as a product you already have?</summary>
+          {yoursList}
+        </details>
+      ) : null}
+      {confirm ? (
+        <button
+          type="button"
+          disabled={!chosen || name.trim() === ''}
+          onClick={() => chosen && pickSize(chosen)}
+        >
+          Save product
+        </button>
+      ) : null}
     </>
   );
 }

@@ -74,6 +74,10 @@ describe('Quick add: Scan a barcode', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: /Tinned soup/ }));
     fireEvent.click(screen.getByRole('button', { name: '400 g' }));
+    fireEvent.change(screen.getByLabelText(/^Product name/), {
+      target: { value: 'Tinned soup 400 g' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save product' }));
     expect(await screen.findByText(/Add .*soup/i)).toBeTruthy();
     expect(s.doc().barcodes[KNOWN]?.productId).not.toBe('prod-spread');
     fireEvent.click(screen.getByRole('button', { name: 'Add' }));
@@ -133,6 +137,20 @@ describe('Quick add: Scan a barcode', () => {
     expect(pid).toBeDefined();
     expect(s.doc().products[pid!]!.itemId).toBeUndefined();
     expect(await screen.findByText(/Add Test beans/)).toBeTruthy();
+  });
+
+  it('Counts towards nothing for a code nobody knows asks for a name first', async () => {
+    fakeOff({});
+    const s = await openScanner();
+    await read(UNKNOWN);
+    fireEvent.click(await screen.findByRole('button', { name: 'Counts towards nothing' }));
+    expect(s.doc().barcodes[UNKNOWN]).toBeUndefined();
+    const save = screen.getByRole('button', { name: 'Save product' }) as HTMLButtonElement;
+    expect(save.disabled).toBe(true);
+    fireEvent.change(screen.getByLabelText(/^Product name/), { target: { value: 'Dog biscuits' } });
+    fireEvent.click(save);
+    const pid = s.doc().barcodes[UNKNOWN]?.productId;
+    expect(s.doc().products[pid!]).toMatchObject({ name: 'Dog biscuits' });
   });
 
   it('typing the number works with no camera, and refuses a bad check digit', async () => {
