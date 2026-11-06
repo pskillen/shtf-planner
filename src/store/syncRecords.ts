@@ -188,6 +188,11 @@ const fieldsOf = (...records: unknown[]): string[] => {
   return Array.from(names).sort();
 };
 const get = (r: unknown, f: string): unknown => (isObj(r) ? r[f] : undefined);
+const additiveStrings = (base: unknown, side: unknown): boolean =>
+  Array.isArray(base) &&
+  Array.isArray(side) &&
+  base.every((x) => typeof x === 'string' && side.includes(x)) &&
+  side.every((x) => typeof x === 'string');
 
 /** Compares base, local and remote record by record. */
 export function classify(base: Obj, local: Obj, remote: Obj): Classified {
@@ -224,6 +229,12 @@ export function classify(base: Obj, local: Obj, remote: Obj): Classified {
       fields = fieldsOf(bv, lv, rv)
         .filter(
           (f) =>
+            !(
+              key.startsWith('reviews/') &&
+              f === 'resolved' &&
+              additiveStrings(get(bv, f), get(lv, f)) &&
+              additiveStrings(get(bv, f), get(rv, f))
+            ) &&
             !deepEqual(get(bv, f), get(lv, f)) &&
             !deepEqual(get(bv, f), get(rv, f)) &&
             !deepEqual(get(lv, f), get(rv, f)),
