@@ -86,7 +86,7 @@ export function CalendarExport({
       {candidates.map((candidate) => {
         const key = JSON.stringify(candidate.identity);
         return (
-          <label key={key}>
+          <label className="calendar-choice" key={key}>
             <input
               type="checkbox"
               disabled={pending}
@@ -100,9 +100,11 @@ export function CalendarExport({
                   return next;
                 });
               }}
-            />{' '}
-            {candidate.label} — {candidate.due}
-            {candidate.due < asOf ? ' (overdue)' : ''}
+            />
+            <span>
+              {candidate.label} — {candidate.due}
+              {candidate.due < asOf ? ' (overdue)' : ''}
+            </span>
           </label>
         );
       })}

@@ -29,7 +29,7 @@ cadence from today. Maintenance remains unscored.
 
 Review and Settings offer Add to calendar. The preview selects the next household stock review by
 default; equipment maintenance jobs due within the review window are optional, one next occurrence
-per job. Overdue dates remain visible. Selecting reminders and downloading produces one local
+per job. Each reminder has a separate touch-friendly checkbox row, and overdue dates remain visible. Selecting reminders and downloading produces one local
 `shtf-planner.ics` file. It is a snapshot, not a subscription; repeat-import handling varies by
 calendar. There are no automatic downloads, push notifications or calendar service calls.
 
