@@ -45,9 +45,16 @@ export function ScanSheet({
       title="Scan a barcode"
       onClose={onClose}
       actions={
-        <button type="button" className="secondary" onClick={onBack}>
-          {reidentify ? 'Keep as it was' : 'Find it by name'}
-        </button>
+        <>
+          {code !== null ? (
+            <button type="button" className="secondary" onClick={() => setCode(null)}>
+              Scan another
+            </button>
+          ) : null}
+          <button type="button" className="secondary" onClick={onBack}>
+            {reidentify ? 'Keep as it was' : 'Find it by name'}
+          </button>
+        </>
       }
     >
       {addedStatus ? (
@@ -129,11 +136,6 @@ export function ScanSheet({
                 : undefined
             }
           />
-          <div className="scan-actions">
-            <button type="button" className="secondary" onClick={() => setCode(null)}>
-              Scan another
-            </button>
-          </div>
         </>
       )}
     </Sheet>
