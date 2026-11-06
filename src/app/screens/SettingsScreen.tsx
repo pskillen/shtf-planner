@@ -1,11 +1,15 @@
-import { DEFAULT_EXPIRY, expiryWindows, nextReviewDue } from '../../engine';
+import { useState } from 'react';
+import { DEFAULT_EXPIRY, calendarCandidates, expiryWindows, nextReviewDue } from '../../engine';
+import { today } from '../../util';
 import { REGIONS } from '../../model';
 import { bundledPacks } from '../../packs';
+import { CalendarExport } from '../components/CalendarExport';
 import { FieldGroup, Segmented, Switch } from '../components/controls';
 import { EditArea } from '../components/EditArea';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { useSavedChange } from '../components/SavedNote';
-import { useDocument, useStoreStatus } from '../state';
+import { useDocument, useEditable, useStoreStatus } from '../state';
+import { usePacks } from '../usePacks';
 import { formatReviewDate } from '../reviewDisplay';
 import { applyRegion } from './region';
 import { DataSection } from './settings/DataSection';
@@ -14,6 +18,9 @@ import { packLabel, packSwitch, setPack } from './settings/packs';
 /** Region, content packs, review cadence, anonymising and (later) the data section. */
 export function SettingsScreen() {
   const doc = useDocument();
+  const editable = useEditable();
+  const activePacks = usePacks();
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const { settings } = doc;
   const storeStatus = useStoreStatus();
   const { change, note } = useSavedChange();
@@ -127,6 +134,19 @@ export function SettingsScreen() {
         />
       </EditArea>
 
+      {storeStatus.kind === 'ok' && editable && (
+        <button type="button" onClick={() => setCalendarOpen(true)}>
+          Add to calendar
+        </button>
+      )}
+      {calendarOpen && storeStatus.kind === 'ok' && editable && (
+        <CalendarExport
+          candidates={calendarCandidates(doc, activePacks, today())}
+          createdAt={doc.meta.createdAt}
+          asOf={today()}
+          onClose={() => setCalendarOpen(false)}
+        />
+      )}
       <DataSection />
     </div>
   );

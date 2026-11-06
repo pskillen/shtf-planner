@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import {
+  calendarCandidates,
   nextReviewDue,
   reviewItems,
   reviewPeriod,
@@ -10,6 +11,7 @@ import {
   type ReviewItem,
 } from '../../engine';
 import { today } from '../../util';
+import { CalendarExport } from '../components/CalendarExport';
 import { ReviewRow } from '../components/ReviewRow';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { Toast } from '../components/Toast';
@@ -48,6 +50,7 @@ export function ReviewScreen() {
   );
   const [replacementToken, setReplacementToken] = useState<string>();
   const [error, setError] = useState('');
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [replace, setReplace] = useState<QuickAddPrefill>();
   useEffect(
     () => () => {
@@ -250,6 +253,17 @@ export function ReviewScreen() {
             Finish review
           </button>
         </>
+      )}
+      <button type="button" disabled={!editable} onClick={() => setCalendarOpen(true)}>
+        Add to calendar
+      </button>
+      {calendarOpen && editable && (
+        <CalendarExport
+          candidates={calendarCandidates(doc, packs, asOf)}
+          createdAt={doc.meta.createdAt}
+          asOf={asOf}
+          onClose={() => setCalendarOpen(false)}
+        />
       )}
       {!replace &&
         receipts.map((receipt) => (
