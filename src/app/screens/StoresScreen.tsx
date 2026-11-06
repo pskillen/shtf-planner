@@ -279,7 +279,7 @@ export function StoresScreen() {
     const expiryWord = worstLevel && worstLevel !== 'ok' ? EXPIRY_LABEL[worstLevel] : undefined;
     const open = itemOpen(item.id);
     return (
-      <li className="row-item" key={item.id}>
+      <li className="row-item row-item-stack" key={item.id}>
         <button
           type="button"
           className="row-main"

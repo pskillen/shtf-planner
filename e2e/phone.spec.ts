@@ -107,3 +107,22 @@ test('an unreadable household shows the banner with a 44 px link, not a blank pa
   const link = page.getByRole('link', { name: /Go to More/ });
   expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(44);
 });
+
+test('an expanded item in Stores keeps its title on one wide row, with the panel beneath', async ({
+  page,
+}) => {
+  await page.goto('/?debug=1');
+  await page.evaluate(() =>
+    (window as unknown as { __shtf: { loadFixture: () => Promise<void> } }).__shtf.loadFixture(),
+  );
+  await page.goto('/app/stores');
+
+  const row = page.locator('li.row-item-stack').first();
+  const title = row.locator('button.row-main').first();
+  await title.click();
+  await expect(title).toHaveAttribute('aria-expanded', 'true');
+  const t = (await title.boundingBox())!;
+  const r = (await row.boundingBox())!;
+  expect(t.width).toBeGreaterThan(r.width / 2);
+  expect(t.height).toBeLessThan(120);
+});
