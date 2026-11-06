@@ -91,8 +91,11 @@ product replaces what the household remembers on all devices.
 When Open Food Facts does not know a code (or you are offline with no stored facts), the card asks **What does it
 count as?** and says what that means: the item in the plan this product stands in for. **Counts towards nothing**
 (for things that are not in the plan, with a line saying so) and **Decide later** come first, then a search box
-and the common items; recent products are not offered here. After an item comes the **size step** if size is not
-already known, then the date (stocktake) or Add (quick add).
+and the common items; recent products are not offered here. After an item comes a **New product** form if the size
+is not already known: the **Product name** first (filled from Open Food Facts where it knows one), then the size
+(the first suggestion already chosen; tap another or **Another size**), then **Save product**. The name is required (a product named after its item is no help): Open Food Facts' name fills it where it knows one. **Counts towards nothing** on a code nobody knows asks for a name the same way. Products you already
+have of that item are under "Same as a product you already have?". **Change** goes back to the item search. After
+saving comes the date (stocktake) or Add (quick add).
 
 ## Product from Open Food Facts
 

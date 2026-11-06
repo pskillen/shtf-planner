@@ -1,17 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { suggestItems } from '../../../engine';
-import type { Item, OffFacts } from '../../../model';
+import type { Item, OffFacts, Size } from '../../../model';
 import type { OffProduct, OffResult } from '../../../scan/openFoodFacts';
 import { sizeFits, today } from '../../../util';
 import { getOff } from '../../off';
+import { Field } from '../../components/controls';
 import { useChange, useDocument } from '../../state';
 import { usePacks } from '../../usePacks';
 import { ItemPicker } from './ItemPicker';
 import { SizeStep, type SizeStepDone } from './SizeStep';
-import { defaultProductName, ensureProduct, rememberBarcode, type NewProduct } from './stock';
+import { ensureProduct, rememberBarcode, type NewProduct } from './stock';
 import { offFactsOf, offPreviewText, productLine, useStockItems } from './scanHelpers';
 
-type Phase = 'countsAs' | 'pickItem' | 'size';
+type Phase = 'countsAs' | 'pickItem' | 'size' | 'name';
 
 function seedToOff(seed: OffFacts): OffProduct {
   return {
@@ -122,7 +123,7 @@ export function ScanResolve({
 
   function finishItem(item: Item): void {
     const size = off?.size && sizeFits(off.size, item.measure) ? off.size : undefined;
-    if (size) {
+    if (size && offName) {
       const label = labelKcal !== undefined && item.measure !== 'count' ? labelKcal : undefined;
       finishNew({
         itemId: item.id,
@@ -147,8 +148,9 @@ export function ScanResolve({
 
   function countsTowardsNothing(): void {
     const size = off?.size ?? { amount: 1, unit: 'pieces' as const };
-    const name = off ? productLine(off) : defaultProductName(undefined, size);
-    finishNew({ size, name });
+    // A product with no item has nothing to be named after: Open Food Facts' name, or the person's.
+    if (offName) finishNew({ size, name: offName });
+    else setPhase('name');
   }
 
   function onPickedProduct(productId: string): void {
@@ -180,7 +182,7 @@ export function ScanResolve({
         {reidentify && knownStock ? ` · remembered as ${knownStock.name}` : ''}
       </p>
       {result === 'looking' && !seed ? <p role="status">Looking it up…</p> : null}
-      {off && phase !== 'size' ? (
+      {off && phase !== 'size' && phase !== 'name' ? (
         <p role="status">
           <strong>{preview}</strong>
         </p>
@@ -255,7 +257,7 @@ export function ScanResolve({
           </div>
         </>
       ) : null}
-      {showPicker && phase !== 'size' ? (
+      {showPicker && phase !== 'size' && phase !== 'name' ? (
         <>
           {!showCountsAs ? (
             <>
@@ -313,15 +315,62 @@ export function ScanResolve({
           />
         </>
       ) : null}
-      {phase === 'size' && sizeItem ? (
-        <SizeStep
-          item={sizeItem}
-          labelKcalPer100={labelKcal}
-          initialName={sizeName}
-          onDone={onSizeDone}
+      {phase === 'name' ? (
+        <NameOnly
+          size={off?.size ?? { amount: 1, unit: 'pieces' }}
+          onSave={(name, size) => finishNew({ size, name })}
+          onBack={() => setPhase('pickItem')}
         />
+      ) : null}
+      {phase === 'size' && sizeItem ? (
+        <>
+          <h3>New product</h3>
+          <p className="muted">
+            Counts as {sizeItem.name}.{' '}
+            <button type="button" className="link" onClick={() => setPhase('pickItem')}>
+              Change
+            </button>
+          </p>
+          <SizeStep
+            confirm
+            item={sizeItem}
+            labelKcalPer100={labelKcal}
+            initialName={sizeName}
+            onDone={onSizeDone}
+          />
+        </>
       ) : null}
       {onSortLater && sortLaterBlocked ? <p className="muted">{sortLaterBlocked}</p> : null}
     </div>
+  );
+}
+
+/** A product that counts towards nothing: it has no item to take a name from, so it needs one. */
+function NameOnly({
+  size,
+  onSave,
+  onBack,
+}: {
+  size: Size;
+  onSave: (name: string, size: Size) => void;
+  onBack: () => void;
+}) {
+  const [name, setName] = useState('');
+  return (
+    <>
+      <h3>New product</h3>
+      <p className="muted">
+        Counts towards nothing.{' '}
+        <button type="button" className="link" onClick={onBack}>
+          Change
+        </button>
+      </p>
+      <Field label="Product name" hint="As on the pack, for example “Dog biscuits 1 kg”.">
+        <input type="text" autoFocus value={name} onChange={(e) => setName(e.target.value)} />
+      </Field>
+      <button type="button" disabled={name.trim() === ''} onClick={() => onSave(name.trim(), size)}>
+        Save product
+      </button>
+    </>
   );
 }

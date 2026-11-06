@@ -200,6 +200,10 @@ describe('Not this item?', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: /Tinned soup/ }));
     fireEvent.click(screen.getByRole('button', { name: '400 g' }));
+    fireEvent.change(screen.getByLabelText(/^Product name/), {
+      target: { value: 'Tinned soup 400 g' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save product' }));
     expect(await screen.findByRole('heading', { name: /soup/i })).toBeTruthy();
     expect(s.doc().barcodes[KNOWN]?.productId).not.toBe('prod-spread');
     chip('+1 y');

@@ -233,6 +233,8 @@ test.describe('stocktake with a fake camera', () => {
       .getByRole('region', { name: 'Suggested sizes' })
       .getByRole('button', { name: '400 g', exact: true })
       .click();
+    await page.getByLabel(/^Product name/).fill('Tinned soup 400 g');
+    await page.getByRole('button', { name: 'Save product' }).click();
     await expect(page.getByRole('heading', { name: /Tinned soup 400 g/i })).toBeVisible();
     await firstChip(page);
     await ok(page);
@@ -265,6 +267,8 @@ test.describe('stocktake with a fake camera', () => {
       .getByRole('region', { name: 'Suggested sizes' })
       .getByRole('button', { name: '400 g', exact: true })
       .click();
+    await sortDlg.getByLabel(/^Product name/).fill('Tinned soup 400 g');
+    await sortDlg.getByRole('button', { name: 'Save product' }).click();
     expect(net.offUrls).toHaveLength(0);
     await expect
       .poll(async () => Object.keys((await doc(page)).scans).length, { timeout: 10_000 })
