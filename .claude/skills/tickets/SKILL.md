@@ -13,6 +13,9 @@ this says what a ticket looks like here. GitHub issues are the backlog, and issu
 - **Epic**: a themed group of features. Title `Epic: <theme>`, label `epic`, body = a one-paragraph summary and a task list (`- [ ] #n title`) under
   `## Features`. It is closed when every feature is closed.
 - **Feature**: one PR, or a short stack. Title is the outcome in plain words, no `feat:` prefix, no phase number. Body opens with `Part of #<epic>.`
+  Also link it as a GitHub **sub-issue** of the epic, so the parent shows in the UI and the epic counts progress:
+  `gh api -X POST repos/pskillen/shtf-planner/issues/<epic>/sub_issues -F sub_issue_id=$(gh api repos/pskillen/shtf-planner/issues/<n> -q .id)`
+  (the API wants the issue's id, not its number).
 - **Bug / debt**: same shape; label `bug` (wrong behaviour) or `debt` (internal, nothing user-visible changes). Body gives the failure scenario
   for a bug.
 - **Not tickets**: objectives (tagging a release, "get to 0.1.0"), clean-up chores, and anything that is one command.
