@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { reviewItems, reviewPeriod } from '../src/engine';
 import { biggarDocument } from '../src/fixtures/household-biggar';
@@ -144,6 +144,27 @@ it('keeps independent undo windows for rapid answers', () => {
   expect(Object.values(store.store.get().reviews)[0]!.resolved).toHaveLength(1);
   fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
   expect(Object.values(store.store.get().reviews)[0]!.resolved).toHaveLength(0);
+});
+it('keeps earlier undo accessible and pauses each window during replacement', () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date(`${day}T12:00:00Z`));
+  const store = liveStore(setup());
+  render(store.wrap(<ReviewScreen />));
+  const maintenance = document.querySelector<HTMLElement>('[data-review-kind="maintenance"]')!;
+  fireEvent.click(within(maintenance).getByRole('button', { name: /^Done:/ }));
+  act(() => vi.advanceTimersByTime(2000));
+  const expiry = document.querySelector<HTMLElement>('[data-review-kind="expiry"]')!;
+  fireEvent.click(within(expiry).getByRole('button', { name: /^Replace:/ }));
+  const dialog = screen.getByRole('dialog');
+  expect(within(dialog).getAllByRole('button', { name: 'Undo' })).toHaveLength(2);
+  act(() => vi.advanceTimersByTime(6000));
+  fireEvent.click(within(dialog).getAllByRole('button', { name: 'Undo' })[0]!);
+  expect(Object.values(store.store.get().reviews)[0]!.resolved).toHaveLength(1);
+  fireEvent.click(within(dialog).getByRole('button', { name: /close/i }));
+  act(() => vi.advanceTimersByTime(4999));
+  expect(screen.getByRole('button', { name: 'Undo' })).toBeTruthy();
+  act(() => vi.advanceTimersByTime(1));
+  expect(screen.queryByRole('button', { name: 'Undo' })).toBeNull();
 });
 it('rejects stale stock, maintenance and plan answers without changing the document', () => {
   for (const kind of ['expiry', 'maintenance', 'plan'] as const) {
