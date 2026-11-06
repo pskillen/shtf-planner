@@ -6,6 +6,10 @@ stores and kit, and keeps a preparedness score. One household document lives in 
 (IndexedDB) and syncs through the user's own Google Drive. There is no server. UK-first. Sister
 project of the SHTF game (`shtf-game`). Working title.
 
+Read next: [`docs/design.md`](docs/design.md) (the design overview),
+[`GLOSSARY.md`](GLOSSARY.md) (the domain words) and [`docs/decisions/`](docs/decisions/README.md)
+(the rules that bind, with their reasons).
+
 ## Stack
 
 - Vite + TypeScript (strict) + React 19; React Router (`BrowserRouter`; the PWA serves

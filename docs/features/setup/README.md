@@ -94,10 +94,34 @@ leaving half-way.
 - **Units.** `formatVolume` shows litres in the UK and US gallons in the US; `formatTemp` shows
   Celsius or Fahrenheit. Amounts shown to a person go through them.
 
+- **The horizon is a choice, not a ladder.** A household can go straight to 28 days without passing
+  through 3, 7 and 14; 3 days (72 hours) is the default for a new household. Each horizon has one
+  sentence saying what it means (`HORIZON_SENTENCE` in `src/app/labels.ts`) and the table shows what
+  it asks of this household, so people can set their expectations up or down.
+- **Where the home is, roughly.** Region, part of the UK and a postcode area, plus a typed home
+  profile (type, heating, cooking, insulation…). No address, no map, no building pick: less
+  location means less to protect.
+- **Risks are self-declared** from a checklist, with links to the official checkers. Nothing is
+  looked up, because a lookup would send the location out of the browser.
+- **Stored, not yet read.** The review reminder (3 or 6 months) and anonymise names are saved in the
+  document but nothing uses them yet: the first waits for the review queue, the second for any
+  feature that sends household text out (there is none).
+
 ## Known gaps
 
 - No maintenance dates on equipment.
 - Wales and Northern Ireland have no flood links of their own.
+
+## Not built yet
+
+- Maintenance schedules and the review queue: [#20](https://github.com/pskillen/shtf-planner/issues/20).
+- Equipment linked to its exact fuel: [#28](https://github.com/pskillen/shtf-planner/issues/28).
+- Natural Resources Wales and DfI flood links, diesel, vehicles as assets:
+  [#49](https://github.com/pskillen/shtf-planner/issues/49).
+- Scenario checklists (power cut, flood, storm, heatwave, evacuate), tracked and printable:
+  [#40](https://github.com/pskillen/shtf-planner/issues/40).
+- Household contacts and a printable in-case-of-emergency sheet:
+  [#45](https://github.com/pskillen/shtf-planner/issues/45).
 
 ## Tests
 

@@ -39,14 +39,36 @@ The Stores tab: what the household has, grouped by **item** (the generic from th
   duplicate.
 - **Counts towards nothing.** Products with no item sit in a last group. Equipment in places is read-only with an
   Equipment badge, as before.
-- **Expiry colours.** Unchanged on batches (`ExpiryBadge`, household settings in Settings). See labels in
-  `src/app/labels.ts`.
+- **Expiry colours.** One rule app-wide (`src/engine/expiry.ts`, `ExpiryBadge`), always a word as well
+  as a colour: **Expired** (red) once the best-before month has gone; **Expires soon** (red) from this
+  month to `expirySoonMonths` ahead (default 1, 0 to 3); **Before next check** (amber) up to
+  `expiryCheckMonths` ahead (default 3, 1 to 12, never shorter than the soon window); nothing after
+  that. Both windows are household settings (More, Settings, Expiry colours). The stocktake, Stores
+  rows and the date reader use the same rule.
+- **Same batch, one row.** Adding stock of the same product, in the same place, with the same
+  best-before month adds to that row instead of listing it twice (quick add, stocktake and scans to
+  sort alike).
+- **Suitability.** A place's conditions (frost, heat, damp; indoor-stable asks nothing) are checked
+  against the item's `suitability`; a mismatch shows a warning such as "Water containers, kept filled
+  may freeze in the Shed" when adding, in the stocktake and on the batch. It warns; it never blocks.
+- **Remembered per device, never in the document.** The last place used and the recent items and
+  products (up to 12) live in localStorage, so they do not sync and a private window simply forgets
+  them.
 
 ## Not done
 
 - Editing pack **items** in the app (items come only from content packs).
 - **Custom items** by design; a recurring "nothing fits" is a pack change.
-- Review workflow for expiry beyond colours and words on screen.
+
+## Not built yet
+
+- A review queue for expiring stock and places not recounted, beyond the colours and words on screen:
+  [#20](https://github.com/pskillen/shtf-planner/issues/20). Until then a stocktake only adds stock;
+  it never recounts a place.
+- Water containers are stock "kept filled" for now, counting what they hold; whether they should be
+  equipment that holds a resource up to a capacity is open
+  ([#91](https://github.com/pskillen/shtf-planner/issues/91), under
+  [#28](https://github.com/pskillen/shtf-planner/issues/28)).
 
 ## Tests
 

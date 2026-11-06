@@ -126,10 +126,43 @@ Checked on 2026-11-04: the UK Be Ready site gives 3 days and 3 litres per person
 and no other quantity; Ready.gov gives one gallon per person per day and says "several days", with
 no number of days. The 14-day US band is therefore this planner's choice, not Ready.gov's.
 
+## Curated, not imported
+
+Official guidance (UK Be Ready, Ready.gov) is prose, so a pack is authored from it by hand, with
+the source URL and the date checked, and versioned. Nothing is scraped or fetched at run time:
+fetching would break offline use and buy nothing, since the sources change rarely. A pack can be
+re-checked against its sources at any time.
+
+## Items: what the pack's choices mean
+
+- **Shopping-list level.** Items are what a shopping list says (baked beans, chopped tomatoes,
+  tinned soup), about 170 of them, grouped under headings, with an `other-…` catch-all per heading.
+  The product's label kcal does the precise counting, so the item only needs a typical figure.
+- **Drinks count as water.** Soft drinks and long-life fruit juice give 1 L of water per litre plus
+  the label's kcal (diet drinks 0; juice falls back to a typical figure).
+- **Hygiene "uses".** A use is one hand clean, and the target is three a person a day; a wipe is one
+  use, a soap and sanitiser kit 30. Things that do not fit that measure (gloves, for one) are not
+  given a special item; how hygiene is modelled is an open question
+  ([#38](https://github.com/pskillen/shtf-planner/issues/38)).
+- **Water containers** are stock "kept filled": they count the litres they hold, and a suggestion for
+  one says to fill it from the tap.
+- **Calories.** 24 kcal figures cite CoFID; checking them against the CoFID workbook is still to do
+  ([#59](https://github.com/pskillen/shtf-planner/issues/59)). A product's label kcal replaces the
+  typical figure whenever it has one.
+
 ## Known gaps
 
-- No screens read the packs yet; the engine (`docs/features/engine`) does.
 - `perHousehold` expresses a one-off amount of a resource (the first aid kit). A one-off that has no
   resource (a radio, a torch as a thing rather than as light) cannot be a rule: the radio is the
   engine's own comms target, and torches count as light.
 - No diesel resource: diesel generators and oil heating are not modelled.
+
+## Not built yet
+
+- Content and engine breadth ([#49](https://github.com/pskillen/shtf-planner/issues/49)): diesel,
+  vehicles, candles and torch cells as light, a wood burner and a gas BBQ as items to buy, Welsh and
+  Northern Irish flood links, a check of the asset assumptions, the CoFID kcal check.
+- Equipment that names its exact fuel, and equipment that holds a resource up to a capacity (water
+  containers): [#28](https://github.com/pskillen/shtf-planner/issues/28).
+- A checklist pack by scenario and phase, with stable ids so packs merge without duplicates:
+  [#40](https://github.com/pskillen/shtf-planner/issues/40).

@@ -37,11 +37,25 @@ neither computes targets or scoring rules.
 
 - Overall percent, weakest need, link to horizon. Bar per need, weakest first.
 - Rules live in the engine; see [Engine](../engine/README.md#score).
+- The headline is written on a ruled notebook page in a handwritten face (Caveat, self-hosted in
+  `public/fonts/` with its OFL licence and precached; no font is fetched from Google or anyone
+  else). It is the app's one nod to the SHTF game; every other screen stays plain.
+- Enough is enough: a need at or over its target scores 100 % and shows under **Enough**. Over-stock
+  is neutral; it never lifts another need's score.
 
 ## Equipment and the horizon table
 
 Blocked equipment shows a badge and reason; full text under Why? on Equipment. The horizon table bolds the weakest
 shortfall row per need at 28 days.
+
+## Not built yet
+
+- A review summary with the score change, as the end of a review
+  ([#20](https://github.com/pskillen/shtf-planner/issues/20)). Badges and a review streak were
+  planned alongside it; there is no leaderboard.
+- Shopping rows that deep-link to the equipment and its fuel
+  ([#28](https://github.com/pskillen/shtf-planner/issues/28)); impractical suggestions on very
+  large shortfalls ([#49](https://github.com/pskillen/shtf-planner/issues/49)).
 
 ## Tests
 
