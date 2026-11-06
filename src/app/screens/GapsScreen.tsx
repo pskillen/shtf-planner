@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { addMonths, applicablePlanItems, coverage, gaps, planDone, score } from '../../engine';
+import { applicablePlanItems, coverage, gaps, planDone, score } from '../../engine';
 import { today } from '../../util';
 import { EditArea } from '../components/EditArea';
 import { useDeferredDelete } from '../components/useDeferredDelete';
@@ -17,6 +17,7 @@ import {
 } from './gaps/view';
 import { equipmentAddPath } from './assets/route';
 import { QuickAdd, type QuickAddPrefill } from './stores/QuickAdd';
+import { completePlan } from './review/actions';
 
 /**
  * The Gaps tab: what to buy and what to do, from the engine's gaps for the chosen horizon, and
@@ -53,11 +54,8 @@ export function GapsScreen() {
     (planItemId) => {
       const months = packs.plans[planItemId]?.expiresMonths;
       change('plan done', (d) => {
-        d.plans[planItemId] = {
-          ...d.plans[planItemId],
-          doneAt: now,
-          ...(months ? { expires: addMonths(now, months) } : {}),
-        };
+        const entry = (d.plans[planItemId] ??= {});
+        completePlan(entry, now, months);
       });
     },
     (label) => `Marked done: ${label}`,
