@@ -70,10 +70,16 @@ test('answers each kind on a phone with taps and swipe', async ({ page }) => {
       doc.plans['plans-base:first-aid-course'] = { doneAt: '2023-02-01' };
     });
   });
-  await page.goto('/app/review');
+  await page.goto('/app/review?debug=1');
   const expiry = page.locator('[data-review-kind="expiry"]').first();
-  await expiry.dispatchEvent('touchstart', { touches: [{ clientX: 10 }] });
-  await expiry.dispatchEvent('touchend', { changedTouches: [{ clientX: 120 }] });
+  await expiry.dispatchEvent('touchstart', {
+    touches: [{ identifier: 1, target: await expiry.elementHandle(), clientX: 10, clientY: 50 }],
+  });
+  await expiry.dispatchEvent('touchend', {
+    changedTouches: [
+      { identifier: 1, target: await expiry.elementHandle(), clientX: 120, clientY: 50 },
+    ],
+  });
   for (const [kind, action] of [
     ['maintenance', 'Done'],
     ['age', 'Noted'],
@@ -88,9 +94,10 @@ test('answers each kind on a phone with taps and swipe', async ({ page }) => {
   }
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   const count = await page.evaluate(
-    () =>
+    async () =>
       Object.values(
-        (window as unknown as { __shtf: { doc: () => Document } }).__shtf.doc().reviews,
+        (await (window as unknown as { __shtf: { doc: () => Promise<Document> } }).__shtf.doc())
+          .reviews,
       ).flatMap((r) => r.resolved).length,
   );
   expect(count).toBe(5);

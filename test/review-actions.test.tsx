@@ -114,3 +114,17 @@ it('keeps replacement choice when the sheet is cancelled', () => {
   expect(Object.values(store.store.get().reviews)[0]!.resolved[0]).toContain('replace');
   expect(screen.getByRole('button', { name: 'Undo' })).toBeTruthy();
 });
+it('disables answers in a read-only document', () => {
+  vi.setSystemTime(new Date(`${day}T12:00:00Z`));
+  const store = liveStore(setup());
+  vi.spyOn(store.store, 'status').mockReturnValue({ kind: 'invalid', error: new Error('invalid') });
+  render(store.wrap(<ReviewScreen />));
+  const row = document.querySelector<HTMLElement>('[data-review-kind="expiry"]')!;
+  expect(
+    within(row)
+      .getByRole('button', { name: /^Used:/ })
+      .hasAttribute('disabled'),
+  ).toBe(true);
+  fireEvent.click(within(row).getByRole('button', { name: /^Used:/ }));
+  expect(Object.keys(store.store.get().reviews)).toHaveLength(0);
+});

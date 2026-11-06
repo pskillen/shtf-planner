@@ -66,7 +66,15 @@ function AddedStatus({
  * Quick add: pick an item and size (or a recent product), then Add. The place is the last one
  * you used and the quantity is one unless you change it.
  */
-export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: QuickAddPrefill }) {
+export function QuickAdd({
+  onClose,
+  prefill,
+  onUndoReview,
+}: {
+  onClose: () => void;
+  prefill?: QuickAddPrefill;
+  onUndoReview?: () => void;
+}) {
   const doc = useDocument();
   const change = useChange();
   const packs = usePacks();
@@ -378,6 +386,14 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
           ) : undefined
         }
       >
+        {onUndoReview ? (
+          <p role="status">
+            Answer saved.{' '}
+            <button type="button" onClick={onUndoReview}>
+              Undo
+            </button>
+          </p>
+        ) : null}
         {step === 'search' ? (
           <>
             {last ? (

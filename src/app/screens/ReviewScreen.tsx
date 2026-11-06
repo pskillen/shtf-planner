@@ -58,6 +58,7 @@ export function ReviewScreen() {
       restored = undoReview(d, receipt);
     });
     setReceipt(undefined);
+    setReplace(undefined);
     if (!restored) setError('This item changed since your answer. Check it in Stores.');
   }
   return (
@@ -79,7 +80,7 @@ export function ReviewScreen() {
           ))}
         </ul>
       )}
-      {receipt ? (
+      {receipt && !replace ? (
         <Toast>
           Answer saved.{' '}
           <button type="button" onClick={undo} disabled={!editable}>
@@ -89,7 +90,11 @@ export function ReviewScreen() {
       ) : null}
       {error ? <Toast>{error}</Toast> : null}
       {replace && editable ? (
-        <QuickAdd prefill={replace} onClose={() => setReplace(undefined)} />
+        <QuickAdd
+          prefill={replace}
+          onClose={() => setReplace(undefined)}
+          onUndoReview={receipt ? undo : undefined}
+        />
       ) : null}
     </section>
   );
