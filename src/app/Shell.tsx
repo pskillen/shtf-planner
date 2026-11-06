@@ -23,7 +23,9 @@ import { StocktakeScreen } from './screens/stores/StocktakeScreen';
 import { ProductsScreen } from './screens/stores/ProductsScreen';
 import type { ReactNode } from 'react';
 import { TooOld } from './TooOld';
-import { useStoreStatus } from './state';
+import { useDocument, useStoreStatus } from './state';
+import { reviewIsDue } from '../engine';
+import { today } from '../util';
 
 function Screen({ children }: { children: ReactNode }) {
   return <section className="screen">{children}</section>;
@@ -35,6 +37,11 @@ function Screen({ children }: { children: ReactNode }) {
  */
 const screenKey = (pathname: string): string =>
   pathname.startsWith('/app/setup') ? '/app/setup' : pathname;
+
+function ReviewBadge() {
+  const doc = useDocument();
+  return reviewIsDue(doc, today()) ? <span className="tab-badge">Review due</span> : null;
+}
 
 /** The app proper: top bar, one screen per tab, bottom nav, footer. */
 export function Shell() {
@@ -148,6 +155,7 @@ export function Shell() {
                 {t.icon}
               </span>
               <span>{t.label}</span>
+              {t.path === '' ? <ReviewBadge /> : null}
             </Link>
           ))}
         </nav>

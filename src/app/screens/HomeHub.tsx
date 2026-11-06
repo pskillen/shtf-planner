@@ -1,4 +1,7 @@
 import type { ReactNode } from 'react';
+import { nextReviewDue, reviewIsDue } from '../../engine';
+import { today } from '../../util';
+import { formatReviewDate } from '../reviewDisplay';
 import { Link, Navigate } from 'react-router-dom';
 import {
   LOCAL_RISK_LABEL,
@@ -42,6 +45,14 @@ export function HomeHub() {
       <h1>Your household</h1>
       <p className="muted">Everything the plan is built from. Tap a card to change it.</p>
       <div className="cards">
+        <div className="card">
+          <span className="card-title">Review</span>
+          <span className="card-body">
+            {reviewIsDue(doc, today())
+              ? 'Review due'
+              : `Next review ${formatReviewDate(nextReviewDue(doc))}`}
+          </span>
+        </div>
         <Card to="/app/people" title="People">
           {members.length} {members.length === 1 ? 'person' : 'people'}
           {pets.length > 0 ? `, ${pets.length} ${pets.length === 1 ? 'pet' : 'pets'}` : ''}

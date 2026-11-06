@@ -1,4 +1,4 @@
-import { DEFAULT_EXPIRY, expiryWindows } from '../../engine';
+import { DEFAULT_EXPIRY, expiryWindows, nextReviewDue } from '../../engine';
 import { REGIONS } from '../../model';
 import { bundledPacks } from '../../packs';
 import { FieldGroup, Segmented, Switch } from '../components/controls';
@@ -6,13 +6,15 @@ import { EditArea } from '../components/EditArea';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { useSavedChange } from '../components/SavedNote';
 import { useDocument } from '../state';
+import { formatReviewDate } from '../reviewDisplay';
 import { applyRegion } from './region';
 import { DataSection } from './settings/DataSection';
 import { packLabel, packSwitch, setPack } from './settings/packs';
 
 /** Region, content packs, review cadence, anonymising and (later) the data section. */
 export function SettingsScreen() {
-  const { settings } = useDocument();
+  const doc = useDocument();
+  const { settings } = doc;
   const { change, note } = useSavedChange();
   const packs = bundledPacks();
   const windows = expiryWindows(settings);
@@ -75,6 +77,7 @@ export function SettingsScreen() {
               change('review cadence', (d) => void (d.settings.reviewCadenceMonths = m))
             }
           />
+          <p className="muted">Next review {formatReviewDate(nextReviewDue(doc))}</p>
         </FieldGroup>
 
         <FieldGroup
