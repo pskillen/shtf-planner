@@ -1,6 +1,6 @@
 import { NOT_SCORED_NOTE, countsAsLine } from './stores/countsAs';
 import { useMemo, useState, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { minimumKey, type Asset, type Item, type Location, type Stock } from '../../model';
 import { formatQty, today } from '../../util';
 import { EditArea } from '../components/EditArea';
@@ -46,18 +46,27 @@ export function StoresScreen() {
   const change = useChange();
   const packs = usePacks();
   const todayIso = today();
+  const [params, setParams] = useSearchParams();
   const [query, setQuery] = useState('');
-  const [placeFilter, setPlaceFilter] = useState<string | 'all'>('all');
+  const [placeFilter, setPlaceFilter] = useState<string | 'all'>(
+    () => params.get('place') ?? 'all',
+  );
   const activePlaceFilter =
     placeFilter !== 'all' && !doc.locations[placeFilter] ? 'all' : placeFilter;
   const [collapsedCats, setCollapsedCats] = useState<ReadonlySet<string>>(new Set());
   const [openItems, setOpenItems] = useState<ReadonlySet<string>>(new Set());
   const [adding, setAdding] = useState(false);
-  const [editing, setEditing] = useState<Stock | null>(null);
+  const [editing, setEditing] = useState<Stock | null>(
+    () => doc.stock[params.get('stock') ?? ''] ?? null,
+  );
   const [minimumItem, setMinimumItem] = useState<Item | null>(null);
   const [pickMinimumItem, setPickMinimumItem] = useState(false);
   const [sorting, setSorting] = useState(false);
   useScanQueue();
+  const closeEditing = () => {
+    setEditing(null);
+    if (params.has('stock')) setParams({}, { replace: true });
+  };
 
   const remove = useDeferredDelete((id) =>
     change('delete stock', (d) => {
@@ -325,6 +334,7 @@ export function StoresScreen() {
   return (
     <section className="screen stores">
       <h1>Stores</h1>
+      {filterLocation ? <p>Place: {filterLocation.name}</p> : null}
       <ScansToSortNote onOpen={() => setSorting(true)} />
       <div className="stores-actions">
         <Link className="button secondary" to="/app/stores/stocktake">
@@ -490,14 +500,14 @@ export function StoresScreen() {
             change('edit stock', (d) => {
               d.stock[row.id] = row;
             });
-            setEditing(null);
+            closeEditing();
           }}
           onDelete={() => {
             const product = doc.products[editing.productId];
             remove.request(editing.id, product?.name ?? editing.productId);
-            setEditing(null);
+            closeEditing();
           }}
-          onClose={() => setEditing(null)}
+          onClose={closeEditing}
         />
       ) : null}
       {minimumItem ? (

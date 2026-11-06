@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { addMonths, applicablePlanItems, coverage, gaps, planDone, score } from '../../engine';
 import { today } from '../../util';
 import { EditArea } from '../components/EditArea';
@@ -29,6 +29,8 @@ export function GapsScreen() {
   const [sort, setSort] = useState<ShoppingSort>('capability');
   const [buying, setBuying] = useState<QuickAddPrefill | null>(null);
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const selectedPlan = packs.plans[params.get('plan') ?? ''];
   const horizonDays = doc.settings.horizonDays;
   const now = today();
 
@@ -136,6 +138,15 @@ export function GapsScreen() {
         <Link to="/app/horizon">Change how long to plan for</Link>
       </p>
 
+      {selectedPlan && applicablePlanItems(doc, packs).includes(selectedPlan.id) ? (
+        <section aria-label="Selected plan">
+          <h2>Plan to review</h2>
+          <p>{selectedPlan.text}</p>
+          <p className="muted">
+            {planDone(doc, packs, selectedPlan.id, now) ? 'Done' : 'Needs attention'}
+          </p>
+        </section>
+      ) : null}
       <h2>Shopping</h2>
       {view.shopping.length === 0 ? (
         <p className="muted">Nothing to buy for {horizonDays} days.</p>
