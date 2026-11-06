@@ -250,6 +250,7 @@ export function StoresScreen() {
                     to={`/app/stores/products?open=${product.id}`}
                     aria-label={`Product list: ${product.name}`}
                   >
+                    <span className="muted product-tag">Product</span>
                     <strong>
                       {product.name} · {formatPackTotal(packsTotal, item.unit)} ›
                     </strong>

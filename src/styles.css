@@ -1510,3 +1510,36 @@ button.scans-note {
   background: #c62828;
   font-weight: 800;
 }
+
+/* Stores: an item opens to its products, and each product to where its stock is. The three levels
+   read as a tree: the product is a heading line, its stock sits indented under a rule. */
+.item-panel {
+  margin-top: 8px;
+}
+
+.item-panel .counts-as {
+  margin: 4px 0 8px;
+  font-style: italic;
+}
+
+.item-panel > .row-list > li > .row-item {
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid var(--accent);
+  border-radius: 0;
+  min-height: 44px;
+  padding: 4px 0;
+}
+
+.item-panel .product-tag {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.item-panel .batch-list {
+  margin: 6px 0 16px 8px;
+  padding-left: 12px;
+  border-left: 3px solid var(--border);
+  gap: 6px;
+}
