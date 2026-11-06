@@ -82,6 +82,13 @@ export function ReviewScreen() {
     .flatMap((r) => (r.finished ? [r.finished] : []))
     .sort()
     .at(-1);
+  const lastSummary = latestFinished
+    ? reviewSummary(Object.values(doc.reviews).filter((r) => r.finished === latestFinished))
+    : undefined;
+  const lastDelta =
+    lastSummary?.before !== undefined && lastSummary.after !== undefined
+      ? wholePercent(lastSummary.after) - wholePercent(lastSummary.before)
+      : undefined;
   const summary = summaryAt
     ? reviewSummary(Object.values(doc.reviews).filter((r) => r.finished === summaryAt))
     : undefined;
@@ -218,6 +225,7 @@ export function ReviewScreen() {
           {latestFinished && (
             <button type="button" onClick={() => setSummaryAt(latestFinished)}>
               Last review {formatReviewDate(latestFinished.slice(0, 10))}
+              {lastDelta !== undefined && `: ${lastDelta >= 0 ? '+' : ''}${lastDelta}`}
             </button>
           )}
           {items.length === 0 ? (
