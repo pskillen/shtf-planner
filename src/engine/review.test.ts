@@ -31,4 +31,22 @@ describe('review cadence', () => {
     };
     expect(nextReviewDue(doc)).toBe('2026-08-28');
   });
+  it('orders finished timestamps by instant before taking the selected calendar date', () => {
+    const doc = emptyDocument('local', '2025-01-01T00:00:00Z');
+    doc.reviews = {
+      earlier: {
+        id: 'earlier',
+        started: '2026-05-01T00:00:00Z',
+        finished: '2026-05-02T00:30:00+02:00',
+        resolved: [],
+      },
+      later: {
+        id: 'later',
+        started: '2026-05-01T00:00:00Z',
+        finished: '2026-05-01T23:30:00Z',
+        resolved: [],
+      },
+    };
+    expect(nextReviewDue(doc)).toBe('2026-11-01');
+  });
 });

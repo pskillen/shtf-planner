@@ -4,9 +4,9 @@ import { addMonths } from './dates';
 /** The latest finished review's calendar date, or creation date, plus the chosen cadence. */
 export function nextReviewDue(doc: Document): string {
   const finished = Object.values(doc.reviews)
-    .flatMap((review) => (review.finished ? [review.finished.slice(0, 10)] : []))
-    .sort();
-  const base = finished.at(-1) ?? doc.meta.createdAt.slice(0, 10);
+    .flatMap((review) => (review.finished ? [review.finished] : []))
+    .sort((a, b) => Date.parse(a) - Date.parse(b));
+  const base = (finished.at(-1) ?? doc.meta.createdAt).slice(0, 10);
   return addMonths(base, doc.settings.reviewCadenceMonths);
 }
 
