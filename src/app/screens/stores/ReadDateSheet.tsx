@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { today } from '../../../util';
-import { terminateDateReader } from '../../../scan/ocr/client';
+import { releaseDateReader } from '../../../scan/ocr/client';
 import { CameraStrip } from '../../components/CameraStrip';
 import { Sheet } from '../../components/Sheet';
 import type { CameraStream } from '../../../scan/camera';
@@ -23,8 +23,8 @@ export function ReadDateSheet({
   const [read, setRead] = useState<DateRead | null>(null);
   const [centre, setCentre] = useState<HTMLElement | null>(null);
 
-  // The models' memory goes back when the sheet goes.
-  useEffect(() => () => terminateDateReader(), []);
+  // The models stay a while after the sheet goes, for the next date.
+  useEffect(() => () => releaseDateReader(), []);
 
   return (
     <Sheet

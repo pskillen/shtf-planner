@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { OffFacts } from '../../../model';
+import { preloadDateReader } from '../../../scan/ocr/client';
+import { readUseWebGpu } from './dateSettings';
 import { CameraStrip } from '../../components/CameraStrip';
 import { Field } from '../../components/controls';
 import { Sheet } from '../../components/Sheet';
@@ -32,6 +34,11 @@ export function ScanSheet({
   const [problem, setProblem] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [flash, setFlash] = useState(0);
+
+  // A date step often follows a scan: have the date reader loading while the barcode is read.
+  useEffect(() => {
+    if (!reidentify) preloadDateReader(readUseWebGpu());
+  }, [reidentify]);
 
   function got(next: string): void {
     buzz('barcode');

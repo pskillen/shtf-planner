@@ -113,6 +113,12 @@ best-before month off the pack, on the phone, with no network once installed. Th
 was read with its expiry colour, and **nothing is saved until they OK it** (or tap a suggestion in
 the stocktake).
 
+**Loading.** The models (about 0.5 GB in memory, no network once installed) start loading as soon as the
+stocktake opens, or a barcode sheet opens, so they are usually ready by the first date step. While they load
+the strip's box is dashed and the picture dim, and the status says "Getting the date reader ready…". They stay
+loaded for 5 minutes (`READER_IDLE_MS`) after the screen that used them closes, and are freed at once when the
+page is hidden or the camera switch is turned off.
+
 **The flow.** The strip shows the yellow date box and the reader starts by itself when "Read dates
 with the camera" is on. That switch lives below the item card on the stocktake screen (on by
 default, remembered per device) and applies to the stocktake only: Quick add's **Read the date**

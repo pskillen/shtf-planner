@@ -35,6 +35,8 @@ export const dateState: {
   stops: number;
   aborts: number;
   terminated: number;
+  /** Times a screen let go of the reader (it stays loaded for a while). */
+  released: number;
   /** What the reader's status() says (the About line). */
   status: unknown;
   listeners: Set<() => void>;
@@ -47,6 +49,7 @@ export const dateState: {
   stops: 0,
   aborts: 0,
   terminated: 0,
+  released: 0,
   status: { state: 'ready', ep: 'wasm', loadMs: 1, reason: '', lastReadMs: 400 },
   listeners: new Set(),
   resolvers: [],
@@ -75,6 +78,7 @@ export function resetDates(): void {
   dateState.stops = 0;
   dateState.aborts = 0;
   dateState.terminated = 0;
+  dateState.released = 0;
   dateState.status = { state: 'ready', ep: 'wasm', loadMs: 1, reason: '', lastReadMs: 400 };
   dateState.listeners = new Set();
   dateState.resolvers = [];
@@ -101,6 +105,10 @@ export const fakeDateClientModule = () => ({
   onReaderChange: (l: () => void) => {
     dateState.listeners.add(l);
     return () => void dateState.listeners.delete(l);
+  },
+  preloadDateReader: () => undefined,
+  releaseDateReader: () => {
+    dateState.released++;
   },
   terminateDateReader: () => {
     dateState.terminated++;

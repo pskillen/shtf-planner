@@ -222,7 +222,7 @@ describe('Quick add: Read the date', () => {
     expect(withDate(s, '2031-03')).toHaveLength(0);
     fireEvent.click(screen.getByRole('button', { name: 'Add' }));
     expect(withDate(s, '2031-03')).toHaveLength(1);
-    expect(dateState.terminated).toBeGreaterThan(0);
+    expect(dateState.released).toBeGreaterThan(0);
   });
 
   it('a suggestion sets the field and does not save', async () => {
