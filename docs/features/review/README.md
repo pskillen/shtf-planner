@@ -8,7 +8,7 @@ completion date. The dates are stored on the equipment and do not affect the pre
 
 The review reminder helps a household keep its plan current. Settings offers a cadence of three or
 six months (six by default). The engine calculates the next date from the calendar date of the
-latest finished review, or the household's creation date when there is none. Calendar months clamp
+latest finished review (ordered by timestamp), or the household's creation date when there is none. Calendar months clamp
 to the last day of a shorter month. Unfinished reviews do not move the date.
 
 Home displays the next date, or “Review due” on and after that date, with a badge on the Home tab.
