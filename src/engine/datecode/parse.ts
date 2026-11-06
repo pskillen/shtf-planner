@@ -79,6 +79,7 @@ const WEAK_KINDS = new Set([
   'DDMM YY (label)',
   'MM/YY (label)',
   'MM YYYY (label)',
+  'DD/MM/YY (fixed)',
 ]);
 
 const sep = '[\\/.\\-]';
@@ -99,6 +100,8 @@ export function normalise(raw: string): string {
     );
     return glued ? run.replace(/O/g, '0') : run.replace(/O/g, '0').replace(/[IL]/g, '1');
   });
+  // The reader takes the colon after a label for a 1 ("BB131.07.2028" for "BB:31.07.2028").
+  t = t.replace(/\b(B\.?B)1(?=\d{2}[./-]\d{1,2}[./-])/g, '$1 ');
   // Times: 14:32 (colon only; dots are ambiguous with dates).
   t = t.replace(/\b\d{1,2}\s*:\s*\d{2}(?:\s*:\s*\d{2})?\b/g, ' ');
   return t.replace(/\s+/g, ' ').trim();
@@ -137,6 +140,15 @@ function scan(t: string): Raw[] {
   // Capture groups are present in every pattern below, so `m[n]` is a string when it matches.
   const g = (m: RegExpMatchArray, n: number): string => m[n] ?? '';
 
+  // A damaged year on a full date: dot-matrix print on a tin lid loses or changes the 2 of 2028
+  // ("31.07.028", "31.07.6028"). Read as 20YY; weak (it needs a label and two agreeing frames).
+  run(
+    new RegExp(
+      `(?<![0-9])(\\d{1,2})\\s?${sep}\\s?(\\d{1,2})\\s?${sep}\\s?(?:6(0\\d{2})|0(\\d{2}))(?![0-9])`,
+      'g',
+    ),
+    (m) => add(m, +g(m, 2), 2000 + +(m[3] ?? m[4] ?? '0'), 'DD/MM/YY (fixed)', +g(m, 1)),
+  );
   // ISO YYYY-MM-DD, YYYY/MM
   run(new RegExp(`(?<![0-9])(20\\d{2})${sep}(\\d{1,2})(?:${sep}(\\d{1,2}))?(?![0-9])`, 'g'), (m) =>
     add(m, +g(m, 2), +g(m, 1), m[3] ? 'YYYY-MM-DD' : 'YYYY-MM', m[3] ? +g(m, 3) : undefined),
@@ -337,6 +349,7 @@ export function parseDates(raw: string, todayIso: string): ParseResult {
   if (best.kind === 'MM/YY' || best.kind === 'YYYY-MM') c -= 0.1;
   if (best.kind === 'DD MMM YY' || best.kind === 'MMM YY') c += 0.1;
   if (distinct > 1) c -= 0.2;
+  if (best.kind.endsWith('(fixed)')) c = Math.min(c, 0.55); // a repaired year: two frames must agree
   if (best.yearAssumed) c = Math.min(c, 0.45);
   if (best.expired) c = Math.min(c, 0.6); // never sure on its own: it needs two agreeing frames
   return { best, all: hits, confidence: Math.max(0.05, Math.min(0.95, c)), suggestions };

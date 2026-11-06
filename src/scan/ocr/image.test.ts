@@ -93,12 +93,19 @@ describe('pictures for the reader', () => {
 describe('which pictures a crop gets', () => {
   const names = (g: Gray) => variantsFor(g).map((v) => v.name);
 
-  it('a tall crop gets all five, cheapest first, adaptive last', () => {
-    expect(names(gray(480, 256))).toEqual(['stretch@64', 'stretch', 'inv@64', 'inv', 'adapt']);
+  it('a tall crop gets all six, cheapest first, adaptive last', () => {
+    expect(names(gray(480, 256))).toEqual([
+      'stretch@64',
+      'stretch',
+      'inv@64',
+      'inv',
+      'dots',
+      'adapt',
+    ]);
   });
 
   it('a crop of 80 pixels high or less skips the native-size ones', () => {
-    expect(names(gray(480, 80))).toEqual(['stretch@64', 'inv@64', 'adapt']);
+    expect(names(gray(480, 80))).toEqual(['stretch@64', 'inv@64', 'dots', 'adapt']);
     expect(names(gray(480, 81))).toContain('stretch');
   });
 
