@@ -1495,3 +1495,18 @@ button.scans-note {
   color: #1a1a1a;
   border-color: #fff;
 }
+
+/* A date search that ended with no date: the strip itself says so (grey picture, red frame), since the pill is easy to miss. */
+.camera-strip:has(.centre-pill[data-phase='none']) {
+  border-color: #e5392b !important;
+}
+.camera-strip:has(.centre-pill[data-phase='none']) .camera-video {
+  filter: grayscale(1) brightness(0.7);
+}
+.camera-strip:has(.centre-pill[data-phase='none']) .camera-box {
+  border-color: #e5392b !important;
+}
+.centre-pill[data-phase='none'] {
+  background: #c62828;
+  font-weight: 800;
+}

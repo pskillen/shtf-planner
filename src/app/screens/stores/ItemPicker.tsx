@@ -39,12 +39,18 @@ export function ItemPicker({
   onItem,
   onProduct,
   searchLabel = 'What is it?',
+  searchHint,
   showEquipmentLink = true,
+  showRecentProducts = true,
 }: {
   onItem: (item: Item) => void;
   onProduct: (productId: string) => void;
   searchLabel?: string;
+  /** A line under the search box. */
+  searchHint?: string;
   showEquipmentLink?: boolean;
+  /** Recent products, to reuse one for a barcode; off, the common items show instead. */
+  showRecentProducts?: boolean;
 }) {
   const doc = useDocument();
   const items = useStockItems();
@@ -103,7 +109,7 @@ export function ItemPicker({
 
   return (
     <>
-      <Field label={searchLabel}>
+      <Field label={searchLabel} hint={searchHint}>
         <input
           type="search"
           value={query}
@@ -136,7 +142,7 @@ export function ItemPicker({
         </>
       ) : (
         <>
-          {recentProductRows.length > 0 ? (
+          {showRecentProducts && recentProductRows.length > 0 ? (
             <section aria-label="Recent products" className="recent">
               <h3>Recent products</h3>
               <ul className="row-list">

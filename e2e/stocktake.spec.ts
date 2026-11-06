@@ -221,13 +221,13 @@ test.describe('stocktake with a fake camera', () => {
     // `coverage(...).water:waterL.amount` stays at 56 once water is already above target.
   });
 
-  test('an unknown barcode: What is it, size, then the date', async ({ page, context }) => {
+  test('an unknown barcode: what it counts as, size, then the date', async ({ page, context }) => {
     const net = await setUp(page, context);
     await open(page, '/app/stores/stocktake');
     await show(page, NOT_FOUND);
     await expect(page.getByText(/does not have this one/)).toBeVisible();
     await cam(page, 'clear');
-    await page.getByLabel('What is it?').fill('tinned soup');
+    await page.getByLabel('Search for what it counts as').fill('tinned soup');
     await page.getByRole('button', { name: /^Tinned soup / }).click();
     await page
       .getByRole('region', { name: 'Suggested sizes' })
@@ -259,7 +259,7 @@ test.describe('stocktake with a fake camera', () => {
     await page.getByRole('button', { name: '1 scan to sort ›' }).click();
     await page.getByRole('button', { name: `Sort scan ${NOT_FOUND}` }).click();
     const sortDlg = page.getByRole('dialog', { name: 'Sort this scan' });
-    await sortDlg.getByLabel('What is it?').fill('tinned soup');
+    await sortDlg.getByLabel('Search for what it counts as').fill('tinned soup');
     await sortDlg.getByRole('button', { name: /^Tinned soup / }).click();
     await sortDlg
       .getByRole('region', { name: 'Suggested sizes' })

@@ -14,7 +14,7 @@ const CASES: Array<[text: string, want: string | null, assumed?: boolean, expire
   ['USE BY 22 MAR 2027', '03/2027'],
   ['USE BY 22MAR27', '03/2027'],
   ['BBE 12/27', '12/2027'],
-  ['BBE: 12 2027', null], // bare "MM YYYY" with a space: too ambiguous
+  ['BBE: 12 2027', '12/2027'], // a label claims a spaced MM YYYY
   ['BB 062027', '06/2027'],
   ['B.B. 09/2029', '09/2029'],
   ['BEST BEFORE END JUN 2028', '06/2028'],
@@ -56,7 +56,7 @@ const CASES: Array<[text: string, want: string | null, assumed?: boolean, expire
   ['BB 06/2027 BB 06/2026', '06/2027'], // later of two, label on first
   ['PRODUCED 01/2026 12/2027', '12/2027'],
   ['USE BY 05 JAN 2027 04:12', '01/2027'],
-  ['USE BY END 01 2027', null],
+  ['USE BY END 01 2027', '01/2027'], // was null; a real pack prints EXP 12 2027 (#105),
   ['', null],
   ['ABCDEF', null],
   ['BB 6/2027', '06/2027'],
@@ -196,6 +196,19 @@ describe('the date parser: 152 cases from the camera spike', () => {
 
   it.each(SUGGEST)('offers for %j: %j', (text, want) => {
     expect(parseDates(text, TODAY).suggestions.map(formatMonthYear)).toEqual(want);
+  });
+});
+
+describe('the date parser: a spaced month and year', () => {
+  it('reads EXP 12 2027 after a batch code on the line above', () => {
+    const r = parseDates('BN I60570\nEXP 12 2027', TODAY);
+    expect(r.best && formatMonthYear(r.best)).toBe('12/2027');
+  });
+
+  it('only suggests an unlabelled 12 2027', () => {
+    const r = parseDates('12 2027', TODAY);
+    expect(r.best).toBeNull();
+    expect(r.suggestions.map(formatMonthYear)).toEqual(['12/2027']);
   });
 });
 

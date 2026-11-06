@@ -257,52 +257,60 @@ export function ScanResolve({
       ) : null}
       {showPicker && phase !== 'size' ? (
         <>
-          <ItemPicker
-            searchLabel="What is it?"
-            onItem={(item) => finishItem(item)}
-            onProduct={onPickedProduct}
-          />
           {!showCountsAs ? (
-            <div className="scan-choices">
-              <div className="scan-choice">
-                <button
-                  type="button"
-                  className="secondary"
-                  aria-describedby="choice-nothing-unknown"
-                  onClick={() => countsTowardsNothing()}
-                >
-                  Counts towards nothing
-                </button>
-                <p className="muted" id="choice-nothing-unknown">
-                  Keep it listed; it scores nothing towards the plan
-                </p>
-              </div>
-              {onSortLater ? (
+            <>
+              <h3>What does it count as?</h3>
+              <p className="muted">
+                Pick the item in your plan that this product stands in for. That is what its stock
+                is counted as.
+              </p>
+              <div className="scan-choices">
                 <div className="scan-choice">
                   <button
                     type="button"
                     className="secondary"
-                    aria-describedby="choice-later-unknown"
-                    disabled={sortLaterBlocked !== undefined}
-                    onClick={() =>
-                      onSortLater(
-                        found
-                          ? offFactsOf(found)
-                          : seeded
-                            ? offFactsOf(seeded as OffProduct)
-                            : undefined,
-                      )
-                    }
+                    aria-describedby="choice-nothing-unknown"
+                    onClick={() => countsTowardsNothing()}
                   >
-                    Decide later
+                    Counts towards nothing
                   </button>
-                  <p className="muted" id="choice-later-unknown">
-                    Keep the scan; sort it on Stores
+                  <p className="muted" id="choice-nothing-unknown">
+                    Not an item in the plan (pet food, say). Keep it listed; it scores nothing.
                   </p>
                 </div>
-              ) : null}
-            </div>
+                {onSortLater ? (
+                  <div className="scan-choice">
+                    <button
+                      type="button"
+                      className="secondary"
+                      aria-describedby="choice-later-unknown"
+                      disabled={sortLaterBlocked !== undefined}
+                      onClick={() =>
+                        onSortLater(
+                          found
+                            ? offFactsOf(found)
+                            : seeded
+                              ? offFactsOf(seeded as OffProduct)
+                              : undefined,
+                        )
+                      }
+                    >
+                      Decide later
+                    </button>
+                    <p className="muted" id="choice-later-unknown">
+                      Keep the scan; sort it on Stores
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+            </>
           ) : null}
+          <ItemPicker
+            searchLabel={showCountsAs ? 'What is it?' : 'Search for what it counts as'}
+            showRecentProducts={reidentify}
+            onItem={(item) => finishItem(item)}
+            onProduct={onPickedProduct}
+          />
         </>
       ) : null}
       {phase === 'size' && sizeItem ? (

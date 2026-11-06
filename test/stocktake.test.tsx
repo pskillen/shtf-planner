@@ -195,7 +195,7 @@ describe('Not this item?', () => {
     await screen.findByText(SPREAD);
     fireEvent.click(screen.getByRole('button', { name: 'Not this item?' }));
     expect(screen.getByText(/remembered as Test spread 400 g/)).toBeTruthy();
-    fireEvent.change(screen.getByLabelText('What is it?'), {
+    fireEvent.change(screen.getByLabelText('Search for what it counts as'), {
       target: { value: 'soup' },
     });
     fireEvent.click(screen.getByRole('button', { name: /Tinned soup/ }));

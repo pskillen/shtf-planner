@@ -88,9 +88,11 @@ product replaces what the household remembers on all devices.
 
 ## Unknown codes
 
-When Open Food Facts does not know a code (or you are offline with no stored facts), the card asks **What is it?**
-(item picker), then the **size step** if size is not already known, then the date (stocktake) or Add (quick add).
-You can choose **Counts towards nothing** or **Decide later** instead.
+When Open Food Facts does not know a code (or you are offline with no stored facts), the card asks **What does it
+count as?** and says what that means: the item in the plan this product stands in for. **Counts towards nothing**
+(for things that are not in the plan, with a line saying so) and **Decide later** come first, then a search box
+and the common items; recent products are not offered here. After an item comes the **size step** if size is not
+already known, then the date (stocktake) or Add (quick add).
 
 ## Product from Open Food Facts
 
@@ -124,7 +126,9 @@ crop that was read (in memory only).
   finished read is left alone if the page is hidden and shown again.
 - **A date set by hand** (a chip or the month box) stops the search: a late read can never overwrite
   it. The line says "Date set by hand" and **Read again** starts the camera again.
-- **No date found** (after 8 s, or **Stop**; Stop wins even while a frame is being read): up to three
+- **No date found** (when you tap **Stop**, which wins even while a frame is being read; there is no
+  time limit, so the step keeps looking like the barcode step does, `DATE_TIMEOUT_MS`). The strip says
+  so too: the picture goes grey and the frame and the status turn red. Up to three
   suggestion buttons, best first, each with its expiry colour. In the stocktake a tap saves that month
   and goes to the next barcode (it is the person's choice); in Quick add it sets the field.
 - **A read the worker could not do** is tried once more on the next frame; a second one ends the
