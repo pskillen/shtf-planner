@@ -34,3 +34,4 @@ export { score, type CapabilityScore, type Score } from './score';
 export { preview, type PreviewHorizon, type PreviewRow } from './preview';
 
 export { maintenanceDue, type MaintenanceDue } from './maintenance';
+export { nextReviewDue, reviewIsDue } from './review';
