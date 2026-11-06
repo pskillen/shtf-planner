@@ -100,7 +100,7 @@ it('answers every kind and undo restores the latest answer', () => {
     fireEvent.click(within(row).getByRole('button', { name: new RegExp(`^${label}:`) }));
   }
   expect(Object.values(store.store.get().reviews)[0]!.resolved).toHaveLength(5);
-  fireEvent.click(screen.getAllByRole('button', { name: 'Undo' })[4]!);
+  fireEvent.click(screen.getByRole('button', { name: /^Undo Still true:/ }));
   expect(Object.values(store.store.get().reviews)[0]!.resolved).toHaveLength(4);
 });
 it('keeps replacement choice when the sheet is cancelled', () => {
@@ -112,7 +112,7 @@ it('keeps replacement choice when the sheet is cancelled', () => {
   expect(screen.getByRole('dialog')).toBeTruthy();
   fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /close/i }));
   expect(Object.values(store.store.get().reviews)[0]!.resolved[0]).toContain('replace');
-  expect(screen.getByRole('button', { name: 'Undo' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: /^Undo / })).toBeTruthy();
 });
 it('disables answers in a read-only document', () => {
   vi.setSystemTime(new Date(`${day}T12:00:00Z`));
@@ -139,10 +139,11 @@ it('keeps independent undo windows for rapid answers', () => {
   vi.advanceTimersByTime(1000);
   const second = document.querySelector<HTMLElement>('[data-review-kind="maintenance"]')!;
   fireEvent.click(within(second).getByRole('button', { name: /^Done:/ }));
-  expect(screen.getAllByRole('button', { name: 'Undo' })).toHaveLength(2);
-  fireEvent.click(screen.getAllByRole('button', { name: 'Undo' })[0]!);
+  expect(screen.getByRole('button', { name: /^Undo Fine: .+ · Best before / })).toBeTruthy();
+  expect(screen.getByRole('button', { name: /^Undo Done: .+ · .+/ })).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: /^Undo Fine:/ }));
   expect(Object.values(store.store.get().reviews)[0]!.resolved).toHaveLength(1);
-  fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+  fireEvent.click(screen.getByRole('button', { name: /^Undo / }));
   expect(Object.values(store.store.get().reviews)[0]!.resolved).toHaveLength(0);
 });
 it('keeps earlier undo accessible and pauses each window during replacement', () => {
@@ -156,15 +157,19 @@ it('keeps earlier undo accessible and pauses each window during replacement', ()
   const expiry = document.querySelector<HTMLElement>('[data-review-kind="expiry"]')!;
   fireEvent.click(within(expiry).getByRole('button', { name: /^Replace:/ }));
   const dialog = screen.getByRole('dialog');
-  expect(within(dialog).getAllByRole('button', { name: 'Undo' })).toHaveLength(2);
+  expect(within(dialog).getAllByRole('button', { name: /^Undo / })).toHaveLength(2);
   act(() => vi.advanceTimersByTime(6000));
-  fireEvent.click(within(dialog).getAllByRole('button', { name: 'Undo' })[0]!);
+  expect(within(dialog).getByRole('button', { name: /^Undo Done: .+ · .+/ })).toBeTruthy();
+  expect(
+    within(dialog).getByRole('button', { name: /^Undo Replace: .+ · Best before / }),
+  ).toBeTruthy();
+  fireEvent.click(within(dialog).getByRole('button', { name: /^Undo Done:/ }));
   expect(Object.values(store.store.get().reviews)[0]!.resolved).toHaveLength(1);
   fireEvent.click(within(dialog).getByRole('button', { name: /close/i }));
   act(() => vi.advanceTimersByTime(4999));
-  expect(screen.getByRole('button', { name: 'Undo' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: /^Undo / })).toBeTruthy();
   act(() => vi.advanceTimersByTime(1));
-  expect(screen.queryByRole('button', { name: 'Undo' })).toBeNull();
+  expect(screen.queryByRole('button', { name: /^Undo / })).toBeNull();
 });
 it('rejects stale stock, maintenance and plan answers without changing the document', () => {
   for (const kind of ['expiry', 'maintenance', 'plan'] as const) {

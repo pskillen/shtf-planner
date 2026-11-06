@@ -2,30 +2,9 @@ import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import type { ReviewAction, ReviewItem } from '../../engine';
 import type { Document, Packs } from '../../model';
-import { reviewRow } from '../screens/review/view';
+import { actions, reviewRow } from '../screens/review/view';
 
 const urgencyLabel = { overdue: 'Overdue', due: 'Due today', soon: 'Upcoming' } as const;
-const actions: Record<ReviewItem['kind'], [ReviewAction, string][]> = {
-  expiry: [
-    ['fine', 'Fine'],
-    ['used', 'Used'],
-    ['replace', 'Replace'],
-    ['binned', 'Binned'],
-  ],
-  maintenance: [
-    ['done', 'Done'],
-    ['not-now', 'Not now'],
-  ],
-  age: [['noted', 'Noted']],
-  recount: [
-    ['recounted', 'Recounted'],
-    ['not-now', 'Not now'],
-  ],
-  plan: [
-    ['still-true', 'Still true'],
-    ['no-longer', 'No longer'],
-  ],
-};
 export function ReviewRow({
   item,
   doc,

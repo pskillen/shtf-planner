@@ -8,16 +8,18 @@ import { formatReviewDate } from '../reviewDisplay';
 import { useChange, useDocument, useEditable } from '../state';
 import { usePacks } from '../usePacks';
 import { answerReview, undoReview } from './review/actions';
+import { actions, reviewRow } from './review/view';
 import { QuickAdd, type QuickAddPrefill } from './stores/QuickAdd';
 
 const now = () => Date.now();
+type Receipt = { answer: NonNullable<ReturnType<typeof answerReview>>; label: string };
 
 export function ReviewScreen() {
   const doc = useDocument();
   const change = useChange();
   const editable = useEditable();
   const packs = usePacks();
-  const [receipts, setReceipts] = useState<NonNullable<ReturnType<typeof answerReview>>[]>([]);
+  const [receipts, setReceipts] = useState<Receipt[]>([]);
   const timers = useRef(
     new Map<
       string,
@@ -40,7 +42,7 @@ export function ReviewScreen() {
     entry.started = now();
     entry.timer = setTimeout(() => {
       timers.current.delete(token);
-      setReceipts((previous) => previous.filter((r) => r.token !== token));
+      setReceipts((previous) => previous.filter((r) => r.answer.token !== token));
     }, entry.remaining);
   }
   function pauseTimers() {
@@ -59,6 +61,9 @@ export function ReviewScreen() {
   const items = reviewItems(doc, packs, asOf, until);
   function answer(item: ReviewItem, action: ReviewAction) {
     if (!editable) return;
+    const row = reviewRow(item, doc, packs);
+    const actionLabel = actions[item.kind].find(([value]) => value === action)?.[1] ?? action;
+    const label = `${actionLabel}: ${row.title} · ${row.detail}`;
     let result: ReturnType<typeof answerReview>;
     change('answer review', (d) => {
       result = answerReview(
@@ -77,7 +82,7 @@ export function ReviewScreen() {
       return;
     }
     const saved = result;
-    setReceipts((previous) => [...previous, saved]);
+    setReceipts((previous) => [...previous, { answer: saved, label }]);
     timers.current.set(saved.token, { remaining: 5000, started: now() });
     startTimer(saved.token);
     setError('');
@@ -99,7 +104,7 @@ export function ReviewScreen() {
     });
     clearTimeout(timers.current.get(receipt.token)?.timer);
     timers.current.delete(receipt.token);
-    setReceipts((previous) => previous.filter((r) => r.token !== receipt.token));
+    setReceipts((previous) => previous.filter((r) => r.answer.token !== receipt.token));
     if (receipt.token === replacementToken && replace) closeReplacement();
     if (!restored) setError('This item changed since your answer. Check it in Stores.');
   }
@@ -124,9 +129,14 @@ export function ReviewScreen() {
       )}
       {!replace &&
         receipts.map((receipt) => (
-          <Toast key={receipt.token}>
-            Answer saved.{' '}
-            <button type="button" onClick={() => undo(receipt)} disabled={!editable}>
+          <Toast key={receipt.answer.token}>
+            {receipt.label}.{' '}
+            <button
+              type="button"
+              aria-label={`Undo ${receipt.label}`}
+              onClick={() => undo(receipt.answer)}
+              disabled={!editable}
+            >
               Undo
             </button>
           </Toast>
@@ -137,9 +147,14 @@ export function ReviewScreen() {
           prefill={replace}
           onClose={closeReplacement}
           reviewUndo={receipts.map((receipt) => (
-            <p key={receipt.token} role="status">
-              Answer saved.{' '}
-              <button type="button" onClick={() => undo(receipt)} disabled={!editable}>
+            <p key={receipt.answer.token} role="status">
+              {receipt.label}.{' '}
+              <button
+                type="button"
+                aria-label={`Undo ${receipt.label}`}
+                onClick={() => undo(receipt.answer)}
+                disabled={!editable}
+              >
                 Undo
               </button>
             </p>

@@ -1,8 +1,30 @@
-import type { ReviewItem } from '../../../engine';
+import type { ReviewAction, ReviewItem } from '../../../engine';
 import type { Document, Packs } from '../../../model';
 import { formatQty } from '../../../util';
 import { formatReviewDate } from '../../reviewDisplay';
 import { equipmentEditPath } from '../assets/route';
+
+export const actions: Record<ReviewItem['kind'], [ReviewAction, string][]> = {
+  expiry: [
+    ['fine', 'Fine'],
+    ['used', 'Used'],
+    ['replace', 'Replace'],
+    ['binned', 'Binned'],
+  ],
+  maintenance: [
+    ['done', 'Done'],
+    ['not-now', 'Not now'],
+  ],
+  age: [['noted', 'Noted']],
+  recount: [
+    ['recounted', 'Recounted'],
+    ['not-now', 'Not now'],
+  ],
+  plan: [
+    ['still-true', 'Still true'],
+    ['no-longer', 'No longer'],
+  ],
+};
 
 /** Display and destinations for engine-ordered review items; keys are opaque. */
 export function reviewRow(item: ReviewItem, doc: Document, packs: Packs) {
