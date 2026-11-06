@@ -6,6 +6,15 @@ Equipment maintenance helps a household keep its equipment ready. Each type's pa
 jobs and intervals. Home → Equipment shows a due badge and lets the household record the last
 completion date. The dates are stored on the equipment and do not affect the preparedness score.
 
+The review reminder helps a household keep its plan current. Settings offers a cadence of three or
+six months (six by default). The engine calculates the next date from the calendar date of the
+latest finished review, or the household's creation date when there is none. Calendar months clamp
+to the last day of a shorter month. Unfinished reviews do not move the date.
+
+Home displays the next date, or “Review due” on and after that date, with a badge on the Home tab.
+Settings shows the next date and updates it immediately when the cadence changes. These reminders
+are in the app; there are no push notifications.
+
 ## Documentation map
 
 - [Equipment form](../setup/README.md)
@@ -13,4 +22,4 @@ completion date. The dates are stored on the equipment and do not affect the pre
 
 ## Known gaps
 
-- The review queue and calendar export are planned.
+- The review queue, actions and calendar export are planned.
