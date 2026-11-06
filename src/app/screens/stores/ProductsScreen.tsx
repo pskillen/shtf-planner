@@ -1,3 +1,4 @@
+import { NOT_SCORED_NOTE } from './countsAs';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { CATEGORY_LABEL, labelOf } from '../../labels';
@@ -99,8 +100,9 @@ export function ProductsScreen() {
         </section>
       ) : null}
       {nothing.length > 0 ? (
-        <section className="store-group" aria-label="Counts towards nothing">
-          <h2>Counts towards nothing</h2>
+        <section className="store-group" aria-label="Not scored yet">
+          <h2>Not scored yet</h2>
+          <p className="muted">{NOT_SCORED_NOTE}</p>
           <ul className="row-list">{nothing.map((p) => renderProduct(p))}</ul>
         </section>
       ) : null}

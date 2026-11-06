@@ -1,3 +1,4 @@
+import { countsAsLine } from './countsAs';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { Item, OffFacts } from '../../../model';
@@ -576,7 +577,7 @@ function FindByName({
           <li className="row-item" key={t.id}>
             <button type="button" className="row-main" onClick={() => pickItem(t)}>
               <strong>{t.name}</strong>
-              <span className="muted">{t.countsAs}</span>
+              <span className="muted">{countsAsLine(t.countsAs)}</span>
             </button>
           </li>
         ))}

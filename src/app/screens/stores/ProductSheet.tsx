@@ -250,7 +250,7 @@ export function ProductSheet({
     );
   }
 
-  const countsAsLabel = item ? item.name : 'Counts towards nothing';
+  const countsAsLabel = item ? item.name : 'Nothing: not scored in the plan';
 
   return (
     <Sheet

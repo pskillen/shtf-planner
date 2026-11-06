@@ -224,7 +224,7 @@ export function ScanResolve({
                 aria-describedby="choice-nothing"
                 onClick={() => countsTowardsNothing()}
               >
-                Counts towards nothing
+                Not scored in the plan
               </button>
               <p className="muted" id="choice-nothing">
                 Keep it listed; it scores nothing towards the plan
@@ -274,7 +274,7 @@ export function ScanResolve({
                     aria-describedby="choice-nothing-unknown"
                     onClick={() => countsTowardsNothing()}
                   >
-                    Counts towards nothing
+                    Not scored in the plan
                   </button>
                   <p className="muted" id="choice-nothing-unknown">
                     Not an item in the plan (pet food, say). Keep it listed; it scores nothing.
@@ -360,7 +360,7 @@ function NameOnly({
     <>
       <h3>New product</h3>
       <p className="muted">
-        Counts towards nothing.{' '}
+        Not scored in the plan.{' '}
         <button type="button" className="link" onClick={onBack}>
           Change
         </button>
