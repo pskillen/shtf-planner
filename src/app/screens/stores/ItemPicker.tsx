@@ -1,3 +1,4 @@
+import { countsAsLine } from './countsAs';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { Category, Item, Product } from '../../../model';
@@ -117,7 +118,7 @@ export function ItemPicker({
     <li className="row-item" key={t.id}>
       <button type="button" className="row-main" onClick={() => onItem(t)}>
         <strong>{t.name}</strong>
-        <span className="muted">{t.countsAs}</span>
+        <span className="muted">{countsAsLine(t.countsAs)}</span>
       </button>
     </li>
   );

@@ -106,7 +106,7 @@ describe('Quick add: Scan a barcode', () => {
     await read(UNKNOWN);
     expect(await screen.findByText(/You are offline/)).toBeTruthy();
     expect(screen.getByLabelText('Search for what it counts as')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Counts towards nothing' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Not scored in the plan' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Decide later' }));
     const scans = Object.values(s.doc().scans);
     expect(scans).toHaveLength(1);
@@ -132,7 +132,7 @@ describe('Quick add: Scan a barcode', () => {
     fakeOff({ [UNKNOWN]: beans });
     const s = await openScanner();
     await read(UNKNOWN);
-    fireEvent.click(await screen.findByRole('button', { name: 'Counts towards nothing' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Not scored in the plan' }));
     const pid = s.doc().barcodes[UNKNOWN]?.productId;
     expect(pid).toBeDefined();
     expect(s.doc().products[pid!]!.itemId).toBeUndefined();
@@ -143,7 +143,7 @@ describe('Quick add: Scan a barcode', () => {
     fakeOff({});
     const s = await openScanner();
     await read(UNKNOWN);
-    fireEvent.click(await screen.findByRole('button', { name: 'Counts towards nothing' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Not scored in the plan' }));
     expect(s.doc().barcodes[UNKNOWN]).toBeUndefined();
     const save = screen.getByRole('button', { name: 'Save product' }) as HTMLButtonElement;
     expect(save.disabled).toBe(true);

@@ -1,3 +1,4 @@
+import { NOT_SCORED_NOTE, countsAsLine } from './stores/countsAs';
 import { useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { minimumKey, type Asset, type Item, type Location, type Stock } from '../../model';
@@ -237,7 +238,7 @@ export function StoresScreen() {
     );
     return (
       <div className="item-panel">
-        <p className="muted counts-as">{item.countsAs}</p>
+        <p className="muted counts-as">{countsAsLine(item.countsAs)}</p>
         <ul className="row-list">
           {products.map((product) => {
             const packsTotal = sumProductPacks(doc, product.id, activePlaceFilter, remove.pending);
@@ -396,8 +397,9 @@ export function StoresScreen() {
       })}
 
       {nothingIds.length > 0 ? (
-        <section className="store-group" aria-label="Counts towards nothing">
-          <h2>Counts towards nothing</h2>
+        <section className="store-group" aria-label="Not scored yet">
+          <h2>Not scored yet</h2>
+          <p className="muted">{NOT_SCORED_NOTE}</p>
           <ul className="row-list">
             {nothingIds.map((productId) => {
               const product = doc.products[productId]!;

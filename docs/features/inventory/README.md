@@ -37,7 +37,7 @@ The Stores tab: what the household has, grouped by **item** (the generic from th
 - **Your products.** Footer link and each product's › in Stores open the list: every product by item, with kcal
   source, stock total and barcode count. Merge moves **packs** and barcodes to another product and deletes the
   duplicate.
-- **Counts towards nothing.** Products with no item sit in a last group. Equipment in places is read-only with an
+- **Not scored yet.** (Items and products no target uses; Stores shows an explainer under the group.) Products with no item sit in a last group. Equipment in places is read-only with an
   Equipment badge, as before.
 - **Expiry colours.** One rule app-wide (`src/engine/expiry.ts`, `ExpiryBadge`), always a word as well
   as a colour: **Expired** (red) once the best-before month has gone; **Expires soon** (red) from this
