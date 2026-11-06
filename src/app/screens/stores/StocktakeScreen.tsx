@@ -3,7 +3,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import type { Item, OffFacts } from '../../../model';
 import { today } from '../../../util';
 import type { CameraStream } from '../../../scan/camera';
-import { terminateDateReader } from '../../../scan/ocr/client';
+import {
+  preloadDateReader,
+  releaseDateReader,
+  terminateDateReader,
+} from '../../../scan/ocr/client';
 import { CameraStrip } from '../../components/CameraStrip';
 import { Field, Switch } from '../../components/controls';
 import { ExpiryBadge } from '../../components/ExpiryBadge';
@@ -15,7 +19,7 @@ import { usePacks } from '../../usePacks';
 import { equipmentAddPath } from '../assets/route';
 import { DateAbout } from './DateAbout';
 import { DateReader, type DateRead } from './DateReader';
-import { readUseCamera, writeUseCamera } from './dateSettings';
+import { readUseCamera, readUseWebGpu, writeUseCamera } from './dateSettings';
 import { MonthField } from './MonthField';
 import { ScanResolve } from './ScanResolve';
 import {
@@ -131,7 +135,11 @@ export function StocktakeScreen() {
   const dateStarted = useRef(0);
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => () => terminateDateReader(), []);
+  // Start loading the models while the first barcode is being scanned; keep them a while after leaving.
+  useEffect(() => {
+    if (readUseCamera()) preloadDateReader(readUseWebGpu());
+    return () => releaseDateReader();
+  }, []);
 
   useEffect(() => {
     if (!saved) return;

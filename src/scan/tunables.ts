@@ -54,6 +54,12 @@ export const DATE_COLOUR = '#fc0';
  */
 export const DATE_TIMEOUT_MS = Number.POSITIVE_INFINITY;
 
+/**
+ * The date reader's models (about 0.5 GB of memory) stay loaded this long after the last screen
+ * that used them closes, so the next date step starts at once. A hidden page frees them at once.
+ */
+export const READER_IDLE_MS = 5 * 60_000;
+
 /** One frame stops trying more pictures after this long, in milliseconds. */
 export const FRAME_MAX_MS = 3000;
 

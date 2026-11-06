@@ -1543,3 +1543,15 @@ button.scans-note {
   border-left: 3px solid var(--border);
   gap: 6px;
 }
+
+/* While the date reader loads the box is dashed and the picture dim: it looks like it is not reading yet. */
+.camera-strip:has(.centre-pill[data-phase='loading']) .camera-video {
+  filter: brightness(0.55);
+}
+.camera-strip:has(.centre-pill[data-phase='loading']) .camera-box {
+  border-style: dashed;
+  border-color: #9aa !important;
+}
+.centre-pill[data-phase='loading'] {
+  background: rgba(0, 0, 0, 0.8);
+}

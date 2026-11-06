@@ -1,6 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { FrameVerdict } from '../../engine/datecode';
-import { createDateReader, getDateReader, type WorkerLike } from './client';
+import {
+  createDateReader,
+  getDateReader,
+  peekDateReader,
+  preloadDateReader,
+  releaseDateReader,
+  type WorkerLike,
+} from './client';
 import { gray } from './image';
 import type { FromWorker, ToWorker } from './messages';
 
@@ -138,6 +145,34 @@ describe('the date reader client', () => {
       b.terminate();
       expect(spawn).toHaveBeenCalledTimes(2);
     } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('a released reader stays until the idle time, and asking for it again keeps it', () => {
+    vi.useFakeTimers();
+    vi.stubGlobal(
+      'Worker',
+      class {
+        constructor() {
+          return new FakeWorker();
+        }
+      },
+    );
+    try {
+      preloadDateReader();
+      const a = peekDateReader()!;
+      releaseDateReader(1000);
+      vi.advanceTimersByTime(900);
+      expect(peekDateReader()).toBe(a);
+      expect(getDateReader()).toBe(a); // asked for again: the timer is cancelled
+      vi.advanceTimersByTime(5000);
+      expect(peekDateReader()).toBe(a);
+      releaseDateReader(1000);
+      vi.advanceTimersByTime(1000);
+      expect(peekDateReader()).toBeUndefined();
+    } finally {
+      vi.useRealTimers();
       vi.unstubAllGlobals();
     }
   });

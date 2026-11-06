@@ -3,6 +3,7 @@ import { today } from '../../util';
 import { ReadError } from './errors';
 import type { Gray } from './image';
 import type { FromWorker, ToWorker } from './messages';
+import { READER_IDLE_MS } from '../tunables';
 import type { Provider } from './paddle';
 
 /** The part of a `Worker` the client uses (a fake in tests). */
@@ -148,6 +149,7 @@ let single: DateReader | undefined;
  * when this makes it; to change it, {@link DateReader.terminate} the reader and ask again.
  */
 export function getDateReader(preferWebGpu = true): DateReader {
+  cancelRelease();
   if (!single) {
     single = createDateReader({
       preferWebGpu,
@@ -160,11 +162,40 @@ export function getDateReader(preferWebGpu = true): DateReader {
   return single;
 }
 
+/** Starts loading the models without waiting for a date step: a failure is the date step's to report. */
+export function preloadDateReader(preferWebGpu = true): void {
+  try {
+    getDateReader(preferWebGpu);
+  } catch {
+    // No Worker here: the date step says the reader is not available.
+  }
+}
+
+let releaseTimer: ReturnType<typeof setTimeout> | undefined;
+function cancelRelease(): void {
+  if (releaseTimer !== undefined) clearTimeout(releaseTimer);
+  releaseTimer = undefined;
+}
+
+/**
+ * The screen that used the reader is done with it: free the models after {@link READER_IDLE_MS}
+ * unless something asks for the reader again first (the next date step, a preload).
+ */
+export function releaseDateReader(afterMs = READER_IDLE_MS): void {
+  cancelRelease();
+  if (!single) return;
+  releaseTimer = setTimeout(() => {
+    releaseTimer = undefined;
+    terminateDateReader();
+  }, afterMs);
+}
+
 /** The page's reader if one has been made, without making one. */
 export const peekDateReader = (): DateReader | undefined => single;
 
 /** Frees the reader's memory, if there is one. Call when the screen that used it goes away. */
 export function terminateDateReader(): void {
+  cancelRelease();
   single?.terminate();
 }
 
