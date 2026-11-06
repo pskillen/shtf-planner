@@ -23,7 +23,7 @@ export function maintenanceDue(doc: Document, packs: Packs, asOf: string): Maint
         text: job.text,
         lastDone,
         due,
-        overdue: due <= asOf,
+        overdue: due < asOf,
       };
     }),
   );

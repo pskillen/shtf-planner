@@ -284,7 +284,7 @@ export function AssetsScreen() {
 
   const dueAssets = new Set(
     maintenanceDue(doc, packs, today())
-      .filter((job) => job.overdue)
+      .filter((job) => job.due <= today())
       .map((job) => job.assetId),
   );
   const assets = Object.values(doc.assets).filter((a) => !remove.pending.has(a.id));
@@ -318,6 +318,7 @@ export function AssetsScreen() {
                     type="button"
                     className="row-main"
                     aria-label={`Edit ${a.name || type?.name || a.typeId}`}
+                    aria-describedby={dueAssets.has(a.id) ? `maintenance-${a.id}` : undefined}
                     disabled={!type}
                     onClick={() =>
                       type && setEditing({ step: 'form', type, asset: a, isNew: false })
@@ -327,7 +328,9 @@ export function AssetsScreen() {
                       {a.name || type?.name || a.typeId}{' '}
                       {why ? <span className="badge badge-warn">Blocked</span> : null}
                       {dueAssets.has(a.id) ? (
-                        <span className="badge badge-warn">Maintenance due</span>
+                        <span id={`maintenance-${a.id}`} className="badge badge-warn">
+                          Maintenance due
+                        </span>
                       ) : null}
                     </strong>
                     <span className="muted">
@@ -401,9 +404,14 @@ export function AssetsScreen() {
                 for (const key of ['name', 'notes', 'locationId', 'purchased'] as const) {
                   if (a[key] !== editing.asset[key]) current[key] = a[key];
                 }
-                for (const key of Object.keys(a.answers)) {
-                  if (a.answers[key] !== editing.asset.answers[key])
-                    current.answers[key] = a.answers[key]!;
+                for (const key of new Set([
+                  ...Object.keys(a.answers),
+                  ...Object.keys(editing.asset.answers),
+                ])) {
+                  if (a.answers[key] !== editing.asset.answers[key]) {
+                    if (key in a.answers) current.answers[key] = a.answers[key]!;
+                    else delete current.answers[key];
+                  }
                 }
               }
             });
