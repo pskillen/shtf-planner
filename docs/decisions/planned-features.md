@@ -3,9 +3,9 @@
 **Status:** Planned. Decided in the design but not built in 0.1.0. Each points at its GitHub epic;
 the rule here is what was agreed, the epic is where the work is shaped.
 
-**Review queue.** One list sorted by urgency: stock expiring, equipment maintenance due, age
+**Review queue.** The engine derives one list sorted by urgency: stock expiring, equipment maintenance due, age
 rollovers coming (nappy size, formula to solids), places not recounted for a while, plans to
-re-confirm. Each item is a swipe (fine, used, replace, binned); the cadence is 3 or 6 months (the
+re-confirm. The planned screen will offer actions appropriate to each item; the cadence is 3 or 6 months (the
 setting exists already); a review ends with a summary and the score change. Recounts would feed
 suggested minimums. [#20](https://github.com/pskillen/shtf-planner/issues/20). [D7, D16, D26]
 
@@ -13,8 +13,8 @@ suggested minimums. [#20](https://github.com/pskillen/shtf-planner/issues/20). [
 due dates; no push notifications in v1.
 [#20](https://github.com/pskillen/shtf-planner/issues/20). [D21]
 
-**Equipment maintenance and fuel.** Maintenance schedules come from the assets pack and land in the
-review queue; equipment is linked to the exact fuel it needs.
+**Equipment maintenance and fuel.** Maintenance schedules come from the assets pack and feed the review queue; linking equipment to
+the exact fuel it needs is planned.
 [#28](https://github.com/pskillen/shtf-planner/issues/28). [D24]
 
 **Scenario checklists.** Tracked runs (each tick timestamped) with a printable export for the grab

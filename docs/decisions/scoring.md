@@ -5,8 +5,8 @@
 
 **One loop.** Household, home, risks and horizon give **targets** per capability, for a date;
 stock and equipment roll up into **coverage**; targets minus coverage are **gaps** (a shopping list
-and tasks); coverage over targets is the **score**. Screens never compute any of it. Planned:
-expiry, maintenance and age rollovers feeding a review queue
+and tasks); coverage over targets is the **score**. Screens never compute any of it. The engine also derives review items from expiry, maintenance,
+age rollovers, recounts and expiring plans
 ([#20](https://github.com/pskillen/shtf-planner/issues/20)). [D7]
 
 **A capability's score is the product of its targets' cover ratios**, each capped at 1, not the

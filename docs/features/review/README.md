@@ -15,11 +15,17 @@ Home displays the next date, or “Review due” on and after that date, with a 
 Settings shows the next date and updates it immediately when the cadence changes. These reminders
 are in the app; there are no push notifications.
 
+The engine also builds a dated queue of stock expiry, maintenance, age transitions, places to
+recount and applicable plans to reconfirm. It excludes items resolved in any unfinished review.
+The scheduled reminder remains overdue until a review finishes, while the queue looks ahead one
+cadence from today. Maintenance remains unscored.
+
 ## Documentation map
 
 - [Equipment form](../setup/README.md)
 - [Maintenance calculation](../engine/README.md#maintenance)
+- [Review queue calculation](../engine/README.md#review-queue)
 
 ## Known gaps
 
-- The review queue, actions and calendar export are planned.
+- The review screen, actions, summary and calendar export are planned.
