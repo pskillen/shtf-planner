@@ -56,7 +56,8 @@ Finish is available even with items remaining, or with no answers. It finishes a
 records together, stores the score at finish, clears local Undo and requests a Drive sync. The
 summary counts distinct checked items and actions, including deferrals and differing answers, and
 shows the score snapshots, current weakest capability and next review date. Start another review
-is deliberate; the latest summary can be reopened. Late synced answers can change the counts but
+is deliberate; the latest summary can be reopened. An unfinished session arriving later is shown as
+“Review in progress”, even when its answers have resolved the queue. Late synced answers can change the counts but
 never rewrite the stored score. An unseen open review remains in progress.
 
 ## Documentation map

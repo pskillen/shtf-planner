@@ -3,6 +3,7 @@ import {
   nextReviewDue,
   reviewItems,
   reviewPeriod,
+  reviewSession,
   reviewSummary,
   score,
   type ReviewAction,
@@ -222,6 +223,7 @@ export function ReviewScreen() {
         </div>
       ) : (
         <>
+          {reviewSession(doc).ids.length > 0 && <p>Review in progress</p>}
           {latestFinished && (
             <button type="button" onClick={() => setSummaryAt(latestFinished)}>
               Last review {formatReviewDate(latestFinished.slice(0, 10))}
