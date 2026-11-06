@@ -1599,3 +1599,19 @@ button.scans-note {
   background: var(--border);
   color: var(--text);
 }
+
+[data-review-kind] {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+.review-actions button,
+.review-actions .button {
+  min-height: 44px;
+}

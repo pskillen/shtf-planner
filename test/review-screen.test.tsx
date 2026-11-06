@@ -56,7 +56,7 @@ it('shows engine order, urgency words and destinations for every kind', () => {
     new Set(['expiry', 'maintenance', 'age', 'recount', 'plan']),
   );
   for (const row of rows) {
-    expect(within(row).getByRole('link').getAttribute('href')).toMatch(/^\/app\//);
+    expect(within(row).getAllByRole('link')[0]!.getAttribute('href')).toMatch(/^\/app\//);
     expect(row.textContent).toMatch(/Overdue|Due today|Upcoming/);
   }
 });
