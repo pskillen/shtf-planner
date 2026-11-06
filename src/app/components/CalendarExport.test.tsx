@@ -54,6 +54,18 @@ describe('CalendarExport', () => {
     expect(props.onClose).toHaveBeenCalledOnce();
     expect(calendarFile).not.toHaveBeenCalled();
   });
+  it('excludes a selected reminder that disappears on rerender', () => {
+    const view = render(<CalendarExport {...props} />);
+    fireEvent.click(screen.getByRole('checkbox', { name: /Household stock review/ }));
+    fireEvent.click(screen.getByRole('checkbox', { name: /Kitchen: Test/ }));
+    expect(screen.getByText('1 selected')).toBeTruthy();
+    view.rerender(<CalendarExport {...props} candidates={[candidates[0]!]} />);
+    expect(screen.getByText('0 selected')).toBeTruthy();
+    const button = screen.getByRole('button', { name: 'Download calendar' });
+    expect((button as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(button);
+    expect(calendarFile).not.toHaveBeenCalled();
+  });
   it('downloads once per click and prevents pending duplicate clicks', async () => {
     let resolve!: (file: string) => void;
     vi.mocked(calendarFile).mockReturnValue(
