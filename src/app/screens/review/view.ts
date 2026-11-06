@@ -44,7 +44,12 @@ export function reviewRow(item: ReviewItem, doc: Document, packs: Packs) {
     case 'maintenance': {
       const asset = doc.assets[item.assetId];
       const name = asset?.name || (asset && packs.assets[asset.typeId]?.name) || 'Equipment';
-      return { title: name, detail: `${item.text} · ${date}`, to: equipmentEditPath(item.assetId) };
+      const place = asset?.locationId ? doc.locations[asset.locationId]?.name : undefined;
+      return {
+        title: place ? `${name} · ${place}` : name,
+        detail: `${item.text} · ${date}`,
+        to: equipmentEditPath(item.assetId),
+      };
     }
     case 'age':
       return {

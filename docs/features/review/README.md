@@ -42,7 +42,7 @@ are versioned tokens in its resolved list. All unfinished records form one logic
 sync; their resolved keys are combined. Additions to the same resolved list merge without a
 conflict prompt, while removals and other conflicting changes retain the normal copy choice.
 
-Undo is available locally for five seconds. Each receipt identifies the answer and review item, including its batch or maintenance details, in the toast and button name. Outstanding Undo buttons appear in Quick add, and their remaining time pauses until Quick add closes, including while a nested sheet is open. Reload keeps the
+Undo is available locally for five seconds. Each receipt identifies the answer and review item, including its batch or maintenance details and equipment place when available, in the toast and button name. Identical outstanding receipts are numbered in answer order. Outstanding Undo buttons appear in Quick add, and their remaining time pauses until Quick add closes, including while a nested sheet is open. Reload keeps the
 answer but not the toast. Undo checks that the review is unfinished, its token remains, and touched
 fields have not changed. It restores only those fields. A removed batch is restored exactly only
 if its product and place still exist and no matching batch has appeared. If the check fails, Undo
