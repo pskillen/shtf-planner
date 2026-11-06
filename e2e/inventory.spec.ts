@@ -234,7 +234,7 @@ test('Quick add warns when the place does not suit the item, and still allows it
   await page.getByRole('searchbox', { name: 'What are you adding?' }).fill('uht');
   await page
     .getByRole('dialog')
-    .getByRole('button', { name: /UHT milk/ })
+    .getByRole('button', { name: /^UHT milk Food/ })
     .click();
   await pickSizeInDialog(page);
   await page.getByLabel('Where does it go?').selectOption({ label: 'Shed' });

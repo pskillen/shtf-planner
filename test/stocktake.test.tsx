@@ -198,7 +198,7 @@ describe('Not this item?', () => {
     fireEvent.change(screen.getByLabelText('Search for what it counts as'), {
       target: { value: 'soup' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /Tinned soup/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^Tinned soup/ }));
     fireEvent.click(screen.getByRole('button', { name: '400 g' }));
     fireEvent.change(screen.getByLabelText(/^Product name/), {
       target: { value: 'Tinned soup 400 g' },

@@ -72,7 +72,7 @@ describe('Quick add: Scan a barcode', () => {
     fireEvent.change(await screen.findByLabelText('Search for what it counts as'), {
       target: { value: 'soup' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /Tinned soup/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^Tinned soup/ }));
     fireEvent.click(screen.getByRole('button', { name: '400 g' }));
     fireEvent.change(screen.getByLabelText(/^Product name/), {
       target: { value: 'Tinned soup 400 g' },

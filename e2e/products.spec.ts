@@ -22,7 +22,7 @@ async function quickAddBeans220(page: Page, packs: number): Promise<void> {
   await page.getByRole('searchbox', { name: 'What are you adding?' }).fill('baked');
   await page
     .getByRole('dialog')
-    .getByRole('button', { name: /^Baked beans/ })
+    .getByRole('button', { name: /^Baked beans (?!\d)/ })
     .click();
   await page
     .getByRole('region', { name: 'Suggested sizes' })

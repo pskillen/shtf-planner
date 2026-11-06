@@ -4,6 +4,7 @@ import type { Category, Item, Product } from '../../../model';
 import { Field } from '../../components/controls';
 import { CATEGORY_LABEL, labelOf } from '../../labels';
 import { useDocument } from '../../state';
+import { usePacks } from '../../usePacks';
 import { EQUIPMENT_PATH, equipmentAddPath } from '../assets/route';
 import { useEquipmentMatches, useStockItems } from './scanHelpers';
 import { groupItemsForPicker, type ItemPickerGroup } from './pickerHelpers';
@@ -30,6 +31,7 @@ const COMMON = [
 ];
 
 const RECENT_PRODUCTS_SHOWN = 8;
+const PRODUCT_MATCHES_SHOWN = 8;
 
 /**
  * Pick a pack item or a recent product: search, recent products, common items, then browse by
@@ -42,6 +44,7 @@ export function ItemPicker({
   searchHint,
   showEquipmentLink = true,
   showRecentProducts = true,
+  showProductMatches = true,
 }: {
   onItem: (item: Item) => void;
   onProduct: (productId: string) => void;
@@ -51,9 +54,12 @@ export function ItemPicker({
   showEquipmentLink?: boolean;
   /** Recent products, to reuse one for a barcode; off, the common items show instead. */
   showRecentProducts?: boolean;
+  /** A search also finds the household's products by name (off where picking one does nothing). */
+  showProductMatches?: boolean;
 }) {
   const doc = useDocument();
   const items = useStockItems();
+  const packs = usePacks();
   const [query, setQuery] = useState('');
   const [browsing, setBrowsing] = useState(false);
   const recentItemIds = useMemo(() => readRecent(), []);
@@ -65,6 +71,15 @@ export function ItemPicker({
     () => matchItems(items, query, recentItemIds),
     [items, query, recentItemIds],
   );
+
+  const productMatches = useMemo(() => {
+    const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+    if (!showProductMatches || words.length === 0) return [];
+    return Object.values(doc.products)
+      .filter((p) => words.every((w) => p.name.toLowerCase().includes(w)))
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .slice(0, PRODUCT_MATCHES_SHOWN);
+  }, [doc.products, query, showProductMatches]);
 
   const recentProductRows = useMemo(
     () =>
@@ -135,7 +150,30 @@ export function ItemPicker({
       ) : null}
       {searching ? (
         <>
-          {shown.length === 0 && equipmentShown.length === 0 ? (
+          {productMatches.length > 0 ? (
+            <section aria-label="Your products" className="recent">
+              <h3>Your products</h3>
+              <ul className="row-list">
+                {productMatches.map((product) => (
+                  <li className="row-item" key={product.id}>
+                    <button
+                      type="button"
+                      className="row-main"
+                      onClick={() => onProduct(product.id)}
+                    >
+                      <strong>{product.name}</strong>
+                      <span className="muted">
+                        {product.itemId
+                          ? (packs.items[product.itemId]?.name ?? '')
+                          : 'Counts towards nothing'}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+          {shown.length === 0 && productMatches.length === 0 && equipmentShown.length === 0 ? (
             <p className="muted">Nothing matches “{query}”.</p>
           ) : null}
           <ul className="row-list">{shown.map(itemRow)}</ul>

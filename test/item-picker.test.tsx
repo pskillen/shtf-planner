@@ -34,6 +34,27 @@ describe('groupItemsForPicker', () => {
   });
 });
 
+describe('ItemPicker searching products', () => {
+  it('finds a product by name, and picking it is onProduct', () => {
+    const onItem = vi.fn();
+    const onProduct = vi.fn();
+    const s = liveStore(biggarDocument());
+    render(s.wrap(<ItemPicker onItem={onItem} onProduct={onProduct} />));
+    fireEvent.change(screen.getByLabelText('What is it?'), { target: { value: 'test beans' } });
+    const region = screen.getByRole('region', { name: 'Your products' });
+    fireEvent.click(within(region).getByRole('button', { name: /Test beans 415 g/ }));
+    expect(onProduct).toHaveBeenCalledWith('prod-beans');
+    expect(onItem).not.toHaveBeenCalled();
+  });
+
+  it('can leave products out of a search', () => {
+    const s = liveStore(biggarDocument());
+    render(s.wrap(<ItemPicker onItem={vi.fn()} onProduct={vi.fn()} showProductMatches={false} />));
+    fireEvent.change(screen.getByLabelText('What is it?'), { target: { value: 'test beans' } });
+    expect(screen.queryByRole('region', { name: 'Your products' })).toBeNull();
+  });
+});
+
 describe('ItemPicker', () => {
   const renderPicker = () => {
     const onItem = vi.fn();

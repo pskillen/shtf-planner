@@ -153,6 +153,7 @@ export function ProductSheet({
         <ItemPicker
           searchLabel="What is it?"
           showEquipmentLink={false}
+          showProductMatches={false}
           onItem={(picked) => applyItem(picked)}
           onProduct={() => undefined}
         />
