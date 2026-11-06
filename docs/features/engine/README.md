@@ -237,7 +237,8 @@ Overdue items come first, followed by date, capability order and key. All unfini
 one session and their resolved keys are omitted. Versioned answer tokens and legacy bare keys are
 read for suppression; only an explicit Recounted action in a finished review advances a place's
 recount date. `reviewPeriod` preserves an overdue scheduled date while looking ahead one cadence
-from today for queue items. These calculations do not change the preparedness score.
+from today for queue items. These calculations do not change the preparedness score. The [review screen](../review/README.md)
+displays the returned order and links to the relevant entities.
 
 ## Out of scope
 

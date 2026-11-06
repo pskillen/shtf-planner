@@ -11,11 +11,16 @@ six months (six by default). The engine calculates the next date from the calend
 latest finished review (ordered by timestamp), or the household's creation date when there is none. Calendar months clamp
 to the last day of a shorter month. Unfinished reviews do not move the date.
 
-Home displays the next date, or “Review due” on and after that date, with a badge on the Home tab.
+Home displays a Review card with the number to check and the next date, or “Review due” on and after that date, with a badge on the Home tab. The card opens `/app/review`.
 Settings shows the next date and updates it immediately when the cadence changes. These reminders
 are in the app; there are no push notifications.
 
-The engine also builds a dated queue of stock expiry, maintenance, age transitions, places to
+The screen shows a single engine-ordered list with an urgency word and colour on every row. Rows open
+the stock batch, equipment, person, filtered place in Stores or selected plan in Gaps. A read-only
+document keeps navigation available while the existing edit sheets disable changes. An empty list
+shows the end of the current look-ahead window.
+
+The engine builds a dated queue of stock expiry, maintenance, age transitions, places to
 recount and applicable plans to reconfirm. It excludes items resolved in any unfinished review.
 The scheduled reminder remains overdue until a review finishes, while the queue looks ahead one
 cadence from today. Maintenance remains unscored.
@@ -28,4 +33,4 @@ cadence from today. Maintenance remains unscored.
 
 ## Known gaps
 
-- The review screen, actions, summary and calendar export are planned.
+- Review answers, finish and summary, and calendar export are planned. Opening a row does not resolve it.
