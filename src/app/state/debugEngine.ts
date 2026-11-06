@@ -5,8 +5,8 @@ const today = (): string => new Date().toISOString().slice(0, 10);
 
 /**
  * With `?debug=1`, hangs the engine on `window.__shtf.engine`, bound to the live document and the
- * bundled packs with its custom item types merged in: `targets`, `coverage`, `gaps` and `score` take `(asOf?, horizonDays?)`, `preview`
- * takes `(asOf?)`. `asOf` is `YYYY-MM-DD` and defaults to today; `horizonDays` defaults to the
+ * bundled packs: `targets`, `coverage`, `gaps` and `score` take `(asOf?, horizonDays?)`;
+ * `preview` and `review` take `(asOf?)`. `asOf` is `YYYY-MM-DD` and defaults to today; `horizonDays` defaults to the
  * document's setting. Each returns a promise.
  */
 export function installEngineDebug(hook: Record<string, unknown> | undefined): void {
@@ -36,6 +36,10 @@ export function installEngineDebug(hook: Record<string, unknown> | undefined): v
     score: async (asOf: string = today(), horizonDays?: number) => {
       const { engine, packs, doc } = await load();
       return engine.score(doc, packs, asOf, horizonDays);
+    },
+    review: async (asOf: string = today()) => {
+      const { engine, packs, doc } = await load();
+      return engine.reviewItems(doc, packs, asOf, engine.reviewPeriod(doc, asOf).until);
     },
     preview: async (asOf: string = today()) => {
       const { engine, packs, doc } = await load();

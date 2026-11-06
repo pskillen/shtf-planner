@@ -55,7 +55,7 @@ function validKey(key: string): boolean {
 export function reviewSession(doc: Document): ReviewSession {
   const open = Object.values(doc.reviews)
     .filter((r) => !r.finished)
-    .sort((a, b) => a.started.localeCompare(b.started) || a.id.localeCompare(b.id));
+    .sort((a, b) => Date.parse(a.started) - Date.parse(b.started) || a.id.localeCompare(b.id));
   const resolvedKeys = new Set<string>();
   const answers = new Map<string, ReviewAnswer>();
   for (const review of open)
@@ -86,7 +86,7 @@ export interface ReviewSummary {
 }
 export function reviewSummary(reviews: readonly Review[]): ReviewSummary {
   const ordered = [...reviews].sort(
-    (a, b) => a.started.localeCompare(b.started) || a.id.localeCompare(b.id),
+    (a, b) => Date.parse(a.started) - Date.parse(b.started) || a.id.localeCompare(b.id),
   );
   const actions = new Map<string, Set<ReviewAction>>();
   const ops = new Set<string>();
