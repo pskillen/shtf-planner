@@ -261,6 +261,59 @@ describe('products (schema 4)', () => {
     }
   });
 
+  it('unions independent answers in an existing review through Drive', async () => {
+    const cloud = createFakeCloud();
+    const a = await device(cloud);
+    const b = await device(cloud);
+    a.store.change('start review', (d) => {
+      d.reviews.r = { id: 'r', started: '2026-06-01T12:00:00Z', resolved: ['base'] };
+    });
+    await a.sync.connect();
+    await b.sync.connect();
+    a.port.offline = true;
+    a.store.change('answer A', (d) => {
+      d.reviews.r!.resolved.push('answer-a');
+    });
+    await settle(a);
+    b.store.change('answer B', (d) => {
+      d.reviews.r!.resolved.push('answer-b');
+    });
+    await b.sync.flush();
+    a.port.offline = false;
+    await a.sync.checkDrive();
+    await b.sync.checkDrive();
+    for (const d of [a, b]) {
+      expect(d.store.get().reviews.r!.resolved).toEqual(
+        expect.arrayContaining(['base', 'answer-a', 'answer-b']),
+      );
+      expect(d.sync.state().conflicts).toEqual([]);
+    }
+  });
+
+  it('keeps two independently started reviews through Drive', async () => {
+    const cloud = createFakeCloud();
+    const a = await device(cloud);
+    const b = await device(cloud);
+    await a.sync.connect();
+    await b.sync.connect();
+    a.port.offline = true;
+    a.store.change('answer A', (d) => {
+      d.reviews.a = { id: 'a', started: '2026-06-01T12:00:00Z', resolved: ['answer-a'] };
+    });
+    await settle(a);
+    b.store.change('answer B', (d) => {
+      d.reviews.b = { id: 'b', started: '2026-06-01T12:00:00Z', resolved: ['answer-b'] };
+    });
+    await b.sync.flush();
+    a.port.offline = false;
+    await a.sync.checkDrive();
+    await b.sync.checkDrive();
+    for (const d of [a, b]) {
+      expect(Object.keys(d.store.get().reviews).sort()).toEqual(['a', 'b']);
+      expect(d.sync.state().conflicts).toEqual([]);
+    }
+  });
+
   it('the same product renamed two ways asks which copy, like any other record', async () => {
     const cloud = createFakeCloud();
     const a = await device(cloud);
