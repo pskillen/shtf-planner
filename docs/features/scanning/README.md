@@ -152,8 +152,11 @@ crop that was read (in memory only).
 **Agreement and gates.** The numbers are named constants: the tally ones in
 `src/engine/datecode/tally.ts`, the loop's in `src/scan/tunables.ts`.
 
-- One frame is read in up to five pictures of the box (shrunk and stretched, native size, inverted,
-  inverted native, adaptive threshold last); a pass is _sure_ when the parser's confidence is at
+- One frame is read in up to six pictures of the box (shrunk and stretched, native size, inverted,
+  inverted native, `dots`, adaptive threshold last). `dots` grows the ink and blurs it, so the dots of
+  dot-matrix print (a code inkjetted on a tin lid) run into strokes the reader can follow. The parser
+  reads `BB:31.07.2028` there, and also a year the print damaged (`31.07.028`, `31.07.6028`) as 2028,
+  but only with a label and only with two frames that agree; a pass is _sure_ when the parser's confidence is at
   least 0.7, the text reader's at least 0.75 and the year was not assumed. A frame stops at the
   first sure pass, or at two agreeing passes.
 - A date settles when two frames give the same month and year, or one frame is confident (0.85) with

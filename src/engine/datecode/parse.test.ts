@@ -199,6 +199,24 @@ describe('the date parser: 152 cases from the camera spike', () => {
   });
 });
 
+describe('the date parser: dot-matrix print on a tin lid', () => {
+  it.each([
+    ['LDE1K224 07\nBB:31.07.2028', '07/2028'],
+    ['BB:31.07.028', '07/2028'], // the 2 lost behind the ring pull
+    ['BB:31.07.6028', '07/2028'], // the 2 read as a 6
+    ['BB131.07.2028', '07/2028'], // the colon read as a 1
+    ['B.B: 31.07.2028', '07/2028'],
+  ])('reads %j as %s', (text, want) => {
+    const r = parseDates(text, TODAY);
+    expect(r.best && formatMonthYear(r.best)).toBe(want);
+  });
+
+  it('never trusts a repaired year on its own, or without a label', () => {
+    expect(parseDates('BB:31.07.028', TODAY).confidence).toBeLessThan(0.6);
+    expect(parseDates('31.07.028', TODAY).best).toBeNull();
+  });
+});
+
 describe('the date parser: a spaced month and year', () => {
   it('reads EXP 12 2027 after a batch code on the line above', () => {
     const r = parseDates('BN I60570\nEXP 12 2027', TODAY);

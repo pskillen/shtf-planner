@@ -131,6 +131,46 @@ export function adaptive(g: Gray, win = 0, c = 8): Gray {
   return o;
 }
 
+/**
+ * Grows dark ink by `r` pixels (a minimum filter over a square). The dots of a dot-matrix print
+ * (a code inkjetted on a tin lid) run together into strokes the text reader can follow.
+ */
+export function grow(g: Gray, r: number): Gray {
+  const o = gray(g.w, g.h);
+  for (let y = 0; y < g.h; y++) {
+    for (let x = 0; x < g.w; x++) {
+      let m = 255;
+      for (let dy = Math.max(0, y - r); dy <= Math.min(g.h - 1, y + r); dy++) {
+        for (let dx = Math.max(0, x - r); dx <= Math.min(g.w - 1, x + r); dx++) {
+          const v = g.d[dy * g.w + dx]!;
+          if (v < m) m = v;
+        }
+      }
+      o.d[y * g.w + x] = m;
+    }
+  }
+  return o;
+}
+
+/** A box blur of radius `r`. */
+export function blur(g: Gray, r: number): Gray {
+  const o = gray(g.w, g.h);
+  for (let y = 0; y < g.h; y++) {
+    for (let x = 0; x < g.w; x++) {
+      let sum = 0;
+      let n = 0;
+      for (let dy = Math.max(0, y - r); dy <= Math.min(g.h - 1, y + r); dy++) {
+        for (let dx = Math.max(0, x - r); dx <= Math.min(g.w - 1, x + r); dx++) {
+          sum += g.d[dy * g.w + dx]!;
+          n++;
+        }
+      }
+      o.d[y * g.w + x] = sum / n;
+    }
+  }
+  return o;
+}
+
 export function invert(g: Gray): Gray {
   const o = gray(g.w, g.h);
   for (let i = 0; i < g.d.length; i++) o.d[i] = 255 - g.d[i]!;
@@ -203,7 +243,7 @@ export interface Variant {
 /**
  * Cheapest likely first. The shrunk, contrast-stretched crop read the most dates on the bench;
  * native resolution rescues framing looser than the box; inverted polarity is for light print on
- * dark; adaptive threshold is last because it is the one that makes confident wrong reads. Only
+ * dark; `dots` joins dot-matrix print (tin lids) into strokes; adaptive threshold is last because it is the one that makes confident wrong reads. Only
  * the upright picture is tried (no rotation), and no dilation.
  */
 export const VARIANTS: Variant[] = [
@@ -211,6 +251,13 @@ export const VARIANTS: Variant[] = [
   { name: 'stretch', apply: (g) => stretch(fit(g)), redundant: small },
   { name: 'inv@64', apply: (g) => invert(stretch(resizeToHeight(g, OCR_H))) },
   { name: 'inv', apply: (g) => invert(stretch(fit(g))), redundant: small },
+  {
+    name: 'dots',
+    apply: (g) => {
+      const f = fit(g);
+      return f.h >= 160 ? stretch(blur(grow(f, 2), 2)) : stretch(blur(grow(f, 1), 1));
+    },
+  },
   { name: 'adapt', apply: (g) => adaptive(stretch(fit(g))) },
 ];
 
