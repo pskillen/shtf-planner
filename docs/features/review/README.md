@@ -50,6 +50,15 @@ leaves everything as it is and asks the person to check Stores. These checks use
 document; later unseen edits follow normal sync conflict handling. Review answers and camera-free
 stock details remain in the household document and its own Drive sync.
 
+## Finish and summary
+
+Finish is available even with items remaining, or with no answers. It finishes all known open
+records together, stores the score at finish, clears local Undo and requests a Drive sync. The
+summary counts distinct checked items and actions, including deferrals and differing answers, and
+shows the score snapshots, current weakest capability and next review date. Start another review
+is deliberate; the latest summary can be reopened. Late synced answers can change the counts but
+never rewrite the stored score. An unseen open review remains in progress.
+
 ## Documentation map
 
 - [Equipment form](../setup/README.md)
@@ -58,7 +67,7 @@ stock details remain in the household document and its own Drive sync.
 
 ## Known gaps
 
-- Review finish and summary, and calendar export are planned. Opening a row does not resolve it.
+- Calendar export is planned. Opening a row does not resolve it.
 
 The person and stock destinations follow changes to their query IDs, including browser back and
 forward. Changing the destination discards the previous sheet's draft; a missing or deleted record

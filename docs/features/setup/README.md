@@ -114,7 +114,7 @@ leaving half-way.
 
 ## Not built yet
 
-- Review actions and summary: [#20](https://github.com/pskillen/shtf-planner/issues/20).
+- Review calendar export: [#20](https://github.com/pskillen/shtf-planner/issues/20).
 - Equipment linked to its exact fuel: [#28](https://github.com/pskillen/shtf-planner/issues/28).
 - Natural Resources Wales and DfI flood links, diesel, vehicles as assets:
   [#49](https://github.com/pskillen/shtf-planner/issues/49).
