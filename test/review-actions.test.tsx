@@ -146,6 +146,49 @@ it('keeps independent undo windows for rapid answers', () => {
   fireEvent.click(screen.getByRole('button', { name: /^Undo / }));
   expect(Object.values(store.store.get().reviews)[0]!.resolved).toHaveLength(0);
 });
+it('distinguishes maintenance receipts by place and answer order on Review and in Quick add', () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date(`${day}T12:00:00Z`));
+  const doc = setup();
+  const alarm = doc.assets['asset-smoke']!;
+  alarm.name = 'Alarm';
+  alarm.locationId = 'loc-pantry';
+  doc.assets['alarm-garage'] = {
+    ...structuredClone(alarm),
+    id: 'alarm-garage',
+    locationId: 'loc-garage',
+  };
+  doc.assets['alarm-garage-2'] = {
+    ...structuredClone(alarm),
+    id: 'alarm-garage-2',
+    locationId: 'loc-garage',
+  };
+  const store = liveStore(doc);
+  render(store.wrap(<ReviewScreen />));
+  fireEvent.click(screen.getByRole('button', { name: 'Done: Alarm · Pantry' }));
+  fireEvent.click(screen.getAllByRole('button', { name: 'Done: Alarm · Garage' })[0]!);
+  fireEvent.click(screen.getByRole('button', { name: 'Done: Alarm · Garage' }));
+  const pantry = screen.getByRole('button', { name: /^Undo Done: Alarm · Pantry ·/ });
+  const first = screen.getByRole('button', { name: /^Undo Done: Alarm · Garage · .* · answer 1$/ });
+  const second = screen.getByRole('button', {
+    name: /^Undo Done: Alarm · Garage · .* · answer 2$/,
+  });
+  for (const button of [pantry, first, second]) {
+    expect(button.parentElement?.textContent).toContain(
+      button.getAttribute('aria-label')!.slice(5),
+    );
+  }
+  const expiry = document.querySelector<HTMLElement>('[data-review-kind="expiry"]')!;
+  fireEvent.click(within(expiry).getByRole('button', { name: /^Replace:/ }));
+  const dialog = screen.getByRole('dialog');
+  for (const button of [pantry, first, second]) {
+    const name = button.getAttribute('aria-label')!;
+    const inside = within(dialog).getByRole('button', { name });
+    expect(inside.parentElement?.textContent).toContain(name.slice(5));
+  }
+  fireEvent.click(within(dialog).getByRole('button', { name: second.getAttribute('aria-label')! }));
+  expect(Object.values(store.store.get().reviews)[0]!.resolved).toHaveLength(3);
+});
 it('keeps earlier undo accessible and pauses each window during replacement', () => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date(`${day}T12:00:00Z`));

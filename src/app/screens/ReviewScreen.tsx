@@ -12,7 +12,12 @@ import { actions, reviewRow } from './review/view';
 import { QuickAdd, type QuickAddPrefill } from './stores/QuickAdd';
 
 const now = () => Date.now();
-type Receipt = { answer: NonNullable<ReturnType<typeof answerReview>>; label: string };
+type Receipt = {
+  answer: NonNullable<ReturnType<typeof answerReview>>;
+  baseLabel: string;
+  label: string;
+  ordinal: number;
+};
 
 export function ReviewScreen() {
   const doc = useDocument();
@@ -20,6 +25,7 @@ export function ReviewScreen() {
   const editable = useEditable();
   const packs = usePacks();
   const [receipts, setReceipts] = useState<Receipt[]>([]);
+  const receiptCounts = useRef(new Map<string, number>());
   const timers = useRef(
     new Map<
       string,
@@ -82,7 +88,24 @@ export function ReviewScreen() {
       return;
     }
     const saved = result;
-    setReceipts((previous) => [...previous, { answer: saved, label }]);
+    const ordinal = (receiptCounts.current.get(label) ?? 0) + 1;
+    receiptCounts.current.set(label, ordinal);
+    setReceipts((previous) => {
+      const duplicate = previous.some((receipt) => receipt.baseLabel === label);
+      return [
+        ...previous.map((receipt) =>
+          receipt.baseLabel === label && receipt.label === label
+            ? { ...receipt, label: `${label} · answer ${receipt.ordinal}` }
+            : receipt,
+        ),
+        {
+          answer: saved,
+          baseLabel: label,
+          label: duplicate ? `${label} · answer ${ordinal}` : label,
+          ordinal,
+        },
+      ];
+    });
     timers.current.set(saved.token, { remaining: 5000, started: now() });
     startTimer(saved.token);
     setError('');
