@@ -47,25 +47,39 @@ export function StoresScreen() {
   const packs = usePacks();
   const todayIso = today();
   const [params, setParams] = useSearchParams();
+  const stockId = params.get('stock');
+  const placeId = params.get('place');
+  const [lastStockId, setLastStockId] = useState(stockId);
+  const [lastPlaceId, setLastPlaceId] = useState(placeId);
   const [query, setQuery] = useState('');
-  const [placeFilter, setPlaceFilter] = useState<string | 'all'>(
-    () => params.get('place') ?? 'all',
-  );
+  const [placeFilter, setPlaceFilter] = useState<string | 'all'>(() => placeId ?? 'all');
   const activePlaceFilter =
     placeFilter !== 'all' && !doc.locations[placeFilter] ? 'all' : placeFilter;
   const [collapsedCats, setCollapsedCats] = useState<ReadonlySet<string>>(new Set());
   const [openItems, setOpenItems] = useState<ReadonlySet<string>>(new Set());
   const [adding, setAdding] = useState(false);
-  const [editing, setEditing] = useState<Stock | null>(
-    () => doc.stock[params.get('stock') ?? ''] ?? null,
-  );
+  const [editing, setEditing] = useState<Stock | null>(() => doc.stock[stockId ?? ''] ?? null);
+  // Keep local changes until the corresponding URL destination actually changes.
+  if (stockId !== lastStockId) {
+    setLastStockId(stockId);
+    setEditing(doc.stock[stockId ?? ''] ?? null);
+  }
+  if (placeId !== lastPlaceId) {
+    setLastPlaceId(placeId);
+    setPlaceFilter(placeId ?? 'all');
+  }
+  if (editing && !doc.stock[editing.id]) setEditing(null);
   const [minimumItem, setMinimumItem] = useState<Item | null>(null);
   const [pickMinimumItem, setPickMinimumItem] = useState(false);
   const [sorting, setSorting] = useState(false);
   useScanQueue();
   const closeEditing = () => {
     setEditing(null);
-    if (params.has('stock')) setParams({}, { replace: true });
+    if (params.has('stock')) {
+      const next = new URLSearchParams(params);
+      next.delete('stock');
+      setParams(next, { replace: true });
+    }
   };
 
   const remove = useDeferredDelete((id) =>
@@ -498,7 +512,7 @@ export function StoresScreen() {
           }
           onSave={(row) => {
             change('edit stock', (d) => {
-              d.stock[row.id] = row;
+              if (d.stock[row.id]) d.stock[row.id] = row;
             });
             closeEditing();
           }}

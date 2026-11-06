@@ -34,3 +34,8 @@ cadence from today. Maintenance remains unscored.
 ## Known gaps
 
 - Review answers, finish and summary, and calendar export are planned. Opening a row does not resolve it.
+
+The person and stock destinations follow changes to their query IDs, including browser back and
+forward. Changing the destination discards the previous sheet's draft; a missing or deleted record
+closes the sheet. The place filter falls back to all places when its query ID is missing or invalid.
+Closing a linked sheet removes its own query parameter and retains unrelated parameters.
