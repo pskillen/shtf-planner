@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import type { Item, OffFacts, Product } from '../../../model';
 import { formatQty, today } from '../../../util';
@@ -69,11 +69,11 @@ function AddedStatus({
 export function QuickAdd({
   onClose,
   prefill,
-  onUndoReview,
+  reviewUndo,
 }: {
   onClose: () => void;
   prefill?: QuickAddPrefill;
-  onUndoReview?: () => void;
+  reviewUndo?: ReactNode;
 }) {
   const doc = useDocument();
   const change = useChange();
@@ -386,14 +386,7 @@ export function QuickAdd({
           ) : undefined
         }
       >
-        {onUndoReview ? (
-          <p role="status">
-            Answer saved.{' '}
-            <button type="button" onClick={onUndoReview}>
-              Undo
-            </button>
-          </p>
-        ) : null}
+        {reviewUndo}
         {step === 'search' ? (
           <>
             {last ? (
