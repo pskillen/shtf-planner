@@ -63,6 +63,5 @@ item; undated stock is never first. [D185, D190]
 **Equipment and fuel are counted, maintenance is not yet scored.** Equipment comes from the assets
 pack with a questionnaire (does the solar have an EPS? does the EV have vehicle-to-load?); an answer
 can block a contribution, and a blocked one becomes a named fix task ("Fit an EPS"). Maintenance
-schedules exist in the pack and the document, but nothing reminds or scores them yet. Planned:
-[#20](https://github.com/pskillen/shtf-planner/issues/20) and
+schedules feed review reminders but do not affect the score. Linking equipment to its exact fuel remains planned:
 [#28](https://github.com/pskillen/shtf-planner/issues/28). [D24]

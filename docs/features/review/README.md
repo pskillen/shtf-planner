@@ -1,6 +1,6 @@
 # Review
 
-**Status:** In progress · **Tracking:** [#20](https://github.com/pskillen/shtf-planner/issues/20)
+**Status:** Done · **Tracking:** [#20](https://github.com/pskillen/shtf-planner/issues/20)
 
 Equipment maintenance helps a household keep its equipment ready. Each type's pack supplies its
 jobs and intervals. Home → Equipment shows a due badge and lets the household record the last
@@ -24,6 +24,18 @@ The engine builds a dated queue of stock expiry, maintenance, age transitions, p
 recount and applicable plans to reconfirm. It excludes items resolved in any unfinished review.
 The scheduled reminder remains overdue until a review finishes, while the queue looks ahead one
 cadence from today. Maintenance remains unscored.
+
+## Calendar export
+
+Review and Settings offer Add to calendar. The preview selects the next household stock review by
+default; equipment maintenance jobs due within the review window are optional, one next occurrence
+per job. Overdue dates remain visible. Selecting reminders and downloading produces one local
+`shtf-planner.ics` file. It is a snapshot, not a subscription; repeat-import handling varies by
+calendar. There are no automatic downloads, push notifications or calendar service calls.
+
+Event titles use the equipment type and job from the pack, never household names or places. Opaque
+stable identifiers help calendars match repeat imports, where supported. The local preview can show
+custom equipment names to distinguish jobs.
 
 ## Answers and Undo
 
@@ -68,7 +80,7 @@ never rewrite the stored score. An unseen open review remains in progress.
 
 ## Known gaps
 
-- Calendar export is planned. Opening a row does not resolve it.
+- Opening a row does not resolve it. Suggested minimums from recounts remain future work.
 
 The person and stock destinations follow changes to their query IDs, including browser back and
 forward. Changing the destination discards the previous sheet's draft; a missing or deleted record
