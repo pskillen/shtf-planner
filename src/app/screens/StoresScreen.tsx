@@ -13,6 +13,7 @@ import { usePacks } from '../usePacks';
 import { equipmentEditPath } from './assets/route';
 import { keyAnswer } from './assets/questionnaire';
 import { ItemPicker } from './stores/ItemPicker';
+import { PlaceWarningBox } from './stores/PlaceWarningBox';
 import { MinimumSheet } from './stores/MinimumSheet';
 import { QuickAdd } from './stores/QuickAdd';
 import { ScansToSort, ScansToSortNote } from './stores/ScansToSort';
@@ -36,7 +37,7 @@ import {
   worstExpiryLevel,
 } from './stores/storesGrouping';
 import { useScanQueue } from './stores/useScanQueue';
-import { matchItems, suitabilityWarning } from './stores/stock';
+import { matchItems, placeWarnings } from './stores/stock';
 import { groupItemsForPicker } from './stores/pickerHelpers';
 
 /** The Stores tab: stock grouped by item, product and batch. */
@@ -128,6 +129,15 @@ export function StoresScreen() {
       .filter((g) => g.items.length > 0);
   }, [orderedItems, packItems]);
 
+  const warnings = placeWarnings(
+    doc,
+    packs,
+    (s) =>
+      !remove.pending.has(s.id) &&
+      (activePlaceFilter === 'all' || s.locationId === activePlaceFilter) &&
+      matchesProduct(doc.products[s.productId] ?? { name: s.productId }),
+  );
+
   const equipmentMatches = (a: Asset): boolean => {
     if (q === '') return true;
     const type = packs.assets[a.typeId];
@@ -202,11 +212,9 @@ export function StoresScreen() {
     );
   };
 
-  const renderBatch = (stock: Stock, item: Item | undefined) => {
+  const renderBatch = (stock: Stock) => {
     const product = doc.products[stock.productId];
     const where = locationName(doc, stock.locationId);
-    const loc = doc.locations[stock.locationId];
-    const warning = item && loc ? suitabilityWarning(item, loc) : undefined;
     const first =
       product?.itemId && useFirst.get(product.itemId) === stock.id ? (
         <strong className="use-first">Use first</strong>
@@ -226,7 +234,6 @@ export function StoresScreen() {
             {stock.bestBefore ? <ExpiryBadge bestBefore={stock.bestBefore} showMonth /> : 'No date'}
             {first ? <> · {first}</> : null}
           </span>
-          {warning ? <span className="warn">⚠ {warning}</span> : null}
         </button>
       </li>
     );
@@ -257,7 +264,7 @@ export function StoresScreen() {
                     </strong>
                   </Link>
                 </div>
-                <ul className="row-list batch-list">{batches.map((s) => renderBatch(s, item))}</ul>
+                <ul className="row-list batch-list">{batches.map((s) => renderBatch(s))}</ul>
               </li>
             );
           })}
@@ -372,6 +379,10 @@ export function StoresScreen() {
         <p className="note">Some stock is not in any place. Add places under Home → Locations.</p>
       ) : null}
 
+      {warnings.map((w) => (
+        <PlaceWarningBox key={w.locationId} warning={w} />
+      ))}
+
       {!showGroups && q !== '' ? <p className="muted">No stock matches your search.</p> : null}
 
       {categoryGroups.map((g) => {
@@ -412,9 +423,7 @@ export function StoresScreen() {
                       {product.name} · {formatPackTotal(packsTotal, 'pack')}
                     </strong>
                   </div>
-                  <ul className="row-list batch-list">
-                    {batches.map((s) => renderBatch(s, undefined))}
-                  </ul>
+                  <ul className="row-list batch-list">{batches.map((s) => renderBatch(s))}</ul>
                 </li>
               );
             })}
@@ -432,16 +441,7 @@ export function StoresScreen() {
       {lost.length > 0 ? (
         <section className="store-group" aria-label="Unknown place">
           <h2>Unknown place</h2>
-          <ul className="row-list">
-            {lost.map((s) =>
-              renderBatch(
-                s,
-                doc.products[s.productId]?.itemId
-                  ? packs.items[doc.products[s.productId]!.itemId!]
-                  : undefined,
-              ),
-            )}
-          </ul>
+          <ul className="row-list">{lost.map((s) => renderBatch(s))}</ul>
         </section>
       ) : null}
 

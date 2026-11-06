@@ -7,6 +7,8 @@ import {
   ensureProduct,
   formatMonth,
   matchItems,
+  placeWarnings,
+  shortName,
   monthChips,
   parseMonth,
   suitabilityWarning,
@@ -222,5 +224,36 @@ describe('defaultLocationId', () => {
     expect(
       defaultLocationId({ stock: {}, products: {}, locations: {} }, 'items-base:candles', null),
     ).toBe('');
+  });
+});
+
+describe('placeWarnings', () => {
+  it('gives one warning per place, naming each product once in a short form', () => {
+    const doc = biggarDocument();
+    const packs = bundledPacks();
+    const uht = packs.items['items-base:uht-milk']!;
+    const shed = doc.locations['loc-shed']!;
+    doc.products['p-long'] = {
+      id: 'p-long',
+      name: 'HARIB Tangfastics 1471 346 AN A 1054 AIN 1% 50% 6A',
+      itemId: uht.id,
+    } as never;
+    for (const id of ['s-a', 's-b']) {
+      doc.stock[id] = { id, productId: 'p-long', locationId: shed.id, qty: 1 } as never;
+    }
+    const all = placeWarnings(doc, packs, () => true);
+    const inShed = all.filter((w) => w.locationId === shed.id);
+    expect(inShed).toHaveLength(1);
+    expect(inShed[0]!.summary).toMatch(/^May .* in the Shed$/);
+    expect(inShed[0]!.products.filter((p) => p.id === 'p-long')).toHaveLength(1);
+    expect(inShed[0]!.products.find((p) => p.id === 'p-long')!.name.length).toBeLessThanOrEqual(25);
+    expect(placeWarnings(doc, packs, () => false)).toEqual([]);
+  });
+});
+
+describe('shortName', () => {
+  it('keeps short names and cuts long ones at a word', () => {
+    expect(shortName('Baked beans')).toBe('Baked beans');
+    expect(shortName('Fruit & Nut Milk Chocolate bar large')).toBe('Fruit & Nut Milk…');
   });
 });

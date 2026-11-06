@@ -17,6 +17,22 @@ const PHRASE: Record<Exclude<Condition, 'indoor-stable'>, string> = {
   damp: 'get damp',
 };
 
+/** The conditions of a place this item does not suit, as phrases ("freeze", "get damp"). */
+function unsuitedPhrases(
+  type: Pick<Item, 'suitability'>,
+  location: Pick<Location, 'conditions'>,
+): string[] {
+  return location.conditions
+    .filter(
+      (c): c is Exclude<Condition, 'indoor-stable'> =>
+        c !== 'indoor-stable' && !type.suitability.includes(c),
+    )
+    .map((c) => PHRASE[c]);
+}
+
+const joinPhrases = (what: string[]): string =>
+  what.length > 1 ? `${what.slice(0, -1).join(', ')} or ${what.at(-1)}` : what[0]!;
+
 /**
  * Why this item does not suit this place, or undefined when it does. A place's conditions
  * (frost, heat, damp) must each be in the type's `suitability`; `indoor-stable` asks for nothing.
@@ -25,14 +41,65 @@ export function suitabilityWarning(
   type: Pick<Item, 'name' | 'suitability'>,
   location: Pick<Location, 'name' | 'conditions'>,
 ): string | undefined {
-  const bad = location.conditions.filter(
-    (c): c is Exclude<Condition, 'indoor-stable'> =>
-      c !== 'indoor-stable' && !type.suitability.includes(c),
-  );
-  if (bad.length === 0) return undefined;
-  const what = bad.map((c) => PHRASE[c]);
-  const list = what.length > 1 ? `${what.slice(0, -1).join(', ')} or ${what.at(-1)}` : what[0];
-  return `${type.name} may ${list} in the ${location.name}`;
+  const what = unsuitedPhrases(type, location);
+  if (what.length === 0) return undefined;
+  return `${type.name} may ${joinPhrases(what)} in the ${location.name}`;
+}
+
+/** A product's name cut to a short form a person can still recognise ("Fruit & Nut Milk…"). */
+export function shortName(name: string, max = 24): string {
+  const t = name.trim().replace(/\s+/g, ' ');
+  if (t.length <= max) return t;
+  const cut = t.slice(0, max);
+  const space = cut.lastIndexOf(' ');
+  return `${(space > max / 2 ? cut.slice(0, space) : cut).replace(/[ ,;:&-]+$/, '')}…`;
+}
+
+/** One place's warning: what is stored there that its conditions do not suit. */
+export interface PlaceWarning {
+  locationId: string;
+  /** "May freeze, get too hot or get damp in the Loft", the union over every product listed. */
+  summary: string;
+  /** The products, short names, in alphabetical order. */
+  products: { id: string; name: string }[];
+}
+
+/**
+ * One warning per place, for the stock the screen is showing, instead of one under every batch.
+ * `include` says whether a stock line is in view (place filter, search, pending delete).
+ */
+export function placeWarnings(
+  doc: Document,
+  packs: Pick<Packs, 'items'>,
+  include: (stock: Stock) => boolean,
+): PlaceWarning[] {
+  const byPlace = new Map<string, { phrases: Set<string>; products: Map<string, string> }>();
+  for (const s of Object.values(doc.stock)) {
+    const loc = doc.locations[s.locationId];
+    const product = doc.products[s.productId];
+    const item = product?.itemId ? packs.items[product.itemId] : undefined;
+    if (!loc || !product || !item || !include(s)) continue;
+    const what = unsuitedPhrases(item, loc);
+    if (what.length === 0) continue;
+    const entry = byPlace.get(loc.id) ?? { phrases: new Set(), products: new Map() };
+    for (const w of what) entry.phrases.add(w);
+    entry.products.set(product.id, shortName(product.name));
+    byPlace.set(loc.id, entry);
+  }
+  return [...byPlace.entries()]
+    .map(([locationId, e]) => {
+      const what = Object.values(PHRASE).filter((w) => e.phrases.has(w));
+      return {
+        locationId,
+        summary: `May ${joinPhrases(what)} in the ${doc.locations[locationId]!.name}`,
+        products: [...e.products.entries()]
+          .map(([id, name]) => ({ id, name }))
+          .sort((a, b) => a.name.localeCompare(b.name)),
+      };
+    })
+    .sort((a, b) =>
+      doc.locations[a.locationId]!.name.localeCompare(doc.locations[b.locationId]!.name),
+    );
 }
 
 // ---- best-before months ---------------------------------------------------------------------

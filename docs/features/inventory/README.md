@@ -50,7 +50,7 @@ The Stores tab: what the household has, grouped by **item** (the generic from th
   sort alike).
 - **Suitability.** A place's conditions (frost, heat, damp; indoor-stable asks nothing) are checked
   against the item's `suitability`; a mismatch shows a warning such as "Water containers, kept filled
-  may freeze in the Shed" when adding, in the stocktake and on the batch. It warns; it never blocks.
+  may freeze in the Shed" when adding and in the stocktake. On the Stores list it appears once per place, in a box at the top that opens to the products it applies to (short names), not under every batch. It warns; it never blocks.
 - **Remembered per device, never in the document.** The last place used and the recent items and
   products (up to 12) live in localStorage, so they do not sync and a private window simply forgets
   them.

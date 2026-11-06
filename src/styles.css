@@ -1555,3 +1555,26 @@ button.scans-note {
 .centre-pill[data-phase='loading'] {
   background: rgba(0, 0, 0, 0.8);
 }
+
+/* One warning per place on Stores, instead of one under every batch. */
+.place-warning {
+  border: 1px solid var(--warn);
+  border-radius: 8px;
+  padding: 0 12px;
+  margin: 8px 0;
+}
+
+.place-warning summary {
+  color: var(--warn);
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.place-warning ul {
+  margin: 4px 0 8px;
+  padding-left: 20px;
+}
