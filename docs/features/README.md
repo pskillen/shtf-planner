@@ -29,10 +29,10 @@ The stock model names six levels, then a few everyday words the screens use besi
 | [Inventory](inventory/README.md)           | Stores tab, Quick add, minimums, suitability warnings                                  |
 | [Scanning](scanning/README.md)             | Barcode scanning, stocktake mode, camera date reading, scans to sort, Open Food Facts  |
 | [Gaps and score](gaps-and-score/README.md) | Shopping and to-do lists, the preparedness score                                       |
+| [Review](review/README.md)                 | Review cadence and due reminder                                                        |
 | [Drive sync](drive-sync/README.md)         | Household kept in step across devices through Google Drive                             |
 
 Not built yet, so no hub: scenario checklists
 ([#40](https://github.com/pskillen/shtf-planner/issues/40)), contacts and the ICE sheet
-([#45](https://github.com/pskillen/shtf-planner/issues/45)) and the review queue
-([#20](https://github.com/pskillen/shtf-planner/issues/20)). Each hub's "Not built yet" section
+([#45](https://github.com/pskillen/shtf-planner/issues/45)). Each hub's "Not built yet" section
 links the work that extends it.
