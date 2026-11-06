@@ -32,3 +32,5 @@ export {
 export { gaps, type Gap, type Suggestion } from './gaps';
 export { score, type CapabilityScore, type Score } from './score';
 export { preview, type PreviewHorizon, type PreviewRow } from './preview';
+
+export { nextReviewDue, reviewIsDue } from './review';
