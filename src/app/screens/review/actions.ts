@@ -160,3 +160,32 @@ export function undoReview(doc: Document, receipt: Receipt): boolean {
   review.resolved.splice(review.resolved.indexOf(receipt.token), 1);
   return true;
 }
+
+/** Finish the known open session, or create a completed empty review. */
+export function finishReview(
+  doc: Document,
+  packs: Packs,
+  day: string,
+  timestamp: string,
+  id: string,
+): string[] {
+  const ids = reviewSession(doc).ids;
+  const after = score(doc, packs, day, doc.settings.horizonDays).overall;
+  if (!ids.length) {
+    doc.reviews[id] = {
+      id,
+      started: timestamp,
+      finished: timestamp,
+      resolved: [],
+      scoreBefore: after,
+      scoreAfter: after,
+    };
+    return [id];
+  }
+  for (const reviewId of ids) {
+    const review = doc.reviews[reviewId]!;
+    review.finished = timestamp;
+    review.scoreAfter = after;
+  }
+  return ids;
+}
