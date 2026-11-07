@@ -195,6 +195,8 @@ export const QuestionSchema = z.strictObject({
   kind: z.enum(['bool', 'number', 'choice']),
   choices: z.array(Text).optional(),
   unit: z.string().optional(),
+  /** Display labels for stable choice values. */
+  choiceLabels: z.record(z.string(), Text).optional(),
   /** A choice question that starts unanswered, when no option is a fair first guess. */
   noDefault: z.boolean().optional(),
 });
@@ -213,6 +215,14 @@ export const ContributionSchema = z.strictObject({
       resource: ResourceIdSchema,
       perHour: z.number().positive().optional(),
       perHourFrom: z.string().optional(),
+      rateOverrideQuestion: z.string().optional(),
+      fuel: z.strictObject({
+        itemIds: z.array(NamespacedId).min(1),
+        selectionQuestion: z.string().optional(),
+        confirmationQuestion: z.string(),
+        indoorQuestion: z.string().optional(),
+        highRiseQuestion: z.string().optional(),
+      }),
     })
     .optional(),
   /** Capability units provided per running hour (Wh for power), or from a question's answer. */
@@ -266,6 +276,8 @@ export const AssetTypeSchema = z.strictObject({
   name: Text,
   category: CategorySchema,
   questions: z.array(QuestionSchema),
+  useContext: z.enum(['outdoor-only', 'potentially-indoor', 'unknown']).optional(),
+  guidance: z.array(z.strictObject({ text: Text, source: Url })).optional(),
   contributes: z.array(ContributionSchema),
   maintenance: z.array(MaintenanceItemSchema),
 });

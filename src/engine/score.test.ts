@@ -75,7 +75,13 @@ describe('score', () => {
 
   it('lifts heat once there is a heater and fuel', () => {
     const doc = biggarDocument();
-    doc.assets['asset-heater'] = asset('asset-heater', 'cabinet-heater', { setting: '1.3 kW' });
+    doc.assets['asset-heater'] = asset('asset-heater', 'cabinet-heater', {
+      setting: '1.3 kW',
+      chosenLpg: 'items-base:butane-bottle',
+      fuelConfirmed: true,
+      indoorUse: 'permitted',
+      highRise: 'no',
+    });
     addStock(doc, packs, { id: 'gas', item: 'butane-bottle', qty: 2, locationId: 'loc-garage' });
     const heat = pct(doc, 'heat');
     expect(heat.percent).toBe(100);
@@ -189,7 +195,7 @@ describe('preview', () => {
   it('names the heater and its fuel for heat, and leaves plan items out', () => {
     const heat = rows[1]!.rows.find((r) => r.capability === 'heat')!;
     expect(heat.unit).toBe('h');
-    expect(heat.example).toMatch(/ and .* to run it$/);
+    expect(heat.example).toMatch(/Choose how you will keep warm/);
     expect(rows[0]!.rows.every((r) => r.capability !== 'plans')).toBe(true);
   });
 

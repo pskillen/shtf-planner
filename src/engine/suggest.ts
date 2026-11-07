@@ -10,6 +10,13 @@ export interface Suggestion {
   /** The household's usual product of the item, when it has one. */
   productId?: string;
   assetTypeId?: string;
+  assetId?: string;
+  assetIds?: string[];
+  alternativeGroup?: string;
+  /** Resource units still required by this fuel option. */
+  fuelDemand?: number;
+  capabilities?: CapabilityId[];
+  question?: string;
   planItemId?: string;
   /** Packs of `size`: the usual product's, else the item's usual size. */
   qty?: number;
@@ -75,6 +82,7 @@ export function closeResource(
   resource: string,
   shortfall: number,
   limit = 3,
+  onlyItemId?: string,
 ): Suggestion[] {
   if (!(shortfall > EPS)) return [];
   type Candidate = {
@@ -92,6 +100,7 @@ export function closeResource(
   };
   const all: Candidate[] = [];
   for (const item of Object.values(ctx.packs.items)) {
+    if (onlyItemId && item.id !== onlyItemId) continue;
     if (!item.gives.some((g) => g.resource === resource)) continue;
     if (!fitsHousehold(item, ctx.people)) continue;
     if (item.tags.includes('needs-cooking') && !ctx.cookingMet) continue;
@@ -191,61 +200,39 @@ export function closeHours(
 ): Suggestion[] {
   if (!(shortfallHours > EPS)) return [];
   const owned = activeConverters(doc, ctx.packs).filter((c) => c.capability === capability);
-  if (owned.length > 0) {
-    const out: Suggestion[] = [];
-    for (const resource of [...new Set(owned.map((c) => c.resource))].sort()) {
-      const best = owned
-        .filter((c) => c.resource === resource)
-        .reduce((a, b) => (b.output / b.perHour > a.output / a.perHour ? b : a));
-      const fuel = closeResource(
-        ctx,
-        resource,
-        (shortfallHours / best.output) * best.perHour,
-        1,
-      )[0];
-      if (fuel) out.push({ ...fuel, label: `${fuel.label} for the ${best.name}` });
-    }
-    return out;
+  const out: Suggestion[] = [];
+  for (const itemId of [...new Set(owned.map((c) => c.itemId))].sort()) {
+    const choices = owned
+      .filter((c) => c.itemId === itemId)
+      .sort(
+        (a, b) =>
+          b.output / b.perHour - a.output / a.perHour || a.asset.id.localeCompare(b.asset.id),
+      );
+    const best = choices[0]!;
+    const fuel = closeResource(
+      ctx,
+      best.resource,
+      (shortfallHours / best.output) * best.perHour,
+      1,
+      itemId,
+    )[0];
+    if (fuel)
+      out.push({
+        ...fuel,
+        label: `${fuel.label} for the ${best.name}`,
+        assetIds: choices.map((c) => c.asset.id),
+        alternativeGroup: `${capability}:fuel`,
+        fuelDemand: (shortfallHours / best.output) * best.perHour,
+        capabilities: [capability],
+      });
   }
-
-  type Option = { assetTypeId: string; item?: Item; fuel?: Suggestion; total?: number };
-  const options: Option[] = [];
-  for (const asset of Object.values(ctx.packs.assets)) {
-    const c = asset.contributes.find((x) => x.capability === capability && x.converts?.perHour);
-    if (!c?.converts?.perHour) continue;
-    const item = Object.values(ctx.packs.items).find((i) => i.assetTypeId === asset.id);
-    const fuel = closeResource(ctx, c.converts.resource, shortfallHours * c.converts.perHour, 1)[0];
-    const price =
-      item?.typicalPricePence !== undefined && fuel?.pricePence !== undefined
-        ? item.typicalPricePence + fuel.pricePence
-        : undefined;
-    options.push({
-      assetTypeId: asset.id,
-      ...(item ? { item } : {}),
-      ...(fuel ? { fuel } : {}),
-      ...(price !== undefined ? { total: price } : {}),
-    });
-  }
-  options.sort((a, b) => {
-    const pa = a.total !== undefined;
-    const pb = b.total !== undefined;
-    if (pa !== pb) return pa ? -1 : 1;
-    return (a.total ?? 0) - (b.total ?? 0) || compareText(a.assetTypeId, b.assetTypeId);
-  });
-  const best = options.find((o) => o.item && o.total !== undefined) ?? options[0];
-  if (!best) return [];
-  const name = best.item?.name ?? ctx.packs.assets[best.assetTypeId]!.name;
-  const out: Suggestion[] = [
-    {
-      assetTypeId: best.assetTypeId,
-      ...(best.item ? { itemId: best.item.id } : {}),
-      qty: 1,
-      label: `1 × ${name}`,
-      ...(best.item?.typicalPricePence !== undefined
-        ? { pricePence: best.item.typicalPricePence }
-        : {}),
-    },
-  ];
-  if (best.fuel) out.push({ ...best.fuel, label: `${best.fuel.label} to run it` });
-  return out;
+  if (out.length) return out;
+  if (
+    capability === 'heat' &&
+    !Object.values(doc.assets).some((a) =>
+      ctx.packs.assets[a.typeId]?.contributes.some((c) => c.capability === 'heat' && c.converts),
+    )
+  )
+    return [{ label: 'Choose how you will keep warm' }];
+  return [];
 }

@@ -13,7 +13,9 @@
     },
     "asset-bbq": {
       "answers": {
-        "bottleKg": 13
+        "bottleKg": 13,
+        "chosenLpg": "items-base:propane-bottle",
+        "fuelConfirmed": true
       },
       "id": "asset-bbq",
       "locationId": "loc-shed",
@@ -222,7 +224,7 @@
     ],
     "env": "local",
     "packVersions": {
-      "assets-base": 5,
+      "assets-base": 6,
       "guidance-grid-free": 3,
       "guidance-uk-prepare": 3,
       "guidance-us-ready": 4,

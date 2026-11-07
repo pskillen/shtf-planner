@@ -126,7 +126,16 @@ export function gapsFrom(doc: Document, packs: Packs, a: Analysis): Gap[] {
           ...base,
           shortfall: buy,
           kind: 'acquire',
-          suggestions: closeResource(ctx, t.resource as string, buy),
+          suggestions:
+            t.id === 'power:batteryWh'
+              ? [
+                  ...closeHours(ctx, doc, 'power', buy),
+                  ...closeResource(ctx, t.resource as string, buy).map((s) => ({
+                    ...s,
+                    capabilities: ['power' as const],
+                  })),
+                ]
+              : closeResource(ctx, t.resource as string, buy),
         });
         break;
       }
@@ -187,10 +196,78 @@ export function gapsFrom(doc: Document, packs: Packs, a: Analysis): Gap[] {
         shortfall: Math.max(0, t.amount - c.amount),
         unit: t.unit,
         kind: 'task',
-        suggestions: [{ assetTypeId: b.assetTypeId, label: b.task }],
+        suggestions: [{ assetId: b.assetId, question: b.question, label: b.task }],
       });
     }
   }
+
+  // Add independent primary demands for the same fuel once, retaining alternatives per need.
+  const separateItems = new Set(
+    out.filter((g) => g.suggestions.length > 1).map((g) => g.suggestions[0]?.itemId),
+  );
+  const shared = new Map<string, Gap>();
+  const merged = new Set<Gap>();
+  for (const gap of out) {
+    const s = gap.suggestions[0];
+    if (
+      gap.kind !== 'acquire' ||
+      (gap.target.kind !== 'hours' && gap.target.id !== 'power:batteryWh') ||
+      !s?.itemId ||
+      separateItems.has(s.itemId) ||
+      s.fuelDemand === undefined ||
+      !s.perUnitCoverage
+    )
+      continue;
+    const previous = shared.get(s.itemId);
+    if (!previous) {
+      shared.set(s.itemId, gap);
+      continue;
+    }
+    // A per-need alternative cannot replace another need's fuel. Keep these
+    // requirements separate whenever either has an alternative.
+    if (previous.suggestions.length > 1 || gap.suggestions.length > 1) {
+      shared.delete(s.itemId);
+      continue;
+    }
+    const primary = previous.suggestions[0]!;
+    if (primary.productId !== s.productId || primary.perUnitCoverage !== s.perUnitCoverage)
+      continue;
+    if ((primary.capabilities?.length ?? 1) === 1) {
+      previous.suggestions = [
+        primary,
+        ...previous.suggestions
+          .slice(1)
+          .map((alt) => ({ ...alt, label: `For ${previous.capability} instead: ${alt.label}` })),
+      ];
+    }
+    previous.suggestions.push(
+      ...gap.suggestions
+        .slice(1)
+        .map((alt) => ({ ...alt, label: `For ${gap.capability} instead: ${alt.label}` })),
+    );
+    const demand = primary.fuelDemand! + s.fuelDemand;
+    const qty = Math.ceil(demand / s.perUnitCoverage - EPS);
+    const item = packs.items[s.itemId]!;
+    const name = primary.productId
+      ? (doc.products[primary.productId]?.name ?? item.name)
+      : `${item.name} ${formatSize(primary.size!)}`;
+    primary.fuelDemand = demand;
+    if (primary.size) primary.amount = (demand / s.perUnitCoverage) * baseAmountOf(primary.size);
+    primary.qty = qty;
+    primary.label = `${qty} × ${name} for your equipment`;
+    primary.detail = undefined;
+    primary.assetIds = [...new Set([...(primary.assetIds ?? []), ...(s.assetIds ?? [])])].sort();
+    primary.capabilities = [
+      ...new Set([
+        ...(primary.capabilities ?? [previous.capability]),
+        ...(s.capabilities ?? [gap.capability]),
+      ]),
+    ];
+    if (primary.pricePence !== undefined && s.pricePence !== undefined && s.qty)
+      primary.pricePence = Math.round((s.pricePence / s.qty) * qty);
+    merged.add(gap);
+  }
+  for (let i = out.length - 1; i >= 0; i--) if (merged.has(out[i]!)) out.splice(i, 1);
 
   const cap = (g: Gap) => CAPABILITY_ORDER.indexOf(g.capability);
   return out.sort(

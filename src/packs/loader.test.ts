@@ -387,3 +387,67 @@ describe('pack versions in the document', () => {
     ]);
   });
 });
+
+describe('converter fuel references', () => {
+  const burner = () => ({
+    ...assets,
+    assets: [
+      {
+        id: 'assets-t:burner',
+        name: 'Burner',
+        category: 'heat',
+        useContext: 'outdoor-only',
+        questions: [
+          {
+            id: 'choice',
+            text: 'Fuel?',
+            kind: 'choice',
+            choices: ['items-t:water', 'items-t:other'],
+            noDefault: true,
+          },
+          { id: 'confirmed', text: 'Checked?', kind: 'bool' },
+        ],
+        contributes: [
+          {
+            capability: 'cooking',
+            converts: {
+              resource: 'waterL',
+              perHour: 1,
+              fuel: {
+                itemIds: ['items-t:water', 'items-t:other'],
+                selectionQuestion: 'choice',
+                confirmationQuestion: 'confirmed',
+              },
+            },
+            source: 'assumption',
+          },
+        ],
+        maintenance: [],
+      },
+    ],
+  });
+  const other = { ...items.items[0], id: 'items-t:other', offCategories: [] };
+  it('rejects a missing fuel item or one that does not give the resource', () => {
+    expect(() => loadPacks([file(items), file(burner())])).toThrow(
+      /items-t:other must give waterL/,
+    );
+    const wrong = {
+      ...items,
+      items: [items.items[0], { ...other, gives: [{ resource: 'petrolL', amount: 1, per: 1 }] }],
+    };
+    expect(() => loadPacks([file(wrong), file(burner())])).toThrow(/must give waterL/);
+  });
+  it('rejects guessed selection and outdoor-only heat', () => {
+    const invalid = burner();
+    invalid.assets[0]!.questions[0]!.noDefault = false;
+    expect(() =>
+      loadPacks([file({ ...items, items: [...items.items, other] }), file(invalid)]),
+    ).toThrow(/selector must start unanswered/);
+    const outdoor = burner();
+    outdoor.assets[0]!.useContext = 'outdoor-only';
+    outdoor.assets[0]!.contributes[0]!.capability = 'heat';
+    expect(() =>
+      loadPacks([file({ ...items, items: [...items.items, other] }), file(outdoor)]),
+    ).toThrow(/outdoor-only/);
+  });
+});

@@ -92,7 +92,8 @@ COVERAGE / TARGETS               ──►  SCORE      per capability, overall, 
   applies when its lowest horizon band is at or below the chosen horizon.
 - **Coverage.** Stock counts through its product's item (label kcal where known); rotating places
   count up to their minimum; expired stock counts nothing. Converters share fuel in a fixed order
-  (cooking, then heat, then power). Food that needs cooking counts only while cooking is covered;
+  by exact confirmed item (cooking, then heat, then power). Fuel and indoor use remain unknown until
+  checked against the manual. Heat hours are an assumed burner runtime, not safe warmth. Food that needs cooking counts only while cooking is covered;
   raw water only with a way to treat it. Equipment blocked by an answer (solar with no EPS) counts
   nothing and becomes a fix task.
 - **Gaps.** Restocks back to minimums first, then a buy row for the rest, as whole packs of an item

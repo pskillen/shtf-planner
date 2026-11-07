@@ -89,6 +89,7 @@ function AssetForm({
   note: React.ReactNode;
 }) {
   const doc = useDocument();
+  const packs = usePacks();
   const [a, setA] = useState<Asset>(initial);
   const locations = Object.values(doc.locations);
   const lines = describeContributions(type, a.answers);
@@ -126,6 +127,18 @@ function AssetForm({
         />
       </Field>
 
+      {type.contributes
+        .filter((c) => c.converts && !c.converts.fuel.selectionQuestion)
+        .map((c, i) => (
+          <p key={i}>
+            Fuel: {c.converts!.fuel.itemIds.map((id) => packs.items[id]?.name ?? id).join(', ')}
+          </p>
+        ))}
+      {type.guidance?.map((g) => (
+        <p key={g.text}>
+          {g.text} <a href={g.source}>Read guidance</a>
+        </p>
+      ))}
       {type.questions.map((q) => (
         <QuestionField
           key={q.id}

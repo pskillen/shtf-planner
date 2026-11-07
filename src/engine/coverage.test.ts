@@ -283,28 +283,40 @@ describe('coverage: assets as converters', () => {
   it('turns the BBQ bottle into cooking hours and nothing for heat', () => {
     const doc = biggarDocument();
     const cooking = cov(doc, 'cooking:hours');
-    expect(cooking.amount).toBeCloseTo(13 / 0.3); // 13 kg at 0.3 kg an hour
+    expect(cooking.amount).toBeCloseTo(7.5); // target-limited claim
     expect(cooking.from[0]).toMatchObject({ kind: 'asset', id: 'asset-bbq' });
-    expect(cooking.days).toBeCloseTo(13 / 0.3 / (7.5 / 3));
+    expect(cooking.days).toBeCloseTo(3);
     expect(cov(doc, 'heat:hours').amount).toBe(0);
   });
 
   it('gives heat from a cabinet heater and 30 kg of gas: days = kg / burn rate / hours a day', () => {
     const doc = bare();
-    doc.assets['asset-heater'] = asset('asset-heater', 'cabinet-heater', { setting: '1.3 kW' });
+    doc.assets['asset-heater'] = asset('asset-heater', 'cabinet-heater', {
+      setting: '1.3 kW',
+      chosenLpg: 'items-base:butane-bottle',
+      fuelConfirmed: true,
+      indoorUse: 'permitted',
+      highRise: 'no',
+    });
     item(doc, 'gas-1', 'butane-bottle', 2, L.garage);
     const heat = cov(doc, 'heat:hours');
-    expect(heat.amount).toBeCloseTo(30 / 0.095, 6);
+    expect(heat.amount).toBeCloseTo(18, 6);
     // the excellent-insulation, snow-risk home needs 6 hours a day
-    expect(heat.days).toBeCloseTo(30 / 0.095 / 6, 6);
+    expect(heat.days).toBeCloseTo(3, 6);
     expect(heat.from).toMatchObject([{ kind: 'asset', id: 'asset-heater' }]);
   });
 
   it('uses the answered heater setting, and reports an unanswered one as blocked', () => {
     const doc = bare();
-    doc.assets['asset-heater'] = asset('asset-heater', 'cabinet-heater', { setting: '4.2 kW' });
+    doc.assets['asset-heater'] = asset('asset-heater', 'cabinet-heater', {
+      setting: '4.2 kW',
+      chosenLpg: 'items-base:butane-bottle',
+      fuelConfirmed: true,
+      indoorUse: 'permitted',
+      highRise: 'no',
+    });
     item(doc, 'gas-1', 'butane-bottle', 1, L.garage);
-    expect(cov(doc, 'heat:hours').amount).toBeCloseTo(15 / 0.3);
+    expect(cov(doc, 'heat:hours').amount).toBeCloseTo(18);
     doc.assets['asset-heater']!.answers = {};
     const heat = cov(doc, 'heat:hours');
     expect(heat.amount).toBe(0);
@@ -313,24 +325,43 @@ describe('coverage: assets as converters', () => {
 
   it('shares a fuel: cooking takes what it needs, heat gets the rest', () => {
     const doc = biggarDocument(); // BBQ and one 13 kg bottle
-    doc.assets['asset-heater'] = asset('asset-heater', 'cabinet-heater', { setting: '1.3 kW' });
+    doc.assets['asset-heater'] = asset('asset-heater', 'cabinet-heater', {
+      setting: '1.3 kW',
+      chosenLpg: 'items-base:propane-bottle',
+      fuelConfirmed: true,
+      indoorUse: 'permitted',
+      highRise: 'no',
+    });
     const cooking = cov(doc, 'cooking:hours');
     const heat = cov(doc, 'heat:hours');
-    expect(cooking.amount).toBeCloseTo(13 / 0.3);
+    expect(cooking.amount).toBeCloseTo(7.5);
     const cookingKg = 7.5 * 0.3; // the 7.5 hours cooking needs for 3 days
-    expect(heat.amount).toBeCloseTo((13 - cookingKg) / 0.095);
+    expect(
+      analyse(doc, packs, NOW, 3).equipmentRuntime.find((r) => r.assetId === 'asset-heater')!
+        .availableHours,
+    ).toBeCloseTo((13 - cookingKg) / 0.095);
+    expect(heat.amount).toBeCloseTo(18);
   });
 
   it('burns a generator fuel into Wh', () => {
     const doc = bare();
+    delete doc.assets['asset-ev-1'];
+    delete doc.assets['asset-ev-2'];
     doc.assets['asset-gen'] = asset('asset-gen', 'generator', {
       fuel: 'petrol',
+      fuelConfirmed: true,
       watts: 800,
       fuelPerHour: 0.5,
     });
     item(doc, 'petrol', 'petrol', 1, L.shed);
     const gen = cov(doc, 'power:batteryWh').from.find((s) => s.id === 'asset-gen')!;
-    expect(gen.amount).toBeCloseTo((20 / 0.5) * 800);
+    expect(gen.amount).toBeCloseTo(
+      analyse(doc, packs, NOW, 3).targets.find((t) => t.id === 'power:batteryWh')!.amount,
+    );
+    expect(
+      analyse(doc, packs, NOW, 3).equipmentRuntime.find((r) => r.assetId === 'asset-gen')!
+        .availableHours,
+    ).toBeCloseTo(20 / 0.5);
   });
 
   it('adds a battery bought as an asset (a power station answers in Wh)', () => {

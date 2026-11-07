@@ -1,4 +1,5 @@
 import type { AssetType, Contribution, Question } from '../../../model';
+import { equipmentEligibility } from '../../../engine/equipmentEligibility';
 import { CAPABILITY_GIVES } from '../../labels';
 
 export type Answer = string | number | boolean;
@@ -27,6 +28,11 @@ export function setAnswer(answers: Answers, question: Question, raw: Answer | un
   const next = { ...answers };
   const clear = () => {
     delete next[question.id];
+    if (question.id === 'chosenLpg' || question.id === 'fuel') {
+      delete next.fuelConfirmed;
+      delete next.manualRate;
+      if (question.id === 'fuel') delete next.fuelPerHour;
+    }
     return next;
   };
   if (raw === undefined || raw === '') return clear();
@@ -43,6 +49,15 @@ export function setAnswer(answers: Answers, question: Question, raw: Answer | un
     case 'choice': {
       const choice = String(raw);
       if (!question.choices?.includes(choice)) return clear();
+      if (
+        (question.id === 'chosenLpg' || question.id === 'fuel') &&
+        answers[question.id] !== choice
+      ) {
+        delete next.fuelConfirmed;
+        delete next.manualRate;
+        if (question.id === 'fuel') delete next.fuelPerHour;
+      }
+      if (question.id === 'setting' && answers[question.id] !== choice) delete next.manualRate;
       next[question.id] = choice;
       return next;
     }
@@ -58,13 +73,12 @@ export interface ContributionLine {
 }
 
 function needs(type: AssetType, c: Contribution): string {
-  if (!c.when) return '';
+  if (!c.when) return 'check the equipment questions below';
   const q = type.questions.find((x) => x.id === c.when!.question);
   const text = q ? `“${q.text}”` : 'a question below';
-  if (typeof c.when.equals === 'boolean') {
-    return `answer ${c.when.equals ? 'yes' : 'no'} to ${text}`;
-  }
-  return `${text} must be ${c.when.equals}`;
+  return typeof c.when.equals === 'boolean'
+    ? `answer ${c.when.equals ? 'yes' : 'no'} to ${text}`
+    : `${text} must be ${c.when.equals}`;
 }
 
 /**
@@ -78,14 +92,18 @@ export function describeContributions(type: AssetType, answers: Answers): Contri
   for (const c of type.contributes) if (!order.includes(c.capability)) order.push(c.capability);
   for (const capability of order) {
     const mine = type.contributes.filter((c) => c.capability === capability);
-    const applies = mine.some((c) => !c.when || answers[c.when.question] === c.when.equals);
+    const applies = mine.some(
+      (c) =>
+        (!c.when || answers[c.when.question] === c.when.equals) &&
+        (!c.converts || equipmentEligibility(type, c, answers).reasons.length === 0),
+    );
     const phrase = CAPABILITY_GIVES[capability];
     lines.push({
       capability,
       gives: applies,
       text: applies
         ? `Gives ${phrase}: yes`
-        : `Gives ${phrase}: no, ${mine.map((c) => needs(type, c)).join(' or ')}`,
+        : `Gives ${phrase}: no, ${mine.some((c) => c.converts) ? 'check the equipment questions below' : mine.map((c) => needs(type, c)).join(' or ')}`,
     });
   }
   return lines;
@@ -99,7 +117,7 @@ export function keyAnswer(type: AssetType, answers: Answers): string | undefined
   for (const q of type.questions) {
     const a = answers[q.id];
     if (q.kind === 'number' && typeof a === 'number') return q.unit ? `${a} ${q.unit}` : String(a);
-    if (q.kind === 'choice' && typeof a === 'string') return a;
+    if (q.kind === 'choice' && typeof a === 'string') return q.choiceLabels?.[a] ?? a;
   }
   return undefined;
 }

@@ -162,6 +162,48 @@ export function loadPacks(raws: ReadonlyArray<{ label: string; raw: unknown }>):
             needQuestion(c.storesWh?.fromQuestion, `${at}.storesWh`, 'number');
             needQuestion(c.holds?.fromQuestion, `${at}.holds`, 'number');
             needQuestion(c.converts?.perHourFrom, `${at}.converts`, 'number');
+            needQuestion(c.converts?.rateOverrideQuestion, `${at}.converts`, 'number');
+            const fuel = c.converts?.fuel;
+            if (fuel) {
+              if (!asset.useContext) issues.push(`${at}: a converter needs a use context`);
+              if (c.capability === 'heat' && !fuel.indoorQuestion)
+                issues.push(`${at}: indoor heat needs a manual indoor-use check`);
+              needQuestion(fuel.confirmationQuestion, `${at}.converts.fuel`, 'bool');
+              needQuestion(fuel.selectionQuestion, `${at}.converts.fuel`, 'choice');
+              needQuestion(fuel.indoorQuestion, `${at}.converts.fuel`, 'choice');
+              needQuestion(fuel.highRiseQuestion, `${at}.converts.fuel`, 'choice');
+              if (
+                fuel.indoorQuestion &&
+                !['permitted', 'not permitted', 'unknown'].every((x) =>
+                  questions.get(fuel.indoorQuestion!)?.choices?.includes(x),
+                )
+              )
+                issues.push(
+                  `${at}.converts.fuel: indoor check must offer permitted, not permitted and unknown`,
+                );
+              if (
+                fuel.highRiseQuestion &&
+                !['yes', 'no', 'unknown'].every((x) =>
+                  questions.get(fuel.highRiseQuestion!)?.choices?.includes(x),
+                )
+              )
+                issues.push(`${at}.converts.fuel: high-rise check must offer yes, no and unknown`);
+              if (fuel.itemIds.length > 1 && !fuel.selectionQuestion)
+                issues.push(`${at}.converts.fuel: multiple items require a selector`);
+              if (fuel.selectionQuestion) {
+                const q = questions.get(fuel.selectionQuestion);
+                if (
+                  !q?.noDefault ||
+                  fuel.itemIds.some((id) => !q.choices?.includes(id)) ||
+                  q.choices?.some((id) => !fuel.itemIds.includes(id))
+                )
+                  issues.push(
+                    `${at}.converts.fuel: selector must start unanswered and offer exactly the fuel item IDs`,
+                  );
+              }
+              if (asset.useContext === 'outdoor-only' && c.capability === 'heat')
+                issues.push(`${at}: outdoor-only equipment cannot provide indoor heat`);
+            }
             needQuestion(c.providesPerDayFrom?.question, `${at}.providesPerDayFrom`, 'number');
             if (typeof c.outputPerHour === 'object')
               needQuestion(c.outputPerHour.fromQuestion, `${at}.outputPerHour`, 'number');
@@ -186,6 +228,11 @@ export function loadPacks(raws: ReadonlyArray<{ label: string; raw: unknown }>):
             )
               issues.push(`${at}.converts: give exactly one of perHour and perHourFrom`);
           });
+          for (const guidance of asset.guidance ?? [])
+            if (!sourceDates.has(guidance.source))
+              issues.push(
+                `${where}.guidance: source ${guidance.source} is not listed in the pack's sources`,
+              );
           const mids = asset.maintenance.map((m) => m.id);
           if (new Set(mids).size !== mids.length) issues.push(`${where}: duplicate maintenance id`);
         });
@@ -223,6 +270,22 @@ export function loadPacks(raws: ReadonlyArray<{ label: string; raw: unknown }>):
         if (item.assetTypeId !== undefined && !assets[item.assetTypeId])
           issues.push(`items[${i}].assetTypeId: asset type "${item.assetTypeId}" does not exist`);
       });
+    }
+    if (pack.kind === 'assets') {
+      pack.assets.forEach((asset, i) =>
+        asset.contributes.forEach((c, j) => {
+          c.converts?.fuel.itemIds.forEach((id) => {
+            const item = items[id];
+            if (
+              !item ||
+              !item.gives.some((g) => g.resource === c.converts!.resource && g.amount > 0)
+            )
+              issues.push(
+                `assets[${i}].contributes[${j}].converts.fuel: ${id} must give ${c.converts!.resource} positively`,
+              );
+          });
+        }),
+      );
     }
     if (pack.kind === 'plans') {
       pack.items.forEach((item, i) =>
