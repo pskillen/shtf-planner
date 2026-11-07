@@ -57,8 +57,30 @@ it('shows engine order, urgency words and destinations for every kind', () => {
   );
   for (const row of rows) {
     expect(within(row).getAllByRole('link')[0]!.getAttribute('href')).toMatch(/^\/app\//);
-    expect(row.textContent).toMatch(/Overdue|Due today|Upcoming/);
+    expect(row.textContent).toMatch(
+      /Overdue|Due today|Upcoming|Expired|Expiring soon|Before next check/,
+    );
   }
+});
+it('labels stock using configured expiry windows and keeps task urgency words', () => {
+  vi.setSystemTime(new Date('2026-11-30T12:00:00Z'));
+  const doc = fixture();
+  doc.settings.expirySoonMonths = 2;
+  doc.settings.expiryCheckMonths = 3;
+  const stock = Object.values(doc.stock)[0]!;
+  doc.stock = Object.fromEntries(
+    ['2026-10', '2026-11', '2027-01', '2027-02', '2027-03'].map((month, i) => {
+      const id = `label-stock-${i}`;
+      return [id, { ...stock, id, bestBefore: month }];
+    }),
+  );
+  render(liveStore(doc).wrap(<ReviewScreen />));
+  const labels = Array.from(document.querySelectorAll('[data-review-kind="expiry"] .badge')).map(
+    (badge) => badge.textContent,
+  );
+  expect(labels).toEqual(['Expired', 'Expiring soon', 'Expiring soon', 'Before next check']);
+  const task = document.querySelector('[data-review-kind="recount"] .badge')!;
+  expect(task.textContent).toBe('Due today');
 });
 it('shows the empty boundary date', () => {
   vi.setSystemTime(new Date('2026-11-04T12:00:00Z'));

@@ -16,7 +16,10 @@ Settings shows the next date and updates it immediately when the cadence changes
 are in the app; there are no push notifications.
 
 The screen shows a single engine-ordered list with an urgency word and colour on every row. Rows open
-the stock batch, equipment, person, filtered place in Stores or selected plan in Gaps. A read-only
+the stock batch, equipment, person, filtered place in Stores or selected plan in Gaps. Stock rows say
+“Expired”, “Expiring soon” or “Before next check” according to the configured expiry windows;
+stock beyond those windows says “Upcoming”. A best-before month lasts through its final day.
+Other tasks retain their due urgency labels. A read-only
 document keeps navigation available while answer buttons and edit sheets disable changes. An empty list
 shows the end of the current look-ahead window.
 

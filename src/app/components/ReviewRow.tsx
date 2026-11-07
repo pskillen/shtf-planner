@@ -5,6 +5,12 @@ import type { Document, Packs } from '../../model';
 import { actions, reviewRow } from '../screens/review/view';
 
 const urgencyLabel = { overdue: 'Overdue', due: 'Due today', soon: 'Upcoming' } as const;
+const expiryLabel = {
+  expired: 'Expired',
+  soon: 'Expiring soon',
+  check: 'Before next check',
+  ok: 'Upcoming',
+} as const;
 export function ReviewRow({
   item,
   doc,
@@ -44,7 +50,9 @@ export function ReviewRow({
       <Link className="row-main" to={row.to}>
         <strong>{row.title}</strong>
         <span className="muted">{row.detail}</span>
-        <span className={`badge review-${item.urgency}`}>{urgencyLabel[item.urgency]}</span>
+        <span className={`badge review-${item.urgency}`}>
+          {item.kind === 'expiry' ? expiryLabel[item.expiryLevel] : urgencyLabel[item.urgency]}
+        </span>
       </Link>
       <div className="review-actions">
         {item.kind === 'age' || item.kind === 'recount' ? (
