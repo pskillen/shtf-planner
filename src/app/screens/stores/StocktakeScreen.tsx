@@ -25,6 +25,7 @@ import { MonthField } from './MonthField';
 import { ScanResolve } from './ScanResolve';
 import {
   dateSummaryText,
+  multipackCount,
   quantityHint,
   readTypedCode,
   savedText,
@@ -163,7 +164,7 @@ export function StocktakeScreen() {
 
   function startDate(productId: string, from?: string): void {
     setCounting({ productId, code: from });
-    setQty(1);
+    setQty(multipackCount(doc.products[productId]?.name ?? '') ?? 1);
     setBestBefore(undefined);
     setCode(null);
     setFinding(false);
