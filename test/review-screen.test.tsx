@@ -67,6 +67,8 @@ it('labels stock using configured expiry windows and keeps task urgency words', 
   const doc = fixture();
   doc.settings.expirySoonMonths = 2;
   doc.settings.expiryCheckMonths = 3;
+  doc.meta.createdAt = '2020-01-01T00:00:00.000Z';
+  doc.settings.reviewCadenceMonths = 6;
   const stock = Object.values(doc.stock)[0]!;
   doc.stock = Object.fromEntries(
     ['2026-10', '2026-11', '2027-01', '2027-02', '2027-03'].map((month, i) => {
@@ -78,9 +80,19 @@ it('labels stock using configured expiry windows and keeps task urgency words', 
   const labels = Array.from(document.querySelectorAll('[data-review-kind="expiry"] .badge')).map(
     (badge) => badge.textContent,
   );
-  expect(labels).toEqual(['Expired', 'Expiring soon', 'Expiring soon', 'Before next check']);
+  expect(labels).toEqual([
+    'Expired',
+    'Expiring soon',
+    'Expiring soon',
+    'Before next check',
+    'Before next check',
+  ]);
   const task = document.querySelector('[data-review-kind="recount"] .badge')!;
   expect(task.textContent).toBe('Due today');
+  const upcomingTask = Array.from(
+    document.querySelectorAll('[data-review-kind]:not([data-review-kind="expiry"]) .badge'),
+  ).find((badge) => badge.textContent === 'Upcoming');
+  expect(upcomingTask).toBeTruthy();
 });
 it('shows the empty boundary date', () => {
   vi.setSystemTime(new Date('2026-11-04T12:00:00Z'));
