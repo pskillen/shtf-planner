@@ -60,3 +60,6 @@ equipment form, and Stores lists each place's equipment. [D127]
 **Water containers are stock for now.** A container "kept filled" is stock counting what it holds.
 Open: they may become equipment that holds a capacity of a resource, the inverse of equipment that
 burns fuel ([#91](https://github.com/pskillen/shtf-planner/issues/91)). [D196]
+
+Fuel remains stock and is matched by exact item to confirmed equipment. Allocation tracks each
+stock row and its proportional rotating minimum; an equipment bottle-size answer is not stock.

@@ -304,3 +304,34 @@ test('Gaps highlights heat and links its own shopping suggestions', async ({ pag
   await page.getByRole('link', { name: '← Back to gaps' }).click();
   await expect(page.getByRole('heading', { name: 'To do' })).toBeVisible();
 });
+
+test('exact fuel choice survives reload and a missing confirmation links to its equipment', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  await fixture(page, '/app/assets');
+  await page.getByRole('button', { name: 'Edit Gas BBQ' }).click();
+  await page.getByRole('radio', { name: 'Butane bottle' }).click();
+  await page.getByRole('button', { name: 'Save' }).click();
+  await page.evaluate(() => (window as unknown as { __shtf: Shtf }).__shtf.flush());
+  await page.reload();
+  await page.getByRole('button', { name: 'Edit Gas BBQ' }).click();
+  await expect(page.getByRole('radio', { name: 'Butane bottle' })).toHaveAttribute(
+    'aria-checked',
+    'true',
+  );
+  await expect(page.getByRole('switch', { name: /checked the chosen fuel/ })).not.toBeChecked();
+  await page.getByRole('button', { name: 'Save' }).click();
+  await expect(page.getByText('Edit Gas BBQ', { exact: true })).not.toBeVisible();
+  await page.goto('/app/gaps?debug=1');
+  const edit = page.getByRole('link', { name: 'Open Gas BBQ' }).first();
+  await expect(edit).toHaveAttribute('href', '/app/assets?edit=asset-bbq');
+  await edit.click();
+  await expect(page.getByText('Edit Gas BBQ')).toBeVisible();
+  await page.goto('/app/gaps/shopping?debug=1');
+  await expect(page.getByText('Choose how you will keep warm')).toBeVisible();
+  await page.goto('/app/gaps/shopping?need=heat&debug=1');
+  await expect(page.getByText('Choose how you will keep warm')).toBeVisible();
+  await page.getByRole('link', { name: /Back to gaps/ }).click();
+  await expect(page).toHaveURL(/\/app\/gaps/);
+});

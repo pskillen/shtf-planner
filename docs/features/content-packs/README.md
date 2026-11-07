@@ -60,7 +60,10 @@ assetTypeId?, offCategories?, source? }`. **`measure`** is `mass`, `volume` or `
   `providesPerDayFrom` (fuel-free supply, e.g. solar), `storesWh` (a battery), `holds` (held stock,
   e.g. a water butt). Solar and a home battery contribute power **only** when `hasEps` is true; an
   EV only when `v2l`. A contribution with a number carries a `source` (an `https` URL listed in
-  the pack's `sources`, or `"assumption"`), as a rule does; the loader requires it.
+  the pack's `sources`, or `"assumption"`), as a rule does; the loader requires it. Each converter
+  names exact fuel items, a confirmation question and, for multiple items, an unanswered selector
+  whose values are item IDs. Its use context and sourced safety guidance are bundled; indoor heat
+  requires the household's manual check. Rates marked assumption are not manufacturer claims.
 - **`guidance`**: `horizonBands` and `rules`. A `Rule` states a quantity (`perPersonDay`,
   `perPetDay`, `perHouseholdDay`, `perHousehold`, `hoursPerDay`, `mealsPerPersonDay` or `rangeKm`), optional
   `appliesTo`, `requires`, `multipliers`, `minHorizonDays`, and a `source`. With `ageBands`, a
@@ -162,7 +165,6 @@ re-checked against its sources at any time.
 - Content and engine breadth ([#49](https://github.com/pskillen/shtf-planner/issues/49)): diesel,
   vehicles, candles and torch cells as light, a wood burner and a gas BBQ as items to buy, Welsh and
   Northern Irish flood links, a check of the asset assumptions, the CoFID kcal check.
-- Equipment that names its exact fuel, and equipment that holds a resource up to a capacity (water
-  containers): [#28](https://github.com/pskillen/shtf-planner/issues/28).
+- Equipment that holds a resource up to a capacity (water containers): [#28](https://github.com/pskillen/shtf-planner/issues/28).
 - A checklist pack by scenario and phase, with stable ids so packs merge without duplicates:
   [#40](https://github.com/pskillen/shtf-planner/issues/40).

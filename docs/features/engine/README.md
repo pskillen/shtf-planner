@@ -107,16 +107,18 @@ becomes a `task` gap ("Fit an EPS so Roof solar keeps working in a power cut").
 
 ## Converters share fuel
 
-A heater, stove or generator turns a fuel resource (held as stock) into running hours (or Wh): the
-held amount divided by the burn rate. Fuel is shared: **cooking** takes what its target needs first, then
-**heat**, then **power**, and what is left is available to the next. Where two assets burn the same
-fuel in one capability, the most efficient counts (they are alternatives, not additions). A
-converter that is missing becomes an asset plus its fuel in the suggestions.
+A converter counts only the exact stock item selected and confirmed against its manual. Missing or
+stale selection, confirmation, indoor-use permission, high-rise check, rate or output gives no
+allocation and produces a task. Existing generic rates remain assumptions; a positive manual rate
+can override them. Outdoor-only cookers can supply cooking but never indoor heat.
 
-The per-capability coverage row of a converter shows its **full hours** from the fuel left when its
-turn comes, so the BBQ's cooking row can read 43.3 h even though heat shares the bottle afterwards.
-What heat gets is its own row, computed from what cooking left. The sharing affects the later
-capabilities' rows and the score, not the earlier row's display.
+The allocator counts each stock row, including its product size and proportional rotating minimum,
+then gives cooking first claim, heat second and power third. It chooses the best output per unit for
+one exact item within a capability, with stable ties; distinct item pools add. Claims are limited to
+the target. This deterministic policy is not a global optimiser. `equipmentRuntime` projects the
+same analysis: available potential after earlier claims, allocated hours, alternatives and lots.
+Unknown quantities remain absent. The heat target is a legacy assumed burner runtime, not an
+assessment of safe warmth.
 
 ## Dependent capabilities
 
@@ -179,7 +181,7 @@ and over the packs it is given:
   example; for more (a month of charging) the banks are still named and a portable power station is
   added in words ("or 5 × Portable power station (500 Wh)"), because a station costs two to two and
   a half times as much for the same Wh and is never swapped in silently.
-- **Heat and cooking** keep "a heater and its fuel to run it" (or the fuel for the one you own).
+- **Heat and cooking** suggest only fuel confirmed for owned equipment; otherwise check the equipment or choose a heating plan.
 - A radio is "e.g. a wind-up or battery-powered radio"; driving range is "about the same as a
   vehicle charged or fuelled to drive N km".
 
@@ -254,8 +256,7 @@ No screens (they call these functions), budgeting or minimum suggestions from re
 
 ## Not built yet
 
-- Equipment linked to its exact fuel, with what is left per piece of equipment ("BBQ: 3 days of
-  cooking on 1 x 13 kg propane"): [#28](https://github.com/pskillen/shtf-planner/issues/28).
+- Equipment runtime and per-fuel lot details in the equipment screen: [#28](https://github.com/pskillen/shtf-planner/issues/28).
 - Diesel, vehicles as assets, candles and torch cells as light, no impractical suggestions on big
   shortfalls, the preview's food-mix overshoot:
   [#49](https://github.com/pskillen/shtf-planner/issues/49).

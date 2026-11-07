@@ -32,8 +32,9 @@ score at the next horizon is shown so moving up is concrete. [D8]
 biggest asks highlighted, from the same engine call as the score. [D28]
 
 **Fuel is shared in a fixed order.** Cooking takes what its target needs from a fuel first, then
-heat, then power. Assets that burn the same fuel in one capability are alternatives (the most
-efficient counts), not a sum. [D90]
+heat, then power. Assets that burn the same exact item in one capability are alternatives (the most
+efficient counts), not a sum; distinct item pools can add. Only target-limited claims consume lots.
+Unknown fuel, connection, rate or indoor suitability has no default or fallback. [D90]
 
 **Which guidance applies.** A guidance pack applies when its lowest horizon band is at or below the
 chosen horizon; if every banded pack is above it, the lowest-banded pack applies anyway. Comms is a
@@ -63,5 +64,5 @@ item; undated stock is never first. [D185, D190]
 **Equipment and fuel are counted, maintenance is not yet scored.** Equipment comes from the assets
 pack with a questionnaire (does the solar have an EPS? does the EV have vehicle-to-load?); an answer
 can block a contribution, and a blocked one becomes a named fix task ("Fit an EPS"). Maintenance
-schedules feed review reminders but do not affect the score. Linking equipment to its exact fuel remains planned:
-[#28](https://github.com/pskillen/shtf-planner/issues/28). [D24]
+schedules feed review reminders but do not affect the score. Exact confirmed fuel is required; heat
+hours are a legacy assumed burner runtime, not a safe-warmth assessment. [D24]

@@ -68,3 +68,7 @@ The [review summary](../review/README.md) shows the score snapshots captured bef
 
 `test/gaps-view.test.ts`, `test/gaps-screen.test.tsx`, `test/score-screen.test.tsx`, `src/engine/gaps.test.ts`,
 Playwright `e2e/inventory.spec.ts`, `e2e/products.spec.ts`.
+
+Fuel suggestions name the exact confirmed fuel for owned equipment. Missing facts become equipment
+checks; without a heater, the shopping list asks for a heating plan instead of pairing a generic
+heater and bottle. The heat score currently represents assumed burner hours, not safe warmth.

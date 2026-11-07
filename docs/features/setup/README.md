@@ -114,7 +114,7 @@ leaving half-way.
 
 ## Not built yet
 
-- Equipment linked to its exact fuel: [#28](https://github.com/pskillen/shtf-planner/issues/28).
+- Equipment runtime and fuel lot details: [#28](https://github.com/pskillen/shtf-planner/issues/28).
 - Natural Resources Wales and DfI flood links, diesel, vehicles as assets:
   [#49](https://github.com/pskillen/shtf-planner/issues/49).
 - Scenario checklists (power cut, flood, storm, heatwave, evacuate), tracked and printable:
@@ -133,3 +133,7 @@ leaving half-way.
 places, a solar array and 14 days, then a reload; the fixture household with a medication edit and
 delete with undo), `e2e/document.spec.ts` (an edit then a reload, ten times) and `e2e/phone.spec.ts`
 (375 px: horizon table, Back and discard, long names, the unreadable banner).
+
+Equipment fuel selection starts unanswered. Check the chosen fuel and connection against the manual;
+indoor heating also needs the manual and any high-rise check. Changing the fuel clears confirmation.
+The manual fuel rate may override a pack assumption.
