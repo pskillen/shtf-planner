@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { StoreContext } from '../src/app/state/storeContext';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GapsScreen } from '../src/app/screens/GapsScreen';
 import { ShoppingScreen } from '../src/app/screens/ShoppingScreen';
@@ -82,5 +84,41 @@ describe('gaps overview', () => {
     expect(screen.queryByRole('radio', { name: 'By aisle' })).toBeNull();
     expect(screen.getByRole('heading', { name: 'To do' })).toBeTruthy();
     expect(screen.getByText(/Heat: 0 of/)).toBeTruthy();
+  });
+});
+
+describe('fuel shopping alternatives', () => {
+  it('keeps one actionable exact fuel and its alternative on the full and heat lists', () => {
+    const doc = biggarDocument();
+    delete doc.stock['stock-propane'];
+    for (const [id, fuel] of [
+      ['heater-a', 'items-base:butane-bottle'],
+      ['heater-b', 'items-base:propane-bottle'],
+    ]) {
+      doc.assets[id!] = {
+        id: id!,
+        typeId: 'assets-base:catalytic-heater',
+        maintenance: {},
+        answers: { chosenLpg: fuel!, fuelConfirmed: true, indoorUse: 'permitted', highRise: 'no' },
+      };
+    }
+    for (const path of ['/app/gaps/shopping', '/app/gaps/shopping?need=heat']) {
+      const s = liveStore(doc);
+      const result = render(
+        <MemoryRouter initialEntries={[path]}>
+          <StoreContext.Provider value={s.store}>
+            <ShoppingScreen />
+          </StoreContext.Provider>
+        </MemoryRouter>,
+      );
+      const purchase = screen.getByRole('button', { name: /Bought: Butane bottle/ });
+      expect(purchase).toBeTruthy();
+      expect(screen.getByText(/or .*Propane bottle/)).toBeTruthy();
+      fireEvent.click(screen.getByRole('radio', { name: 'By aisle' }));
+      expect(screen.getByRole('button', { name: /Bought: Butane bottle/ })).toBeTruthy();
+      fireEvent.click(screen.getByRole('button', { name: /Bought: Butane bottle/ }));
+      expect(screen.getByRole('dialog')).toBeTruthy();
+      result.unmount();
+    }
   });
 });

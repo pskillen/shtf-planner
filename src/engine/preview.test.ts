@@ -76,7 +76,7 @@ describe('preview examples on the Biggar household', () => {
   });
 
   it('keeps the heater-and-fuel wording for heat and cooking', () => {
-    expect(at(7, 'heat').example).toMatch(/^e\.g\. .* and .* to run it$/);
+    expect(at(7, 'heat').example).toMatch(/Choose how you will keep warm/);
     expect(at(7, 'cooking').example).toMatch(/^e\.g\. .* for the Gas BBQ$/);
   });
 });

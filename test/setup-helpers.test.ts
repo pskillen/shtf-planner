@@ -87,7 +87,7 @@ describe('the asset questionnaire', () => {
 
   it('starts bools off and choices on their first option, numbers unanswered', () => {
     expect(defaultAnswers(solar)).toEqual({ hasEps: false });
-    expect(defaultAnswers(generator)).toEqual({ fuel: 'petrol' });
+    expect(defaultAnswers(generator)).toEqual({ fuelConfirmed: false });
   });
 
   it('writes each answer with the type its question calls for', () => {
@@ -124,7 +124,13 @@ describe('the asset questionnaire', () => {
   it('folds contributions to one capability into one line, and counts what applies', () => {
     const heater = packs.assets['assets-base:cabinet-heater']!;
     expect(heater.contributes.length).toBeGreaterThan(1);
-    const lines = describeContributions(heater, { setting: '1.3 kW' });
+    const lines = describeContributions(heater, {
+      setting: '1.3 kW',
+      chosenLpg: 'items-base:butane-bottle',
+      fuelConfirmed: true,
+      indoorUse: 'permitted',
+      highRise: 'no',
+    });
     expect(lines).toHaveLength(1);
     expect(lines[0]!.gives).toBe(true);
   });

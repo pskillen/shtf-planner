@@ -26,7 +26,7 @@ const ASSETS = 'assets-base';
 const TODAY = '2026-09-01';
 /** The pack versions the fixture was written against (a test checks they are current). */
 const PACK_VERSIONS: Record<string, number> = {
-  'assets-base': 5,
+  'assets-base': 6,
   'items-base': 9,
   'guidance-grid-free': 3,
   'guidance-uk-prepare': 3,
@@ -123,7 +123,7 @@ export function biggarDocument(): Document {
     asset('asset-bbq', 'gas-bbq', {
       name: 'Gas BBQ',
       locationId: L.shed,
-      answers: { bottleKg: 13 },
+      answers: { bottleKg: 13, chosenLpg: 'items-base:propane-bottle', fuelConfirmed: true },
       maintenance: { 'fuel-rotate': '2025-09-01' },
     }),
     asset('asset-smoke', 'smoke-alarm', {

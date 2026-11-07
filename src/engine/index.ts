@@ -23,6 +23,9 @@ export {
 export {
   coverage,
   analyse,
+  equipmentRuntime,
+  type EquipmentRuntime,
+  type FuelLot,
   type Analysis,
   type BelowMinimum,
   type BlockedAsset,

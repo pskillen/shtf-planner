@@ -26,9 +26,17 @@ export function QuestionField({
         <Segmented
           label={question.text}
           value={typeof value === 'string' ? value : undefined}
-          options={(question.choices ?? []).map((c) => ({ value: c, label: c }))}
+          options={(question.choices ?? []).map((c) => ({
+            value: c,
+            label: question.choiceLabels?.[c] ?? c,
+          }))}
           onChange={onAnswer}
         />
+        {question.noDefault && (
+          <button type="button" onClick={() => onAnswer(undefined)}>
+            Other / not sure
+          </button>
+        )}
       </FieldGroup>
     );
   }

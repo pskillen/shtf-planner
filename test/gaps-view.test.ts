@@ -136,12 +136,8 @@ describe('the gaps view on the fixture household', () => {
 
   it('suggests a heater and its fuel for heat, as two lines to tick', () => {
     const heat = view(3).shopping.filter((r) => r.capability === 'heat');
-    expect(heat.length).toBe(2);
-    // the heater is equipment (its row opens the equipment form); its fuel is stock
-    expect(heat[0]!.assetTypeId).toMatch(/^assets-base:/);
-    expect(heat[0]!.itemId).toBeUndefined();
-    expect(heat[1]!.itemId).toBeDefined();
-    expect(heat[0]!.closes).toBe('heat: 18 h short of 3 days');
+    expect(heat).toHaveLength(1);
+    expect(heat[0]!.label).toBe('Choose how you will keep warm');
   });
 
   it('keeps store alternatives as the "or" line of one row', () => {
@@ -194,9 +190,9 @@ describe('the gaps view on the fixture household', () => {
 
   it('keeps tasks and plan items in the to-do list, with the plan item to mark done', () => {
     const todo = view(3).todo;
-    expect(
-      todo.some((r) => r.kind === 'task' && /^Fit an EPS/.test(r.label) && r.assetTypeId),
-    ).toBe(true);
+    expect(todo.some((r) => r.kind === 'task' && /^Fit an EPS/.test(r.label) && r.assetId)).toBe(
+      true,
+    );
     const plan = todo.find((r) => r.kind === 'plan' && r.planItemId);
     expect(plan).toBeDefined();
     expect(todo.every((r) => r.kind === 'task' || r.kind === 'plan')).toBe(true);

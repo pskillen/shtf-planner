@@ -2,13 +2,28 @@
   "format": 1,
   "id": "assets-base",
   "kind": "assets",
-  "version": 5,
+  "version": 6,
   "name": "Base household assets",
   "sources": [
     {
       "url": "https://beready.campaign.gov.uk/be-ready-for-emergencies/",
       "title": "Be Ready: be ready for emergencies (UK Government)",
       "checked": "2026-11-04"
+    },
+    {
+      "url": "https://www.firescotland.gov.uk/at-home/power-cuts/",
+      "title": "Scottish Fire and Rescue: power cuts",
+      "checked": "2026-11-07"
+    },
+    {
+      "url": "https://www.gov.uk/government/publications/public-health-advice-from-uk-cmos-during-a-national-power-outage/keeping-warm-or-cool-in-extreme-weather-scripts-for-broadcast-media",
+      "title": "UK Chief Medical Officers: keeping warm during a power outage",
+      "checked": "2026-11-07"
+    },
+    {
+      "url": "https://www.firescotland.gov.uk/at-home/heating-and-gas/",
+      "title": "Scottish Fire and Rescue: heating and gas",
+      "checked": "2026-11-07"
     }
   ],
   "assets": [
@@ -22,6 +37,42 @@
           "text": "Which setting do you run it on?",
           "kind": "choice",
           "choices": ["1.3 kW", "4.2 kW"]
+        },
+        {
+          "id": "chosenLpg",
+          "text": "Which bottle does your equipment use?",
+          "kind": "choice",
+          "choices": ["items-base:butane-bottle", "items-base:propane-bottle"],
+          "choiceLabels": {
+            "items-base:butane-bottle": "Butane bottle",
+            "items-base:propane-bottle": "Propane bottle"
+          },
+          "noDefault": true
+        },
+        {
+          "id": "fuelConfirmed",
+          "text": "Have you checked the chosen fuel and connection against the equipment manual?",
+          "kind": "bool"
+        },
+        {
+          "id": "indoorUse",
+          "text": "What does the manual say about indoor use?",
+          "kind": "choice",
+          "choices": ["permitted", "not permitted", "unknown"],
+          "noDefault": true
+        },
+        {
+          "id": "manualRate",
+          "text": "Fuel use per hour from the manual (optional)",
+          "kind": "number",
+          "unit": "kg/h"
+        },
+        {
+          "id": "highRise",
+          "text": "Is this a high-rise flat?",
+          "kind": "choice",
+          "choices": ["yes", "no", "unknown"],
+          "noDefault": true
         }
       ],
       "contributes": [
@@ -33,7 +84,15 @@
           },
           "converts": {
             "resource": "lpgKg",
-            "perHour": 0.095
+            "perHour": 0.095,
+            "fuel": {
+              "itemIds": ["items-base:butane-bottle", "items-base:propane-bottle"],
+              "confirmationQuestion": "fuelConfirmed",
+              "selectionQuestion": "chosenLpg",
+              "indoorQuestion": "indoorUse",
+              "highRiseQuestion": "highRise"
+            },
+            "rateOverrideQuestion": "manualRate"
           },
           "source": "assumption",
           "note": "Butane is about 12.9 kWh/kg, so 1.3 kW is roughly 0.1 kg/h; 95 g/h as the figure to plan on."
@@ -46,7 +105,15 @@
           },
           "converts": {
             "resource": "lpgKg",
-            "perHour": 0.3
+            "perHour": 0.3,
+            "fuel": {
+              "itemIds": ["items-base:butane-bottle", "items-base:propane-bottle"],
+              "confirmationQuestion": "fuelConfirmed",
+              "selectionQuestion": "chosenLpg",
+              "indoorQuestion": "indoorUse",
+              "highRiseQuestion": "highRise"
+            },
+            "rateOverrideQuestion": "manualRate"
           },
           "source": "assumption",
           "note": "About 300 g/h at 4.2 kW (4.2 / 12.9 is 0.33 kg/h before efficiency). Verify against the manual."
@@ -63,19 +130,83 @@
           "text": "Check the regulator and hose for wear",
           "everyMonths": 12
         }
+      ],
+      "useContext": "potentially-indoor",
+      "guidance": [
+        {
+          "source": "https://www.gov.uk/government/publications/public-health-advice-from-uk-cmos-during-a-national-power-outage/keeping-warm-or-cool-in-extreme-weather-scripts-for-broadcast-media",
+          "text": "Check the manual for the specified fuel, ventilation and carbon monoxide detection. Keep generators and outdoor cookers outside."
+        },
+        {
+          "source": "https://www.firescotland.gov.uk/at-home/power-cuts/",
+          "text": "Keep portable heaters clear of anything that can burn; never leave them unattended or on while sleeping."
+        },
+        {
+          "source": "https://www.firescotland.gov.uk/at-home/power-cuts/",
+          "text": "Do not use portable gas cylinder heaters in high-rise flats. Change cylinders outdoors."
+        },
+        {
+          "source": "https://www.firescotland.gov.uk/at-home/heating-and-gas/",
+          "text": "Store spare cylinders upright outdoors where possible, away from basements, drains and escape routes."
+        }
       ]
     },
     {
       "id": "assets-base:catalytic-heater",
       "name": "Catalytic gas heater (1.3 kW)",
       "category": "heat",
-      "questions": [],
+      "questions": [
+        {
+          "id": "chosenLpg",
+          "text": "Which bottle does your equipment use?",
+          "kind": "choice",
+          "choices": ["items-base:butane-bottle", "items-base:propane-bottle"],
+          "choiceLabels": {
+            "items-base:butane-bottle": "Butane bottle",
+            "items-base:propane-bottle": "Propane bottle"
+          },
+          "noDefault": true
+        },
+        {
+          "id": "fuelConfirmed",
+          "text": "Have you checked the chosen fuel and connection against the equipment manual?",
+          "kind": "bool"
+        },
+        {
+          "id": "indoorUse",
+          "text": "What does the manual say about indoor use?",
+          "kind": "choice",
+          "choices": ["permitted", "not permitted", "unknown"],
+          "noDefault": true
+        },
+        {
+          "id": "manualRate",
+          "text": "Fuel use per hour from the manual (optional)",
+          "kind": "number",
+          "unit": "kg/h"
+        },
+        {
+          "id": "highRise",
+          "text": "Is this a high-rise flat?",
+          "kind": "choice",
+          "choices": ["yes", "no", "unknown"],
+          "noDefault": true
+        }
+      ],
       "contributes": [
         {
           "capability": "heat",
           "converts": {
             "resource": "lpgKg",
-            "perHour": 0.1
+            "perHour": 0.1,
+            "fuel": {
+              "itemIds": ["items-base:butane-bottle", "items-base:propane-bottle"],
+              "confirmationQuestion": "fuelConfirmed",
+              "selectionQuestion": "chosenLpg",
+              "indoorQuestion": "indoorUse",
+              "highRiseQuestion": "highRise"
+            },
+            "rateOverrideQuestion": "manualRate"
           },
           "source": "assumption",
           "note": "1.3 kW of butane or propane, about 0.1 kg/h."
@@ -87,19 +218,63 @@
           "text": "Check the gas bottle and hose; swap old bottles",
           "everyMonths": 12
         }
+      ],
+      "useContext": "potentially-indoor",
+      "guidance": [
+        {
+          "source": "https://www.gov.uk/government/publications/public-health-advice-from-uk-cmos-during-a-national-power-outage/keeping-warm-or-cool-in-extreme-weather-scripts-for-broadcast-media",
+          "text": "Check the manual for the specified fuel, ventilation and carbon monoxide detection. Keep generators and outdoor cookers outside."
+        },
+        {
+          "source": "https://www.firescotland.gov.uk/at-home/power-cuts/",
+          "text": "Keep portable heaters clear of anything that can burn; never leave them unattended or on while sleeping."
+        },
+        {
+          "source": "https://www.firescotland.gov.uk/at-home/power-cuts/",
+          "text": "Do not use portable gas cylinder heaters in high-rise flats. Change cylinders outdoors."
+        },
+        {
+          "source": "https://www.firescotland.gov.uk/at-home/heating-and-gas/",
+          "text": "Store spare cylinders upright outdoors where possible, away from basements, drains and escape routes."
+        }
       ]
     },
     {
       "id": "assets-base:wood-burner",
       "name": "Wood burner",
       "category": "heat",
-      "questions": [],
+      "questions": [
+        {
+          "id": "fuelConfirmed",
+          "text": "Have you checked the chosen fuel and connection against the equipment manual?",
+          "kind": "bool"
+        },
+        {
+          "id": "indoorUse",
+          "text": "What does the manual say about indoor use?",
+          "kind": "choice",
+          "choices": ["permitted", "not permitted", "unknown"],
+          "noDefault": true
+        },
+        {
+          "id": "manualRate",
+          "text": "Fuel use per hour from the manual (optional)",
+          "kind": "number",
+          "unit": "kg/h"
+        }
+      ],
       "contributes": [
         {
           "capability": "heat",
           "converts": {
             "resource": "woodKg",
-            "perHour": 1.5
+            "perHour": 1.5,
+            "fuel": {
+              "itemIds": ["items-base:logs-kindling"],
+              "confirmationQuestion": "fuelConfirmed",
+              "indoorQuestion": "indoorUse"
+            },
+            "rateOverrideQuestion": "manualRate"
           },
           "source": "assumption",
           "note": "Assumption: about 1.5 kg of seasoned logs an hour for a few kW."
@@ -111,19 +286,55 @@
           "text": "Sweep the chimney",
           "everyMonths": 12
         }
+      ],
+      "useContext": "potentially-indoor",
+      "guidance": [
+        {
+          "source": "https://www.gov.uk/government/publications/public-health-advice-from-uk-cmos-during-a-national-power-outage/keeping-warm-or-cool-in-extreme-weather-scripts-for-broadcast-media",
+          "text": "Check the manual for the specified fuel, ventilation and carbon monoxide detection. Keep generators and outdoor cookers outside."
+        },
+        {
+          "source": "https://www.firescotland.gov.uk/at-home/power-cuts/",
+          "text": "Keep portable heaters clear of anything that can burn; never leave them unattended or on while sleeping."
+        }
       ]
     },
     {
       "id": "assets-base:paraffin-heater",
       "name": "Paraffin heater (2.5 kW)",
       "category": "heat",
-      "questions": [],
+      "questions": [
+        {
+          "id": "fuelConfirmed",
+          "text": "Have you checked the chosen fuel and connection against the equipment manual?",
+          "kind": "bool"
+        },
+        {
+          "id": "indoorUse",
+          "text": "What does the manual say about indoor use?",
+          "kind": "choice",
+          "choices": ["permitted", "not permitted", "unknown"],
+          "noDefault": true
+        },
+        {
+          "id": "manualRate",
+          "text": "Fuel use per hour from the manual (optional)",
+          "kind": "number",
+          "unit": "L/h"
+        }
+      ],
       "contributes": [
         {
           "capability": "heat",
           "converts": {
             "resource": "paraffinL",
-            "perHour": 0.25
+            "perHour": 0.25,
+            "fuel": {
+              "itemIds": ["items-base:paraffin"],
+              "confirmationQuestion": "fuelConfirmed",
+              "indoorQuestion": "indoorUse"
+            },
+            "rateOverrideQuestion": "manualRate"
           },
           "source": "assumption",
           "note": "Paraffin is about 10 kWh/L, so 2.5 kW is about 0.25 L/h."
@@ -140,19 +351,47 @@
           "text": "Check the wick and ventilate when used",
           "everyMonths": 12
         }
+      ],
+      "useContext": "potentially-indoor",
+      "guidance": [
+        {
+          "source": "https://www.gov.uk/government/publications/public-health-advice-from-uk-cmos-during-a-national-power-outage/keeping-warm-or-cool-in-extreme-weather-scripts-for-broadcast-media",
+          "text": "Check the manual for the specified fuel, ventilation and carbon monoxide detection. Keep generators and outdoor cookers outside."
+        },
+        {
+          "source": "https://www.firescotland.gov.uk/at-home/power-cuts/",
+          "text": "Keep portable heaters clear of anything that can burn; never leave them unattended or on while sleeping."
+        }
       ]
     },
     {
       "id": "assets-base:camping-stove",
       "name": "Camping stove (gas canister)",
       "category": "food",
-      "questions": [],
+      "questions": [
+        {
+          "id": "fuelConfirmed",
+          "text": "Have you checked the chosen fuel and connection against the equipment manual?",
+          "kind": "bool"
+        },
+        {
+          "id": "manualRate",
+          "text": "Fuel use per hour from the manual (optional)",
+          "kind": "number",
+          "unit": "canisters/h"
+        }
+      ],
       "contributes": [
         {
           "capability": "cooking",
           "converts": {
             "resource": "gasCanister",
-            "perHour": 0.4
+            "perHour": 0.4,
+            "fuel": {
+              "itemIds": ["items-base:gas-canisters"],
+              "confirmationQuestion": "fuelConfirmed"
+            },
+            "rateOverrideQuestion": "manualRate"
           },
           "source": "assumption",
           "note": "From the game: about 90 g of butane an hour on a small burner."
@@ -163,6 +402,17 @@
           "id": "fuel-rotate",
           "text": "Check canisters are in date and undamaged",
           "everyMonths": 12
+        }
+      ],
+      "useContext": "outdoor-only",
+      "guidance": [
+        {
+          "source": "https://www.gov.uk/government/publications/public-health-advice-from-uk-cmos-during-a-national-power-outage/keeping-warm-or-cool-in-extreme-weather-scripts-for-broadcast-media",
+          "text": "Check the manual for the specified fuel, ventilation and carbon monoxide detection. Keep generators and outdoor cookers outside."
+        },
+        {
+          "source": "https://www.firescotland.gov.uk/at-home/power-cuts/",
+          "text": "Keep portable heaters clear of anything that can burn; never leave them unattended or on while sleeping."
         }
       ]
     },
@@ -176,6 +426,28 @@
           "text": "Size of the attached LPG bottle?",
           "kind": "number",
           "unit": "kg"
+        },
+        {
+          "id": "chosenLpg",
+          "text": "Which bottle does your equipment use?",
+          "kind": "choice",
+          "choices": ["items-base:butane-bottle", "items-base:propane-bottle"],
+          "choiceLabels": {
+            "items-base:butane-bottle": "Butane bottle",
+            "items-base:propane-bottle": "Propane bottle"
+          },
+          "noDefault": true
+        },
+        {
+          "id": "fuelConfirmed",
+          "text": "Have you checked the chosen fuel and connection against the equipment manual?",
+          "kind": "bool"
+        },
+        {
+          "id": "manualRate",
+          "text": "Fuel use per hour from the manual (optional)",
+          "kind": "number",
+          "unit": "kg/h"
         }
       ],
       "contributes": [
@@ -183,7 +455,13 @@
           "capability": "cooking",
           "converts": {
             "resource": "lpgKg",
-            "perHour": 0.3
+            "perHour": 0.3,
+            "fuel": {
+              "itemIds": ["items-base:butane-bottle", "items-base:propane-bottle"],
+              "confirmationQuestion": "fuelConfirmed",
+              "selectionQuestion": "chosenLpg"
+            },
+            "rateOverrideQuestion": "manualRate"
           },
           "source": "assumption",
           "note": "Assumption: a 3-4 kW burner, about 0.3 kg/h. Outdoors only."
@@ -195,25 +473,64 @@
           "text": "Check the bottle and hose",
           "everyMonths": 12
         }
+      ],
+      "useContext": "outdoor-only",
+      "guidance": [
+        {
+          "source": "https://www.gov.uk/government/publications/public-health-advice-from-uk-cmos-during-a-national-power-outage/keeping-warm-or-cool-in-extreme-weather-scripts-for-broadcast-media",
+          "text": "Check the manual for the specified fuel, ventilation and carbon monoxide detection. Keep generators and outdoor cookers outside."
+        },
+        {
+          "source": "https://www.firescotland.gov.uk/at-home/power-cuts/",
+          "text": "Keep portable heaters clear of anything that can burn; never leave them unattended or on while sleeping."
+        }
       ]
     },
     {
       "id": "assets-base:rocket-stove",
       "name": "Rocket stove",
       "category": "food",
-      "questions": [],
+      "questions": [
+        {
+          "id": "fuelConfirmed",
+          "text": "Have you checked the chosen fuel and connection against the equipment manual?",
+          "kind": "bool"
+        },
+        {
+          "id": "manualRate",
+          "text": "Fuel use per hour from the manual (optional)",
+          "kind": "number",
+          "unit": "kg/h"
+        }
+      ],
       "contributes": [
         {
           "capability": "cooking",
           "converts": {
             "resource": "woodKg",
-            "perHour": 1
+            "perHour": 1,
+            "fuel": {
+              "itemIds": ["items-base:logs-kindling"],
+              "confirmationQuestion": "fuelConfirmed"
+            },
+            "rateOverrideQuestion": "manualRate"
           },
           "source": "assumption",
           "note": "Assumption: about 1 kg of dry sticks an hour. Outdoors only."
         }
       ],
-      "maintenance": []
+      "maintenance": [],
+      "useContext": "outdoor-only",
+      "guidance": [
+        {
+          "source": "https://www.gov.uk/government/publications/public-health-advice-from-uk-cmos-during-a-national-power-outage/keeping-warm-or-cool-in-extreme-weather-scripts-for-broadcast-media",
+          "text": "Check the manual for the specified fuel, ventilation and carbon monoxide detection. Keep generators and outdoor cookers outside."
+        },
+        {
+          "source": "https://www.firescotland.gov.uk/at-home/power-cuts/",
+          "text": "Keep portable heaters clear of anything that can burn; never leave them unattended or on while sleeping."
+        }
+      ]
     },
     {
       "id": "assets-base:power-station",
@@ -288,7 +605,8 @@
           "id": "fuel",
           "text": "What does it run on?",
           "kind": "choice",
-          "choices": ["petrol", "lpg"]
+          "choices": ["petrol", "lpg"],
+          "noDefault": true
         },
         {
           "id": "watts",
@@ -301,6 +619,22 @@
           "text": "Fuel use per hour at that load (litres for petrol, kg for LPG)?",
           "kind": "number",
           "unit": "per hour"
+        },
+        {
+          "id": "chosenLpg",
+          "text": "Which bottle does your equipment use?",
+          "kind": "choice",
+          "choices": ["items-base:butane-bottle", "items-base:propane-bottle"],
+          "choiceLabels": {
+            "items-base:butane-bottle": "Butane bottle",
+            "items-base:propane-bottle": "Propane bottle"
+          },
+          "noDefault": true
+        },
+        {
+          "id": "fuelConfirmed",
+          "text": "Have you checked the chosen fuel and connection against the equipment manual?",
+          "kind": "bool"
         }
       ],
       "contributes": [
@@ -312,7 +646,11 @@
           },
           "converts": {
             "resource": "petrolL",
-            "perHourFrom": "fuelPerHour"
+            "perHourFrom": "fuelPerHour",
+            "fuel": {
+              "itemIds": ["items-base:petrol"],
+              "confirmationQuestion": "fuelConfirmed"
+            }
           },
           "outputPerHour": {
             "fromQuestion": "watts"
@@ -327,7 +665,12 @@
           },
           "converts": {
             "resource": "lpgKg",
-            "perHourFrom": "fuelPerHour"
+            "perHourFrom": "fuelPerHour",
+            "fuel": {
+              "itemIds": ["items-base:butane-bottle", "items-base:propane-bottle"],
+              "confirmationQuestion": "fuelConfirmed",
+              "selectionQuestion": "chosenLpg"
+            }
           },
           "outputPerHour": {
             "fromQuestion": "watts"
@@ -345,6 +688,17 @@
           "id": "fuel-rotate",
           "text": "Use or replace stored fuel",
           "everyMonths": 12
+        }
+      ],
+      "useContext": "outdoor-only",
+      "guidance": [
+        {
+          "source": "https://www.gov.uk/government/publications/public-health-advice-from-uk-cmos-during-a-national-power-outage/keeping-warm-or-cool-in-extreme-weather-scripts-for-broadcast-media",
+          "text": "Check the manual for the specified fuel, ventilation and carbon monoxide detection. Keep generators and outdoor cookers outside."
+        },
+        {
+          "source": "https://www.firescotland.gov.uk/at-home/power-cuts/",
+          "text": "Keep portable heaters clear of anything that can burn; never leave them unattended or on while sleeping."
         }
       ]
     },

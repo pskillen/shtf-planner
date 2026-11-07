@@ -107,6 +107,12 @@ export function HomeScreen({
   return (
     <div>
       {embedded ? <h1>Tell us about your home</h1> : <ScreenHeader title="Home" />}
+      {!embedded && (
+        <p>
+          Make a heating plan for a power cut. Check the equipment manual, ventilation and carbon
+          monoxide detection; portable heaters must not be left unattended or used while sleeping.
+        </p>
+      )}
       {note}
       <EditArea>
         <ChooseField

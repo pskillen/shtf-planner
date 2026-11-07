@@ -1,5 +1,5 @@
 import { ANSWERED_BY_ASSET } from '../../../engine';
-import type { BlockedAsset, Coverage, Gap, Score, Suggestion } from '../../../engine';
+import type { Coverage, Gap, Score, Suggestion } from '../../../engine';
 import type { CapabilityId, Packs } from '../../../model';
 import { formatVolume } from '../../../util';
 import { blockedLine } from '../../blocked';
@@ -12,6 +12,7 @@ export type ShoppingSort = 'capability' | 'cost' | 'aisle';
 export interface ShoppingRow {
   key: string;
   capability: CapabilityId;
+  capabilities?: CapabilityId[];
   /** The target this row closes (`food:foodKcal`): a restock and a buy for the same one go together. */
   targetId: string;
   kind: 'acquire' | 'replenish';
@@ -27,10 +28,12 @@ export interface ShoppingRow {
   /** What Quick add opens with when the row is ticked; absent for advice with nothing to add. */
   itemId?: string;
   productId?: string;
+  assetIds?: string[];
   /** Set when the row is a piece of equipment: ticking it opens the equipment form, not stock. */
   assetTypeId?: string;
   qty?: number;
   alternatives: string[];
+  alternativeOptions?: { label: string; capabilities?: CapabilityId[] }[];
   critical?: boolean;
 }
 
@@ -43,6 +46,7 @@ export interface TodoRow {
   planItemId?: string;
   /** For a task from a blocked asset: the asset type (the row links to Equipment). */
   assetTypeId?: string;
+  assetId?: string;
   /** Why, for a task, in words with no shortfall ("Roof solar gives nothing in a power cut ..."). */
   closes: string;
 }
@@ -133,7 +137,7 @@ function restockText(r: NonNullable<Gap['restock']>): string {
  * Store and device gaps list alternatives (any one will do); a gap for running hours lists what
  * works together (the heater and its fuel); a floor to restock or a medicine is one line.
  */
-const ALTERNATIVES = new Set<Gap['target']['kind']>(['resource', 'device']);
+const ALTERNATIVES = new Set<Gap['target']['kind']>(['resource', 'device', 'hours']);
 
 function shoppingRowsFor(gap: Gap, horizonDays: number, region: 'UK' | 'US', at: number) {
   if (gap.kind !== 'acquire' && gap.kind !== 'replenish') return [];
@@ -148,10 +152,12 @@ function shoppingRowsFor(gap: Gap, horizonDays: number, region: 'UK' | 'US', at:
     closes,
     critical: gap.critical,
   };
-  const row = (s: Suggestion, i: number, alternatives: string[]): ShoppingRow => ({
+  const row = (s: Suggestion, i: number, alternatives: Suggestion[]): ShoppingRow => ({
     ...base,
     key: `${gap.target.id}|${gap.kind}|${at}|${i}`,
     label: s.label,
+    ...(s.capabilities ? { capabilities: s.capabilities } : {}),
+    ...(s.assetIds ? { assetIds: s.assetIds } : {}),
     ...(s.pricePence !== undefined ? { pricePence: s.pricePence } : {}),
     ...(s.detail ? { detail: s.detail } : {}),
     ...(s.assetTypeId
@@ -160,19 +166,19 @@ function shoppingRowsFor(gap: Gap, horizonDays: number, region: 'UK' | 'US', at:
         ? { itemId: s.itemId, ...(s.productId ? { productId: s.productId } : {}) }
         : {}),
     ...(s.qty ? { qty: s.qty } : {}),
-    alternatives,
+    alternatives: alternatives.map((a) => a.label),
+    ...(alternatives.length
+      ? {
+          alternativeOptions: alternatives.map((a) => ({
+            label: a.label,
+            ...(a.capabilities ? { capabilities: a.capabilities } : {}),
+          })),
+        }
+      : {}),
   });
   if (ALTERNATIVES.has(gap.target.kind) && gap.kind === 'acquire') {
     const [best, ...others] = gap.suggestions;
-    return best
-      ? [
-          row(
-            best,
-            0,
-            others.map((o) => o.label),
-          ),
-        ]
-      : [];
+    return best ? [row(best, 0, others)] : [];
   }
   return gap.suggestions.map((s, i) => row(s, i, []));
 }
@@ -228,13 +234,10 @@ export function buildGapsView(input: {
   });
 
   // A task from a blocked asset says what that asset gives, not how much is short.
-  const blockedByTask = new Map<string, BlockedAsset>(
-    coverage.flatMap((c) => c.blockedAssets ?? []).map((b) => [b.task, b]),
-  );
   const taskQuestions = new Set(
     gaps
       .filter((g) => g.kind === 'task')
-      .flatMap((g) => g.suggestions.map((s) => blockedByTask.get(s.label)?.question))
+      .flatMap((g) => g.suggestions.map((s) => s.question))
       .filter((q): q is string => q !== undefined),
   );
   const todo: TodoRow[] = gaps
@@ -247,7 +250,12 @@ export function buildGapsView(input: {
               return !(q && taskQuestions.has(q));
             })
             .map((s, i) => {
-              const blocked = g.kind === 'task' ? blockedByTask.get(s.label) : undefined;
+              const blocked =
+                g.kind === 'task'
+                  ? coverage
+                      .flatMap((c) => c.blockedAssets ?? [])
+                      .find((b) => b.assetId === s.assetId && b.question === s.question)
+                  : undefined;
               return {
                 key: `${g.target.id}|${g.kind}|${at}|${i}`,
                 capability: g.capability,
@@ -256,6 +264,7 @@ export function buildGapsView(input: {
                 closes: blocked ? blockedLine(blocked) : '',
                 ...(s.planItemId ? { planItemId: s.planItemId } : {}),
                 ...(s.assetTypeId ? { assetTypeId: s.assetTypeId } : {}),
+                ...(s.assetId ? { assetId: s.assetId } : {}),
               };
             })
         : [],

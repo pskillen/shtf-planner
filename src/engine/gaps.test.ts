@@ -169,17 +169,17 @@ describe('gaps', () => {
     const doc = biggarDocument();
     const heat = find(gaps(doc, packs, NOW, 3), 'heat:hours')!;
     expect(heat.shortfall).toBe(18);
-    expect(heat.suggestions).toHaveLength(2);
-    const [heater, fuel] = heat.suggestions;
-    expect(heater!.assetTypeId).toMatch(/^assets-base:/);
-    expect(heater!.pricePence).toBeGreaterThan(0);
-    expect(fuel!.itemId).toBeDefined();
-    expect(fuel!.label).toMatch(/to run it$/);
+    expect(heat.suggestions).toEqual([{ label: 'Choose how you will keep warm' }]);
   });
 
   it('suggests only the fuel when a heater is owned', () => {
     const doc = biggarDocument();
-    doc.assets['asset-heater'] = asset('asset-heater', 'catalytic-heater');
+    doc.assets['asset-heater'] = asset('asset-heater', 'catalytic-heater', {
+      chosenLpg: 'items-base:propane-bottle',
+      fuelConfirmed: true,
+      indoorUse: 'permitted',
+      highRise: 'no',
+    });
     delete doc.stock['stock-propane'];
     delete doc.assets['asset-bbq'];
     const heat = find(gaps(doc, packs, NOW, 3), 'heat:hours')!;
@@ -193,9 +193,9 @@ describe('gaps', () => {
     const labels = tasks.map((g) => g.suggestions[0]!.label);
     expect(labels).toContain('Fit an EPS so Roof solar keeps working in a power cut');
     expect(labels).toContain('Fit an EPS so Home battery keeps working in a power cut');
-    expect(
-      tasks.find((g) => g.suggestions[0]!.assetTypeId === 'assets-base:solar-pv')!.capability,
-    ).toBe('power');
+    expect(tasks.find((g) => g.suggestions[0]!.assetId === 'asset-solar')!.capability).toBe(
+      'power',
+    );
   });
 
   it('asks to restock a rotating place below its minimum (the expired milk is not stock)', () => {
@@ -360,4 +360,74 @@ describe('suggestions by item, with an amount and the usual product', () => {
     expect(water.suggestions.length).toBeGreaterThan(0);
     for (const s of water.suggestions) expect(packs.items[s.itemId!]).toBeDefined();
   });
+});
+
+describe('shared fuel shopping', () => {
+  it('combines additive shortfalls for the same confirmed fuel into one purchase', () => {
+    const doc = biggarDocument();
+    delete doc.stock['stock-propane'];
+    doc.assets['asset-heater'] = asset('asset-heater', 'catalytic-heater', {
+      chosenLpg: 'items-base:propane-bottle',
+      fuelConfirmed: true,
+      indoorUse: 'permitted',
+      highRise: 'no',
+    });
+    const fuel = gaps(doc, packs, NOW, 3)
+      .flatMap((g) => g.suggestions)
+      .filter((s) => s.itemId === 'items-base:propane-bottle');
+    expect(fuel).toHaveLength(1);
+    expect(fuel[0]!.fuelDemand).toBeCloseTo(7.5 * 0.3 + 18 * 0.1);
+    expect(fuel[0]!.qty).toBe(1);
+    expect(fuel[0]!.assetIds).toEqual(['asset-bbq', 'asset-heater']);
+    expect(fuel[0]!.capabilities).toEqual(['heat', 'cooking']);
+  });
+});
+
+it('offers different confirmed fuels as alternatives for the same heat shortfall', () => {
+  const doc = biggarDocument();
+  delete doc.stock['stock-propane'];
+  doc.assets.a = asset('a', 'catalytic-heater', {
+    chosenLpg: 'items-base:butane-bottle',
+    fuelConfirmed: true,
+    indoorUse: 'permitted',
+    highRise: 'no',
+  });
+  doc.assets.b = asset('b', 'catalytic-heater', {
+    chosenLpg: 'items-base:propane-bottle',
+    fuelConfirmed: true,
+    indoorUse: 'permitted',
+    highRise: 'no',
+  });
+  const heat = find(gaps(doc, packs, NOW, 3), 'heat:hours')!;
+  expect(heat.suggestions.map((s) => s.itemId)).toEqual([
+    'items-base:butane-bottle',
+    'items-base:propane-bottle',
+  ]);
+  expect(new Set(heat.suggestions.map((s) => s.alternativeGroup)).size).toBe(1);
+});
+
+it('adds generator demand to the same fuel purchase after cooking and heat', () => {
+  const doc = biggarDocument();
+  delete doc.stock['stock-propane'];
+  delete doc.assets['asset-ev-1'];
+  delete doc.assets['asset-ev-2'];
+  doc.assets.heater = asset('heater', 'catalytic-heater', {
+    chosenLpg: 'items-base:propane-bottle',
+    fuelConfirmed: true,
+    indoorUse: 'permitted',
+    highRise: 'no',
+  });
+  doc.assets.gen = asset('gen', 'generator', {
+    fuel: 'lpg',
+    chosenLpg: 'items-base:propane-bottle',
+    fuelConfirmed: true,
+    watts: 800,
+    fuelPerHour: 0.5,
+  });
+  const propane = gaps(doc, packs, NOW, 3)
+    .flatMap((g) => g.suggestions)
+    .filter((s) => s.itemId === 'items-base:propane-bottle');
+  expect(propane).toHaveLength(1);
+  expect(propane[0]!.assetIds).toEqual(['asset-bbq', 'gen', 'heater']);
+  expect(propane[0]!.capabilities).toEqual(expect.arrayContaining(['cooking', 'heat', 'power']));
 });

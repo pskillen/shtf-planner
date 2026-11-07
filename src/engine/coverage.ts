@@ -10,6 +10,7 @@ import type {
   Stock,
 } from '../model';
 import { minimumKey } from '../model';
+import { equipmentEligibility, type EquipmentReason } from './equipmentEligibility';
 import { ASSUMPTIONS } from './assumptions';
 import { fitsHousehold, fmt, localId, peopleAt, type Person } from './context';
 import { monthOf } from './dates';
@@ -37,6 +38,7 @@ export interface BlockedAsset {
   reason: string;
   /** What to do about it. */
   task: string;
+  reasons?: EquipmentReason[];
 }
 
 export interface Coverage {
@@ -72,6 +74,38 @@ export interface Analysis {
   /** Something to make raw water safe: tablets, bleach, a filter, or cooking to boil it. */
   treatmentAvailable: boolean;
   people: Person[];
+  equipmentRuntime: EquipmentRuntime[];
+}
+
+export interface FuelLot {
+  stockId: string;
+  productId: string;
+  itemId: string;
+  locationId: string;
+  heldPacks: number;
+  countedPacks: number;
+  resourceAmount: number;
+  allocatedResource: number;
+  expired?: boolean;
+}
+export interface EquipmentRuntime {
+  assetId: string;
+  assetTypeId: string;
+  contributionKey: string;
+  name: string;
+  capability: CapabilityId;
+  status: 'counted' | 'alternative' | 'unknown' | 'blocked' | 'no-fuel';
+  reasons: EquipmentReason[];
+  selectedItemIds: string[];
+  rate?: number;
+  output?: number;
+  source?: string;
+  note?: string;
+  availableHours?: number;
+  allocatedHours?: number;
+  days?: number;
+  sharingAssetIds: string[];
+  inputLots: FuelLot[];
 }
 
 type Src = CoverageSource & { gate?: 'cooking' | 'treatment' };
@@ -109,6 +143,8 @@ export interface Converter {
   perHour: number;
   /** Capability units per running hour: 1 for heat or cooking (an hour), watts for power. */
   output: number;
+  itemId: string;
+  contributionKey: string;
 }
 
 export function activeConverters(doc: Document, packs: Packs): Converter[] {
@@ -116,26 +152,20 @@ export function activeConverters(doc: Document, packs: Packs): Converter[] {
   for (const asset of Object.values(doc.assets)) {
     const type = packs.assets[asset.typeId];
     if (!type) continue;
-    for (const c of type.contributes) {
+    for (const [index, c] of type.contributes.entries()) {
       if (!c.converts || !whenOk(c, asset)) continue;
-      const perHour =
-        c.converts.perHour ??
-        (c.converts.perHourFrom ? NUMBER(asset.answers[c.converts.perHourFrom]) : undefined);
-      if (!(perHour && perHour > 0)) continue;
-      const output =
-        c.outputPerHour === undefined
-          ? 1
-          : typeof c.outputPerHour === 'number'
-            ? c.outputPerHour
-            : NUMBER(asset.answers[c.outputPerHour.fromQuestion]);
-      if (!(output && output > 0)) continue;
+      const eligible = equipmentEligibility(type, c, asset.answers);
+      if (eligible.reasons.length || !eligible.itemId || !eligible.perHour || !eligible.output)
+        continue;
       out.push({
         asset,
         name: asset.name ?? type.name,
         capability: c.capability,
         resource: c.converts.resource,
-        perHour,
-        output,
+        perHour: eligible.perHour,
+        output: eligible.output,
+        itemId: eligible.itemId,
+        contributionKey: `${type.id}:${index}`,
       });
     }
   }
@@ -153,6 +183,30 @@ function blockedAssets(doc: Document, packs: Packs): BlockedAsset[] {
     for (const c of type.contributes)
       byCap.set(c.capability, [...(byCap.get(c.capability) ?? []), c]);
     for (const [capability, list] of byCap) {
+      for (const c of list.filter((x) => x.converts && whenOk(x, asset))) {
+        const reasons = equipmentEligibility(type, c, asset.answers).reasons;
+        if (!reasons.length) continue;
+        const labels: Record<EquipmentReason, string> = {
+          'operating-mode': 'choose the operating mode',
+          'fuel-selection': 'choose the exact fuel',
+          'fuel-confirmation': 'check the fuel and connection in the manual',
+          'indoor-use': 'check that the manual permits indoor use',
+          'high-rise': 'check the high-rise cylinder restriction',
+          rate: 'enter a positive fuel use rate',
+          output: 'enter a positive output',
+        };
+        for (const reasonCode of reasons)
+          out.push({
+            assetId: asset.id,
+            assetTypeId: asset.typeId,
+            name,
+            capability,
+            question: reasonCode,
+            reason: `${name}: ${labels[reasonCode]}`,
+            task: `${name}: ${labels[reasonCode]}`,
+            reasons: [reasonCode],
+          });
+      }
       if (!list.every((c) => c.when) || list.some((c) => whenOk(c, asset))) continue;
       const when = list[0]!.when!;
       const q = type.questions.find((x) => x.id === when.question);
@@ -212,6 +266,7 @@ export function analyse(
   const push = (resource: string, s: Src) =>
     pools.set(resource, [...(pools.get(resource) ?? []), s]);
   const belowMinimum: BelowMinimum[] = [];
+  const fuelLots: (FuelLot & { resource: string; remaining: number })[] = [];
   let hasTreatmentItem = false;
 
   /** Stock that counts as an item (through its product), grouped by place and item. */
@@ -262,6 +317,22 @@ export function analyse(
           note: `best before ${e.bestBefore} has passed`,
         });
 
+    for (const row of expired)
+      for (const g of rowGives(row, item)) {
+        fuelLots.push({
+          stockId: row.id,
+          productId: row.productId,
+          itemId: item.id,
+          locationId,
+          heldPacks: row.qty,
+          countedPacks: 0,
+          resource: g.resource,
+          resourceAmount: 0,
+          remaining: 0,
+          allocatedResource: 0,
+          expired: true,
+        });
+      }
     const liveQty = live.reduce((n, r) => n + r.qty, 0);
     const fit = fitsHousehold(item, people);
     const gate = item.tags.includes('needs-cooking') ? ('cooking' as const) : undefined;
@@ -275,6 +346,28 @@ export function analyse(
         : `${item.name} is equipment: add it under Home, Equipment so it counts once`
       : "does not fit anyone's age in the household";
 
+    const factor =
+      location?.kind === 'rotating'
+        ? liveQty > 0
+          ? Math.min(liveQty, doc.minimums[key] ?? 0) / liveQty
+          : 0
+        : 1;
+    for (const row of live)
+      for (const g of rowGives(row, item)) {
+        const amount = countsAsStock ? g.amount * factor : 0;
+        fuelLots.push({
+          stockId: row.id,
+          productId: row.productId,
+          itemId: item.id,
+          locationId,
+          heldPacks: row.qty,
+          countedPacks: countsAsStock ? row.qty * factor : 0,
+          resource: g.resource,
+          resourceAmount: amount,
+          remaining: amount,
+          allocatedResource: 0,
+        });
+      }
     if (location?.kind === 'rotating') {
       const minimum = doc.minimums[key];
       if (minimum !== undefined && liveQty < minimum)
@@ -385,36 +478,131 @@ export function analyse(
   }
 
   // ---- 3. Converters burn resources; a resource goes to the capability that needs it first ----------
-  const fuelLeft = new Map<string, number>();
-  const fuelStores = new Set<string>();
   const converters = activeConverters(doc, packs);
-  for (const c of converters) fuelStores.add(c.resource);
-  for (const resource of fuelStores) fuelLeft.set(resource, sum(pools.get(resource)));
-  const caps: CapabilityId[] = ['cooking', 'heat', 'power'];
-  for (const c of converters) if (!caps.includes(c.capability)) caps.push(c.capability);
-  for (const capability of caps) {
-    const targetId = capabilityTargetId(capability);
-    let need = (targetId ? tById.get(targetId)?.amount : undefined) ?? 0;
-    const here = converters.filter((c) => c.capability === capability);
-    const resources = [...new Set(here.map((c) => c.resource))].sort();
-    for (const resource of resources) {
-      const best = here
-        .filter((c) => c.resource === resource)
-        .reduce((a, b) => (b.output / b.perHour > a.output / a.perHour ? b : a));
-      const left = fuelLeft.get(resource) ?? 0;
-      const amount = (left / best.perHour) * best.output;
-      if (amount <= 0) continue;
-      extra(targetId, {
-        kind: 'asset',
-        id: best.asset.id,
-        amount,
-        note: `${fmt(left)} ${resource} at ${fmt(best.perHour)} an hour`,
+  const runtime: EquipmentRuntime[] = [];
+  for (const asset of Object.values(doc.assets).sort((a, b) => a.id.localeCompare(b.id))) {
+    const type = packs.assets[asset.typeId];
+    if (!type) continue;
+    for (const [index, c] of type.contributes.entries()) {
+      if (!c.converts) continue;
+      const e = equipmentEligibility(type, c, asset.answers);
+      const applies = whenOk(c, asset);
+      runtime.push({
+        assetId: asset.id,
+        assetTypeId: type.id,
+        contributionKey: `${type.id}:${index}`,
+        name: asset.name ?? type.name,
+        capability: c.capability,
+        status:
+          !applies ||
+          (c.converts.fuel.indoorQuestion &&
+            asset.answers[c.converts.fuel.indoorQuestion] === 'not permitted') ||
+          (c.converts.fuel.highRiseQuestion &&
+            asset.answers[c.converts.fuel.highRiseQuestion] === 'yes')
+            ? 'blocked'
+            : e.reasons.length
+              ? 'unknown'
+              : 'no-fuel',
+        reasons: !applies ? ['operating-mode'] : e.reasons,
+        selectedItemIds: e.itemId ? [e.itemId] : [],
+        ...(e.perHour ? { rate: e.perHour } : {}),
+        ...(e.output ? { output: e.output } : {}),
+        ...(c.converts.rateOverrideQuestion &&
+        asset.answers[c.converts.rateOverrideQuestion] !== undefined
+          ? { source: 'manual' }
+          : c.source
+            ? { source: c.source }
+            : {}),
+        ...(c.converts.rateOverrideQuestion &&
+        asset.answers[c.converts.rateOverrideQuestion] !== undefined
+          ? { note: 'Fuel use entered from the equipment manual.' }
+          : c.note
+            ? { note: c.note }
+            : {}),
+        sharingAssetIds: [],
+        inputLots: [],
       });
-      const claim = Math.min(amount, need);
-      need -= claim;
-      fuelLeft.set(resource, left - (claim / best.output) * best.perHour);
     }
   }
+  const fuelLeft = new Map<string, number>();
+  const caps: CapabilityId[] = ['cooking', 'heat', 'power'];
+  for (const capability of caps) {
+    const targetId = capabilityTargetId(capability);
+    const target = targetId ? tById.get(targetId) : undefined;
+    let need = Math.max(
+      0,
+      (target?.amount ?? 0) - sum(targetId ? extras.get(targetId) : undefined),
+    );
+    const here = converters.filter((c) => c.capability === capability);
+    for (const itemId of [...new Set(here.map((c) => c.itemId))].sort()) {
+      const choices = here
+        .filter((c) => c.itemId === itemId)
+        .sort(
+          (a, b) =>
+            b.output / b.perHour - a.output / a.perHour ||
+            a.asset.typeId.localeCompare(b.asset.typeId) ||
+            a.asset.id.localeCompare(b.asset.id) ||
+            a.contributionKey.localeCompare(b.contributionKey),
+        );
+      const best = choices[0]!;
+      const lots = fuelLots
+        .filter((l) => l.itemId === itemId && l.resource === best.resource)
+        .sort((a, b) => a.stockId.localeCompare(b.stockId));
+      const available = lots.reduce((n, l) => n + l.remaining, 0);
+      const hours = available / best.perHour;
+      const claim = Math.min(hours * best.output, need);
+      let consume = (claim / best.output) * best.perHour;
+      need -= claim;
+      for (const c of choices) {
+        const r = runtime.find(
+          (r) => r.assetId === c.asset.id && r.contributionKey === c.contributionKey,
+        )!;
+        r.status = c === best ? (available > 0 ? 'counted' : 'no-fuel') : 'alternative';
+        r.availableHours = available / c.perHour;
+        r.allocatedHours = c === best ? claim / c.output : 0;
+        if (target && target.amount > 0 && target.days > 0 && c === best)
+          r.days = claim / (target.amount / target.days);
+        r.sharingAssetIds = [
+          ...new Set(
+            converters
+              .filter((x) => x.itemId === c.itemId && x.asset.id !== c.asset.id)
+              .map((x) => x.asset.id),
+          ),
+        ].sort();
+        r.inputLots = lots.map((lot) => ({
+          stockId: lot.stockId,
+          productId: lot.productId,
+          itemId: lot.itemId,
+          locationId: lot.locationId,
+          heldPacks: lot.heldPacks,
+          countedPacks: lot.countedPacks,
+          resourceAmount: lot.resourceAmount,
+          allocatedResource: 0,
+          ...(lot.expired ? { expired: true } : {}),
+        }));
+      }
+      const winner = runtime.find(
+        (r) => r.assetId === best.asset.id && r.contributionKey === best.contributionKey,
+      )!;
+      for (const lot of lots) {
+        const used = Math.min(lot.remaining, consume);
+        const fraction = lot.remaining > 0 ? used / lot.remaining : 0;
+        for (const other of fuelLots.filter((l) => l.stockId === lot.stockId))
+          other.remaining *= 1 - fraction;
+        consume -= used;
+        winner.inputLots.find((l) => l.stockId === lot.stockId)!.allocatedResource = used;
+      }
+      if (claim > 0)
+        extra(targetId, {
+          kind: 'asset',
+          id: best.asset.id,
+          amount: claim,
+          note: `${fmt(claim / best.output)} hours using ${itemId}`,
+        });
+    }
+  }
+  for (const lot of fuelLots)
+    fuelLeft.set(lot.resource, (fuelLeft.get(lot.resource) ?? 0) + lot.remaining);
 
   const cookingTarget = tById.get('cooking:hours');
   const cookingMet = cookingTarget
@@ -516,7 +704,15 @@ export function analyse(
     return row;
   });
 
-  return { targets: ts, coverage, belowMinimum, cookingMet, treatmentAvailable, people };
+  return {
+    targets: ts,
+    coverage,
+    belowMinimum,
+    cookingMet,
+    treatmentAvailable,
+    people,
+    equipmentRuntime: runtime,
+  };
 }
 
 /**
@@ -540,4 +736,14 @@ export function coverage(
   horizonDays: number = doc.settings.horizonDays,
 ): Coverage[] {
   return analyse(doc, packs, asOf, horizonDays).coverage;
+}
+
+/** Runtime is a projection of the same allocation used by coverage. */
+export function equipmentRuntime(
+  doc: Document,
+  packs: Packs,
+  asOf: string,
+  horizonDays = doc.settings.horizonDays,
+): EquipmentRuntime[] {
+  return analyse(doc, packs, asOf, horizonDays).equipmentRuntime;
 }

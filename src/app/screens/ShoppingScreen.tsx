@@ -61,7 +61,11 @@ export function ShoppingScreen() {
     </button>
   );
 
-  const rows = needLabel ? view.shopping.filter((r) => r.capability === need) : view.shopping;
+  const rows = needLabel
+    ? view.shopping.filter(
+        (r) => r.capability === need || r.capabilities?.includes(need as CapabilityId),
+      )
+    : view.shopping;
   const restock = rows.filter((r) => r.kind === 'replenish');
   const buy = rows.filter((r) => r.kind === 'acquire');
   const shoppingList = (rows: ShoppingRow[]) => (
@@ -70,13 +74,37 @@ export function ShoppingScreen() {
         <li className="row-item" key={r.key}>
           <div className="row-main">
             <strong>{r.label}</strong>
+            {r.label === 'Choose how you will keep warm' ? (
+              <span>
+                Make a heating plan for an outage. <Link to="/app/home">Open Home</Link>
+              </span>
+            ) : null}
+            {r.assetTypeId || r.itemId?.includes('bottle') || r.itemId?.includes('paraffin') ? (
+              <span>
+                Check the equipment manual for the specified fuel, connection, ventilation and safe
+                use.
+              </span>
+            ) : null}
             {r.detail ? <span className="muted">{r.detail}</span> : null}
             <span className="muted">
               {r.closes}
               {r.pricePence !== undefined ? ` · about ${formatPrice(r.pricePence)}` : ''}
             </span>
-            {r.alternatives.length > 0 ? (
-              <span className="muted">or {r.alternatives.join(', ')}</span>
+            {(r.alternativeOptions ?? []).filter(
+              (a) => !needLabel || !a.capabilities || a.capabilities.includes(need as CapabilityId),
+            ).length > 0 ? (
+              <span className="muted">
+                or{' '}
+                {(r.alternativeOptions ?? [])
+                  .filter(
+                    (a) =>
+                      !needLabel ||
+                      !a.capabilities ||
+                      a.capabilities.includes(need as CapabilityId),
+                  )
+                  .map((a) => a.label)
+                  .join(', ')}
+              </span>
             ) : null}
           </div>
           {tick(r)}
