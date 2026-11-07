@@ -9,7 +9,7 @@ const expiryLabel = {
   expired: 'Expired',
   soon: 'Expiring soon',
   check: 'Before next check',
-  ok: 'Upcoming',
+  ok: 'Before next check',
 } as const;
 export function ReviewRow({
   item,
