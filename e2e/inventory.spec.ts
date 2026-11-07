@@ -61,6 +61,7 @@ async function waterLitres(page: Page): Promise<number> {
 
 async function waterShort(page: Page): Promise<number> {
   await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Gaps' }).click();
+  await page.getByRole('link', { name: /Shopping list/ }).click();
   await expect(page.getByRole('heading', { name: 'Shopping' })).toBeVisible();
   const row = page.getByText(/^water: [\d.]+ L short of 3 days/).first();
   if ((await row.count()) === 0) return 0;
@@ -216,6 +217,7 @@ test('a pantry floor counts towards food, and Gaps hands a ticked row to Quick a
 
   // Ticking a shopping row opens Quick add with that item.
   await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Gaps' }).click();
+  await page.getByRole('link', { name: /Shopping list/ }).click();
   await page
     .getByRole('button', { name: /^Bought: \d+ × / })
     .first()
@@ -283,4 +285,22 @@ test('the three tabs and Quick add fit a 375 px phone with big targets', async (
     expect(box!.height).toBeGreaterThanOrEqual(44);
     expect(box!.width).toBeGreaterThanOrEqual(44);
   }
+});
+
+test('Gaps highlights heat and links its own shopping suggestions', async ({ page }) => {
+  await fixture(page, '/app/gaps');
+  await expect(page.getByRole('heading', { name: 'Needs attention' })).toBeVisible();
+  const heat = page.locator('#need-heat');
+  await expect(heat).toBeVisible();
+  if (!(await heat.evaluate((el) => (el as HTMLDetailsElement).open))) {
+    await heat.locator('summary').click();
+  }
+  await expect(heat.getByText(/Heat: .* of .*hours/)).toBeVisible();
+  await heat.getByRole('link', { name: /See shopping suggestions/ }).click();
+  await expect(page.getByRole('heading', { name: 'Shopping: Heat' })).toBeVisible();
+  await expect(page.getByText(/heat: .*short/).first()).toBeVisible();
+  await page.getByRole('link', { name: 'See the full shopping list' }).click();
+  await expect(page.getByRole('heading', { name: 'Shopping', exact: true })).toBeVisible();
+  await page.getByRole('link', { name: '← Back to gaps' }).click();
+  await expect(page.getByRole('heading', { name: 'To do' })).toBeVisible();
 });

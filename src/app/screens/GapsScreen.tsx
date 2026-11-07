@@ -1,22 +1,15 @@
 import { useMemo, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { applicablePlanItems, coverage, gaps, planDone, score } from '../../engine';
 import { today } from '../../util';
 import { EditArea } from '../components/EditArea';
 import { useDeferredDelete } from '../components/useDeferredDelete';
-import { Segmented } from '../components/controls';
 import { CAPABILITY_LABEL } from '../labels';
 import { useChange, useDocument } from '../state';
 import { usePacks } from '../usePacks';
-import {
-  buildGapsView,
-  formatPrice,
-  groupShoppingByAisle,
-  type ShoppingRow,
-  type ShoppingSort,
-} from './gaps/view';
-import { equipmentAddPath } from './assets/route';
-import { QuickAdd, type QuickAddPrefill } from './stores/QuickAdd';
+import { buildGapsView } from './gaps/view';
+import { scoreView } from './score/view';
+import type { CapabilityId } from '../../model';
 import { completePlan } from './review/actions';
 
 /**
@@ -27,9 +20,8 @@ export function GapsScreen() {
   const doc = useDocument();
   const change = useChange();
   const packs = usePacks();
-  const [sort, setSort] = useState<ShoppingSort>('capability');
-  const [buying, setBuying] = useState<QuickAddPrefill | null>(null);
-  const navigate = useNavigate();
+  const [expanded, setExpanded] = useState<CapabilityId | null | undefined>(undefined);
+  const [showAll, setShowAll] = useState(false);
   const [params] = useSearchParams();
   const selectedPlan = packs.plans[params.get('plan') ?? ''];
   const horizonDays = doc.settings.horizonDays;
@@ -43,10 +35,10 @@ export function GapsScreen() {
         coverage: coverage(doc, packs, now, horizonDays),
         horizonDays,
         region: doc.settings.region,
-        sort,
+        sort: 'capability',
         packs,
       }),
-    [doc, packs, now, horizonDays, sort],
+    [doc, packs, now, horizonDays],
   );
 
   // Done waits five seconds with an Undo before it is written, like a delete.
@@ -75,58 +67,25 @@ export function GapsScreen() {
     (id) => planDone(doc, packs, id, now) && !done.pending.has(id),
   );
 
-  const tick = (r: ShoppingRow) => (
-    <button
-      type="button"
-      className="tick"
-      aria-label={`Bought: ${r.label}`}
-      disabled={!r.itemId && !r.assetTypeId}
-      onClick={() => {
-        // Equipment goes to the equipment form with its type chosen, never into stock.
-        if (r.assetTypeId) navigate(equipmentAddPath(r.assetTypeId));
-        else if (r.itemId) setBuying({ itemId: r.itemId, productId: r.productId, qty: r.qty });
-      }}
-    >
-      ✓
-    </button>
-  );
-
-  const restock = view.shopping.filter((r) => r.kind === 'replenish');
-  const buy = view.shopping.filter((r) => r.kind === 'acquire');
-  const shoppingList = (rows: ShoppingRow[]) => (
-    <ul className="row-list">
-      {rows.map((r) => (
-        <li className="row-item" key={r.key}>
-          <div className="row-main">
-            <strong>{r.label}</strong>
-            {r.detail ? <span className="muted">{r.detail}</span> : null}
-            <span className="muted">
-              {r.closes}
-              {r.pricePence !== undefined ? ` · about ${formatPrice(r.pricePence)}` : ''}
-            </span>
-            {r.alternatives.length > 0 ? (
-              <span className="muted">or {r.alternatives.join(', ')}</span>
-            ) : null}
-          </div>
-          {tick(r)}
-        </li>
-      ))}
-    </ul>
-  );
-
-  const aisleShoppingList = (rows: ShoppingRow[]) => (
-    <>
-      {groupShoppingByAisle(rows, packs).map((g) => (
-        <div key={g.heading}>
-          <h3>{g.heading}</h3>
-          {shoppingList(g.rows)}
-        </div>
-      ))}
-    </>
-  );
-
-  const listFor = (rows: ShoppingRow[]) =>
-    sort === 'aisle' ? aisleShoppingList(rows) : shoppingList(rows);
+  const bars = scoreView(score(doc, packs, now, horizonDays), {
+    coverage: coverage(doc, packs, now, horizonDays),
+    region: doc.settings.region,
+  }).bars;
+  const needs = bars.filter((bar) => !bar.enough);
+  const selected = expanded === undefined ? needs[0]?.capability : expanded;
+  const icons: Record<CapabilityId, string> = {
+    water: '💧',
+    food: '🥫',
+    heat: '♨',
+    cooking: '🍳',
+    light: '☀',
+    power: '⚡',
+    comms: '📻',
+    sanitation: '🧼',
+    medical: '✚',
+    mobility: '🚗',
+    plans: '✓',
+  };
 
   return (
     <section className="screen gaps">
@@ -145,33 +104,81 @@ export function GapsScreen() {
           </p>
         </section>
       ) : null}
-      <h2>Shopping</h2>
-      {view.shopping.length === 0 ? (
-        <p className="muted">Nothing to buy for {horizonDays} days.</p>
-      ) : (
+
+      {needs.length > 0 ? (
         <>
-          <Segmented
-            label="Sort shopping by"
-            value={sort}
-            options={[
-              { value: 'capability' as const, label: 'Weakest first' },
-              { value: 'cost' as const, label: 'Cheapest cover' },
-              { value: 'aisle' as const, label: 'By aisle' },
-            ]}
-            onChange={setSort}
-          />
-          <EditArea>
-            {restock.length > 0 ? (
-              <>
-                <h3>Back to your minimums</h3>
-                {listFor(restock)}
-              </>
-            ) : null}
-            {restock.length > 0 && buy.length > 0 ? <h3>To buy</h3> : null}
-            {buy.length > 0 ? listFor(buy) : null}
-          </EditArea>
+          <h2>Needs attention</h2>
+          <p className="muted">Your least-covered needs for {horizonDays} days.</p>
+          <div className="gaps-priorities">
+            {needs.slice(0, 3).map((bar) => (
+              <a
+                className="gaps-priority"
+                key={bar.capability}
+                href={`#need-${bar.capability}`}
+                onClick={() => {
+                  setShowAll(true);
+                  setExpanded(bar.capability);
+                }}
+              >
+                <span aria-hidden="true">{icons[bar.capability]}</span>
+                <strong>{bar.name}</strong>
+                <small>{bar.percent}% covered</small>
+              </a>
+            ))}
+          </div>
+          <h2>Your gaps</h2>
+          {(showAll ? needs : needs.slice(0, 3)).map((bar) => (
+            <details
+              className="gaps-need"
+              key={bar.capability}
+              id={`need-${bar.capability}`}
+              open={selected === bar.capability}
+              onToggle={(event) => {
+                if (event.currentTarget.open) setExpanded(bar.capability);
+                else if (selected === bar.capability) setExpanded(null);
+              }}
+            >
+              <summary>
+                <span aria-hidden="true" className="gaps-need-icon">
+                  {icons[bar.capability]}
+                </span>
+                <span>
+                  <strong>{bar.name}</strong>
+                  <span className="muted gaps-need-subtitle">
+                    {bar.shortfall || `${bar.percent}% covered`}
+                  </span>
+                </span>
+                <span className="gaps-need-percent">{bar.percent}%</span>
+              </summary>
+              <div className="gaps-need-body">
+                {bar.reason ? <p className="muted">{bar.reason}</p> : null}
+                {view.shopping.some((row) => row.capability === bar.capability) ? (
+                  <Link to={`/app/gaps/shopping?need=${bar.capability}`}>
+                    See shopping suggestions →
+                  </Link>
+                ) : (
+                  <p className="muted">Check the to-do list for ways to address this need.</p>
+                )}
+              </div>
+            </details>
+          ))}
+          {needs.length > 3 ? (
+            <button type="button" className="secondary" onClick={() => setShowAll(!showAll)}>
+              {showAll ? 'Show fewer needs' : 'Show all needs'}
+            </button>
+          ) : null}
         </>
+      ) : (
+        <p>All scored needs are covered.</p>
       )}
+      <Link to="/app/gaps/shopping" className="gaps-shopping-link">
+        <span aria-hidden="true">🛒</span>
+        <span>
+          <strong>Shopping list</strong>
+          <span className="muted gaps-need-subtitle">{view.shopping.length} suggestions</span>
+        </span>
+        <span aria-hidden="true">›</span>
+      </Link>
 
       <h2>To do</h2>
       {todo.length === 0 ? (
@@ -241,8 +248,6 @@ export function GapsScreen() {
           ))}
         </ul>
       )}
-
-      {buying ? <QuickAdd prefill={buying} onClose={() => setBuying(null)} /> : null}
     </section>
   );
 }

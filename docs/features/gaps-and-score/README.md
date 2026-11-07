@@ -8,16 +8,23 @@ neither computes targets or scoring rules.
 
 ## Map
 
-| Piece         | Where                              | What                                                                  |
-| ------------- | ---------------------------------- | --------------------------------------------------------------------- |
-| Gaps tab      | `/app/gaps`, `GapsScreen.tsx`      | Shopping, To do, Enough.                                              |
-| Gaps view     | `screens/gaps/view.ts`             | Groups, orders and words the engine's `gaps`, `score` and `coverage`. |
-| Score tab     | `/app/score`, `ScoreScreen.tsx`    | Headline, bar per need, next horizon.                                 |
-| Score view    | `screens/score/view.ts`            | Orders bars and wording.                                              |
-| Horizon table | `screens/horizon/previewSource.ts` | Engine `preview`; three biggest asks.                                 |
-| Blocked badge | `AssetsScreen.tsx`                 | From `coverage(...).blockedAssets`.                                   |
+| Piece         | Where                                      | What                                                                  |
+| ------------- | ------------------------------------------ | --------------------------------------------------------------------- |
+| Gaps tab      | `/app/gaps`, `GapsScreen.tsx`              | Lowest-scoring needs, expandable gaps, To do and Enough.              |
+| Shopping      | `/app/gaps/shopping`, `ShoppingScreen.tsx` | Suggestions, filters and buying actions.                              |
+| Gaps view     | `screens/gaps/view.ts`                     | Groups, orders and words the engine's `gaps`, `score` and `coverage`. |
+| Score tab     | `/app/score`, `ScoreScreen.tsx`            | Headline, bar per need, next horizon.                                 |
+| Score view    | `screens/score/view.ts`                    | Orders bars and wording.                                              |
+| Horizon table | `screens/horizon/previewSource.ts`         | Engine `preview`; three biggest asks.                                 |
+| Blocked badge | `AssetsScreen.tsx`                         | From `coverage(...).blockedAssets`.                                   |
+
+## Gaps overview
+
+The three least-covered needs appear as links above expandable need sections, ordered like the Score tab. The weakest section opens first; Show all needs reveals the remaining shortfalls. Each section shows the score, the weakest target and its guidance, and links to shopping suggestions for that need where available. A separate link opens the complete shopping list. To do and Enough remain on the overview, including plan Done and Undo actions.
 
 ## Gaps — shopping
+
+The separate shopping screen can show the full list or the suggestions for one need. Both retain the existing sorting and buying actions.
 
 - Rows name **items** with an amount and, when the household has one, the **usual product** under the label as
   **detail** (e.g. "Dried pasta: about 5 kg more" with "10 × Tesco fusilli 500 g").

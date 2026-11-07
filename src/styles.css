@@ -1646,3 +1646,77 @@ button.scans-note {
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
+/* The Gaps overview keeps the weakest needs visible before shopping. */
+.gaps-priorities {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+.gaps-priority,
+.gaps-shopping-link {
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+}
+.gaps-priority {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 5.5rem;
+  padding: 0.5rem 0.15rem;
+  font-size: 0.85rem;
+}
+.gaps-priority > span {
+  font-size: 1.4rem;
+}
+.gaps-priority small {
+  font-size: 0.75rem;
+}
+.gaps-need {
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+  margin: 0.5rem 0;
+}
+.gaps-need summary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.8rem;
+  cursor: pointer;
+  list-style: none;
+}
+.gaps-need summary::-webkit-details-marker {
+  display: none;
+}
+.gaps-need-icon,
+.gaps-shopping-link > span:first-child {
+  font-size: 1.5rem;
+}
+.gaps-need-subtitle {
+  display: block;
+  font-size: 0.85rem;
+}
+.gaps-need-percent {
+  margin-left: auto;
+  font-weight: 700;
+}
+.gaps-need-body {
+  padding: 0 0.8rem 0.8rem;
+}
+.gaps-shopping-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.8rem;
+  margin: 1.2rem 0;
+}
+.gaps-shopping-link > span:last-child {
+  margin-left: auto;
+  font-size: 1.5rem;
+}
