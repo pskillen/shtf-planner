@@ -206,6 +206,8 @@ describe('the date parser: dot-matrix print on a tin lid', () => {
     ['BB:31.07.6028', '07/2028'], // the 2 read as a 6
     ['BB131.07.2028', '07/2028'], // the colon read as a 1
     ['B.B: 31.07.2028', '07/2028'],
+    ['06/06/2028INDIAN O.', '06/2028'], // the next printed line glued on: its I is not a digit
+    ['06/06/2028 INDIAN O.', '06/2028'],
   ])('reads %j as %s', (text, want) => {
     const r = parseDates(text, TODAY);
     expect(r.best && formatMonthYear(r.best)).toBe(want);

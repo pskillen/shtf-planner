@@ -253,6 +253,27 @@ button.quiet {
   color: inherit;
 }
 
+/* The scan "Saved" toast appears under the thumb that just tapped OK: Undo sits at the far side
+   and ignores taps for the first moments, so a double tap or a slow lift cannot undo the save. */
+.toast.undo-toast {
+  flex-direction: row-reverse;
+}
+
+.toast.undo-toast button {
+  animation: undo-guard 0.8s steps(1, end);
+}
+
+@keyframes undo-guard {
+  from {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+  to {
+    pointer-events: auto;
+    opacity: 1;
+  }
+}
+
 /* Setup screens. */
 fieldset.plain {
   border: 0;
@@ -1719,4 +1740,24 @@ button.scans-note {
 .gaps-shopping-link > span:last-child {
   margin-left: auto;
   font-size: 1.5rem;
+}
+
+/* Stores filters: category, needs-attention and open/close all, under the search and place. */
+.stores-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+}
+
+.check-row input {
+  width: 22px;
+  height: 22px;
 }

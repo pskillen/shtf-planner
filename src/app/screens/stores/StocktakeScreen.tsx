@@ -25,6 +25,7 @@ import { MonthField } from './MonthField';
 import { ScanResolve } from './ScanResolve';
 import {
   dateSummaryText,
+  quantityHint,
   readTypedCode,
   savedText,
   type DateCounts,
@@ -481,9 +482,10 @@ export function StocktakeScreen() {
                 today={today()}
               />
               {bestBefore ? <ExpiryBadge bestBefore={bestBefore} /> : null}
-              <Field label={`How many (${unit})?`}>
-                <QtyField value={qty} onChange={setQty} label={`How many ${unit}`} />
+              <Field label={`How many ${unit}s?`}>
+                <QtyField value={qty} onChange={setQty} label={`How many ${unit}s`} />
               </Field>
+              <p className="muted">{quantityHint(unit, name)}</p>
             </div>
             <div className="sticky-bar">
               <button type="button" className="secondary" onClick={backToBarcode}>
