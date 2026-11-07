@@ -91,6 +91,18 @@ export function normalise(raw: string): string {
     .replace(/[\r\n\t|_]+/g, ' ')
     .replace(/[,;]/g, '.')
     .replace(/\s+/g, ' ');
+  // A month and year with a stray letter printed after it ("JUN 2028L", "JUN 2028W": a line or
+  // plant code). Without a break the L is taken for a 1 and the year is lost; split before it.
+  t = t.replace(
+    new RegExp(
+      `(\\b${MON_RE}\\.?\\s?[ ./-]?\\s?(?:[2Z][0O][0-9OIL]{2}|[0-9OIL]{2}))[IL](?![0-9A-Z])`,
+      'g',
+    ),
+    '$1 ',
+  );
+  // A full date with the next printed line glued to it ("06/06/2028INDIAN"): without a break the
+  // I of the word is taken for a digit and the year is lost. Split after a four-digit year.
+  t = t.replace(/(?<![0-9OIL])([0-9OIL]{1,2}[./-][0-9OIL]{1,2}[./-][0-9OIL]{4})(?=[A-Z])/g, '$1 ');
   // O to 0, I and L to 1, inside a run that already has a digit: "O6/2O27". A run glued to a
   // month name keeps its I and L: "SEP27L4" is a date then a code, not "SEP2714".
   t = t.replace(/[0-9OIL][0-9OIL/.-]*[0-9OIL]/g, (run, off: number) => {

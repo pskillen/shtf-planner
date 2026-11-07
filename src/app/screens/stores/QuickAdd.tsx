@@ -15,6 +15,7 @@ import { ScanSheet } from './ScanSheet';
 import { SizeStep, type SizeStepDone } from './SizeStep';
 import { StockSheet } from './StockSheet';
 import { hasCamera } from './dateSettings';
+import { quantityHint } from './scanHelpers';
 import {
   addStockWithUndo,
   defaultLocationId,
@@ -415,6 +416,7 @@ export function QuickAdd({
             <Field label={`How many (${unit})?`}>
               <QtyField value={qty} onChange={edit(setQty)} label={`How many ${unit}`} />
             </Field>
+            <p className="muted">{quantityHint(unit, product?.name ?? '')}</p>
             {locations.length === 0 ? (
               <p className="note">
                 You have no places yet. <Link to="/app/locations">Add a place</Link> first, then

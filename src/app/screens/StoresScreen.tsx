@@ -55,6 +55,8 @@ export function StoresScreen() {
   const [placeFilter, setPlaceFilter] = useState<string | 'all'>(() => placeId ?? 'all');
   const activePlaceFilter =
     placeFilter !== 'all' && !doc.locations[placeFilter] ? 'all' : placeFilter;
+  const [categoryFilter, setCategoryFilter] = useState<string | 'all'>('all');
+  const [attentionOnly, setAttentionOnly] = useState(false);
   const [collapsedCats, setCollapsedCats] = useState<ReadonlySet<string>>(new Set());
   const [openItems, setOpenItems] = useState<ReadonlySet<string>>(new Set());
   const [adding, setAdding] = useState(false);
@@ -134,11 +136,34 @@ export function StoresScreen() {
     (doc.locations[activePlaceFilter] !== undefined &&
       matchesPlaceName(doc.locations[activePlaceFilter]!));
 
-  const itemIds = itemIdsInView(doc, activePlaceFilter);
-  const orderedItems = orderedItemsInView(packs, itemIds).filter(matchesItem);
-  const nothingIds = nothingProductIds(doc, activePlaceFilter, remove.pending).filter((id) =>
-    matchesProduct(doc.products[id]!),
-  );
+  const itemIds = useMemo(() => itemIdsInView(doc, activePlaceFilter), [doc, activePlaceFilter]);
+  const categoriesInView = useMemo(() => {
+    const present = new Set([...itemIds].map((id) => packs.items[id]?.category));
+    return [...new Set(packItems.map((i) => i.category))].filter((c) => present.has(c));
+  }, [itemIds, packs.items, packItems]);
+  const activeCategoryFilter = categoriesInView.includes(categoryFilter as never)
+    ? categoryFilter
+    : 'all';
+  const needsAttention = (item: Item): boolean => {
+    const level = worstExpiryLevel(
+      stocksForItem(doc, item.id, activePlaceFilter, remove.pending),
+      todayIso,
+      doc.settings,
+    );
+    return level !== undefined && level !== 'ok';
+  };
+  const orderedItems = orderedItemsInView(packs, itemIds)
+    .filter(matchesItem)
+    .filter((i) => activeCategoryFilter === 'all' || i.category === activeCategoryFilter)
+    .filter((i) => !attentionOnly || needsAttention(i));
+  // A category or "needs attention" filter is about food and kit by item: the sections below
+  // that are not items (not scored, equipment, unknown place) step aside.
+  const itemFiltered = activeCategoryFilter !== 'all' || attentionOnly;
+  const nothingIds = itemFiltered
+    ? []
+    : nothingProductIds(doc, activePlaceFilter, remove.pending).filter((id) =>
+        matchesProduct(doc.products[id]!),
+      );
 
   const categoryGroups = useMemo(() => {
     return groupItemsForPicker(packItems)
@@ -169,6 +194,7 @@ export function StoresScreen() {
 
   const equipmentRows = Object.values(doc.assets)
     .filter((a) => {
+      if (itemFiltered) return false;
       if (!equipmentMatches(a)) return false;
       if (activePlaceFilter !== 'all') {
         return a.locationId === activePlaceFilter;
@@ -180,7 +206,7 @@ export function StoresScreen() {
   const lost = Object.values(doc.stock).filter((s) => {
     if (knownIds.has(s.locationId)) return false;
     if (remove.pending.has(s.id)) return false;
-    if (activePlaceFilter !== 'all') return false;
+    if (activePlaceFilter !== 'all' || itemFiltered) return false;
     return matchesProduct(doc.products[s.productId] ?? { name: s.productId });
   });
 
@@ -339,7 +365,7 @@ export function StoresScreen() {
     Object.keys(doc.assets).length === 0;
 
   const showGroups =
-    q === '' ||
+    (q === '' && !itemFiltered) ||
     orderedItems.length > 0 ||
     nothingIds.length > 0 ||
     equipmentRows.length > 0 ||
@@ -385,6 +411,47 @@ export function StoresScreen() {
               </select>
             </FieldLike>
           ) : null}
+          <div className="stores-filters">
+            <FieldLike label="Category">
+              <select
+                aria-label="Category filter"
+                value={activeCategoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+              >
+                <option value="all">All categories</option>
+                {categoriesInView.map((c) => (
+                  <option key={c} value={c}>
+                    {labelOf(CATEGORY_LABEL, c)}
+                  </option>
+                ))}
+              </select>
+            </FieldLike>
+            <label className="check-row">
+              <input
+                type="checkbox"
+                checked={attentionOnly}
+                onChange={(e) => setAttentionOnly(e.target.checked)}
+              />
+              <span>Only what needs attention (expiring or past date)</span>
+            </label>
+            {categoryGroups.length > 1 ? (
+              <button
+                type="button"
+                className="link"
+                onClick={() =>
+                  setCollapsedCats(
+                    collapsedCats.size >= categoryGroups.length
+                      ? new Set()
+                      : new Set(categoryGroups.map((g) => g.key)),
+                  )
+                }
+              >
+                {collapsedCats.size >= categoryGroups.length
+                  ? 'Expand all groups'
+                  : 'Collapse all groups'}
+              </button>
+            ) : null}
+          </div>
         </>
       )}
 
@@ -407,7 +474,9 @@ export function StoresScreen() {
         <PlaceWarningBox key={w.locationId} warning={w} />
       ))}
 
-      {!showGroups && q !== '' ? <p className="muted">No stock matches your search.</p> : null}
+      {!showGroups && (q !== '' || itemFiltered) ? (
+        <p className="muted">No stock matches your search or filters.</p>
+      ) : null}
 
       {categoryGroups.map((g) => {
         const open = q !== '' || !collapsedCats.has(g.key);

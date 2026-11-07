@@ -14,6 +14,26 @@ export function productLine(p: { name?: string; brand?: string; quantity?: strin
     : base;
 }
 
+/** A kcal figure for display: whole numbers; OFF's label values arrive with a long tail. */
+export function roundKcal(n: number): number {
+  return Math.round(n);
+}
+
+/** "4" for a name like "Tuna chunks 4 x 145 g": how many units one scan of the pack holds. */
+export function multipackCount(name: string): number | undefined {
+  const m = /\b(\d{1,3})\s*[x×]\s*\d/i.exec(name);
+  const n = m ? Number(m[1]) : 0;
+  return n >= 2 ? n : undefined;
+}
+
+/** What "how many" counts, in words: each unit (tin), not each pack; says so for a multipack. */
+export function quantityHint(unit: string, name: string): string {
+  const n = multipackCount(name);
+  return n
+    ? `Count each ${unit}, not each pack: one ${n}-pack is ${n} ${unit}s.`
+    : `Count each ${unit}.`;
+}
+
 /** kcal line for a scan preview: the label when known, else the item's typical figure. */
 export function previewKcalLine(
   item: Item | undefined,
@@ -21,12 +41,12 @@ export function previewKcalLine(
 ): string | undefined {
   if (labelKcalPer100 !== undefined && item && item.measure !== 'count') {
     const per = item.measure === 'volume' ? 'ml' : 'g';
-    return `${labelKcalPer100} kcal per 100 ${per} (from the label)`;
+    return `${roundKcal(labelKcalPer100)} kcal per 100 ${per} (from the label)`;
   }
   const food = item?.gives.find((g) => g.resource === 'foodKcal');
   if (!food || !item || item.measure === 'count') return undefined;
   const per = item.measure === 'volume' ? 'ml' : 'g';
-  return `about ${food.amount} kcal per 100 ${per}`;
+  return `about ${roundKcal(food.amount)} kcal per 100 ${per}`;
 }
 
 /** One line for what Open Food Facts found: name and size, then kcal when there is one. */

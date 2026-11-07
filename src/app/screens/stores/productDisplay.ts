@@ -9,11 +9,11 @@ export function productKcalLine(product: Product, item: Item | undefined): strin
   if (!source || !item) return undefined;
   const per = item.measure === 'volume' ? 'ml' : 'g';
   if (source === 'label') {
-    return `label: ${product.labelKcalPer100} kcal per 100 ${per}`;
+    return `label: ${Math.round(product.labelKcalPer100 ?? 0)} kcal per 100 ${per}`;
   }
   const food = item.gives.find((g) => g.resource === 'foodKcal');
   if (!food) return undefined;
-  return `typical for ${item.name}: ${food.amount} kcal per 100 ${per}`;
+  return `typical for ${item.name}: ${Math.round(food.amount)} kcal per 100 ${per}`;
 }
 
 export function barcodeCount(doc: Pick<Document, 'barcodes'>, productId: string): number {
