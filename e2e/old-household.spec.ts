@@ -32,7 +32,10 @@ test('Start a new household clears stock and opens onboarding', async ({ page })
   await page.evaluate(() => (window as unknown as { __shtf: Shtf }).__shtf.flush());
   await page.goto('/app');
   await page.getByRole('button', { name: 'Start a new household' }).click();
-  await page.getByRole('button', { name: 'Start a new household' }).click();
+  await Promise.all([
+    page.waitForNavigation(),
+    page.getByRole('button', { name: 'Start a new household' }).click(),
+  ]);
   await expect(page.getByRole('heading', { name: /Welcome|People|Household/i })).toBeVisible({
     timeout: 15_000,
   });
