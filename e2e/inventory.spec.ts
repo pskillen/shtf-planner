@@ -323,12 +323,17 @@ test('exact fuel choice survives reload and a missing confirmation links to its 
   await expect(page.getByRole('switch', { name: /checked the chosen fuel/ })).not.toBeChecked();
   await page.getByRole('button', { name: 'Save' }).click();
   await expect(page.getByText('Edit Gas BBQ', { exact: true })).not.toBeVisible();
-  await page.goto('/app/gaps?debug=1');
+  await page.getByRole('link', { name: 'Gaps', exact: true }).click();
   const edit = page.getByRole('link', { name: 'Open Gas BBQ' }).first();
   await expect(edit).toHaveAttribute('href', '/app/assets?edit=asset-bbq');
   await edit.click();
   await expect(page.getByText('Edit Gas BBQ')).toBeVisible();
-  await page.goto('/app/gaps/shopping?debug=1');
+  await page.getByRole('dialog').getByRole('button', { name: 'Close' }).click();
+  await page.getByRole('link', { name: 'Gaps', exact: true }).click();
+  await page
+    .getByRole('link', { name: /Shopping/ })
+    .first()
+    .click();
   await expect(page.getByText('Choose how you will keep warm')).toBeVisible();
   await page.goto('/app/gaps/shopping?need=heat&debug=1');
   await expect(page.getByText('Choose how you will keep warm')).toBeVisible();
