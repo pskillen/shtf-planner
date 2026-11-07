@@ -79,10 +79,10 @@ export function ShoppingScreen() {
                 Make a heating plan for an outage. <Link to="/app/home">Open Home</Link>
               </span>
             ) : null}
-            {r.assetTypeId || r.itemId?.includes('bottle') || r.itemId?.includes('paraffin') ? (
+            {r.assetTypeId || r.fuelPurchase ? (
               <span>
                 Check the equipment manual for the specified fuel, connection, ventilation and safe
-                use.
+                use. Use outdoor-only equipment outside.
               </span>
             ) : null}
             {r.detail ? <span className="muted">{r.detail}</span> : null}

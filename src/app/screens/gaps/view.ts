@@ -29,6 +29,7 @@ export interface ShoppingRow {
   itemId?: string;
   productId?: string;
   assetIds?: string[];
+  fuelPurchase?: boolean;
   /** Set when the row is a piece of equipment: ticking it opens the equipment form, not stock. */
   assetTypeId?: string;
   qty?: number;
@@ -158,6 +159,7 @@ function shoppingRowsFor(gap: Gap, horizonDays: number, region: 'UK' | 'US', at:
     label: s.label,
     ...(s.capabilities ? { capabilities: s.capabilities } : {}),
     ...(s.assetIds ? { assetIds: s.assetIds } : {}),
+    ...(s.fuelDemand !== undefined ? { fuelPurchase: true } : {}),
     ...(s.pricePence !== undefined ? { pricePence: s.pricePence } : {}),
     ...(s.detail ? { detail: s.detail } : {}),
     ...(s.assetTypeId

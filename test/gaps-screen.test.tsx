@@ -122,3 +122,35 @@ describe('fuel shopping alternatives', () => {
     }
   });
 });
+
+it.each([
+  ['camping-stove', { fuelConfirmed: true }, /gas canister/i, 'cooking'],
+  ['wood-burner', { fuelConfirmed: true, indoorUse: 'permitted' }, /logs/i, 'heat'],
+  [
+    'generator',
+    { fuel: 'petrol', fuelConfirmed: true, watts: 800, fuelPerHour: 0.5 },
+    /petrol/i,
+    'power',
+  ],
+])(
+  'shows manual guidance beside %s fuel through filtering and sorting',
+  (type, answers, name, need) => {
+    const doc = biggarDocument();
+    doc.assets = { test: { id: 'test', typeId: `assets-base:${type}`, maintenance: {}, answers } };
+    doc.stock = {};
+    const s = liveStore(doc);
+    render(
+      <MemoryRouter initialEntries={[`/app/gaps/shopping?need=${need}`]}>
+        <StoreContext.Provider value={s.store}>
+          <ShoppingScreen />
+        </StoreContext.Provider>
+      </MemoryRouter>,
+    );
+    const button = screen.getByRole('button', { name: new RegExp(`Bought:.*${name.source}`, 'i') });
+    expect(button.closest('li')?.textContent).toMatch(
+      /equipment manual.*outdoor-only equipment outside/i,
+    );
+    fireEvent.click(screen.getByRole('radio', { name: 'By aisle' }));
+    expect(button.closest('li')?.textContent).toMatch(/equipment manual/i);
+  },
+);
