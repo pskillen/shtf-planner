@@ -378,6 +378,7 @@ describe('shared fuel shopping', () => {
     expect(fuel).toHaveLength(1);
     expect(fuel[0]!.fuelDemand).toBeCloseTo(7.5 * 0.3 + 18 * 0.1);
     expect(fuel[0]!.qty).toBe(1);
+    expect(fuel[0]!.amount).toBeCloseTo((7.5 * 0.3 + 18 * 0.1) * 1000);
     expect(fuel[0]!.assetIds).toEqual(['asset-bbq', 'asset-heater']);
     expect(fuel[0]!.capabilities).toEqual(['heat', 'cooking']);
   });

@@ -242,6 +242,7 @@ export function gapsFrom(doc: Document, packs: Packs, a: Analysis): Gap[] {
       ? (doc.products[primary.productId]?.name ?? item.name)
       : `${item.name} ${formatSize(primary.size!)}`;
     primary.fuelDemand = demand;
+    if (primary.size) primary.amount = (demand / s.perUnitCoverage) * baseAmountOf(primary.size);
     primary.qty = qty;
     primary.label = `${qty} × ${name} for your equipment`;
     primary.detail = undefined;
