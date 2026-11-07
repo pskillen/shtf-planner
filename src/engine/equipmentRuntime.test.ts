@@ -171,3 +171,62 @@ it('counts the invented Biggar heater and BBQ against their respective fuels', (
   expect(bbq.inputLots.map((l) => l.itemId)).toEqual(['items-base:propane-bottle']);
   expect(heater.inputLots.map((l) => l.itemId)).toEqual(['items-base:butane-bottle']);
 });
+
+it.each(['petrol', 'lpg'])('reports the generator %s manual rate provenance', (fuel) => {
+  const doc = biggarDocument();
+  doc.assets.gen = {
+    id: 'gen',
+    typeId: 'assets-base:generator',
+    maintenance: {},
+    answers: {
+      fuel,
+      watts: 800,
+      fuelPerHour: 0.5,
+      chosenLpg: 'items-base:propane-bottle',
+      fuelConfirmed: true,
+    },
+  };
+  const result = equipmentRuntime(doc, packs, now, 3).find(
+    (r) => r.assetId === 'gen' && r.status !== 'blocked',
+  )!;
+  expect(result.source).toBe('manual');
+  expect(result.rate).toBe(0.5);
+});
+
+it('keeps unlike resource converters distinct while conserving a shared physical lot', () => {
+  const doc = biggarDocument();
+  delete doc.assets['asset-bbq'];
+  doc.assets.a = { ...heater('items-base:propane-bottle'), id: 'a' };
+  doc.assets.b = {
+    ...heater('items-base:propane-bottle'),
+    id: 'b',
+    typeId: 'assets-base:dual-heater',
+  };
+  const original = packs.assets['assets-base:cabinet-heater']!;
+  const dual = {
+    ...original,
+    id: 'assets-base:dual-heater',
+    contributes: original.contributes.map((c) =>
+      c.converts ? { ...c, converts: { ...c.converts, resource: 'petrolL' as const } } : c,
+    ),
+  };
+  const propane = packs.items['items-base:propane-bottle']!;
+  const modified = {
+    ...packs,
+    assets: { ...packs.assets, [dual.id]: dual },
+    items: {
+      ...packs.items,
+      [propane.id]: {
+        ...propane,
+        gives: [...propane.gives, { resource: 'petrolL' as const, amount: 1, per: 1000 }],
+      },
+    },
+  };
+  const runtime = equipmentRuntime(doc, modified, now, 3).filter(
+    (r) => (r.assetId === 'a' || r.assetId === 'b') && r.status !== 'blocked',
+  );
+  expect(runtime.map((r) => r.status)).toEqual(['counted', 'counted']);
+  expect(
+    runtime.reduce((n, r) => n + r.inputLots.reduce((m, lot) => m + lot.allocatedResource, 0), 0),
+  ).toBeLessThanOrEqual(13);
+});

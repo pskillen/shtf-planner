@@ -507,14 +507,16 @@ export function analyse(
         selectedItemIds: e.itemId ? [e.itemId] : [],
         ...(e.perHour ? { rate: e.perHour } : {}),
         ...(e.output ? { output: e.output } : {}),
-        ...(c.converts.rateOverrideQuestion &&
-        asset.answers[c.converts.rateOverrideQuestion] !== undefined
+        ...((c.converts.rateOverrideQuestion &&
+          asset.answers[c.converts.rateOverrideQuestion] !== undefined) ||
+        (c.converts.perHourFrom && asset.answers[c.converts.perHourFrom] !== undefined)
           ? { source: 'manual' }
           : c.source
             ? { source: c.source }
             : {}),
-        ...(c.converts.rateOverrideQuestion &&
-        asset.answers[c.converts.rateOverrideQuestion] !== undefined
+        ...((c.converts.rateOverrideQuestion &&
+          asset.answers[c.converts.rateOverrideQuestion] !== undefined) ||
+        (c.converts.perHourFrom && asset.answers[c.converts.perHourFrom] !== undefined)
           ? { note: 'Fuel use entered from the equipment manual.' }
           : c.note
             ? { note: c.note }
@@ -535,70 +537,74 @@ export function analyse(
     );
     const here = converters.filter((c) => c.capability === capability);
     for (const itemId of [...new Set(here.map((c) => c.itemId))].sort()) {
-      const choices = here
-        .filter((c) => c.itemId === itemId)
-        .sort(
-          (a, b) =>
-            b.output / b.perHour - a.output / a.perHour ||
-            a.asset.typeId.localeCompare(b.asset.typeId) ||
-            a.asset.id.localeCompare(b.asset.id) ||
-            a.contributionKey.localeCompare(b.contributionKey),
-        );
-      const best = choices[0]!;
-      const lots = fuelLots
-        .filter((l) => l.itemId === itemId && l.resource === best.resource)
-        .sort((a, b) => a.stockId.localeCompare(b.stockId));
-      const available = lots.reduce((n, l) => n + l.remaining, 0);
-      const hours = available / best.perHour;
-      const claim = Math.min(hours * best.output, need);
-      let consume = (claim / best.output) * best.perHour;
-      need -= claim;
-      for (const c of choices) {
-        const r = runtime.find(
-          (r) => r.assetId === c.asset.id && r.contributionKey === c.contributionKey,
+      for (const resource of [
+        ...new Set(here.filter((c) => c.itemId === itemId).map((c) => c.resource)),
+      ].sort()) {
+        const choices = here
+          .filter((c) => c.itemId === itemId && c.resource === resource)
+          .sort(
+            (a, b) =>
+              b.output / b.perHour - a.output / a.perHour ||
+              a.asset.typeId.localeCompare(b.asset.typeId) ||
+              a.asset.id.localeCompare(b.asset.id) ||
+              a.contributionKey.localeCompare(b.contributionKey),
+          );
+        const best = choices[0]!;
+        const lots = fuelLots
+          .filter((l) => l.itemId === itemId && l.resource === best.resource)
+          .sort((a, b) => a.stockId.localeCompare(b.stockId));
+        const available = lots.reduce((n, l) => n + l.remaining, 0);
+        const hours = available / best.perHour;
+        const claim = Math.min(hours * best.output, need);
+        let consume = (claim / best.output) * best.perHour;
+        need -= claim;
+        for (const c of choices) {
+          const r = runtime.find(
+            (r) => r.assetId === c.asset.id && r.contributionKey === c.contributionKey,
+          )!;
+          r.status = c === best ? (available > 0 ? 'counted' : 'no-fuel') : 'alternative';
+          r.availableHours = available / c.perHour;
+          r.allocatedHours = c === best ? claim / c.output : 0;
+          if (target && target.amount > 0 && target.days > 0 && c === best)
+            r.days = claim / (target.amount / target.days);
+          r.sharingAssetIds = [
+            ...new Set(
+              converters
+                .filter((x) => x.itemId === c.itemId && x.asset.id !== c.asset.id)
+                .map((x) => x.asset.id),
+            ),
+          ].sort();
+          r.inputLots = lots.map((lot) => ({
+            stockId: lot.stockId,
+            productId: lot.productId,
+            itemId: lot.itemId,
+            locationId: lot.locationId,
+            heldPacks: lot.heldPacks,
+            countedPacks: lot.countedPacks,
+            resourceAmount: lot.resourceAmount,
+            allocatedResource: 0,
+            ...(lot.expired ? { expired: true } : {}),
+          }));
+        }
+        const winner = runtime.find(
+          (r) => r.assetId === best.asset.id && r.contributionKey === best.contributionKey,
         )!;
-        r.status = c === best ? (available > 0 ? 'counted' : 'no-fuel') : 'alternative';
-        r.availableHours = available / c.perHour;
-        r.allocatedHours = c === best ? claim / c.output : 0;
-        if (target && target.amount > 0 && target.days > 0 && c === best)
-          r.days = claim / (target.amount / target.days);
-        r.sharingAssetIds = [
-          ...new Set(
-            converters
-              .filter((x) => x.itemId === c.itemId && x.asset.id !== c.asset.id)
-              .map((x) => x.asset.id),
-          ),
-        ].sort();
-        r.inputLots = lots.map((lot) => ({
-          stockId: lot.stockId,
-          productId: lot.productId,
-          itemId: lot.itemId,
-          locationId: lot.locationId,
-          heldPacks: lot.heldPacks,
-          countedPacks: lot.countedPacks,
-          resourceAmount: lot.resourceAmount,
-          allocatedResource: 0,
-          ...(lot.expired ? { expired: true } : {}),
-        }));
+        for (const lot of lots) {
+          const used = Math.min(lot.remaining, consume);
+          const fraction = lot.remaining > 0 ? used / lot.remaining : 0;
+          for (const other of fuelLots.filter((l) => l.stockId === lot.stockId))
+            other.remaining *= 1 - fraction;
+          consume -= used;
+          winner.inputLots.find((l) => l.stockId === lot.stockId)!.allocatedResource = used;
+        }
+        if (claim > 0)
+          extra(targetId, {
+            kind: 'asset',
+            id: best.asset.id,
+            amount: claim,
+            note: `${fmt(claim / best.output)} hours using ${itemId}`,
+          });
       }
-      const winner = runtime.find(
-        (r) => r.assetId === best.asset.id && r.contributionKey === best.contributionKey,
-      )!;
-      for (const lot of lots) {
-        const used = Math.min(lot.remaining, consume);
-        const fraction = lot.remaining > 0 ? used / lot.remaining : 0;
-        for (const other of fuelLots.filter((l) => l.stockId === lot.stockId))
-          other.remaining *= 1 - fraction;
-        consume -= used;
-        winner.inputLots.find((l) => l.stockId === lot.stockId)!.allocatedResource = used;
-      }
-      if (claim > 0)
-        extra(targetId, {
-          kind: 'asset',
-          id: best.asset.id,
-          amount: claim,
-          note: `${fmt(claim / best.output)} hours using ${itemId}`,
-        });
     }
   }
   for (const lot of fuelLots)
