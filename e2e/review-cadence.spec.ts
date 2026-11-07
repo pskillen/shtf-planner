@@ -20,5 +20,7 @@ test('an old household sees a review badge on Home', async ({ page }) => {
   await expect(
     page.getByRole('navigation', { name: 'Main' }).getByText('Review due'),
   ).toBeVisible();
-  await expect(page.getByText('Review due', { exact: true })).toHaveCount(2);
+  const reviewCard = page.getByRole('link', { name: /Review.*to check.*Review due/ });
+  await expect(reviewCard).toBeVisible();
+  await expect(reviewCard).toHaveText(/\d+ to check · Review due/);
 });
