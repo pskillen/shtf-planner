@@ -447,8 +447,8 @@ export function StoresScreen() {
                 }
               >
                 {collapsedCats.size >= categoryGroups.length
-                  ? 'Open all groups'
-                  : 'Close all groups'}
+                  ? 'Expand all groups'
+                  : 'Collapse all groups'}
               </button>
             ) : null}
           </div>
