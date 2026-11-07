@@ -48,11 +48,11 @@ neither computes targets or scoring rules.
 Blocked equipment shows a badge and reason; full text under Why? on Equipment. The horizon table bolds the weakest
 shortfall row per need at 28 days.
 
+The [review summary](../review/README.md) shows the score snapshots captured before answers and at finish.
+
 ## Not built yet
 
-- A review summary with the score change, as the end of a review
-  ([#20](https://github.com/pskillen/shtf-planner/issues/20)). Badges and a review streak were
-  planned alongside it; there is no leaderboard.
+- Badges and a review streak ([#61](https://github.com/pskillen/shtf-planner/issues/61)).
 - Shopping rows that deep-link to the equipment and its fuel
   ([#28](https://github.com/pskillen/shtf-planner/issues/28)); impractical suggestions on very
   large shortfalls ([#49](https://github.com/pskillen/shtf-planner/issues/49)).

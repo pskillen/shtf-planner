@@ -1,6 +1,6 @@
 # Design
 
-What SHTF Planner is and how it hangs together, as built in 0.1.0. The words are in
+What SHTF Planner is and how it hangs together, as built today. The words are in
 [GLOSSARY.md](../GLOSSARY.md), the rules and their reasons in [decisions/](decisions/README.md),
 and each feature's detail in its [feature hub](features/README.md).
 
@@ -153,22 +153,21 @@ The lint fence keeps the model, engine and scan code free of React, storage and 
 
 ## Not built yet
 
-Agreed in the design, not in 0.1.0. Each has an epic; the agreed rules are in
+Agreed in the design, not yet built. Each has an epic; the agreed rules are in
 [planned features](decisions/planned-features.md).
 
-| What                                                                                                                                  | Epic                                                      |
-| ------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| Review queue: expiring stock, maintenance due, age rollovers, places to recount, plans to re-confirm; a 3- or 6-month cadence, `.ics` | [#20](https://github.com/pskillen/shtf-planner/issues/20) |
-| Equipment linked to its exact fuel, and what is left per piece                                                                        | [#28](https://github.com/pskillen/shtf-planner/issues/28) |
-| Scanning round 2: stocktake tuning, a lazily cached date model                                                                        | [#33](https://github.com/pskillen/shtf-planner/issues/33) |
-| Scenario checklists, tracked and printable                                                                                            | [#40](https://github.com/pskillen/shtf-planner/issues/40) |
-| Household contacts and a printable ICE sheet                                                                                          | [#45](https://github.com/pskillen/shtf-planner/issues/45) |
-| Content and engine breadth: diesel, vehicles, candles, more items                                                                     | [#49](https://github.com/pskillen/shtf-planner/issues/49) |
-| Badges and a review streak                                                                                                            | [#61](https://github.com/pskillen/shtf-planner/issues/61) |
-| "Review my plan" by AI through a small proxy with a redacted payload                                                                  | [#65](https://github.com/pskillen/shtf-planner/issues/65) |
-| Sharing a household between Google accounts; one sync loop across tabs                                                                | [#68](https://github.com/pskillen/shtf-planner/issues/68) |
-| Platform and quality: iOS check, accessibility, code-splitting, a real name                                                           | [#72](https://github.com/pskillen/shtf-planner/issues/72) |
-| Regional data: per-region flood lookup, Welsh and Northern Irish links, more guidance packs                                           | [#80](https://github.com/pskillen/shtf-planner/issues/80) |
-| Several households in one Drive                                                                                                       | [#85](https://github.com/pskillen/shtf-planner/issues/85) |
+| What                                                                                        | Epic                                                      |
+| ------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Equipment linked to its exact fuel, and what is left per piece                              | [#28](https://github.com/pskillen/shtf-planner/issues/28) |
+| Scanning round 2: stocktake tuning, a lazily cached date model                              | [#33](https://github.com/pskillen/shtf-planner/issues/33) |
+| Scenario checklists, tracked and printable                                                  | [#40](https://github.com/pskillen/shtf-planner/issues/40) |
+| Household contacts and a printable ICE sheet                                                | [#45](https://github.com/pskillen/shtf-planner/issues/45) |
+| Content and engine breadth: diesel, vehicles, candles, more items                           | [#49](https://github.com/pskillen/shtf-planner/issues/49) |
+| Badges and a review streak                                                                  | [#61](https://github.com/pskillen/shtf-planner/issues/61) |
+| "Review my plan" by AI through a small proxy with a redacted payload                        | [#65](https://github.com/pskillen/shtf-planner/issues/65) |
+| Sharing a household between Google accounts; one sync loop across tabs                      | [#68](https://github.com/pskillen/shtf-planner/issues/68) |
+| Platform and quality: iOS check, accessibility, code-splitting, a real name                 | [#72](https://github.com/pskillen/shtf-planner/issues/72) |
+| Regional data: per-region flood lookup, Welsh and Northern Irish links, more guidance packs | [#80](https://github.com/pskillen/shtf-planner/issues/80) |
+| Several households in one Drive                                                             | [#85](https://github.com/pskillen/shtf-planner/issues/85) |
 
 No push notifications, leaderboard, budgeting, map, vision entry or planning wizard are planned.

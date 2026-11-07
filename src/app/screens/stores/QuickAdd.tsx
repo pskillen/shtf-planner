@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import type { Item, OffFacts, Product } from '../../../model';
 import { formatQty, today } from '../../../util';
@@ -28,7 +28,8 @@ import {
 } from './stock';
 
 export interface QuickAddPrefill {
-  itemId: string;
+  itemId?: string;
+  locationId?: string;
   productId?: string;
   qty?: number;
 }
@@ -65,12 +66,20 @@ function AddedStatus({
  * Quick add: pick an item and size (or a recent product), then Add. The place is the last one
  * you used and the quantity is one unless you change it.
  */
-export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: QuickAddPrefill }) {
+export function QuickAdd({
+  onClose,
+  prefill,
+  reviewUndo,
+}: {
+  onClose: () => void;
+  prefill?: QuickAddPrefill;
+  reviewUndo?: ReactNode;
+}) {
   const doc = useDocument();
   const change = useChange();
   const packs = usePacks();
 
-  const prefItem = prefill ? packs.items[prefill.itemId] : undefined;
+  const prefItem = prefill?.itemId ? packs.items[prefill.itemId] : undefined;
   const prefProduct = prefill?.productId ? doc.products[prefill.productId] : undefined;
   const startItem = prefItem?.assetTypeId === undefined ? prefItem : undefined;
 
@@ -84,7 +93,9 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
   const [pendingNew, setPendingNew] = useState<NewProduct | undefined>(undefined);
   const [qty, setQty] = useState(Math.max(1, prefill?.qty ?? 1));
   const [locationId, setLocationId] = useState(() =>
-    defaultLocationId(doc, startItem?.id ?? prefItem?.id ?? '', readLastLocation()),
+    prefill?.locationId && doc.locations[prefill.locationId]
+      ? prefill.locationId
+      : defaultLocationId(doc, startItem?.id ?? prefItem?.id ?? '', readLastLocation()),
   );
   const [bestBefore, setBestBefore] = useState<string | undefined>(undefined);
   const [added, setAdded] = useState(0);
@@ -375,6 +386,7 @@ export function QuickAdd({ onClose, prefill }: { onClose: () => void; prefill?: 
           ) : undefined
         }
       >
+        {reviewUndo}
         {step === 'search' ? (
           <>
             {last ? (

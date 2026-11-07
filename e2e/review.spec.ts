@@ -1,0 +1,164 @@
+import { expect, test } from '@playwright/test';
+import type { Document } from '../src/model';
+
+test('review lists every kind and opens its entity on a phone', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  await page.clock.setFixedTime(new Date('2026-11-04T12:00:00Z'));
+  await page.goto('/?debug=1');
+  await page.evaluate(async () => {
+    const hook = (window as unknown as { __shtf: unknown }).__shtf as {
+      loadFixture: () => Promise<void>;
+      change: (fn: (doc: Document) => void) => Promise<void>;
+    };
+    await hook.loadFixture();
+    await hook.change((doc) => {
+      doc.household.members.push({
+        id: 'baby:alex',
+        name: 'Baby Alex',
+        dob: '2026-08-01',
+        tags: [],
+        medication: [],
+      });
+      doc.plans['plans-base:first-aid-course'] = { doneAt: '2023-02-01' };
+    });
+  });
+  await page.goto('/app');
+  await page.getByRole('link', { name: /Review.*to check/ }).click();
+  await expect(page.getByRole('heading', { name: 'Review' })).toBeVisible();
+  for (const kind of ['expiry', 'maintenance', 'age', 'recount', 'plan']) {
+    await expect(page.locator(`[data-review-kind="${kind}"]`).first()).toBeVisible();
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.locator('[data-review-kind="expiry"] a').first().click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.goto('/app/review');
+  await page.locator('[data-review-kind="maintenance"] a').first().click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.goto('/app/review');
+  await page.locator('[data-review-kind="age"] a').first().click();
+  await expect(page.getByRole('dialog', { name: 'Edit Baby Alex' })).toBeVisible();
+  await page.goto('/app/review');
+  await page.locator('[data-review-kind="recount"] a').first().click();
+  await expect(page.getByText(/^Place: /)).toBeVisible();
+  await page.goto('/app/review');
+  await page.locator('[data-review-kind="plan"] a').first().click();
+  await expect(page.getByRole('heading', { name: 'Plan to review' })).toBeVisible();
+});
+
+test('answers each kind on a phone with taps and swipe', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  await page.clock.setFixedTime(new Date('2026-11-04T12:00:00Z'));
+  await page.goto('/?debug=1');
+  await page.evaluate(async () => {
+    const hook = (
+      window as unknown as {
+        __shtf: {
+          loadFixture: () => Promise<void>;
+          change: (fn: (doc: Document) => void) => Promise<void>;
+        };
+      }
+    ).__shtf;
+    await hook.loadFixture();
+    await hook.change((doc) => {
+      doc.household.members.push({
+        id: 'baby',
+        name: 'Baby',
+        dob: '2026-08-01',
+        tags: [],
+        medication: [],
+      });
+      doc.plans['plans-base:first-aid-course'] = { doneAt: '2023-02-01' };
+    });
+  });
+  await page.goto('/app/review?debug=1');
+  const expiry = page.locator('[data-review-kind="expiry"]').first();
+  await expiry.dispatchEvent('touchstart', {
+    touches: [{ identifier: 1, target: await expiry.elementHandle(), clientX: 10, clientY: 50 }],
+  });
+  await expiry.dispatchEvent('touchend', {
+    changedTouches: [
+      { identifier: 1, target: await expiry.elementHandle(), clientX: 120, clientY: 50 },
+    ],
+  });
+  for (const [kind, action] of [
+    ['maintenance', 'Done'],
+    ['age', 'Noted'],
+    ['recount', 'Recounted'],
+    ['plan', 'Still true'],
+  ]) {
+    await page
+      .locator(`[data-review-kind="${kind}"]`)
+      .first()
+      .getByRole('button', { name: new RegExp(`^${action}:`) })
+      .click();
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  const count = await page.evaluate(
+    async () =>
+      Object.values(
+        (await (window as unknown as { __shtf: { doc: () => Promise<Document> } }).__shtf.doc())
+          .reviews,
+      ).flatMap((r) => r.resolved).length,
+  );
+  expect(count).toBe(5);
+});
+
+test('finishes two answers and reopens the summary on a phone', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  await page.clock.setFixedTime(new Date('2026-11-04T12:00:00Z'));
+  await page.goto('/?debug=1');
+  await page.evaluate(async () => {
+    const hook = (
+      window as unknown as {
+        __shtf: {
+          loadFixture: () => Promise<void>;
+          change: (fn: (doc: Document) => void) => Promise<void>;
+        };
+      }
+    ).__shtf;
+    await hook.loadFixture();
+    await hook.change((doc) => {
+      doc.stock['stock-water']!.bestBefore = '2026-11';
+    });
+  });
+  await page.goto('/app/review?debug=1');
+  const before = await page.evaluate(
+    async () =>
+      (
+        await (
+          window as unknown as { __shtf: { engine: { score: () => Promise<{ overall: number }> } } }
+        ).__shtf.engine.score()
+      ).overall,
+  );
+  await page
+    .locator('[data-review-kind="expiry"]')
+    .filter({ hasText: 'Spring water' })
+    .getByRole('button', { name: /^Binned:/ })
+    .click();
+  await page
+    .locator('[data-review-kind="maintenance"]')
+    .first()
+    .getByRole('button', { name: /^Done:/ })
+    .click();
+  const after = await page.evaluate(
+    async () =>
+      (
+        await (
+          window as unknown as { __shtf: { engine: { score: () => Promise<{ overall: number }> } } }
+        ).__shtf.engine.score()
+      ).overall,
+  );
+  const beforePercent = Math.round(before);
+  const afterPercent = Math.round(after);
+  const delta = afterPercent - beforePercent;
+  expect(delta).not.toBe(0);
+  const scoreText = `Score at finish ${beforePercent} % → ${afterPercent} % (${delta >= 0 ? '+' : ''}${delta})`;
+  await page.getByRole('button', { name: 'Finish review' }).click();
+  await expect(page.getByText(/Checked 2/)).toBeVisible();
+  await expect(page.getByText(scoreText)).toBeVisible();
+  await expect(page.getByText(/Next review/)).toBeVisible();
+  await page.reload();
+  await page.getByRole('button', { name: /Last review/ }).click();
+  await expect(page.getByText(/Checked 2/)).toBeVisible();
+  await expect(page.getByText(scoreText)).toBeVisible();
+});

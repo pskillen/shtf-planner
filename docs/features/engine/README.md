@@ -10,17 +10,18 @@ same call with a later `asOf`.
 
 ## Map
 
-| Piece          | Where                               | What                                                                          |
-| -------------- | ----------------------------------- | ----------------------------------------------------------------------------- |
-| Targets        | `src/engine/targets.ts`             | `targets(doc, packs, asOf, horizonDays)` returns `Target[]`.                  |
-| Coverage       | `src/engine/coverage.ts`            | `coverage(...)` returns `Coverage[]`; `analyse(...)` adds what `gaps` needs.  |
-| Gaps           | `src/engine/gaps.ts`                | `gaps(...)` returns `Gap[]` with suggestions.                                 |
-| Suggestions    | `src/engine/suggest.ts`             | The cheapest sensible whole-unit way to close a shortfall.                    |
-| Score, preview | `src/engine/score.ts`, `preview.ts` | `score(...)` and `preview(doc, packs, asOf)` for 3, 7, 14 and 28 days.        |
-| Assumptions    | `src/engine/assumptions.ts`         | The few numbers the engine itself uses (the rest are in the packs).           |
-| Debug          | `src/app/state/debugEngine.ts`      | With `?debug=1`: `window.__shtf.engine.{targets,coverage,gaps,score,preview}` |
+| Piece          | Where                                           | What                                                                                 |
+| -------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Targets        | `src/engine/targets.ts`                         | `targets(doc, packs, asOf, horizonDays)` returns `Target[]`.                         |
+| Coverage       | `src/engine/coverage.ts`                        | `coverage(...)` returns `Coverage[]`; `analyse(...)` adds what `gaps` needs.         |
+| Gaps           | `src/engine/gaps.ts`                            | `gaps(...)` returns `Gap[]` with suggestions.                                        |
+| Suggestions    | `src/engine/suggest.ts`                         | The cheapest sensible whole-unit way to close a shortfall.                           |
+| Score, preview | `src/engine/score.ts`, `preview.ts`             | `score(...)` and `preview(doc, packs, asOf)` for 3, 7, 14 and 28 days.               |
+| Assumptions    | `src/engine/assumptions.ts`                     | The few numbers the engine itself uses (the rest are in the packs).                  |
+| Review         | `src/engine/reviewItems.ts`, `reviewSession.ts` | `reviewItems(...)` and shared answer/session helpers.                                |
+| Debug          | `src/app/state/debugEngine.ts`                  | With `?debug=1`: `window.__shtf.engine.{targets,coverage,gaps,score,preview,review}` |
 
-Every function takes `(doc, packs, asOf, horizonDays)`; `asOf` is `YYYY-MM-DD` and the engine never
+The target, coverage, gaps and score functions take `(doc, packs, asOf, horizonDays)`; `asOf` is `YYYY-MM-DD` and the engine never
 reads the clock. `horizonDays` defaults to `doc.settings.horizonDays`. `packs` is the `Packs` the
 loader returns (`bundledPacks()`); the engine reads only the packs enabled in `doc.settings`.
 
@@ -216,10 +217,32 @@ Numbers worth a look, none of them official:
 | Usable battery fraction                    | EV 50%, home battery 90%, power station 85%, lead-acid 50%                                                                                                         | `assets-base`                               |
 | Burn rates                                 | butane heater 0.095 kg/h at 1.3 kW, 0.3 at 4.2 kW; catalytic 0.1; wood burner 1.5 kg/h; paraffin 0.25 L/h; stove 0.4 canister/h; BBQ 0.3 kg/h; rocket stove 1 kg/h | `assets-base`                               |
 
+## Maintenance
+
+`maintenanceDue(doc, packs, asOf)` returns every known equipment job, including future dates.
+The pack defines the jobs and intervals. The last recorded date, or the purchase date when no
+completion is recorded, anchors the next date; without either it is due on `asOf`. Month ends are
+clamped. Unknown types and obsolete job IDs are ignored. `overdue` is true only after the due date; a job due on `asOf` is due today.
+Maintenance does not affect the score.
+
+## Review queue
+
+`reviewItems(doc, packs, asOf, until)` returns stock expiry, maintenance, age-band transitions,
+recounts and applicable expiring plans due through the inclusive `until` date. Stock is due on the
+last day of its best-before month. Age edges include today and future transitions only, calculated
+on the first calendar date the age predicate reaches the boundary. Separate item and guidance
+edges retain stable identities, including overlapping age bands.
+
+Overdue items come first, followed by date, capability order and key. All unfinished reviews form
+one session and their resolved keys are omitted. Versioned answer tokens and legacy bare keys are
+read for suppression; only an explicit Recounted action in a finished review advances a place's
+recount date. `reviewPeriod` preserves an overdue scheduled date while looking ahead one cadence
+from today for queue items. These calculations do not change the preparedness score. The [review screen](../review/README.md)
+displays the returned order and links to the relevant entities.
+
 ## Out of scope
 
-No screens (they call these functions). No review queue (expiry windows, maintenance due), no
-budgeting, no minimum suggestions from recounts.
+No screens (they call these functions), budgeting or minimum suggestions from recounts.
 
 ## Known gaps
 
@@ -231,9 +254,6 @@ budgeting, no minimum suggestions from recounts.
 
 ## Not built yet
 
-- The review queue the loop was designed with (expiry, maintenance due, age rollovers, places not
-  recounted, plans to re-confirm), and maintenance schedules on equipment:
-  [#20](https://github.com/pskillen/shtf-planner/issues/20).
 - Equipment linked to its exact fuel, with what is left per piece of equipment ("BBQ: 3 days of
   cooking on 1 x 13 kg propane"): [#28](https://github.com/pskillen/shtf-planner/issues/28).
 - Diesel, vehicles as assets, candles and torch cells as light, no impractical suggestions on big

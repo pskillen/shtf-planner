@@ -109,3 +109,7 @@ product, then batches. **`src/store`** in code is the document store, not a reso
   towards nothing instead.
 - **Store** (a quantity): now **resource**.
 - **Asset**: still the code's name; screens say **equipment**.
+
+- **Review.** A household check of items needing attention, finished deliberately with a summary.
+- **Review queue.** The engine-ordered items to check within the current look-ahead window.
+- **Review cadence.** The three- or six-month interval used for the scheduled review and look-ahead.

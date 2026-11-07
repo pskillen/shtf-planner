@@ -7,6 +7,7 @@ import { ScreenBoundary } from './ScreenBoundary';
 import { StoreBanner } from './StoreBanner';
 import { TABS, activeTab, showsTabs } from './tabs';
 import { HomeHub } from './screens/HomeHub';
+import { ReviewScreen } from './screens/ReviewScreen';
 import { Onboarding } from './screens/Onboarding';
 import { AssetsScreen } from './screens/AssetsScreen';
 import { HomeScreen } from './screens/HomeScreen';
@@ -23,7 +24,9 @@ import { StocktakeScreen } from './screens/stores/StocktakeScreen';
 import { ProductsScreen } from './screens/stores/ProductsScreen';
 import type { ReactNode } from 'react';
 import { TooOld } from './TooOld';
-import { useStoreStatus } from './state';
+import { useDocument, useStoreStatus } from './state';
+import { reviewIsDue } from '../engine';
+import { today } from '../util';
 
 function Screen({ children }: { children: ReactNode }) {
   return <section className="screen">{children}</section>;
@@ -35,6 +38,11 @@ function Screen({ children }: { children: ReactNode }) {
  */
 const screenKey = (pathname: string): string =>
   pathname.startsWith('/app/setup') ? '/app/setup' : pathname;
+
+function ReviewBadge() {
+  const doc = useDocument();
+  return reviewIsDue(doc, today()) ? <span className="tab-badge">Review due</span> : null;
+}
 
 /** The app proper: top bar, one screen per tab, bottom nav, footer. */
 export function Shell() {
@@ -124,6 +132,7 @@ export function Shell() {
                   </Screen>
                 }
               />
+              <Route path="review" element={<ReviewScreen />} />
               <Route path="stores" element={<StoresScreen />} />
               <Route path="stores/products" element={<ProductsScreen />} />
               <Route path="stores/stocktake" element={<StocktakeScreen />} />
@@ -148,6 +157,7 @@ export function Shell() {
                 {t.icon}
               </span>
               <span>{t.label}</span>
+              {t.path === '' && storeStatus.kind === 'ok' ? <ReviewBadge /> : null}
             </Link>
           ))}
         </nav>

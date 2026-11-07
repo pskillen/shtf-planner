@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import type { Medication, Member, Pet, RiskTag } from '../../model';
 import { RISK_TAGS } from '../../model';
 import { daysOfSupply, formatAge, suggestedAgeTags, today } from '../../util';
@@ -312,8 +313,35 @@ type Editing =
 export function PeopleScreen({ embedded = false }: { embedded?: boolean }) {
   const doc = useDocument();
   const change = useChange();
-  const [editing, setEditing] = useState<Editing>(null);
+  const [params, setParams] = useSearchParams();
+  const memberId = params.get('member');
+  const [lastMemberId, setLastMemberId] = useState(memberId);
+  const [editing, setEditing] = useState<Editing>(() => {
+    const member = doc.household.members.find((m) => m.id === memberId);
+    return member ? { kind: 'member', member, isNew: false } : null;
+  });
+  // Only a change of destination replaces the local draft; document updates do not.
+  if (memberId !== lastMemberId) {
+    setLastMemberId(memberId);
+    const member = doc.household.members.find((m) => m.id === memberId);
+    setEditing(member ? { kind: 'member', member, isNew: false } : null);
+  }
+  if (
+    editing?.kind === 'member' &&
+    !editing.isNew &&
+    !doc.household.members.some((m) => m.id === editing.member.id)
+  ) {
+    setEditing(null);
+  }
   const now = today();
+  const closeEditing = () => {
+    setEditing(null);
+    if (params.has('member')) {
+      const next = new URLSearchParams(params);
+      next.delete('member');
+      setParams(next, { replace: true });
+    }
+  };
 
   const removeMember = useDeferredDelete((id) =>
     change('delete person', (d) => {
@@ -333,9 +361,9 @@ export function PeopleScreen({ embedded = false }: { embedded?: boolean }) {
     change(editing?.kind === 'member' && editing.isNew ? 'add person' : 'edit person', (d) => {
       const i = d.household.members.findIndex((x) => x.id === m.id);
       if (i >= 0) d.household.members[i] = m;
-      else d.household.members.push(m);
+      else if (editing?.kind === 'member' && editing.isNew) d.household.members.push(m);
     });
-    setEditing(null);
+    closeEditing();
   };
   const savePet = (p: Pet) => {
     change(editing?.kind === 'pet' && editing.isNew ? 'add pet' : 'edit pet', (d) => {
@@ -411,6 +439,7 @@ export function PeopleScreen({ embedded = false }: { embedded?: boolean }) {
 
       {editing?.kind === 'member' ? (
         <MemberSheet
+          key={editing.member.id}
           initial={editing.member}
           isNew={editing.isNew}
           onSave={saveMember}
@@ -419,10 +448,10 @@ export function PeopleScreen({ embedded = false }: { embedded?: boolean }) {
               ? undefined
               : () => {
                   removeMember.request(editing.member.id, editing.member.name || 'Person');
-                  setEditing(null);
+                  closeEditing();
                 }
           }
-          onClose={() => setEditing(null)}
+          onClose={closeEditing}
         />
       ) : null}
       {editing?.kind === 'pet' ? (

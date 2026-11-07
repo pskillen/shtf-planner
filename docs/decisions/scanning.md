@@ -43,5 +43,4 @@ batch code looked like a date. [D139]
 **Expired dates are read** up to two years back, but only with a label or a full day-month-year.
 [D135]
 
-**A stocktake adds stock; it does not recount.** It adds exactly like quick add; recounting a place waits for the review queue
-([#20](https://github.com/pskillen/shtf-planner/issues/20)). [D149, D157]
+**A stocktake adds stock; it does not recount.** It adds exactly like quick add; recounting a place is a separate review action. [D149, D157]

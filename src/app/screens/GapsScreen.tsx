@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { addMonths, applicablePlanItems, coverage, gaps, planDone, score } from '../../engine';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { applicablePlanItems, coverage, gaps, planDone, score } from '../../engine';
 import { today } from '../../util';
 import { EditArea } from '../components/EditArea';
 import { useDeferredDelete } from '../components/useDeferredDelete';
@@ -17,6 +17,7 @@ import {
 } from './gaps/view';
 import { equipmentAddPath } from './assets/route';
 import { QuickAdd, type QuickAddPrefill } from './stores/QuickAdd';
+import { completePlan } from './review/actions';
 
 /**
  * The Gaps tab: what to buy and what to do, from the engine's gaps for the chosen horizon, and
@@ -29,6 +30,8 @@ export function GapsScreen() {
   const [sort, setSort] = useState<ShoppingSort>('capability');
   const [buying, setBuying] = useState<QuickAddPrefill | null>(null);
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const selectedPlan = packs.plans[params.get('plan') ?? ''];
   const horizonDays = doc.settings.horizonDays;
   const now = today();
 
@@ -51,11 +54,8 @@ export function GapsScreen() {
     (planItemId) => {
       const months = packs.plans[planItemId]?.expiresMonths;
       change('plan done', (d) => {
-        d.plans[planItemId] = {
-          ...d.plans[planItemId],
-          doneAt: now,
-          ...(months ? { expires: addMonths(now, months) } : {}),
-        };
+        const entry = (d.plans[planItemId] ??= {});
+        completePlan(entry, now, months);
       });
     },
     (label) => `Marked done: ${label}`,
@@ -136,6 +136,15 @@ export function GapsScreen() {
         <Link to="/app/horizon">Change how long to plan for</Link>
       </p>
 
+      {selectedPlan && applicablePlanItems(doc, packs).includes(selectedPlan.id) ? (
+        <section aria-label="Selected plan">
+          <h2>Plan to review</h2>
+          <p>{selectedPlan.text}</p>
+          <p className="muted">
+            {planDone(doc, packs, selectedPlan.id, now) ? 'Done' : 'Needs attention'}
+          </p>
+        </section>
+      ) : null}
       <h2>Shopping</h2>
       {view.shopping.length === 0 ? (
         <p className="muted">Nothing to buy for {horizonDays} days.</p>
