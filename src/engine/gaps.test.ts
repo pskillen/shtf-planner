@@ -428,7 +428,29 @@ it('adds generator demand to the same fuel purchase after cooking and heat', () 
   const propane = gaps(doc, packs, NOW, 3)
     .flatMap((g) => g.suggestions)
     .filter((s) => s.itemId === 'items-base:propane-bottle');
-  expect(propane).toHaveLength(1);
-  expect(propane[0]!.assetIds).toEqual(['asset-bbq', 'gen', 'heater']);
-  expect(propane[0]!.capabilities).toEqual(expect.arrayContaining(['cooking', 'heat', 'power']));
+  expect(propane.flatMap((s) => s.assetIds ?? []).sort()).toEqual(['asset-bbq', 'gen', 'heater']);
+  expect(propane.length).toBeGreaterThan(1);
+});
+
+it('keeps shared fuel requirements separate when one need has an alternative', () => {
+  const doc = biggarDocument();
+  delete doc.stock['stock-propane'];
+  doc.assets['asset-heater'] = asset('asset-heater', 'catalytic-heater', {
+    chosenLpg: 'items-base:propane-bottle',
+    fuelConfirmed: true,
+    indoorUse: 'permitted',
+    highRise: 'no',
+  });
+  doc.assets['other-heater'] = asset('other-heater', 'catalytic-heater', {
+    chosenLpg: 'items-base:butane-bottle',
+    fuelConfirmed: true,
+    indoorUse: 'permitted',
+    highRise: 'no',
+  });
+  const rows = gaps(doc, packs, NOW, 3).filter(
+    (g) =>
+      g.kind === 'acquire' && g.suggestions.some((s) => s.itemId === 'items-base:propane-bottle'),
+  );
+  expect(rows.map((g) => g.capability).sort()).toEqual(['cooking', 'heat']);
+  expect(rows.find((g) => g.capability === 'heat')!.suggestions).toHaveLength(2);
 });

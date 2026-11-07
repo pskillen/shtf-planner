@@ -72,3 +72,7 @@ Playwright `e2e/inventory.spec.ts`, `e2e/products.spec.ts`.
 Fuel suggestions name the exact confirmed fuel for owned equipment. Missing facts become equipment
 checks; without a heater, the shopping list asks for a heating plan instead of pairing a generic
 heater and bottle. The heat score currently represents assumed burner hours, not safe warmth.
+
+When independent needs share a fuel but either has an alternative, shopping keeps those needs as
+separate purchases. An alternative for one need does not replace the fuel required by another.
+Fuel purchases carry a reminder to check the equipment manual and use outdoor-only equipment outside.

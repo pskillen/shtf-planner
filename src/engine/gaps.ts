@@ -202,6 +202,9 @@ export function gapsFrom(doc: Document, packs: Packs, a: Analysis): Gap[] {
   }
 
   // Add independent primary demands for the same fuel once, retaining alternatives per need.
+  const separateItems = new Set(
+    out.filter((g) => g.suggestions.length > 1).map((g) => g.suggestions[0]?.itemId),
+  );
   const shared = new Map<string, Gap>();
   const merged = new Set<Gap>();
   for (const gap of out) {
@@ -210,6 +213,7 @@ export function gapsFrom(doc: Document, packs: Packs, a: Analysis): Gap[] {
       gap.kind !== 'acquire' ||
       (gap.target.kind !== 'hours' && gap.target.id !== 'power:batteryWh') ||
       !s?.itemId ||
+      separateItems.has(s.itemId) ||
       s.fuelDemand === undefined ||
       !s.perUnitCoverage
     )
@@ -217,6 +221,12 @@ export function gapsFrom(doc: Document, packs: Packs, a: Analysis): Gap[] {
     const previous = shared.get(s.itemId);
     if (!previous) {
       shared.set(s.itemId, gap);
+      continue;
+    }
+    // A per-need alternative cannot replace another need's fuel. Keep these
+    // requirements separate whenever either has an alternative.
+    if (previous.suggestions.length > 1 || gap.suggestions.length > 1) {
+      shared.delete(s.itemId);
       continue;
     }
     const primary = previous.suggestions[0]!;
