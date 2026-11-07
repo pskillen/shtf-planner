@@ -264,3 +264,25 @@ export function biggarDocument(): Document {
     },
   };
 }
+
+/** Invented equipment scenario: a confirmed butane heater alongside the propane BBQ. */
+export function biggarFuelDocument(): Document {
+  const doc = biggarDocument();
+  doc.assets['asset-butane-heater'] = asset('asset-butane-heater', 'cabinet-heater', {
+    name: 'Butane heater',
+    locationId: BIGGAR_IDS.locations.garage,
+    answers: {
+      setting: '1.3 kW',
+      chosenLpg: 'items-base:butane-bottle',
+      fuelConfirmed: true,
+      indoorUse: 'permitted',
+      highRise: 'no',
+    },
+  });
+  doc.products['prod-butane'] = product('prod-butane', 'Butane 15 kg', 'butane-bottle', {
+    amount: 15,
+    unit: 'kg',
+  });
+  doc.stock['stock-butane'] = stock('stock-butane', 'prod-butane', 1, BIGGAR_IDS.locations.garage);
+  return doc;
+}

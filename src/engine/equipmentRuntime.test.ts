@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { biggarDocument, BIGGAR_IDS } from '../fixtures/household-biggar';
+import { biggarDocument, biggarFuelDocument, BIGGAR_IDS } from '../fixtures/household-biggar';
 import { addStock } from '../fixtures/stock';
 import { bundledPacks } from '../packs/bundled';
 import { analyse, equipmentRuntime } from './coverage';
@@ -157,4 +157,17 @@ it('reports available runtime without days when no capability target applies', (
   expect(runtime.availableHours).toBeGreaterThan(0);
   expect(runtime.allocatedHours).toBe(0);
   expect(runtime.days).toBeUndefined();
+});
+
+it('counts the invented Biggar heater and BBQ against their respective fuels', () => {
+  const doc = biggarFuelDocument();
+  const runtime = equipmentRuntime(doc, packs, now, 3);
+  const bbq = runtime.find((r) => r.assetId === 'asset-bbq')!;
+  const heater = runtime.find(
+    (r) => r.assetId === 'asset-butane-heater' && r.status === 'counted',
+  )!;
+  expect(bbq.selectedItemIds).toEqual(['items-base:propane-bottle']);
+  expect(heater.selectedItemIds).toEqual(['items-base:butane-bottle']);
+  expect(bbq.inputLots.map((l) => l.itemId)).toEqual(['items-base:propane-bottle']);
+  expect(heater.inputLots.map((l) => l.itemId)).toEqual(['items-base:butane-bottle']);
 });
