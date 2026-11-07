@@ -19,6 +19,7 @@ import { RisksScreen } from './screens/RisksScreen';
 import { ScoreScreen } from './screens/ScoreScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { GapsScreen } from './screens/GapsScreen';
+import { ShoppingScreen } from './screens/ShoppingScreen';
 import { StoresScreen } from './screens/StoresScreen';
 import { StocktakeScreen } from './screens/stores/StocktakeScreen';
 import { ProductsScreen } from './screens/stores/ProductsScreen';
@@ -137,6 +138,7 @@ export function Shell() {
               <Route path="stores/products" element={<ProductsScreen />} />
               <Route path="stores/stocktake" element={<StocktakeScreen />} />
               <Route path="gaps" element={<GapsScreen />} />
+              <Route path="gaps/shopping" element={<ShoppingScreen />} />
               <Route path="score" element={<ScoreScreen />} />
               <Route path="*" element={<Navigate to="/app" replace />} />
             </Routes>

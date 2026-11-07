@@ -104,6 +104,7 @@ test('items, products and batches through quick add, the product list and Stores
   await expect(page.getByText('Use first').first()).toBeVisible();
 
   await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Gaps' }).click();
+  await page.getByRole('link', { name: /Shopping list/ }).click();
   await page.getByRole('radio', { name: 'By aisle' }).click();
   await expect(page.getByRole('heading', { name: 'Food and cooking › Tins' })).toBeVisible();
 });

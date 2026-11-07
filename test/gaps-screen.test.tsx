@@ -2,6 +2,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GapsScreen } from '../src/app/screens/GapsScreen';
+import { ShoppingScreen } from '../src/app/screens/ShoppingScreen';
 import { biggarDocument } from '../src/fixtures/household-biggar';
 import { liveStore } from './helpers/liveStore';
 
@@ -18,7 +19,7 @@ const tick = (ms: number) => act(() => void vi.advanceTimersByTime(ms));
 describe('the Gaps tab: shopping sort', () => {
   it('By aisle groups rows under category and heading', () => {
     const s = liveStore(biggarDocument());
-    render(s.wrap(<GapsScreen />));
+    render(s.wrap(<ShoppingScreen />));
     fireEvent.click(screen.getByRole('radio', { name: 'By aisle' }));
     expect(screen.getByRole('heading', { name: /Food and cooking ›/ })).toBeTruthy();
   });
@@ -67,5 +68,19 @@ describe('the Gaps tab: plan items marked done', () => {
     expect(entry?.expires).toBeUndefined();
     // back in To do
     expect(screen.getByRole('button', { name: /^Done: .*meet/i })).toBeTruthy();
+  });
+});
+
+describe('gaps overview', () => {
+  it('highlights the weakest needs and keeps shopping on a separate screen', () => {
+    const s = liveStore(biggarDocument());
+    render(s.wrap(<GapsScreen />));
+    expect(screen.getByRole('heading', { name: 'Needs attention' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: /Shopping list/ }).getAttribute('href')).toBe(
+      '/app/gaps/shopping',
+    );
+    expect(screen.queryByRole('radio', { name: 'By aisle' })).toBeNull();
+    expect(screen.getByRole('heading', { name: 'To do' })).toBeTruthy();
+    expect(screen.getByText(/Heat: 0 of/)).toBeTruthy();
   });
 });
