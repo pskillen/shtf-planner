@@ -70,9 +70,11 @@ checklist pack, and Settings lists the UK pack as "Included for your region" wit
 - Steps must hold across the UK. The reporting number (105, or 03457 643643 in Northern Ireland) and
   the Priority Services Register (England, Scotland, Wales; Customer Care Register in Northern
   Ireland) are labelled by nation in the text. Nothing is filtered by nation.
-- Conditional steps use `requires`: the generator step needs a generator asset, the solar and
-  battery step needs solar PV or a home battery, the medical-equipment plan needs a member tagged
-  `powered-equipment`, and the formula step a member tagged `infant`.
+- Conditional steps use `requires`: the solar and battery step needs solar PV or a home battery,
+  and the formula step a member tagged `infant`. Safety warnings (carbon monoxide, generators) are
+  never gated on recorded assets or household facts, because a household can meet the hazard
+  without having recorded anything; where the source's advice is conditional ("if you use a
+  generator"), the condition stays in the step text.
 - Step ids are stable and never reused for different advice; bump the pack `version` when content
   changes.
 

@@ -196,9 +196,9 @@ describe('the bundled packs', () => {
       expect(phases).toEqual(expect.arrayContaining(['coming', 'immediate']));
       const ids = list.groups.flatMap((g) => g.steps.map((s) => s.id));
       expect(ids).toContain('checklists-uk:report');
-      // conditional steps stay hidden for a household with no generator or equipment
-      expect(ids).not.toContain('checklists-uk:generator');
-      expect(ids).not.toContain('checklists-uk:medical-plan');
+      // safety warnings are not gated on recorded assets or household facts
+      expect(ids).toContain('checklists-uk:generator');
+      expect(ids).toContain('checklists-uk:no-camping-stove');
     });
   });
 });

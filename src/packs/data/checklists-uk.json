@@ -166,18 +166,15 @@
     },
     {
       "id": "checklists-uk:generator",
-      "text": "Never run a petrol or diesel generator indoors. Keep it outdoors at least 6 metres (20 feet) away, with the exhaust facing away from windows and doors.",
+      "text": "If you use a generator, never run it indoors or in an enclosed space such as a garage. Portable generators produce carbon monoxide, which can kill.",
       "scenarios": ["checklists-uk:power-cut"],
       "phase": "immediate",
       "order": 70,
-      "source": "https://www.gov.uk/government/publications/public-health-advice-from-uk-cmos-during-a-national-power-outage/keeping-warm-or-cool-in-extreme-weather-scripts-for-broadcast-media",
-      "requires": {
-        "asset": ["assets-base:generator"]
-      }
+      "source": "https://www.nhs.uk/conditions/carbon-monoxide-poisoning/"
     },
     {
       "id": "checklists-uk:unattended",
-      "text": "Never leave a fire, portable heater or generator running unattended. Use only the fuel it is designed for.",
+      "text": "Never leave a fire, portable heater or generator running unattended. In heaters and stoves, use only the recommended fuel.",
       "scenarios": ["checklists-uk:power-cut"],
       "phase": "immediate",
       "order": 80,
