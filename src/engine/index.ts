@@ -61,4 +61,16 @@ export {
   type ChecklistView,
 } from './checklists';
 export { calendarCandidates, type CalendarCandidate, type CalendarIdentity } from './calendar';
-export { buildCatalogueSnapshot, checklistStateKey, startRun } from './checklistRuns';
+export {
+  buildCatalogueSnapshot,
+  checklistRunLists,
+  checklistRunView,
+  checklistStateKey,
+  clearStepDone,
+  finishRun,
+  setRunScenarios,
+  setStepDone,
+  setStepNote,
+  startRun,
+} from './checklistRuns';
+export type { ChecklistRunStepView, ChecklistRunSummary, ChecklistRunView } from './checklistRuns';

@@ -1,5 +1,7 @@
+import { CHECKLIST_PHASES } from '../model';
 import type {
   ChecklistCatalogueSnapshot,
+  ChecklistPhase,
   ChecklistRun,
   ChecklistSnapshotStep,
   Document,
@@ -151,4 +153,121 @@ export function finishRun(draft: Document, runId: string, at: string): boolean {
   if (!run || run.finished !== undefined) return false;
   run.finished = at;
   return true;
+}
+
+/** One step of a run as a screen shows it: the frozen advice plus its tick and note. */
+export interface ChecklistRunStepView extends ChecklistSnapshotStep {
+  doneAt?: string;
+  note?: string;
+  /** The selected scenarios that supply this step (catalogue order of the step), never empty. */
+  selectedScenarioIds: string[];
+}
+
+export interface ChecklistRunView {
+  id: string;
+  started: string;
+  finished?: string;
+  /** Every catalogue scenario, flagged when selected. */
+  scenarios: { id: string; name: string; selected: boolean }[];
+  /** Visible steps only, by checklist phase; empty phases are omitted. */
+  groups: { phase: ChecklistPhase; steps: ChecklistRunStepView[] }[];
+  /** Visible steps only. */
+  done: number;
+  total: number;
+  /** Hidden steps that still carry a tick or a note. */
+  hiddenWithState: number;
+  /** A merge left no valid selected scenario: `groups` is empty. */
+  needsScenario: boolean;
+  packs: { id: string; version: number }[];
+}
+
+export interface ChecklistRunSummary {
+  id: string;
+  started: string;
+  finished?: string;
+  /** Selected scenario names, de-duplicated, in catalogue order. */
+  scenarioNames: string[];
+  done: number;
+  total: number;
+  needsScenario: boolean;
+}
+
+/**
+ * A run as screens and print read it. Selected scenarios are de-duplicated and ids outside the
+ * catalogue are ignored. A step is visible when a selected scenario supplies it; a shared step is
+ * counted once. Reads the frozen catalogue and the states only, so it never touches plans or the
+ * score, and shows late edits to a finished run as they are. `undefined` for an unknown run.
+ */
+export function checklistRunView(doc: Document, runId: string): ChecklistRunView | undefined {
+  const run = doc.checklistRuns[runId];
+  if (!run) return undefined;
+  const catalogueIds = new Set(run.catalogue.scenarios.map((s) => s.id));
+  const selected = new Set(run.scenarios.filter((id) => catalogueIds.has(id)));
+
+  const byPhase = new Map<ChecklistPhase, ChecklistRunStepView[]>();
+  let done = 0;
+  let total = 0;
+  let hiddenWithState = 0;
+  for (const step of run.catalogue.steps) {
+    const state = doc.checklistStepStates[checklistStateKey(runId, step.id)];
+    const selectedScenarioIds = [...new Set(step.scenarios)].filter((id) => selected.has(id));
+    if (selectedScenarioIds.length === 0) {
+      if (state && (state.doneAt !== undefined || state.note !== undefined)) hiddenWithState += 1;
+      continue;
+    }
+    total += 1;
+    if (state?.doneAt !== undefined) done += 1;
+    const view: ChecklistRunStepView = { ...step, selectedScenarioIds };
+    if (state?.doneAt !== undefined) view.doneAt = state.doneAt;
+    if (state?.note !== undefined) view.note = state.note;
+    const list = byPhase.get(step.phase) ?? [];
+    list.push(view);
+    byPhase.set(step.phase, list);
+  }
+
+  return {
+    id: run.id,
+    started: run.started,
+    ...(run.finished !== undefined ? { finished: run.finished } : {}),
+    scenarios: run.catalogue.scenarios.map((s) => ({
+      id: s.id,
+      name: s.name,
+      selected: selected.has(s.id),
+    })),
+    groups: CHECKLIST_PHASES.filter((p) => byPhase.has(p)).map((phase) => ({
+      phase,
+      steps: byPhase.get(phase)!,
+    })),
+    done,
+    total,
+    hiddenWithState,
+    needsScenario: selected.size === 0,
+    packs: run.catalogue.packs.map((p) => ({ ...p })),
+  };
+}
+
+/** Every run, open and finished, newest started first (ties by id). */
+export function checklistRunLists(doc: Document): {
+  open: ChecklistRunSummary[];
+  finished: ChecklistRunSummary[];
+} {
+  const runs = Object.values(doc.checklistRuns).sort(
+    (a, b) => b.started.localeCompare(a.started) || a.id.localeCompare(b.id),
+  );
+  const open: ChecklistRunSummary[] = [];
+  const finished: ChecklistRunSummary[] = [];
+  for (const run of runs) {
+    const view = checklistRunView(doc, run.id)!;
+    const summary: ChecklistRunSummary = {
+      id: run.id,
+      started: run.started,
+      ...(run.finished !== undefined ? { finished: run.finished } : {}),
+      scenarioNames: view.scenarios.filter((s) => s.selected).map((s) => s.name),
+      done: view.done,
+      total: view.total,
+      needsScenario: view.needsScenario,
+    };
+    (run.finished === undefined ? open : finished).push(summary);
+  }
+  return { open, finished };
 }

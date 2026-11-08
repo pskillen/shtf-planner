@@ -1,6 +1,6 @@
 # Scenario checklists
 
-**Status:** Format, selection engine and the five UK scenarios (power cut, storm, flood, heatwave, evacuation), and starting a run that freezes a snapshot of the catalogue; no screen yet
+**Status:** Format, selection engine and the five UK scenarios (power cut, storm, flood, heatwave, evacuation), starting a run that freezes a snapshot of the catalogue, the commands that tick, note, rescope and finish it, and the read view of a run; no screen yet
 **Tracking:** [#40](https://github.com/pskillen/shtf-planner/issues/40)
 
 Step-by-step checklists for things that happen (a power cut, a flood warning), grouped by when a
@@ -9,12 +9,12 @@ cut, storm, flood, heatwave and evacuation, UK) exist; there is no route yet.
 
 ## Map
 
-| Piece   | Where                         | What                                                                                          |
-| ------- | ----------------------------- | --------------------------------------------------------------------------------------------- |
-| Schemas | `src/model/packs.ts`          | `ChecklistsPack`, `ChecklistScenario`, `ChecklistStep`, `ChecklistPhase`, `CHECKLIST_PHASES`. |
-| Loader  | `src/packs/loader.ts`         | Validation, and the `checklistScenarios` and `checklistSteps` indexes on `Packs`.             |
-| Engine  | `src/engine/checklists.ts`    | `checklistPacks`, `checklistScenarios`, `isStepApplicable`, `checklist`.                      |
-| Runs    | `src/engine/checklistRuns.ts` | `checklistStateKey`, `buildCatalogueSnapshot`, `startRun`.                                    |
+| Piece   | Where                         | What                                                                                                              |
+| ------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Schemas | `src/model/packs.ts`          | `ChecklistsPack`, `ChecklistScenario`, `ChecklistStep`, `ChecklistPhase`, `CHECKLIST_PHASES`.                     |
+| Loader  | `src/packs/loader.ts`         | Validation, and the `checklistScenarios` and `checklistSteps` indexes on `Packs`.                                 |
+| Engine  | `src/engine/checklists.ts`    | `checklistPacks`, `checklistScenarios`, `isStepApplicable`, `checklist`.                                          |
+| Runs    | `src/engine/checklistRuns.ts` | `checklistStateKey`, `buildCatalogueSnapshot`, `startRun`, run commands, `checklistRunView`, `checklistRunLists`. |
 
 ## The `checklists` pack
 
@@ -76,6 +76,31 @@ unlisted source, and a `requires.asset` that is not a real asset type.
   or no selected scenario is in the catalogue. Unknown and repeated ids are dropped.
 - **Merged scenarios.** A run's `scenarios` is a merged array, so a merged document may hold
   duplicates or none. The schema accepts both; readers de-duplicate.
+
+## Run commands and the read view
+
+Same module, pure, called inside the caller's single `change`. Each command returns `true` only
+when it wrote something; it returns `false` and changes nothing for an unknown run, a finished
+run, a step with no state, or a value that is already there.
+
+- `setStepDone(draft, runId, stepId, at)` ticks. A step already ticked keeps its first time.
+- `clearStepDone(draft, runId, stepId)` unticks and keeps the note.
+- `setStepNote(draft, runId, stepId, note)` stores the note exactly as given (nothing trimmed);
+  an empty note deletes the field. A note needs no tick.
+- `setRunScenarios(draft, runId, scenarioIds)` replaces the selection: catalogue ids only, each
+  once, at least one. Steps of a scenario that is no longer selected are hidden, not deleted: their
+  states stay, and selecting the scenario again brings them back.
+- `finishRun(draft, runId, at)` finishes an open run; a finished time already there stands.
+
+`checklistRunView(doc, runId)` is what screens and print read. It lists every catalogue scenario
+(flagged when selected) and the **visible** steps grouped by phase (empty phases omitted): a step
+is visible when a selected scenario supplies it, counted once however many do, and
+`selectedScenarioIds` names only the selected suppliers. `done` and `total` count visible steps;
+`hiddenWithState` counts hidden steps that still carry a tick or a note. It de-duplicates the
+run's scenarios and ignores ids outside the catalogue; when none is left it returns
+`needsScenario: true` with no groups. It reads the frozen catalogue and the states only, so late
+edits merged into a finished run show as they are, and it never touches plans or the score.
+`checklistRunLists(doc)` gives `open` and `finished` summaries, newest started first.
 
 ## Bundled content
 
