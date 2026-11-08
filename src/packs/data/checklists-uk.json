@@ -7,6 +7,21 @@
   "region": "UK",
   "sources": [
     {
+      "url": "https://beready.campaign.gov.uk/be-informed-about-hazards/fires-in-the-home/",
+      "title": "Be Ready (UK Government): fires in the home",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://cadentgas.com/smell-gas",
+      "title": "Cadent: if you smell gas (gas distribution network; page does not state its area)",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://www.gasnetworks.ie/gas-safety/emergency-numbers",
+      "title": "Gas Networks Ireland: emergency numbers (Northern Ireland number)",
+      "checked": "2026-11-08"
+    },
+    {
       "url": "https://beready.campaign.gov.uk/emergencies/power-cuts/",
       "title": "Be Ready (UK Government): power cuts",
       "checked": "2026-11-08"
@@ -617,7 +632,7 @@
     },
     {
       "id": "checklists-uk:flood-evacuate",
-      "text": "If your local council or the emergency services ask you to evacuate, go. Not evacuating, or delaying, puts your life at risk and can endanger rescuers if you later need rescuing.",
+      "text": "If your local council or the emergency services ask you to evacuate, go. Not evacuating, or delaying, can put your life at risk and can endanger rescuers if you later need rescuing.",
       "scenarios": ["checklists-uk:flood", "checklists-uk:evacuation"],
       "phase": "immediate",
       "order": 45,
@@ -881,7 +896,7 @@
     },
     {
       "id": "checklists-uk:heatwave-exhaustion",
-      "text": "In the heat, tiredness, weakness, feeling faint, headache, cramps, feeling or being sick or heavy sweating can be heat exhaustion. Move them to a cooler place, remove extra clothing and cool their skin with cool water. If they are awake and can swallow, give water to drink. If they still feel unwell after 30 minutes, or show any sign of heatstroke, call 999.",
+      "text": "In the heat, tiredness, weakness, feeling faint, headache, cramps, feeling or being sick or heavy sweating can be heat exhaustion. Move the person to a cooler place, remove extra clothing and cool their skin with cool water. If they are awake and can swallow, give water to drink. If they still feel unwell after 30 minutes, or show any sign of heatstroke, call 999.",
       "scenarios": ["checklists-uk:heatwave"],
       "phase": "immediate",
       "order": 85,
@@ -922,7 +937,7 @@
     },
     {
       "id": "checklists-uk:evac-meeting-point",
-      "text": "Agree one meeting place for everyone in your home, to use if you have to leave or cannot get home. Choose somewhere close by with shelter that everyone can reach, including children, older people and people with additional needs.",
+      "text": "Agree one meeting place for everyone in your home, to use if you have to leave. Choose somewhere close by that has shelter, is safe in bad weather and can be reached by everyone, including children, older people and people with additional needs.",
       "scenarios": ["checklists-uk:evacuation"],
       "phase": "coming",
       "order": 10,
@@ -962,15 +977,31 @@
     },
     {
       "id": "checklists-uk:evac-inside",
-      "text": "If the emergency is inside your home, get out, stay out and call 999.",
+      "text": "If the emergency is inside your home, get out, stay out and call 999. Do not stop to investigate or to collect belongings.",
       "scenarios": ["checklists-uk:evacuation"],
       "phase": "immediate",
       "order": 10,
-      "source": "https://beready.campaign.gov.uk/wp-content/uploads/sites/252/2026/10/Be-Ready_Household_Emergency_Plan_English_Final.pdf"
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/fires-in-the-home/"
+    },
+    {
+      "id": "checklists-uk:evac-gas-leak",
+      "text": "If you smell gas, do not touch power or light switches and do not light flames. Open doors and windows, turn the gas off at the mains tap by the meter if you can, and get out. If the leak is in a cellar or basement, do not go in. Once you are safe, call the gas emergency number 0800 111 999 (shown by Cadent and National Gas; neither page says which parts of the UK it covers) and wait for the gas engineer's all-clear before you go back in.",
+      "scenarios": ["checklists-uk:evacuation"],
+      "phase": "immediate",
+      "order": 12,
+      "source": "https://cadentgas.com/smell-gas"
+    },
+    {
+      "id": "checklists-uk:evac-gas-leak-ni",
+      "text": "Northern Ireland only: Gas Networks Ireland gives 0800 085 8851 (+44 800 085 8851) for gas emergencies in Northern Ireland. Use it instead of the number above if you are there.",
+      "scenarios": ["checklists-uk:evacuation"],
+      "phase": "immediate",
+      "order": 13,
+      "source": "https://www.gasnetworks.ie/gas-safety/emergency-numbers"
     },
     {
       "id": "checklists-uk:evac-shutoffs-leaving",
-      "text": "If you have time and it is safe to do so, you may need to turn off your mains water, gas and electricity before you leave.",
+      "text": "If you are leaving for a reason other than a fire or a smell of gas, and you have time and it is safe to do so, you may need to turn off your mains water, gas and electricity before you leave.",
       "scenarios": ["checklists-uk:evacuation"],
       "phase": "immediate",
       "order": 46,
@@ -978,7 +1009,7 @@
     },
     {
       "id": "checklists-uk:evac-take-and-go",
-      "text": "If you have to leave home, take your grab bag if you have one and go to your agreed meeting place.",
+      "text": "If you have to leave home and it is safe to do so, take your grab bag if you have one. Go to your agreed meeting place, or wherever the emergency services tell you to go.",
       "scenarios": ["checklists-uk:evacuation"],
       "phase": "immediate",
       "order": 50,

@@ -276,6 +276,19 @@ describe('the bundled packs', () => {
       const evac = pack.steps.filter((s) => s.scenarios.includes('checklists-uk:evacuation'));
       // conditions are in the text, not gates
       expect(evac.some((s) => s.requires)).toBe(false);
+      const text = (id: string) => pack.steps.find((s) => s.id === `checklists-uk:${id}`)!.text;
+      // a fire evacuee is never told to collect the grab bag, and leaving never overrides "get out"
+      const order = (id: string) => pack.steps.find((s) => s.id === `checklists-uk:${id}`)!.order;
+      expect(order('evac-inside')).toBeLessThan(order('evac-take-and-go'));
+      expect(text('evac-inside')).toMatch(/do not stop to investigate or to collect belongings/i);
+      expect(text('evac-take-and-go')).toMatch(/safe to do so/);
+      expect(text('evac-take-and-go')).toMatch(/emergency services tell you/);
+      // switching things off is not advised for a fire or a gas leak
+      expect(text('evac-shutoffs-leaving')).toMatch(/other than a fire or a smell of gas/);
+      // gas leak: no switches, a labelled number, and a Northern Ireland number only for Northern Ireland
+      expect(text('evac-gas-leak')).toMatch(/do not touch power or light switches/);
+      expect(text('evac-gas-leak')).toMatch(/neither page says which parts of the UK/);
+      expect(text('evac-gas-leak-ni')).toMatch(/^Northern Ireland only/);
       expect(
         pack.scenarios.find((s) => s.id === 'checklists-uk:evacuation')!.risks,
       ).toBeUndefined();
