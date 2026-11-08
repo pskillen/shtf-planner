@@ -50,4 +50,14 @@ export {
   type ReviewSummary,
 } from './reviewSession';
 export { reviewItems, type ReviewItem } from './reviewItems';
+export {
+  checklist,
+  checklistPacks,
+  checklistScenarios,
+  isStepApplicable,
+  type ChecklistPhaseGroup,
+  type ChecklistScenarioView,
+  type ChecklistStepView,
+  type ChecklistView,
+} from './checklists';
 export { calendarCandidates, type CalendarCandidate, type CalendarIdentity } from './calendar';

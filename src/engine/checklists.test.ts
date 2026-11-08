@@ -8,7 +8,7 @@ import {
   type Packs,
   type Region,
 } from '../model';
-import { checklistPacks, checklistScenarios, isStepApplicable } from './checklists';
+import { checklist, checklistPacks, checklistScenarios, isStepApplicable } from './checklists';
 
 const NOW = '2026-11-15';
 
@@ -158,5 +158,110 @@ describe('isStepApplicable', () => {
     d.home.risks = [];
     d.household.pets = [{ id: 'p', name: 'Bran', species: 'dog', size: 'M' }];
     expect(isStepApplicable(s, d, NOW)).toBe(false);
+  });
+});
+
+describe('checklist', () => {
+  const sources = [{ url: 'https://example.org/a', title: 'Guide A', checked: '2026-10-01' }];
+  const a = pack('a', {
+    sources,
+    scenarios: [
+      { id: 'a:power', name: 'Power cut' },
+      { id: 'a:flood', name: 'Flood warning' },
+      { id: 'a:snow', name: 'Snow' },
+    ],
+    steps: [
+      step('a:torch', { scenarios: ['a:power', 'a:flood'], phase: 'immediate', order: 2 }),
+      step('a:fridge', {
+        scenarios: ['a:power'],
+        phase: 'first-days',
+        order: 1,
+        source: 'https://example.org/a',
+      }),
+      step('a:warn', { scenarios: ['a:flood'], phase: 'coming', order: 5 }),
+      step('a:tie-b', { scenarios: ['a:power'], phase: 'immediate', order: 1 }),
+      step('a:tie-a', { scenarios: ['a:power'], phase: 'immediate', order: 1 }),
+      step('a:sandbags', {
+        scenarios: ['a:flood'],
+        phase: 'coming',
+        order: 1,
+        requires: { risk: 'flood' },
+      }),
+    ],
+  });
+  const b = pack('b', {
+    scenarios: [{ id: 'b:power', name: 'Power cut (b)' }],
+    steps: [step('b:radio', { scenarios: ['b:power'], phase: 'immediate', order: 1 })],
+  });
+  const packs = packsOf(a, b);
+  const ids = (v: ReturnType<typeof checklist>) =>
+    v.groups.map((g) => [g.phase, g.steps.map((s) => s.id)]);
+  const flat = (v: ReturnType<typeof checklist>) => v.groups.flatMap((g) => g.steps);
+
+  it('orders by phase, pack, order, then step id (duplicate orders tie-break on id)', () => {
+    const v = checklist(doc(), packs, ['a:power', 'a:flood', 'b:power'], NOW);
+    expect(ids(v)).toEqual([
+      ['coming', ['a:warn']],
+      ['immediate', ['a:tie-a', 'a:tie-b', 'a:torch', 'b:radio']],
+      ['first-days', ['a:fridge']],
+    ]);
+  });
+
+  it('is stable under reversed scenarioIds', () => {
+    const forward = checklist(doc(), packs, ['a:power', 'a:flood', 'b:power'], NOW);
+    const reversed = checklist(doc(), packs, ['b:power', 'a:flood', 'a:power'], NOW);
+    expect(reversed).toEqual(forward);
+    expect(forward.scenarios.map((s) => s.id)).toEqual(['a:power', 'a:flood', 'b:power']);
+  });
+
+  it('lists a shared step once, with only the selected scenarios that supplied it', () => {
+    const both = flat(checklist(doc(), packs, ['a:flood', 'a:power'], NOW)).filter(
+      (s) => s.id === 'a:torch',
+    );
+    expect(both).toHaveLength(1);
+    expect(both[0]!.scenarioIds).toEqual(['a:power', 'a:flood']);
+    const one = flat(checklist(doc(), packs, ['a:flood'], NOW)).find((s) => s.id === 'a:torch');
+    expect(one!.scenarioIds).toEqual(['a:flood']);
+  });
+
+  it('hides only steps that explicitly require an undeclared risk', () => {
+    const d = doc();
+    const names = (v: ReturnType<typeof checklist>) => flat(v).map((s) => s.id);
+    expect(names(checklist(d, packs, ['a:flood'], NOW))).toEqual(['a:warn', 'a:torch']);
+    d.home.risks = ['flood'];
+    expect(names(checklist(d, packs, ['a:flood'], NOW))).toEqual([
+      'a:sandbags',
+      'a:warn',
+      'a:torch',
+    ]);
+  });
+
+  it('carries the source title and checked date when the pack lists the source', () => {
+    const steps = flat(checklist(doc(), packs, ['a:power'], NOW));
+    expect(steps.find((s) => s.id === 'a:fridge')).toMatchObject({
+      packId: 'a',
+      source: 'https://example.org/a',
+      sourceTitle: 'Guide A',
+      sourceChecked: '2026-10-01',
+    });
+    expect(steps.find((s) => s.id === 'a:torch')!.sourceTitle).toBeUndefined();
+  });
+
+  it('gives an empty result for unknown ids or none, and omits empty phases', () => {
+    expect(checklist(doc(), packs, ['nope:x'], NOW)).toEqual({ scenarios: [], groups: [] });
+    expect(checklist(doc(), packs, [], NOW)).toEqual({ scenarios: [], groups: [] });
+    const snow = checklist(doc(), packs, ['a:snow'], NOW);
+    expect(snow.groups).toEqual([]);
+    expect(snow.scenarios).toEqual([{ id: 'a:snow', name: 'Snow' }]);
+    const power = checklist(doc(), packs, ['a:power'], NOW);
+    expect(power.groups.map((g) => g.phase)).toEqual(['immediate', 'first-days']);
+  });
+
+  it('returns nothing for the wrong region and ignores settings.packs', () => {
+    const us = packsOf(pack('u', { region: 'US', scenarios: [{ id: 'u:s', name: 'S' }] }));
+    expect(checklist(doc('UK'), us, ['u:s'], NOW)).toEqual({ scenarios: [], groups: [] });
+    const d = doc();
+    d.settings.packs = [];
+    expect(checklist(d, packs, ['a:power'], NOW).groups).not.toEqual([]);
   });
 });
