@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { checklistRunView, clearStepDone, finishRun, setStepDone, setStepNote } from '../../engine';
 import { ScreenHeader } from '../components/ScreenHeader';
@@ -21,6 +21,17 @@ export function ChecklistRunScreen() {
   const editable = useEditable();
   const notes: NoteRegistry = useRef(new Map());
   const [confirming, setConfirming] = useState(false);
+  const [finishRefused, setFinishRefused] = useState(false);
+  const [unsaved, setUnsaved] = useState<ReadonlySet<string>>(new Set());
+  const markUnsaved = useCallback((stepId: string, on: boolean) => {
+    setUnsaved((was) => {
+      if (was.has(stepId) === on) return was;
+      const next = new Set(was);
+      if (on) next.add(stepId);
+      else next.delete(stepId);
+      return next;
+    });
+  }, []);
   const view = checklistRunView(doc, runId);
   if (!view) {
     return (
@@ -51,10 +62,14 @@ export function ChecklistRunScreen() {
       return text === undefined ? [] : [[stepId, text] as const];
     });
     try {
+      let refused = false;
       change('finish checklist run', (d) => {
+        // Already finished (on another device) or gone: neither the notes nor the finish count.
+        refused = d.checklistRuns[runId]?.finished !== undefined;
         for (const [stepId, text] of pending) setStepNote(d, runId, stepId, text);
         finishRun(d, runId, new Date().toISOString());
       });
+      setFinishRefused(refused);
     } finally {
       setConfirming(false);
     }
@@ -88,6 +103,11 @@ export function ChecklistRunScreen() {
           {!editable ? (
             <p className="muted">This household is read-only, so steps cannot be ticked.</p>
           ) : null}
+          {finishRefused ? (
+            <p className="muted" role="status">
+              This list was already finished, so the notes you were typing were not saved.
+            </p>
+          ) : null}
           {view.finished !== undefined ? (
             <p className="muted">
               This list is finished. It is kept as a record and cannot be changed.
@@ -115,14 +135,17 @@ export function ChecklistRunScreen() {
                           Done {formatDoneAt(step.doneAt)}
                         </span>
                       ) : null}
-                      {canTick || step.note !== undefined ? (
+                      {/* Text typed but never saved (the list was finished meanwhile) stays visible. */}
+                      {canTick || step.note !== undefined || unsaved.has(step.id) ? (
                         <StepNote
+                          key={`${runId}|${step.id}`}
                           runId={runId}
                           stepId={step.id}
                           label={step.text}
                           saved={step.note ?? ''}
                           disabled={!canTick}
                           registry={notes}
+                          onUnsaved={markUnsaved}
                         />
                       ) : null}
                       <span className="checklist-source muted">

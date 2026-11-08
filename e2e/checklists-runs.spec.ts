@@ -97,3 +97,35 @@ test('note a step, reload, finish and read the history', async ({ page }) => {
   await expect(page.getByRole('checkbox').first()).toBeDisabled();
   expect(await fits()).toBe(true);
 });
+
+test.describe('a note typed just before the page goes away is kept', () => {
+  async function openFlood(page: import('@playwright/test').Page) {
+    await page.goto('/?debug=1');
+    await page.evaluate(() =>
+      (window as unknown as { __shtf: { loadFixture: () => Promise<void> } }).__shtf.loadFixture(),
+    );
+    await page.goto('/app/more/checklists');
+    await page.locator('a[href*="/preview/"]', { hasText: /^Flood/ }).click();
+    await page.getByRole('button', { name: 'Start this checklist' }).click();
+    await expect(page.getByRole('heading', { name: 'Flood', level: 1 })).toBeVisible();
+  }
+
+  test('typing then reloading at once', async ({ page }) => {
+    await openFlood(page);
+    await page.getByRole('textbox').first().fill('Typed, then reloaded');
+    await page.reload();
+    await expect(page.getByRole('textbox').first()).toHaveValue('Typed, then reloaded');
+  });
+
+  test('typing then backgrounding the page, then reloading', async ({ page }) => {
+    await openFlood(page);
+    await page.getByRole('textbox').first().fill('Typed, then backgrounded');
+    await page.evaluate(() => {
+      Object.defineProperty(document, 'visibilityState', { get: () => 'hidden' });
+      document.dispatchEvent(new Event('visibilitychange'));
+      window.dispatchEvent(new Event('pagehide'));
+    });
+    await page.reload();
+    await expect(page.getByRole('textbox').first()).toHaveValue('Typed, then backgrounded');
+  });
+});

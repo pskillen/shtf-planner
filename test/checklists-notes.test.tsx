@@ -14,6 +14,7 @@ import { liveStore } from './helpers/liveStore';
 
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => {
+  localStorage.clear();
   cleanup();
   vi.useRealTimers();
 });
@@ -129,6 +130,90 @@ describe('notes on steps', () => {
     type(boxes()[0]!, 'on leave');
     cleanup();
     expect(savedNotes(h)[0]!.note).toBe('on leave');
+  });
+
+  it('writes the note when the page is hidden, before the pending-writes flush', () => {
+    const h = renderFlood();
+    type(boxes()[0]!, 'hidden in time');
+    const spy = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+    act(() => void document.dispatchEvent(new Event('visibilitychange')));
+    spy.mockRestore();
+    expect(savedNotes(h)[0]!.note).toBe('hidden in time');
+  });
+
+  it('takes back a draft left by a page that went away before the write landed', () => {
+    const h = renderFlood();
+    const stepId = checklistRunView(h.doc(), h.runId)!.groups[0]!.steps[0]!.id;
+    cleanup();
+    localStorage.setItem(`shtf:checklist-note-draft:${h.runId}|${stepId}`, 'left behind');
+    render(
+      <StoreContext.Provider value={h.store}>
+        <MemoryRouter initialEntries={[`/app/more/checklists/${h.runId}`]}>
+          <Routes>
+            <Route path="/app/more/checklists/:runId" element={<ChecklistRunScreen />} />
+          </Routes>
+        </MemoryRouter>
+      </StoreContext.Provider>,
+    );
+    expect(boxes()[0]!.value).toBe('left behind');
+    expect(savedNotes(h)[0]!.note).toBe('left behind');
+    expect(localStorage.length).toBe(0);
+  });
+
+  it('removes the draft once the note is saved', () => {
+    renderFlood();
+    type(boxes()[0]!, 'saved soon');
+    expect(localStorage.length).toBe(1);
+    settle();
+    expect(localStorage.length).toBe(0);
+  });
+
+  it('ignores visibilitychange to visible', () => {
+    const h = renderFlood();
+    type(boxes()[0]!, 'still typing');
+    act(() => void document.dispatchEvent(new Event('visibilitychange')));
+    expect(savedNotes(h)).toHaveLength(0);
+  });
+
+  it('writes the note on pagehide', () => {
+    const h = renderFlood();
+    type(boxes()[0]!, 'leaving');
+    act(() => void window.dispatchEvent(new Event('pagehide')));
+    expect(savedNotes(h)[0]!.note).toBe('leaving');
+  });
+
+  it('makes no write for an unchanged value and stores a whitespace-only note as empty', () => {
+    const h = renderFlood();
+    const box = boxes()[0]!;
+    fireEvent.focus(box);
+    fireEvent.blur(box);
+    type(box, '');
+    fireEvent.blur(box);
+    type(box, '   ');
+    fireEvent.blur(box);
+    expect(noteWrites(h)).toHaveLength(0);
+    type(box, 'real');
+    fireEvent.blur(box);
+    type(box, '   ');
+    fireEvent.blur(box);
+    expect(savedNotes(h)).toHaveLength(0);
+    expect(noteWrites(h)).toHaveLength(2);
+  });
+
+  it('keeps the typed text and says so when the list was finished elsewhere', () => {
+    const h = renderFlood();
+    type(boxes()[0]!, 'too late');
+    act(
+      () =>
+        void h.store.change(
+          'sync',
+          (d) => void (d.checklistRuns[h.runId]!.finished = '2026-11-08T10:00:00.000Z'),
+        ),
+    );
+    settle();
+    expect(boxes()[0]!.value).toBe('too late');
+    expect(savedNotes(h)).toHaveLength(0);
+    expect(screen.getByRole('status').textContent).toMatch(/finished, so this note was not saved/);
   });
 
   it('flushes every pending note when finishing, in one write', () => {
