@@ -1,6 +1,6 @@
 # Scenario checklists
 
-**Status:** Format, selection engine and the five UK scenarios (power cut, storm, flood, heatwave, evacuation), the run commands and read view, and screens to browse and preview scenarios, start or resume a run and tick its steps; notes, finishing, history and print are not built yet
+**Status:** Format, selection engine and the five UK scenarios (power cut, storm, flood, heatwave, evacuation), the run commands and read view, and screens to browse and preview scenarios, start or resume a run, tick its steps, keep a note on any step, finish a run and read finished runs; print and household-written steps are not built yet
 **Tracking:** [#40](https://github.com/pskillen/shtf-planner/issues/40)
 
 Step-by-step checklists for things that happen (a power cut, a flood warning), grouped by when a
@@ -35,15 +35,34 @@ devices merged badly) says so and shows no steps. An unknown run id says the lis
 the household document is read-only, or the run is finished, the boxes are disabled. Ticks never
 touch the plans or the preparedness score.
 
+**Notes.** Every step of an open run has a note box ("Add a note"), independent of the tick: a
+step can carry a note whether or not it is done, and unticking keeps the note. Typing is kept on
+the screen and saved a moment after you stop, when you leave the box, and when you leave the
+screen, so one keystroke is never one write of the household document. A change arriving from
+another device never replaces text you are typing; it replaces the box only while you have
+nothing unsaved. A note is stored as typed; a note of only spaces counts as empty and removes it.
+
+**Finishing.** "Finish this list" at the foot of an open run asks first ("Yes, finish" or "Keep
+going"). Finishing saves every note still being typed and stamps the finish time in one
+write. A finished run is a record: its boxes are disabled, the finish time shows beside the
+start, and nothing reopens it. Its text is the steps as they were when the run started, so later
+changes to the household or the packs do not alter it. The hub lists finished runs last, under
+"Finished lists", newest first, each with its start and finish time; tapping one opens it
+read-only, notes and tick times included.
+
+**Not built.** Printing a run, reopening a finished run, and household-written steps (the
+personal section of the original plan, [#132](https://github.com/pskillen/shtf-planner/issues/132)) are not built; the scenario
+checklists are therefore not the whole of the plan in [D31].
+
 ## Map
 
-| Piece   | Where                                                                                                                | What                                                                                                              |
-| ------- | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Schemas | `src/model/packs.ts`                                                                                                 | `ChecklistsPack`, `ChecklistScenario`, `ChecklistStep`, `ChecklistPhase`, `CHECKLIST_PHASES`.                     |
-| Loader  | `src/packs/loader.ts`                                                                                                | Validation, and the `checklistScenarios` and `checklistSteps` indexes on `Packs`.                                 |
-| Engine  | `src/engine/checklists.ts`                                                                                           | `checklistPacks`, `checklistScenarios`, `isStepApplicable`, `checklist`.                                          |
-| Screens | `src/app/screens/ChecklistsScreen.tsx`, `ChecklistPreviewScreen.tsx`, `ChecklistRunScreen.tsx`, `checklists/view.ts` | The hub, the preview with start and resume, the open run, and headings, labels and date formats (`view.ts`).      |
-| Runs    | `src/engine/checklistRuns.ts`                                                                                        | `checklistStateKey`, `buildCatalogueSnapshot`, `startRun`, run commands, `checklistRunView`, `checklistRunLists`. |
+| Piece   | Where                                                                                                                                           | What                                                                                                                                             |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Schemas | `src/model/packs.ts`                                                                                                                            | `ChecklistsPack`, `ChecklistScenario`, `ChecklistStep`, `ChecklistPhase`, `CHECKLIST_PHASES`.                                                    |
+| Loader  | `src/packs/loader.ts`                                                                                                                           | Validation, and the `checklistScenarios` and `checklistSteps` indexes on `Packs`.                                                                |
+| Engine  | `src/engine/checklists.ts`                                                                                                                      | `checklistPacks`, `checklistScenarios`, `isStepApplicable`, `checklist`.                                                                         |
+| Screens | `src/app/screens/ChecklistsScreen.tsx`, `ChecklistPreviewScreen.tsx`, `ChecklistRunScreen.tsx`, `checklists/view.ts`, `checklists/StepNote.tsx` | The hub, the preview with start and resume, the open or finished run, the debounced note box, and headings, labels and date formats (`view.ts`). |
+| Runs    | `src/engine/checklistRuns.ts`                                                                                                                   | `checklistStateKey`, `buildCatalogueSnapshot`, `startRun`, run commands, `checklistRunView`, `checklistRunLists`.                                |
 
 ## The `checklists` pack
 

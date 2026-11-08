@@ -49,10 +49,12 @@ workbook is a follow-up ([#59](https://github.com/pskillen/shtf-planner/issues/5
 that may depend on an answer, and a maintenance schedule. V2L is real: an EV can be a battery.
 [D24]
 
-**Planned: checklist packs.** Scenario checklists are a pack tagged by scenario and phase
-(something's coming, immediate actions, first days, first week, longer term) with stable ids so
-packs merge without duplicates, drafted with AI at build time and owner-reviewed, plus a personal
-section ([#40](https://github.com/pskillen/shtf-planner/issues/40)). [D31]
+**Checklist packs.** Scenario checklists are a pack tagged by scenario and phase (something's
+coming, immediate actions, first days, first week, longer term) with stable ids so packs merge
+without duplicates, drafted with AI at build time and owner-reviewed
+([#40](https://github.com/pskillen/shtf-planner/issues/40)). The personal section of household-written
+steps is deferred ([#132](https://github.com/pskillen/shtf-planner/issues/132)), so D31 is only
+partly delivered. [D31]
 
 Converter packs name exact fuel item IDs and manual confirmation questions; multiple fuels need an
 unanswered selector. Safety guidance is sourced and bundled, and assumptions remain labelled.

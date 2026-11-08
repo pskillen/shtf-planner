@@ -10,9 +10,10 @@ suggesting minimums from recounts remains planned. See [Review](../features/revi
 the exact fuel it needs is planned.
 [#28](https://github.com/pskillen/shtf-planner/issues/28). [D24]
 
-**Scenario checklists.** Tracked runs (each tick timestamped) with a printable export for the grab
-bag; checklist packs by scenario and phase, additive across scenarios, plus a personal section.
-[#40](https://github.com/pskillen/shtf-planner/issues/40). [D14, D31]
+**Scenario checklists.** Built: checklist packs by scenario and phase, additive across scenarios,
+and tracked runs (each tick timestamped, a note on any step, finish and read-only history). Still
+planned: a printable export for the grab bag, and a personal section of household-written steps
+([#132](https://github.com/pskillen/shtf-planner/issues/132)). [#40](https://github.com/pskillen/shtf-planner/issues/40). [D14, D31]
 
 **Contacts and the ICE sheet.** A household contact list, picked from the phone's contacts (Contact
 Picker API where available), imported from vCard or CSV, or typed; one printable sheet of contacts

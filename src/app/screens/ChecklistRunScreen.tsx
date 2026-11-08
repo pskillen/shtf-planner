@@ -1,6 +1,6 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { checklistRunView, clearStepDone, setStepDone } from '../../engine';
+import { checklistRunView, clearStepDone, finishRun, setStepDone, setStepNote } from '../../engine';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { useChange, useDocument, useEditable } from '../state';
 import {
@@ -20,6 +20,7 @@ export function ChecklistRunScreen() {
   const change = useChange();
   const editable = useEditable();
   const notes: NoteRegistry = useRef(new Map());
+  const [confirming, setConfirming] = useState(false);
   const view = checklistRunView(doc, runId);
   if (!view) {
     return (
@@ -40,6 +41,23 @@ export function ChecklistRunScreen() {
       if (ticked) setStepDone(d, runId, stepId, new Date().toISOString());
       else clearStepDone(d, runId, stepId);
     });
+  }
+
+  /** Save every note still being typed and finish, in one change. */
+  function finish() {
+    if (!canTick) return;
+    const pending = [...notes.current.entries()].flatMap(([stepId, read]) => {
+      const text = read();
+      return text === undefined ? [] : [[stepId, text] as const];
+    });
+    try {
+      change('finish checklist run', (d) => {
+        for (const [stepId, text] of pending) setStepNote(d, runId, stepId, text);
+        finishRun(d, runId, new Date().toISOString());
+      });
+    } finally {
+      setConfirming(false);
+    }
   }
 
   return (
@@ -69,6 +87,11 @@ export function ChecklistRunScreen() {
           />
           {!editable ? (
             <p className="muted">This household is read-only, so steps cannot be ticked.</p>
+          ) : null}
+          {view.finished !== undefined ? (
+            <p className="muted">
+              This list is finished. It is kept as a record and cannot be changed.
+            </p>
           ) : null}
           {view.groups.map((g) => (
             <section key={g.phase} aria-labelledby={`phase-${g.phase}`}>
@@ -118,6 +141,28 @@ export function ChecklistRunScreen() {
               </ul>
             </section>
           ))}
+          {canTick ? (
+            <div className="checklist-start">
+              {confirming ? (
+                <>
+                  <p>
+                    Finish this list? Your notes are saved and it becomes a read-only record. It
+                    cannot be reopened.
+                  </p>
+                  <button type="button" onClick={finish}>
+                    Yes, finish
+                  </button>
+                  <button type="button" className="secondary" onClick={() => setConfirming(false)}>
+                    Keep going
+                  </button>
+                </>
+              ) : (
+                <button type="button" className="secondary" onClick={() => setConfirming(true)}>
+                  Finish this list
+                </button>
+              )}
+            </div>
+          ) : null}
         </>
       )}
     </div>

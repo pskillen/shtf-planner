@@ -6,7 +6,7 @@ import { ChecklistPreviewScreen } from '../src/app/screens/ChecklistPreviewScree
 import { ChecklistRunScreen } from '../src/app/screens/ChecklistRunScreen';
 import { ChecklistsScreen } from '../src/app/screens/ChecklistsScreen';
 import { StoreContext } from '../src/app/state/storeContext';
-import { biggarDocument } from '../src/fixtures/household-biggar';
+import { biggarWithoutRuns } from './helpers/noRuns';
 import { checklistRunLists, finishRun } from '../src/engine';
 import { SchemaTooNewError } from '../src/model';
 import type { Document } from '../src/model';
@@ -53,14 +53,14 @@ function renderAt(doc: Document, path: string) {
 }
 
 function startFlood() {
-  const h = renderAt(biggarDocument(), FLOOD);
+  const h = renderAt(biggarWithoutRuns(), FLOOD);
   fireEvent.click(screen.getByRole('button', { name: 'Start this checklist' }));
   return h;
 }
 
 describe('starting a run', () => {
   it('creates exactly one run on a double tap and opens it', () => {
-    const h = renderAt(biggarDocument(), FLOOD);
+    const h = renderAt(biggarWithoutRuns(), FLOOD);
     const button = screen.getByRole('button', { name: 'Start this checklist' });
     // Both taps land before React re-renders, so only the `starting` guard stops the second.
     act(() => {
@@ -85,7 +85,7 @@ describe('starting a run', () => {
 
   it('disables Start on the preview when the document is read-only', () => {
     cleanup();
-    const doc = biggarDocument();
+    const doc = biggarWithoutRuns();
     const status = {
       kind: 'too-new' as const,
       found: 99,
@@ -137,7 +137,7 @@ describe('an open run', () => {
     expect(screen.getByText(/^Done \d\d:\d\d$/)).toBeTruthy();
     expect(screen.getByText(/^1 of \d+ done$/)).toBeTruthy();
     expect(Object.values(h.doc().checklistStepStates).filter((s) => s.doneAt)).toHaveLength(1);
-    expect(h.doc().plans).toEqual(biggarDocument().plans);
+    expect(h.doc().plans).toEqual(biggarWithoutRuns().plans);
     fireEvent.click(screen.getAllByRole('checkbox')[0]!);
     expect(screen.getByText(/^0 of \d+ done$/)).toBeTruthy();
   });
@@ -153,7 +153,7 @@ describe('an open run', () => {
   });
 
   it('says so when the run does not exist', () => {
-    renderAt(biggarDocument(), '/app/more/checklists/nope');
+    renderAt(biggarWithoutRuns(), '/app/more/checklists/nope');
     expect(screen.getByText(/was not found/)).toBeTruthy();
     expect(screen.queryByRole('checkbox')).toBeNull();
   });

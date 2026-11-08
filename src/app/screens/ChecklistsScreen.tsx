@@ -10,7 +10,7 @@ export function ChecklistsScreen() {
   const doc = useDocument();
   const packs = usePacks();
   const scenarios = checklistScenarios(doc, packs);
-  const { open } = checklistRunLists(doc);
+  const { open, finished } = checklistRunLists(doc);
   return (
     <div>
       <ScreenHeader title="Scenario checklists" back="/app/more" backLabel="More" />
@@ -64,6 +64,26 @@ export function ChecklistsScreen() {
           </div>
         </>
       )}
+      {finished.length > 0 ? (
+        <section aria-labelledby="finished-lists">
+          <h2 id="finished-lists">Finished lists</h2>
+          <div className="cards">
+            {finished.map((r) => (
+              <Link key={r.id} to={runPath(r.id)} className="card">
+                <span className="card-title">
+                  {r.scenarioNames.length > 0 ? r.scenarioNames.join(', ') : 'Checklist'}
+                </span>
+                <span className="card-body">
+                  Started {formatRunStart(r.started)}. Finished {formatRunStart(r.finished!)}
+                </span>
+                <span className="card-go" aria-hidden="true">
+                  ›
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

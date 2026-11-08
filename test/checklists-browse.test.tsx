@@ -40,7 +40,9 @@ describe('checklist hub', () => {
   it('lists the UK scenarios, each linking to its preview', () => {
     renderAt(biggarDocument(), '/app/more/checklists');
     for (const name of ['Power cut', 'Storm', 'Flood', 'Heatwave', 'Evacuation']) {
-      const link = screen.getByRole('link', { name: new RegExp(name) });
+      const link = screen
+        .getAllByRole('link', { name: new RegExp(name) })
+        .find((a) => a.getAttribute('href')?.includes('/preview/'))!;
       expect(link.getAttribute('href')).toMatch(/^\/app\/more\/checklists\/preview\/checklists-uk/);
     }
   });

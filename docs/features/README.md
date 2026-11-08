@@ -30,7 +30,7 @@ The stock model names six levels, then a few everyday words the screens use besi
 | [Inventory](inventory/README.md)            | Stores tab, Quick add, minimums, suitability warnings                                  |
 | [Scanning](scanning/README.md)              | Barcode scanning, stocktake mode, camera date reading, scans to sort, Open Food Facts  |
 | [Gaps and score](gaps-and-score/README.md)  | Shopping and to-do lists, the preparedness score                                       |
-| [Scenario checklists](checklists/README.md) | Scenario checklists: bundled UK scenarios, browse and preview, runs and their ticks    |
+| [Scenario checklists](checklists/README.md) | Scenario checklists: bundled UK scenarios, browse and preview, runs, notes and history |
 | [Drive sync](drive-sync/README.md)          | Household kept in step across devices through Google Drive                             |
 
 Not built yet, so no hub: contacts and the ICE sheet

@@ -150,7 +150,7 @@ describe('checklist runs in an import', () => {
     doc.checklistStepStates['r|s'] = { runId: 'r', stepId: 's', note: 'done early' };
     const p = previewImport(JSON.stringify(doc));
     if (!p.ok) throw new Error(p.error);
-    expect(p.summary.checklistRuns).toBe(1);
+    expect(p.summary.checklistRuns).toBe(2);
     const back = JSON.parse(p.json);
     expect(back.checklistRuns.r.scenarios).toEqual([]);
     expect(back.checklistStepStates['r|s'].note).toBe('done early');
