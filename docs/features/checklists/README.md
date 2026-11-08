@@ -1,6 +1,6 @@
 # Scenario checklists
 
-**Status:** Format, selection engine and the five UK scenarios (power cut, storm, flood, heatwave, evacuation); no screen yet
+**Status:** Format, selection engine and the five UK scenarios (power cut, storm, flood, heatwave, evacuation), and starting a run that freezes a snapshot of the catalogue; no screen yet
 **Tracking:** [#40](https://github.com/pskillen/shtf-planner/issues/40)
 
 Step-by-step checklists for things that happen (a power cut, a flood warning), grouped by when a
