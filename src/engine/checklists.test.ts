@@ -31,6 +31,7 @@ function pack(id: string, over: Partial<ChecklistsPack> = {}): ChecklistsPack {
     version: 1,
     name: id,
     kind: 'checklists',
+    region: 'UK',
     scenarios: [],
     steps: [],
     ...over,
@@ -51,13 +52,20 @@ function doc(region: Region = 'UK'): Document {
 describe('checklistPacks', () => {
   const uk = pack('a', { region: 'UK' });
   const us = pack('b', { region: 'US' });
-  const any = pack('c');
+  const any: ChecklistsPack = { ...pack('c'), region: undefined };
   const other = { ...pack('d'), kind: 'plans', items: [] } as unknown as Pack;
 
+  const uk2 = pack('e', { region: 'UK' });
+
   it('keeps region-matching checklist packs in packs.all order', () => {
-    const packs = packsOf(any, us, uk, other);
-    expect(checklistPacks(packs, 'UK').map((p) => p.id)).toEqual(['c', 'a']);
-    expect(checklistPacks(packs, 'US').map((p) => p.id)).toEqual(['c', 'b']);
+    const packs = packsOf(uk2, us, uk, other);
+    expect(checklistPacks(packs, 'UK').map((p) => p.id)).toEqual(['e', 'a']);
+    expect(checklistPacks(packs, 'US').map((p) => p.id)).toEqual(['b']);
+  });
+
+  it('offers a pack with no region to nobody (fail closed)', () => {
+    expect(checklistPacks(packsOf(any), 'UK')).toEqual([]);
+    expect(checklistPacks(packsOf(any), 'US')).toEqual([]);
   });
 
   it('gives no packs for the wrong region, and ignores settings.packs', () => {
@@ -164,6 +172,7 @@ describe('isStepApplicable', () => {
 describe('checklist', () => {
   const sources = [{ url: 'https://example.org/a', title: 'Guide A', checked: '2026-10-01' }];
   const a = pack('a', {
+    region: 'UK',
     sources,
     scenarios: [
       { id: 'a:power', name: 'Power cut' },
@@ -181,6 +190,9 @@ describe('checklist', () => {
       step('a:warn', { scenarios: ['a:flood'], phase: 'coming', order: 5 }),
       step('a:tie-b', { scenarios: ['a:power'], phase: 'immediate', order: 1 }),
       step('a:tie-a', { scenarios: ['a:power'], phase: 'immediate', order: 1 }),
+      // Ids sort opposite to `order`: only `order` puts zzz before aaa.
+      step('a:aaa', { scenarios: ['a:power'], phase: 'immediate', order: 9 }),
+      step('a:zzz', { scenarios: ['a:power'], phase: 'immediate', order: 0 }),
       step('a:sandbags', {
         scenarios: ['a:flood'],
         phase: 'coming',
@@ -190,6 +202,7 @@ describe('checklist', () => {
     ],
   });
   const b = pack('b', {
+    region: 'UK',
     scenarios: [{ id: 'b:power', name: 'Power cut (b)' }],
     steps: [step('b:radio', { scenarios: ['b:power'], phase: 'immediate', order: 1 })],
   });
@@ -202,9 +215,29 @@ describe('checklist', () => {
     const v = checklist(doc(), packs, ['a:power', 'a:flood', 'b:power'], NOW);
     expect(ids(v)).toEqual([
       ['coming', ['a:warn']],
-      ['immediate', ['a:tie-a', 'a:tie-b', 'a:torch', 'b:radio']],
+      ['immediate', ['a:zzz', 'a:tie-a', 'a:tie-b', 'a:torch', 'a:aaa', 'b:radio']],
       ['first-days', ['a:fridge']],
     ]);
+  });
+
+  it('never auto-selects a scenario because the home declares its risk', () => {
+    const r = pack('r', {
+      region: 'UK',
+      scenarios: [
+        { id: 'r:flood', name: 'Flood', risks: ['flood'] },
+        { id: 'r:power', name: 'Power' },
+      ],
+      steps: [
+        step('r:bags', { scenarios: ['r:flood'] }),
+        step('r:torch', { scenarios: ['r:power'] }),
+      ],
+    });
+    const d = doc();
+    d.home.risks = ['flood'];
+    const rp = packsOf(r);
+    expect(checklistScenarios(d, rp)[0]).toMatchObject({ id: 'r:flood', riskMatch: true });
+    expect(checklist(d, rp, [], NOW)).toEqual({ scenarios: [], groups: [] });
+    expect(flat(checklist(d, rp, ['r:power'], NOW)).map((s) => s.id)).toEqual(['r:torch']);
   });
 
   it('is stable under reversed scenarioIds', () => {

@@ -9,12 +9,11 @@ and no route.
 
 ## Map
 
-| Piece   | Where                 | What                                                                                          |
-| ------- | --------------------- | --------------------------------------------------------------------------------------------- |
-| Schemas | `src/model/packs.ts`  | `ChecklistsPack`, `ChecklistScenario`, `ChecklistStep`, `ChecklistPhase`, `CHECKLIST_PHASES`. |
-| Loader  | `src/packs/loader.ts` | Validation, and the `checklistScenarios` and `checklistSteps` indexes on `Packs`.             |
-
-| Engine | `src/engine/checklists.ts` | `checklistPacks`, `checklistScenarios`, `isStepApplicable`, `checklist`. |
+| Piece   | Where                      | What                                                                                          |
+| ------- | -------------------------- | --------------------------------------------------------------------------------------------- |
+| Schemas | `src/model/packs.ts`       | `ChecklistsPack`, `ChecklistScenario`, `ChecklistStep`, `ChecklistPhase`, `CHECKLIST_PHASES`. |
+| Loader  | `src/packs/loader.ts`      | Validation, and the `checklistScenarios` and `checklistSteps` indexes on `Packs`.             |
+| Engine  | `src/engine/checklists.ts` | `checklistPacks`, `checklistScenarios`, `isStepApplicable`, `checklist`.                      |
 
 ## The `checklists` pack
 
@@ -39,7 +38,8 @@ unlisted source, and a `requires.asset` that is not a real asset type.
 `src/engine/checklists.ts`, pure and without any screen yet.
 
 - **Packs.** `checklistPacks(packs, region)` returns the bundled checklist packs whose `region`
-  is the household's (or unset), in load order. It ignores `settings.packs`: checklists are not
+  is exactly the household's, in load order. A pack with no `region` is offered to nobody, so a
+  missing region never sends one region's advice (emergency numbers, agencies) to another. It ignores `settings.packs`: checklists are not
   switched on per household, and nothing here touches targets or the score.
 - **Scenarios.** `checklistScenarios(doc, packs)` lists every scenario on offer. Those whose
   `risks` include a risk declared on the home come first (`riskMatch`), then pack order, then

@@ -11,14 +11,13 @@ import { compareText } from '../util';
 import { peopleAt } from './context';
 
 /**
- * The bundled checklist packs for a region, in `packs.all` order. A pack with no `region` suits
- * every region. This deliberately ignores `settings.packs`: checklists are not switched on or off
+ * The bundled checklist packs for a region, in `packs.all` order. A pack must declare the
+ * household's `region` (strict equality): a pack with no `region` is offered to nobody, so a
+ * missing region never sends one region's advice to another. This deliberately ignores `settings.packs`: checklists are not switched on or off
  * like guidance, and enabling a pack never changes targets or the score.
  */
 export function checklistPacks(packs: Packs, region: Region): ChecklistsPack[] {
-  return packs.all.flatMap((p) =>
-    p.kind === 'checklists' && (p.region === undefined || p.region === region) ? [p] : [],
-  );
+  return packs.all.flatMap((p) => (p.kind === 'checklists' && p.region === region ? [p] : []));
 }
 
 export interface ChecklistScenarioView {
