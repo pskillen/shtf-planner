@@ -1,13 +1,13 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { afterEach, describe, expect, it } from 'vitest';
 import { ChecklistPreviewScreen } from '../src/app/screens/ChecklistPreviewScreen';
 import { ChecklistRunScreen } from '../src/app/screens/ChecklistRunScreen';
 import { ChecklistsScreen } from '../src/app/screens/ChecklistsScreen';
 import { StoreContext } from '../src/app/state/storeContext';
 import { biggarDocument } from '../src/fixtures/household-biggar';
-import { checklistRunLists } from '../src/engine';
+import { checklistRunLists, finishRun } from '../src/engine';
 import { SchemaTooNewError } from '../src/model';
 import type { Document } from '../src/model';
 import type { DocumentStore } from '../src/store';
@@ -17,13 +17,28 @@ afterEach(cleanup);
 
 const FLOOD = '/app/more/checklists/preview/checklists-uk%3Aflood';
 
+function BackButton() {
+  const navigate = useNavigate();
+  return (
+    <button type="button" onClick={() => navigate(-1)}>
+      History back
+    </button>
+  );
+}
+
 function routes() {
   return (
-    <Routes>
-      <Route path="/app/more/checklists" element={<ChecklistsScreen />} />
-      <Route path="/app/more/checklists/preview/:scenarioId" element={<ChecklistPreviewScreen />} />
-      <Route path="/app/more/checklists/:runId" element={<ChecklistRunScreen />} />
-    </Routes>
+    <>
+      <BackButton />
+      <Routes>
+        <Route path="/app/more/checklists" element={<ChecklistsScreen />} />
+        <Route
+          path="/app/more/checklists/preview/:scenarioId"
+          element={<ChecklistPreviewScreen />}
+        />
+        <Route path="/app/more/checklists/:runId" element={<ChecklistRunScreen />} />
+      </Routes>
+    </>
   );
 }
 
@@ -47,12 +62,54 @@ describe('starting a run', () => {
   it('creates exactly one run on a double tap and opens it', () => {
     const h = renderAt(biggarDocument(), FLOOD);
     const button = screen.getByRole('button', { name: 'Start this checklist' });
-    fireEvent.click(button);
-    fireEvent.click(button);
+    // Both taps land before React re-renders, so only the `starting` guard stops the second.
+    act(() => {
+      button.click();
+      button.click();
+    });
     expect(checklistRunLists(h.doc()).open).toHaveLength(1);
     expect(h.labels.filter((l) => l === 'start checklist run')).toHaveLength(1);
     expect(screen.getByRole('heading', { name: 'Flood', level: 1 })).toBeTruthy();
     expect(screen.getAllByRole('checkbox').length).toBeGreaterThan(0);
+  });
+
+  it('after Back from a new run, offers resume rather than a silent second start', () => {
+    const h = startFlood();
+    fireEvent.click(screen.getByRole('button', { name: 'History back' }));
+    expect(screen.getByRole('link', { name: /Resume/ })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Start this checklist' })).toBeNull();
+    expect(checklistRunLists(h.doc()).open).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Start a new incident' }));
+    expect(checklistRunLists(h.doc()).open).toHaveLength(2);
+  });
+
+  it('disables Start on the preview when the document is read-only', () => {
+    cleanup();
+    const doc = biggarDocument();
+    const status = {
+      kind: 'too-new' as const,
+      found: 99,
+      supported: 1,
+      error: new SchemaTooNewError(99, 1),
+    };
+    const store = {
+      get: () => doc,
+      status: () => status,
+      subscribe: () => () => undefined,
+      change: () => {
+        throw new Error('read-only');
+      },
+    } as unknown as DocumentStore;
+    render(
+      <StoreContext.Provider value={store}>
+        <MemoryRouter initialEntries={[FLOOD]}>{routes()}</MemoryRouter>
+      </StoreContext.Provider>,
+    );
+    const start = screen.getByRole('button', { name: 'Start this checklist' }) as HTMLButtonElement;
+    expect(start.disabled).toBe(true);
+    fireEvent.click(start);
+    expect(screen.getByRole('heading', { name: 'Flood', level: 1 })).toBeTruthy();
+    expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
   });
 
   it('offers resume first, and a deliberate new incident makes a second run', () => {
@@ -108,6 +165,19 @@ describe('an open run', () => {
     act(() => h.store.change('merge', (draft) => Object.assign(draft, d)));
     expect(screen.getByText(/no scenario selected/)).toBeTruthy();
     expect(screen.queryByRole('checkbox')).toBeNull();
+  });
+
+  it('is read-only once finished, even on an editable document', () => {
+    const h = startFlood();
+    const runId = Object.keys(h.doc().checklistRuns)[0]!;
+    act(() => h.store.change('finish', (d) => void finishRun(d, runId, new Date().toISOString())));
+    const boxes = screen.getAllByRole('checkbox') as HTMLInputElement[];
+    expect(boxes.every((b) => b.disabled)).toBe(true);
+    const before = h.labels.length;
+    fireEvent.click(boxes[0]!);
+    expect(h.labels).toHaveLength(before);
+    expect(Object.values(h.doc().checklistStepStates).filter((s) => s.doneAt)).toHaveLength(0);
+    expect(screen.getByText(/Finished/)).toBeTruthy();
   });
 
   it('is read-only when the document is', () => {
