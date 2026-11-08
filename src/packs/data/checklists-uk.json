@@ -85,14 +85,11 @@
     },
     {
       "id": "checklists-uk:medical-plan",
-      "text": "Make a plan with your care provider or clinical team for what to do, and who to contact, if powered medical equipment stops.",
+      "text": "If anyone uses medical equipment that needs power, make a plan with their care provider or clinical team: what to do, and who to contact, if the power goes off.",
       "scenarios": ["checklists-uk:power-cut"],
       "phase": "coming",
       "order": 70,
-      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/",
-      "requires": {
-        "memberTag": "powered-equipment"
-      }
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
     },
     {
       "id": "checklists-uk:formula",

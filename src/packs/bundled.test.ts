@@ -199,6 +199,7 @@ describe('the bundled packs', () => {
       // safety warnings are not gated on recorded assets or household facts
       expect(ids).toContain('checklists-uk:generator');
       expect(ids).toContain('checklists-uk:no-camping-stove');
+      expect(ids).toContain('checklists-uk:medical-plan');
     });
   });
 });
