@@ -14,6 +14,7 @@ import { HomeScreen } from './screens/HomeScreen';
 import { HorizonScreen } from './screens/HorizonScreen';
 import { LocationsScreen } from './screens/LocationsScreen';
 import { ChecklistPreviewScreen } from './screens/ChecklistPreviewScreen';
+import { ChecklistRunScreen } from './screens/ChecklistRunScreen';
 import { ChecklistsScreen } from './screens/ChecklistsScreen';
 import { MoreScreen } from './screens/MoreScreen';
 import { PeopleScreen } from './screens/PeopleScreen';
@@ -140,6 +141,14 @@ export function Shell() {
                 element={
                   <Screen>
                     <ChecklistPreviewScreen />
+                  </Screen>
+                }
+              />
+              <Route
+                path="more/checklists/:runId"
+                element={
+                  <Screen>
+                    <ChecklistRunScreen />
                   </Screen>
                 }
               />
