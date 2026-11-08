@@ -99,7 +99,7 @@ checklist pack, and Settings lists the UK pack as "Included for your region" wit
   deliberately empty because no fetched page gives advice for them (no rest-centre or temporary
   accommodation page was found that holds across the UK). It cites UK Government Be Ready (be
   ready for emergencies, and its household emergency plan PDF) and two Ready Scotland pages
-  (emergency plan, emergency kit); the kit list is Scotland's, and no other page fetched contradicts it.
+  (emergency plan, emergency kit), the Be Ready fires-in-the-home page and two gas-network pages; the kit list is Scotland's, and no other page fetched contradicts it.
   Leaving may be ordered or a household's own decision, so the steps do not
   depend on an order: "if the emergency is inside your home, get out" and "if you have to leave
   home" stand beside the shared "if the council or emergency services ask you to evacuate, go".
@@ -110,6 +110,14 @@ checklist pack, and Settings lists the UK pack as "Included for your region" wit
   only when the emergency services say it is safe. Gas must not be turned back on by the
   household; the plan PDF says water and electricity can be, which conflicts with the flood
   steps, so no evacuation step says it.
+  The "turn off before you leave" step is scoped to leaving for a reason other than a fire or a
+  smell of gas, because switching electricity off in a gas leak risks a spark and a fire evacuee
+  should get out at once. A gas leak has its own step (no switches or flames, ventilate, turn off
+  at the meter, leave, call). Its number, 0800 111 999, is shown by Cadent and National Gas, and
+  neither page says which parts of the UK it covers, so the text says so. A separate step gives
+  the Northern Ireland number from Gas Networks Ireland (not checked against firmus energy or
+  other Northern Ireland networks). The fire-in-the-home page is the source for "do not stop to
+  collect belongings".
 - One step is shared between storm and flood: `storm-floodwater` ("Never drive through floodwater. Turn around and find
   another route."), listed once when both are chosen. Elsewhere the
   storm wording differs from the power-cut and flood wording even where the topic overlaps
