@@ -20,6 +20,15 @@ Six levels, top to bottom: **Capability › Resource › Category › Item › P
 **Stores** (the tab) keeps its name: the household's physical stores, grouped by item, then
 product, then batches. **`src/store`** in code is the document store, not a resource.
 
+## Checklists
+
+- **Scenario.** Something that can happen to the household ("Power cut"); the thing a checklist is
+  for. `ChecklistScenario` in a `checklists` pack.
+- **Checklist step.** One action in a scenario, with a phase, an order, optional conditions
+  (`requires`) and a source. A step can belong to several scenarios. `ChecklistStep`.
+- **Checklist phase.** The heading a step sits under, in order: coming, immediate, first days,
+  first week, longer term. Unrelated to delivery phases. `ChecklistPhase`.
+
 ## Inventory
 
 - **Counts as.** The item a product counts through; also the one line an item shows about what it

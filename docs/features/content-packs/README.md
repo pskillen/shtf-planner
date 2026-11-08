@@ -69,6 +69,10 @@ assetTypeId?, offCategories?, source? }`. **`measure`** is `mass`, `volume` or `
   `appliesTo`, `requires`, `multipliers`, `minHorizonDays`, and a `source`. With `ageBands`, a
   person in no band needs none. Each quantity names a **`resource`** (`ResourceId`), not a "store".
 - **`plans`**: `items: PlanDef[]`; `requires` may name a risk, asset types (any of) or `pets`.
+- **`checklists`**: `scenarios` and `steps`; a step names its scenarios (in the same pack), a
+  `phase`, an integer `order`, optional `requires` (risk, asset types, pets, member tag) and a
+  `source` (an `https` URL listed in the pack's `sources`, or `"assumption"`, as a rule has). See
+  [Scenario checklists](../checklists/README.md).
 - **`regions`**: units, currency, `riskLinks`, `subregions`, `suggestedPacks`.
 
 `CapabilityId`: `water food heat cooking light power comms sanitation medical mobility plans`.
