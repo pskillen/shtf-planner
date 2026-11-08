@@ -85,3 +85,70 @@ export function startRun(
   }
   return run;
 }
+
+/** The run, if it is still open and the step has a state record; the commands below need both. */
+function openState(draft: Document, runId: string, stepId: string) {
+  const run = draft.checklistRuns[runId];
+  if (!run || run.finished !== undefined) return undefined;
+  return draft.checklistStepStates[checklistStateKey(runId, stepId)];
+}
+
+/**
+ * Tick a step. Returns `false`, writing nothing, when the run is unknown or finished, the step has
+ * no state, or it is already ticked (the first tick time stands, to avoid needless merge churn).
+ */
+export function setStepDone(draft: Document, runId: string, stepId: string, at: string): boolean {
+  const state = openState(draft, runId, stepId);
+  if (!state || state.doneAt !== undefined) return false;
+  state.doneAt = at;
+  return true;
+}
+
+/** Untick a step, keeping its note. `false` when nothing changed (as for `setStepDone`). */
+export function clearStepDone(draft: Document, runId: string, stepId: string): boolean {
+  const state = openState(draft, runId, stepId);
+  if (!state || state.doneAt === undefined) return false;
+  delete state.doneAt;
+  return true;
+}
+
+/**
+ * Set a step's note, exactly as given (nothing is trimmed). An empty note deletes the field.
+ * `false` when nothing changed, including writing the value already there.
+ */
+export function setStepNote(draft: Document, runId: string, stepId: string, note: string): boolean {
+  const state = openState(draft, runId, stepId);
+  if (!state || state.note === (note === '' ? undefined : note)) return false;
+  if (note === '') delete state.note;
+  else state.note = note;
+  return true;
+}
+
+/**
+ * Replace the run's selected scenarios. Only catalogue ids count, each once, in the caller's
+ * order; with none left the call is refused. `false` when refused or unchanged.
+ */
+export function setRunScenarios(
+  draft: Document,
+  runId: string,
+  scenarioIds: readonly string[],
+): boolean {
+  const run = draft.checklistRuns[runId];
+  if (!run || run.finished !== undefined) return false;
+  const known = new Set(run.catalogue.scenarios.map((s) => s.id));
+  const next = [...new Set(scenarioIds)].filter((id) => known.has(id));
+  if (next.length === 0) return false;
+  if (next.length === run.scenarios.length && next.every((id, i) => id === run.scenarios[i])) {
+    return false;
+  }
+  run.scenarios = next;
+  return true;
+}
+
+/** Finish an open run. `false` for an unknown run or one already finished (its time stands). */
+export function finishRun(draft: Document, runId: string, at: string): boolean {
+  const run = draft.checklistRuns[runId];
+  if (!run || run.finished !== undefined) return false;
+  run.finished = at;
+  return true;
+}
