@@ -1,4 +1,5 @@
 import type { ChecklistPhase } from '../../../model';
+import { formatReviewDate } from '../../reviewDisplay';
 
 /** The five checklist-phase headings, in the order the engine returns them. */
 export const CHECKLIST_PHASE_LABEL: Record<ChecklistPhase, string> = {
@@ -22,7 +23,7 @@ export function sourceLabel(step: {
   if (step.source === 'assumption') return { text: 'Our assumption: no official source' };
   const title = step.sourceTitle ?? step.source;
   return {
-    text: step.sourceChecked ? `${title} (checked ${step.sourceChecked})` : title,
+    text: step.sourceChecked ? `${title} (checked ${formatReviewDate(step.sourceChecked)})` : title,
     href: step.source,
   };
 }

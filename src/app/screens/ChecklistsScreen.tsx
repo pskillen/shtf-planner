@@ -13,7 +13,11 @@ export function ChecklistsScreen() {
   return (
     <div>
       <ScreenHeader title="Scenario checklists" back="/app/more" backLabel="More" />
-      <p className="muted">Step-by-step lists for things that happen. Pick one to see its steps.</p>
+      {scenarios.length > 0 ? (
+        <p className="muted">
+          Step-by-step lists for things that happen. Pick one to see its steps.
+        </p>
+      ) : null}
       {/* Lists the household has started will go here. */}
       <section aria-label="Your lists" />
       {scenarios.length === 0 ? (
