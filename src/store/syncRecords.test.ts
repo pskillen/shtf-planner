@@ -378,8 +378,8 @@ describe('checklist runs and step states', () => {
     });
     const l = structuredClone(b);
     const r = structuredClone(b);
-    l.checklistRuns.r!.finished = '2026-03-05T10:00:00.000Z';
-    r.checklistRuns.r!.finished = '2026-03-06T10:00:00.000Z';
+    l.checklistRuns.r!.scenarios.push('flood');
+    r.checklistRuns.r!.scenarios = ['power-cut'];
     l.checklistStepStates['r|unplug']!.note = 'mine';
     r.checklistStepStates['r|unplug']!.note = 'theirs';
     const by = Object.fromEntries(

@@ -77,19 +77,20 @@ are records like any other, and appear in the which-copy dialog as "Checklist ru
 scenario names and start day) and "Checklist step" (titled by the step's text, read from the run's
 snapshot). Tests with two real stores (`src/store/syncChecklists.test.ts`) pin what happens:
 
-| Two devices, offline                         | Result                                                                                               |
-| -------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| Tick different steps                         | Both ticks kept, no question                                                                         |
-| One ticks a step, the other writes its note  | Both kept, no question                                                                               |
-| Both write a note on one step                | Question with both notes; the CRDT has already picked one, the same on both devices                  |
-| One unticks a step, the other ticks it again | Question on the tick; the later tick stands (a concurrent set beats a delete); the note is kept      |
-| Both tick a step with the same timestamp     | No question; a note written on either device is kept                                                 |
-| Each adds a different scenario to a run      | Both kept, no question; the steps of every scenario stay, hidden ones included                       |
-| Both add the same scenario                   | No question; the merged array holds it twice and readers see it once; removing it later removes both |
-| One removes a scenario, the other adds one   | Question on the scenarios; the merge keeps the addition and the other scenarios                      |
-| Each removes a different scenario            | Question on the scenarios; the run can end up with none, which is valid                              |
-| One finishes a run, the other edits a step   | Both kept, no question                                                                               |
-| Each starts a run                            | Two runs, no question                                                                                |
+| Two devices, offline                         | Result                                                                                                          |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Tick different steps                         | Both ticks kept, no question                                                                                    |
+| One ticks a step, the other writes its note  | Both kept, no question                                                                                          |
+| Both write a note on one step                | Question with both notes; the CRDT has already picked one, the same on both devices                             |
+| One unticks a step, the other ticks it again | Question on the tick (cleared against set); the tick stands (a concurrent set beats a delete); the note is kept |
+| Both tick a step, at any times               | No question, the step is done either way; one time stands on both devices; notes kept                           |
+| Both finish a run, at different times        | No question; one finish time stands on both devices                                                             |
+| Each adds a different scenario to a run      | Both kept, no question; the steps of every scenario stay, hidden ones included                                  |
+| Both add the same scenario                   | No question; the merged array holds it twice and readers see it once; removing it later removes both            |
+| One removes a scenario, the other adds one   | Question on the scenarios; the merge keeps the addition and the other scenarios                                 |
+| Each removes a different scenario            | Question on the scenarios; the run can end up with none, which is valid                                         |
+| One finishes a run, the other edits a step   | Both kept, no question                                                                                          |
+| Each starts a run                            | Two runs, no question                                                                                           |
 
 **Finishing is not a lock across devices.** A device that is offline can still tick steps or write
 notes in a run another device has finished; after the sync both are visible and the run stays

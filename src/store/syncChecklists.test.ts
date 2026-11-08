@@ -203,6 +203,81 @@ describe('two devices working one checklist run', () => {
   });
 });
 
+describe('the same tick or finish at different moments', () => {
+  it('raises no question when both devices tick one step at different times, either way round', async () => {
+    const { a, b, base } = await world();
+    a.change('tick', (d) => tick(d, 'prep', T1));
+    b.change('tick later', (d) => tick(d, 'prep', T2));
+    const m = meet(a, b, base);
+    expect(m.fromA.conflicts).toEqual([]);
+    expect(m.fromB.conflicts).toEqual([]);
+    // One time stands, the same on both devices; the step is done.
+    expect([T1, T2]).toContain(a.get().checklistStepStates['r|prep']!.doneAt);
+  });
+
+  it('raises no question when both devices finish one run at different times', async () => {
+    const { a, b, base } = await world();
+    a.change('finish', (d) => {
+      d.checklistRuns.r!.finished = T1;
+    });
+    b.change('finish later', (d) => {
+      d.checklistRuns.r!.finished = T2;
+    });
+    const m = meet(a, b, base);
+    expect(m.fromA.conflicts).toEqual([]);
+    expect(m.fromB.conflicts).toEqual([]);
+    expect([T1, T2]).toContain(a.get().checklistRuns.r!.finished);
+  });
+
+  it('still asks when one device re-ticks an already ticked step and the other unticks it', async () => {
+    const { a, b, base } = await world(['s1'], (d) => tick(d, 'prep', T0));
+    a.change('re-tick', (d) => tick(d, 'prep', T1));
+    b.change('untick', (d) => {
+      delete d.checklistStepStates['r|prep']!.doneAt;
+    });
+    const m = meet(a, b, base);
+    expect(m.fromA.conflicts[0]!.fields).toEqual([
+      { field: 'doneAt', mine: T1, theirs: undefined },
+    ]);
+    expect(m.fromB.conflicts[0]!.fields).toEqual([
+      { field: 'doneAt', mine: undefined, theirs: T1 },
+    ]);
+  });
+
+  it('still asks when one device unfinishes a run and the other finishes it', async () => {
+    const { a, b, base } = await world(['s1'], (d) => {
+      d.checklistRuns.r!.finished = T0;
+    });
+    a.change('reopen', (d) => {
+      delete d.checklistRuns.r!.finished;
+    });
+    b.change('finish again', (d) => {
+      d.checklistRuns.r!.finished = T2;
+    });
+    const m = meet(a, b, base);
+    expect(m.fromA.conflicts[0]!.fields).toEqual([
+      { field: 'finished', mine: undefined, theirs: T2 },
+    ]);
+    expect(m.fromB.conflicts[0]!.fields).toEqual([
+      { field: 'finished', mine: T2, theirs: undefined },
+    ]);
+  });
+
+  it('still asks about a note while the ticks, at different times, are not asked about', async () => {
+    const { a, b, base } = await world();
+    a.change('tick and note', (d) => {
+      tick(d, 'prep', T1);
+      note(d, 'prep', 'from a');
+    });
+    b.change('tick and note', (d) => {
+      tick(d, 'prep', T2);
+      note(d, 'prep', 'from b');
+    });
+    const m = meet(a, b, base);
+    expect(m.fromA.conflicts[0]!.fields.map((f) => f.field)).toEqual(['note']);
+  });
+});
+
 describe('two devices changing the scenarios of one run', () => {
   it('keeps different scenarios added on each device, hidden states intact', async () => {
     const { a, b, base } = await world(['s1']);

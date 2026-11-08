@@ -226,6 +226,16 @@ const additiveStrings = (base: unknown, side: unknown): boolean =>
   base.every((x) => typeof x === 'string' && side.includes(x)) &&
   side.every((x) => typeof x === 'string');
 
+/**
+ * Two devices that each ticked a step (or each finished a run), at different moments, agree it is
+ * done: the timestamps are not worth a question. A side that cleared the field is not exempt.
+ */
+const bothSet = (key: string, field: string, l: unknown, r: unknown): boolean =>
+  ((key.startsWith('checklistStepStates/') && field === 'doneAt') ||
+    (key.startsWith('checklistRuns/') && field === 'finished')) &&
+  get(l, field) !== undefined &&
+  get(r, field) !== undefined;
+
 /** Compares base, local and remote record by record. */
 export function classify(base: Obj, local: Obj, remote: Obj): Classified {
   const b = recordsOf(base);
@@ -281,6 +291,7 @@ export function classify(base: Obj, local: Obj, remote: Obj): Classified {
               additiveStrings(get(bv, f), get(lv, f)) &&
               additiveStrings(get(bv, f), get(rv, f))
             ) &&
+            !bothSet(key, f, lv, rv) &&
             !deepEqual(get(bv, f), get(lv, f)) &&
             !deepEqual(get(bv, f), get(rv, f)) &&
             !deepEqual(get(lv, f), get(rv, f)),
