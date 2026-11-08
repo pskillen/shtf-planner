@@ -113,6 +113,15 @@ It throws `PackError` whose message names the pack and the field of each problem
 `region` is not `settings.region`; unknown ids are skipped. `recordPackVersions` and
 `packVersionReport` keep `meta.packVersions` honest: a mismatch is reported, not fatal.
 
+## In Settings
+
+Settings draws a switch for each pack except `checklists` packs. A checklist pack is not switched
+on or off and is never written to `settings.packs` (nor to `DEFAULT_PACKS`): it is offered by
+region alone (the pack's `region` must equal the household's; a pack with no region is offered to
+nobody). Under the switches, a "Scenario checklists" group lists this region's checklist packs as
+plain text ("Included for your region"), or says none are available for the region. The group is
+not drawn while no checklist pack is bundled at all.
+
 ## Adding or changing a pack
 
 1. Edit or add `src/packs/data/<name>.json`; a new file is imported in `src/packs/bundled.ts` and,
