@@ -14,6 +14,10 @@ import { HomeScreen } from './screens/HomeScreen';
 import { HorizonScreen } from './screens/HorizonScreen';
 import { LocationsScreen } from './screens/LocationsScreen';
 import { ChecklistPreviewScreen } from './screens/ChecklistPreviewScreen';
+import {
+  ChecklistPreviewPrintScreen,
+  ChecklistRunPrintScreen,
+} from './screens/ChecklistPrintScreen';
 import { ChecklistRunScreen } from './screens/ChecklistRunScreen';
 import { ChecklistsScreen } from './screens/ChecklistsScreen';
 import { MoreScreen } from './screens/MoreScreen';
@@ -141,6 +145,22 @@ export function Shell() {
                 element={
                   <Screen>
                     <ChecklistPreviewScreen />
+                  </Screen>
+                }
+              />
+              <Route
+                path="more/checklists/preview/:scenarioId/print"
+                element={
+                  <Screen>
+                    <ChecklistPreviewPrintScreen />
+                  </Screen>
+                }
+              />
+              <Route
+                path="more/checklists/:runId/print"
+                element={
+                  <Screen>
+                    <ChecklistRunPrintScreen />
                   </Screen>
                 }
               />

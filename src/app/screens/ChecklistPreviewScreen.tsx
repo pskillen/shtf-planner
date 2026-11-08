@@ -10,6 +10,7 @@ import {
   checklistsPath,
   formatRunStart,
   parsePreviewIds,
+  previewPrintPath,
   progressText,
   runPath,
   sourceLabel,
@@ -92,6 +93,11 @@ export function ChecklistPreviewScreen() {
           </button>
         </div>
       )}
+      {view.groups.length > 0 ? (
+        <Link to={previewPrintPath(knownIds)} className="button secondary">
+          Print a blank copy
+        </Link>
+      ) : null}
       <p className="muted">The steps below are for your household. Previewing saves nothing.</p>
       {view.groups.length === 0 ? <p>No steps apply to your household.</p> : null}
       {view.groups.map((g) => (

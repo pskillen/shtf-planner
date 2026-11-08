@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import {
   checklistRunView,
   clearStepDone,
@@ -16,6 +16,7 @@ import {
   formatDoneAt,
   formatRunStart,
   progressText,
+  runPrintPath,
   sourceLabel,
 } from './checklists/view';
 import { ScenarioPicker } from './checklists/ScenarioPicker';
@@ -127,6 +128,11 @@ export function ChecklistRunScreen() {
           Change scenarios
         </button>
       ) : null}
+      {view.needsScenario ? null : (
+        <Link to={runPrintPath(runId)} className="button secondary">
+          Print this list
+        </Link>
+      )}
       {view.needsScenario && !canTick ? (
         <p>This list has no scenario selected, so it shows no steps.</p>
       ) : null}

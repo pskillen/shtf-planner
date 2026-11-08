@@ -27,6 +27,13 @@ export const parsePreviewIds = (param: string): string[] => [
 
 export const runPath = (runId: string): string => `${checklistsPath}/${encodeURIComponent(runId)}`;
 
+/** The print view of a preview (one scenario or several). */
+export const previewPrintPath = (scenarioIds: string | readonly string[]): string =>
+  `${previewPath(scenarioIds)}/print`;
+
+/** The print view of a run. */
+export const runPrintPath = (runId: string): string => `${runPath(runId)}/print`;
+
 const dayFormat = new Intl.DateTimeFormat('en-GB', {
   day: 'numeric',
   month: 'long',
@@ -38,6 +45,15 @@ const timeFormat = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '
 export function formatRunStart(iso: string): string {
   const d = new Date(iso);
   return `${dayFormat.format(d)}, ${timeFormat.format(d)}`;
+}
+
+/** The viewer's time zone name ("Europe/London"), so times on paper can be read later. */
+export function viewerTimeZone(): string {
+  try {
+    return new Intl.DateTimeFormat().resolvedOptions().timeZone || 'local time';
+  } catch {
+    return 'local time';
+  }
 }
 
 /** The time a step was ticked; the date is added when it was not today. */
