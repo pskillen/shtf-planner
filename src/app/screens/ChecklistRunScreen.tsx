@@ -211,7 +211,10 @@ export function ChecklistRunScreen() {
           ))}
         </>
       )}
-      {canTick ? (
+      {canTick && view.needsScenario ? (
+        <p className="muted">Choose a scenario above to finish this list.</p>
+      ) : null}
+      {canTick && !view.needsScenario ? (
         <div className="checklist-start">
           {confirming ? (
             <>

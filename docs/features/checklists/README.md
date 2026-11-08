@@ -41,7 +41,8 @@ packs since). Changes save at once. The last selected scenario cannot be unticke
 the steps only that scenario supplied; their ticks and notes are kept and return, with the note
 the person wrote, when it is ticked again; the picker says so. A run left with no scenario (two
 devices merged badly) opens the picker straight away, and choosing one brings its steps back. Such
-a run can also be finished. A finished run has no picker.
+a run cannot be finished until a scenario is chosen (the screen says so, and the engine refuses).
+A finished run has no picker.
 
 **An open run** (`/app/more/checklists/:runId`) shows the scenario names, when it started, "n of m
 done" with a bar, and the steps under the phase headings. Each step is a labelled checkbox; ticking
@@ -160,7 +161,10 @@ run, a step with no state, or a value that is already there.
 - `setRunScenarios(draft, runId, scenarioIds)` replaces the selection: catalogue ids only, each
   once, at least one. Steps of a scenario that is no longer selected are hidden, not deleted: their
   states stay, and selecting the scenario again brings them back.
-- `finishRun(draft, runId, at)` finishes an open run; a finished time already there stands.
+- `finishRun(draft, runId, at)` finishes an open run; a finished time already there stands. It
+  refuses a run with no valid selected scenario.
+- `openRunsIncluding(doc, ids)` gives the open runs that include every given scenario (extra
+  scenarios allowed), which the preview offers to resume.
 
 `checklistRunView(doc, runId)` is what screens and print read. It lists every catalogue scenario
 (flagged when selected) and the **visible** steps grouped by phase (empty phases omitted): a step

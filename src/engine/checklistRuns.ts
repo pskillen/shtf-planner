@@ -147,10 +147,15 @@ export function setRunScenarios(
   return true;
 }
 
-/** Finish an open run. `false` for an unknown run or one already finished (its time stands). */
+/**
+ * Finish an open run. `false` for an unknown run, one already finished (its time stands), or one
+ * with no valid selected scenario (a bad merge: it would become a record showing no steps).
+ */
 export function finishRun(draft: Document, runId: string, at: string): boolean {
   const run = draft.checklistRuns[runId];
   if (!run || run.finished !== undefined) return false;
+  const known = new Set(run.catalogue.scenarios.map((s) => s.id));
+  if (!run.scenarios.some((id) => known.has(id))) return false;
   run.finished = at;
   return true;
 }
@@ -270,4 +275,21 @@ export function checklistRunLists(doc: Document): {
     (run.finished === undefined ? open : finished).push(summary);
   }
   return { open, finished };
+}
+
+/**
+ * The open runs that include every one of the given scenarios (newest started first), for
+ * offering to resume instead of starting again. Runs with extra scenarios count. Empty `ids`
+ * matches nothing.
+ */
+export function openRunsIncluding(doc: Document, ids: readonly string[]): ChecklistRunSummary[] {
+  if (ids.length === 0) return [];
+  return checklistRunLists(doc).open.filter((summary) => {
+    const selected = new Set(
+      checklistRunView(doc, summary.id)
+        ?.scenarios.filter((s) => s.selected)
+        .map((s) => s.id),
+    );
+    return ids.every((id) => selected.has(id));
+  });
 }

@@ -1,12 +1,6 @@
 import { useRef } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import {
-  checklist,
-  checklistRunLists,
-  checklistRunView,
-  checklistScenarios,
-  startRun,
-} from '../../engine';
+import { checklist, checklistScenarios, openRunsIncluding, startRun } from '../../engine';
 import { today } from '../../util';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { useChange, useDocument, useEditable } from '../state';
@@ -46,14 +40,7 @@ export function ChecklistPreviewScreen() {
   const view = checklist(doc, packs, knownIds, today());
   const nameOf = new Map(known.map((s) => [s.id, s.name]));
   // An open run is offered when it includes every scenario selected here.
-  const resumable = checklistRunLists(doc).open.filter((r) => {
-    const selected = new Set(
-      checklistRunView(doc, r.id)
-        ?.scenarios.filter((s) => s.selected)
-        .map((s) => s.id),
-    );
-    return knownIds.every((id) => selected.has(id));
-  });
+  const resumable = openRunsIncluding(doc, knownIds);
 
   function start() {
     if (!editable || starting.current) return;

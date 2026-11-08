@@ -65,6 +65,7 @@ export {
   buildCatalogueSnapshot,
   checklistRunLists,
   checklistRunView,
+  openRunsIncluding,
   checklistStateKey,
   clearStepDone,
   finishRun,
