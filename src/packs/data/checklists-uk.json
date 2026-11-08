@@ -1,0 +1,211 @@
+{
+  "format": 1,
+  "id": "checklists-uk",
+  "kind": "checklists",
+  "version": 1,
+  "name": "UK scenario checklists",
+  "region": "UK",
+  "sources": [
+    {
+      "url": "https://beready.campaign.gov.uk/emergencies/power-cuts/",
+      "title": "Be Ready (UK Government): power cuts",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://www.nhs.uk/conditions/carbon-monoxide-poisoning/",
+      "title": "NHS: carbon monoxide poisoning",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://www.gov.uk/government/publications/public-health-advice-from-uk-cmos-during-a-national-power-outage/keeping-warm-or-cool-in-extreme-weather-scripts-for-broadcast-media",
+      "title": "UK CMOs: keeping warm or cool in a national power outage (GOV.UK)",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://www.ofgem.gov.uk/your-energy-supply/how-manage-your-energy-supply/join-your-suppliers-priority-services-register",
+      "title": "Ofgem: join your supplier's Priority Services Register",
+      "checked": "2026-11-08"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "checklists-uk:power-cut",
+      "name": "Power cut",
+      "risks": ["grid"]
+    }
+  ],
+  "steps": [
+    {
+      "id": "checklists-uk:torch",
+      "text": "Keep a battery or wind-up torch and spare batteries where you can find them in the dark. Torches are safer than candles.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "coming",
+      "order": 10,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
+    },
+    {
+      "id": "checklists-uk:number",
+      "text": "Write down the power-cut number and save it in your phone: 105 (England, Scotland, Wales) or 03457 643643 (Northern Ireland).",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "coming",
+      "order": 20,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
+    },
+    {
+      "id": "checklists-uk:radio",
+      "text": "Keep a battery or wind-up radio with spare batteries. Write the frequencies of local and national stations on paper.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "coming",
+      "order": 30,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
+    },
+    {
+      "id": "checklists-uk:cash",
+      "text": "Keep a small amount of cash for essentials in case card payments or cash machines are down.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "coming",
+      "order": 40,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
+    },
+    {
+      "id": "checklists-uk:register",
+      "text": "If you may qualify, ask your energy supplier or network operator about the Priority Services Register (England, Scotland, Wales). In Northern Ireland, ask about the Customer Care Register.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "coming",
+      "order": 50,
+      "source": "https://www.ofgem.gov.uk/your-energy-supply/how-manage-your-energy-supply/join-your-suppliers-priority-services-register"
+    },
+    {
+      "id": "checklists-uk:landline",
+      "text": "If you rely on a landline for emergency calls, or have telecare on it, ask your provider whether it works in a power cut.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "coming",
+      "order": 60,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
+    },
+    {
+      "id": "checklists-uk:medical-plan",
+      "text": "Make a plan with your care provider or clinical team for what to do, and who to contact, if powered medical equipment stops.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "coming",
+      "order": 70,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/",
+      "requires": {
+        "memberTag": "powered-equipment"
+      }
+    },
+    {
+      "id": "checklists-uk:formula",
+      "text": "If you use infant formula, keep some ready-made. It is the safest choice if tap water is unavailable.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "coming",
+      "order": 80,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/",
+      "requires": {
+        "memberTag": "infant"
+      }
+    },
+    {
+      "id": "checklists-uk:solar-backup",
+      "text": "Ask your installer whether your solar or battery system keeps running in a power cut. Some only do if designed to work without the grid.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "coming",
+      "order": 90,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/",
+      "requires": {
+        "asset": ["assets-base:solar-pv", "assets-base:home-battery"]
+      }
+    },
+    {
+      "id": "checklists-uk:report",
+      "text": "Report the power cut on your network operator's website. If you cannot, call 105 (England, Scotland, Wales) or 03457 643643 (Northern Ireland). Calls are free.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "immediate",
+      "order": 10,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
+    },
+    {
+      "id": "checklists-uk:power-lines",
+      "text": "Keep well away from power lines. High-voltage electricity can jump gaps without warning.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "immediate",
+      "order": 20,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
+    },
+    {
+      "id": "checklists-uk:appliances",
+      "text": "Turn off irons, ovens, electric fires and fryers. Unplug your TV and computer to protect them from a surge when power returns.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "immediate",
+      "order": 30,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
+    },
+    {
+      "id": "checklists-uk:fridge-doors",
+      "text": "Keep fridge and freezer doors shut so food stays cold for several hours.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "immediate",
+      "order": 40,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
+    },
+    {
+      "id": "checklists-uk:warm",
+      "text": "Stay warm: wear layers, use blankets, close doors to rooms you are not using and draw the curtains.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "immediate",
+      "order": 50,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
+    },
+    {
+      "id": "checklists-uk:no-camping-stove",
+      "text": "Never use a barbecue or camping stove indoors or inside a tent. The fumes contain carbon monoxide, which can kill.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "immediate",
+      "order": 60,
+      "source": "https://www.nhs.uk/conditions/carbon-monoxide-poisoning/"
+    },
+    {
+      "id": "checklists-uk:generator",
+      "text": "Never run a petrol or diesel generator indoors. Keep it outdoors at least 6 metres (20 feet) away, with the exhaust facing away from windows and doors.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "immediate",
+      "order": 70,
+      "source": "https://www.gov.uk/government/publications/public-health-advice-from-uk-cmos-during-a-national-power-outage/keeping-warm-or-cool-in-extreme-weather-scripts-for-broadcast-media",
+      "requires": {
+        "asset": ["assets-base:generator"]
+      }
+    },
+    {
+      "id": "checklists-uk:unattended",
+      "text": "Never leave a fire, portable heater or generator running unattended. Use only the fuel it is designed for.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "immediate",
+      "order": 80,
+      "source": "https://www.gov.uk/government/publications/public-health-advice-from-uk-cmos-during-a-national-power-outage/keeping-warm-or-cool-in-extreme-weather-scripts-for-broadcast-media"
+    },
+    {
+      "id": "checklists-uk:neighbours",
+      "text": "Check on your neighbours, offer supplies if you can, and share anything you know about when power may return.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "immediate",
+      "order": 90,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
+    },
+    {
+      "id": "checklists-uk:emergency-call",
+      "text": "With no working landline in a life-threatening emergency, call 999 or 112 from a mobile.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "immediate",
+      "order": 100,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
+    },
+    {
+      "id": "checklists-uk:radio-news",
+      "text": "Use a battery or wind-up radio for news. Try both FM and digital. Stay inside in severe weather, even if using a car radio.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "first-days",
+      "order": 10,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
+    }
+  ]
+}
