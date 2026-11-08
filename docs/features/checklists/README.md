@@ -1,11 +1,11 @@
 # Scenario checklists
 
-**Status:** Format, selection engine and the five UK scenarios (power cut, storm, flood, heatwave, evacuation), starting a run that freezes a snapshot of the catalogue, the commands that tick, note, rescope and finish it, and the read view of a run; you can browse the scenarios and preview their steps from More, but not yet start or tick one
+**Status:** Format, selection engine and the five UK scenarios (power cut, storm, flood, heatwave, evacuation), the run commands and read view, and screens to browse and preview scenarios, start or resume a run and tick its steps; notes, finishing, history and print are not built yet
 **Tracking:** [#40](https://github.com/pskillen/shtf-planner/issues/40)
 
 Step-by-step checklists for things that happen (a power cut, a flood warning), grouped by when a
 step matters. The content-pack format, its validation, the selection engine and five bundled scenarios (power
-cut, storm, flood, heatwave and evacuation, UK) exist, with a read-only browse and preview in the app.
+cut, storm, flood, heatwave and evacuation, UK) exist, with browse, preview, start and tick screens in the app.
 
 ## Using it
 
@@ -16,18 +16,34 @@ under another region. Tapping a scenario opens `/app/more/checklists/preview/:sc
 steps that apply to this household, under the headings "When it is coming", "Immediately", "First
 days", "First week" and "Longer term" (empty ones omitted). Each step names its source as a link
 (title and date checked) that opens in a new tab, or says it is our assumption. An unknown or
-other-region scenario id shows a plain "not available" note. The preview has no start, tick or
-print controls and saves nothing. Links are ordinary navigation; nothing is fetched while you read.
+other-region scenario id shows a plain "not available" note. Links are ordinary navigation;
+nothing is fetched while you read. The date checked is written as a calendar date (for example
+"4 March 2026").
+
+**Starting.** The preview has a "Start this checklist" button. Tapping it (once, however many
+times it is hit) freezes the household's steps into a new run and opens it. If you already have an
+open run that includes the scenario, the preview instead leads with a "Resume" link per open run
+(progress and start time) and a deliberate, secondary "Start a new incident" button. The hub shows
+"Your lists" above the scenarios when any run is open, newest first, each with its scenarios,
+progress and start time.
+
+**An open run** (`/app/more/checklists/:runId`) shows the scenario names, when it started, "n of m
+done" with a bar, and the steps under the phase headings. Each step is a labelled checkbox; ticking
+records the time and shows "Done 14:05" (with the date when it was not today). Unticking clears it.
+Ticks are saved at once, so reloading keeps them. A run with no valid scenario selected (two
+devices merged badly) says so and shows no steps. An unknown run id says the list was not found. When
+the household document is read-only, or the run is finished, the boxes are disabled. Ticks never
+touch the plans or the preparedness score.
 
 ## Map
 
-| Piece   | Where                                                                                      | What                                                                                                              |
-| ------- | ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| Schemas | `src/model/packs.ts`                                                                       | `ChecklistsPack`, `ChecklistScenario`, `ChecklistStep`, `ChecklistPhase`, `CHECKLIST_PHASES`.                     |
-| Loader  | `src/packs/loader.ts`                                                                      | Validation, and the `checklistScenarios` and `checklistSteps` indexes on `Packs`.                                 |
-| Engine  | `src/engine/checklists.ts`                                                                 | `checklistPacks`, `checklistScenarios`, `isStepApplicable`, `checklist`.                                          |
-| Screens | `src/app/screens/ChecklistsScreen.tsx`, `ChecklistPreviewScreen.tsx`, `checklists/view.ts` | The hub, the preview, and the phase headings and source labels (`view.ts`).                                       |
-| Runs    | `src/engine/checklistRuns.ts`                                                              | `checklistStateKey`, `buildCatalogueSnapshot`, `startRun`, run commands, `checklistRunView`, `checklistRunLists`. |
+| Piece   | Where                                                                                                                | What                                                                                                              |
+| ------- | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Schemas | `src/model/packs.ts`                                                                                                 | `ChecklistsPack`, `ChecklistScenario`, `ChecklistStep`, `ChecklistPhase`, `CHECKLIST_PHASES`.                     |
+| Loader  | `src/packs/loader.ts`                                                                                                | Validation, and the `checklistScenarios` and `checklistSteps` indexes on `Packs`.                                 |
+| Engine  | `src/engine/checklists.ts`                                                                                           | `checklistPacks`, `checklistScenarios`, `isStepApplicable`, `checklist`.                                          |
+| Screens | `src/app/screens/ChecklistsScreen.tsx`, `ChecklistPreviewScreen.tsx`, `ChecklistRunScreen.tsx`, `checklists/view.ts` | The hub, the preview with start and resume, the open run, and headings, labels and date formats (`view.ts`).      |
+| Runs    | `src/engine/checklistRuns.ts`                                                                                        | `checklistStateKey`, `buildCatalogueSnapshot`, `startRun`, run commands, `checklistRunView`, `checklistRunLists`. |
 
 ## The `checklists` pack
 
@@ -72,7 +88,7 @@ unlisted source, and a `requires.asset` that is not a real asset type.
 
 ## Starting a run (snapshot)
 
-`src/engine/checklistRuns.ts`, pure, no screen yet.
+`src/engine/checklistRuns.ts`, pure.
 
 - **Frozen advice.** `startRun(draft, packs, { runId, started, asOf, scenarioIds })` writes, in the
   caller's single `change`, the run and one empty step state (`checklistStepStates`, keyed
@@ -205,4 +221,4 @@ checklist pack, and Settings lists the UK pack as "Included for your region" wit
 
 ## Not built yet
 
-Starting a run, ticking steps, and printing. See [#40](https://github.com/pskillen/shtf-planner/issues/40).
+Notes on steps, finishing a run, past runs, choosing more scenarios mid-run, and printing. See [#40](https://github.com/pskillen/shtf-planner/issues/40).
