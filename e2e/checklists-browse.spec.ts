@@ -19,12 +19,12 @@ test('browse scenarios from More and preview the longest step without sideways s
   await page.getByRole('link', { name: /^Evacuation/ }).click();
   await expect(page.getByRole('heading', { name: 'Evacuation', level: 1 })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Immediately' })).toBeVisible();
-  await expect(page.getByText(/0800 111 999/)).toBeVisible();
+  await expect(page.getByText(/0800 111 999/).first()).toBeVisible();
   expect(await hubWidth()).toBe(true);
 
   // Every link is a 44 px target.
   const small = await page.evaluate(() =>
-    [...document.querySelectorAll('main a')]
+    Array.from(document.querySelectorAll('main a'))
       .filter((a) => (a as HTMLElement).getBoundingClientRect().height < 44)
       .map((a) => a.textContent),
   );
