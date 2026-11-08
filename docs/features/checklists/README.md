@@ -43,8 +43,11 @@ another device never replaces text you are typing; it replaces the box only whil
 nothing unsaved. A note is stored as typed; a note of only spaces counts as empty and removes it.
 The note is also saved when the app is hidden or the page is left. A write begun while the page
 unloads is not reliably kept, so each keystroke also leaves the text in this browser's storage
-(never the household document) and the next visit saves it. If the list was finished elsewhere
-meanwhile, the typed text stays on screen with a short note that it was not saved.
+(never the household document) and the next visit saves it, but only if the saved note is still
+the one it was typed over: a note changed on another device meanwhile is never overwritten or
+deleted by an old draft, which is dropped. "Forget this device's data" removes any drafts. If the
+list was finished elsewhere meanwhile, the typed text stays on screen (on the next visit too)
+with a short note that it was not saved.
 
 **Finishing.** "Finish this list" at the foot of an open run asks first ("Yes, finish" or "Keep
 going"). Finishing saves every note still being typed and stamps the finish time in one

@@ -141,11 +141,7 @@ describe('notes on steps', () => {
     expect(savedNotes(h)[0]!.note).toBe('hidden in time');
   });
 
-  it('takes back a draft left by a page that went away before the write landed', () => {
-    const h = renderFlood();
-    const stepId = checklistRunView(h.doc(), h.runId)!.groups[0]!.steps[0]!.id;
-    cleanup();
-    localStorage.setItem(`shtf:checklist-note-draft:${h.runId}|${stepId}`, 'left behind');
+  const remount = (h: Harness) =>
     render(
       <StoreContext.Provider value={h.store}>
         <MemoryRouter initialEntries={[`/app/more/checklists/${h.runId}`]}>
@@ -155,8 +151,117 @@ describe('notes on steps', () => {
         </MemoryRouter>
       </StoreContext.Provider>,
     );
+  const firstStep = (h: Harness) => checklistRunView(h.doc(), h.runId)!.groups[0]!.steps[0]!.id;
+  const draftKeyOf = (h: Harness) => `shtf:checklist-note-draft:${h.runId}|${firstStep(h)}`;
+  const hide = () => {
+    const spy = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+    act(() => void document.dispatchEvent(new Event('visibilitychange')));
+    spy.mockRestore();
+  };
+  // The page is killed: no unmount runs, so whatever was in localStorage stays there.
+  const kill = () => {
+    const left = Object.entries(localStorage);
+    cleanup();
+    localStorage.clear();
+    for (const [k, v] of left) localStorage.setItem(k, v);
+  };
+  const remoteNote = (h: Harness, note: string) =>
+    act(() => void h.store.change('sync', (d) => void setStepNote(d, h.runId, firstStep(h), note)));
+
+  it('takes back a draft left by a page that went away before the write landed', () => {
+    const h = renderFlood();
+    cleanup();
+    localStorage.setItem(draftKeyOf(h), JSON.stringify({ base: '', text: 'left behind' }));
+    remount(h);
     expect(boxes()[0]!.value).toBe('left behind');
     expect(savedNotes(h)[0]!.note).toBe('left behind');
+    expect(localStorage.length).toBe(0);
+  });
+
+  it('keeps the draft when hidden, and a note changed elsewhere after that is not overwritten', () => {
+    const h = renderFlood();
+    type(boxes()[0]!, 'MY OLD NOTE');
+    hide();
+    expect(localStorage.length).toBe(1);
+    remoteNote(h, 'NEWER NOTE FROM OTHER DEVICE');
+    kill();
+    remount(h);
+    expect(boxes()[0]!.value).toBe('NEWER NOTE FROM OTHER DEVICE');
+    expect(savedNotes(h)[0]!.note).toBe('NEWER NOTE FROM OTHER DEVICE');
+    expect(localStorage.length).toBe(0);
+  });
+
+  it('an emptied-note draft does not delete a note added elsewhere', () => {
+    const h = renderFlood();
+    type(boxes()[0]!, 'abc');
+    settle();
+    type(boxes()[0]!, '');
+    hide();
+    expect(savedNotes(h)).toHaveLength(0);
+    remoteNote(h, 'REMOTE ADDED THIS');
+    kill();
+    remount(h);
+    expect(boxes()[0]!.value).toBe('REMOTE ADDED THIS');
+    expect(savedNotes(h)[0]!.note).toBe('REMOTE ADDED THIS');
+    expect(localStorage.length).toBe(0);
+  });
+
+  it('drops a draft whose base is no longer the saved note, without writing', () => {
+    const h = renderFlood();
+    remoteNote(h, 'NEWER');
+    cleanup();
+    localStorage.setItem(draftKeyOf(h), JSON.stringify({ base: 'OLD', text: 'stale text' }));
+    remount(h);
+    expect(boxes()[0]!.value).toBe('NEWER');
+    expect(savedNotes(h)[0]!.note).toBe('NEWER');
+    cleanup();
+    localStorage.setItem(draftKeyOf(h), JSON.stringify({ base: 'OLD', text: '' }));
+    remount(h);
+    expect(savedNotes(h)[0]!.note).toBe('NEWER');
+    expect(localStorage.length).toBe(0);
+  });
+
+  it('drops a draft without a readable base', () => {
+    const h = renderFlood();
+    cleanup();
+    localStorage.setItem(draftKeyOf(h), 'plain text');
+    remount(h);
+    expect(savedNotes(h)).toHaveLength(0);
+    expect(localStorage.length).toBe(0);
+  });
+
+  it('shows the not-saved message for a draft whose run was finished elsewhere', () => {
+    const h = renderFlood();
+    remoteNote(h, 'saved text');
+    cleanup();
+    act(
+      () =>
+        void h.store.change(
+          'sync',
+          (d) => void (d.checklistRuns[h.runId]!.finished = '2026-01-01T10:20:00.000Z'),
+        ),
+    );
+    localStorage.setItem(
+      draftKeyOf(h),
+      JSON.stringify({ base: 'saved text', text: 'saved text, too late' }),
+    );
+    remount(h);
+    expect(screen.getByRole('status').textContent).toContain('was not saved');
+    expect(localStorage.length).toBe(0);
+  });
+
+  it('clears the draft when a save is refused because the run was finished', () => {
+    const h = renderFlood();
+    type(boxes()[0]!, 'typing');
+    act(
+      () =>
+        void h.store.change(
+          'sync',
+          (d) => void (d.checklistRuns[h.runId]!.finished = '2026-01-01T10:20:00.000Z'),
+        ),
+    );
+    settle();
+    expect(screen.getByRole('status').textContent).toContain('was not saved');
     expect(localStorage.length).toBe(0);
   });
 

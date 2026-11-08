@@ -15,21 +15,31 @@ const normalise = (text: string): string => (text.trim() === '' ? '' : text);
  * A write to IndexedDB started while the page is unloading is not reliably kept (a reload right
  * after typing lost it), so every keystroke also leaves the typed text here, synchronously. It is
  * a few characters in this browser's own storage, never the document, and is removed once the
- * note is saved. On the next visit an unsaved draft is saved first.
+ * note is saved. It carries the saved note it was typed over (`base`): on the next visit it is
+ * saved only if that note is still the saved one, so it can never overwrite or delete a note that
+ * changed on another device meanwhile.
  */
 const draftKey = (runId: string, stepId: string): string =>
   `shtf:checklist-note-draft:${runId}|${stepId}`;
+type Draft = { base: string; text: string };
 const draft = {
-  read(key: string): string | undefined {
+  read(key: string): Draft | undefined {
     try {
-      return localStorage.getItem(key) ?? undefined;
+      const raw = localStorage.getItem(key);
+      if (raw === null) return undefined;
+      const parsed = JSON.parse(raw) as Partial<Draft> | null;
+      if (typeof parsed?.base === 'string' && typeof parsed.text === 'string') {
+        return { base: parsed.base, text: parsed.text };
+      }
+      localStorage.removeItem(key);
     } catch {
-      return undefined;
+      // unreadable or storage blocked: no draft
     }
+    return undefined;
   },
-  write(key: string, text: string): void {
+  write(key: string, value: Draft): void {
     try {
-      localStorage.setItem(key, text);
+      localStorage.setItem(key, JSON.stringify(value));
     } catch {
       // storage blocked: the timer, blur and page-hide saves still apply
     }
@@ -68,27 +78,44 @@ export function StepNote({
   onUnsaved: (stepId: string, on: boolean) => void;
 }) {
   const change = useChange();
-  const [text, setText] = useState(saved);
-  const textRef = useRef(saved);
+  const key = draftKey(runId, stepId);
+  // Text typed just before the page went away, if the note it was typed over is still the saved
+  // one. Read once, so the first paint already shows it.
+  const [left] = useState(() => {
+    const found = draft.read(key);
+    return found && found.base === saved && normalise(found.text) !== saved ? found : undefined;
+  });
+  const [text, setText] = useState(left?.text ?? saved);
+  const textRef = useRef(left?.text ?? saved);
   const savedRef = useRef(saved);
-  const [notSaved, setNotSaved] = useState(false);
+  // A draft for a run finished meanwhile is shown, with the message, and not saved.
+  const [notSaved, setNotSaved] = useState(left !== undefined && disabled);
+  // The saved note the current draft was typed over; undefined while there is no draft.
+  const draftBase = useRef<string | undefined>(undefined);
+  const restored = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  const dropDraft = useCallback(() => {
+    draftBase.current = undefined;
+    draft.clear(key);
+  }, [key]);
 
   useEffect(() => {
     if (textRef.current === savedRef.current && saved !== textRef.current) {
       textRef.current = saved;
       setText(saved);
+      // The note changed elsewhere: a draft typed over the old one must not come back.
+      dropDraft();
     }
     savedRef.current = saved;
-  }, [saved]);
+  }, [saved, dropDraft]);
 
-  const key = draftKey(runId, stepId);
   const save = useCallback(
     (keepDraft: boolean) => {
       clearTimeout(timer.current);
       const next = normalise(textRef.current);
       if (next === savedRef.current) {
-        if (!keepDraft) draft.clear(key);
+        if (!keepDraft) dropDraft();
         onUnsaved(stepId, false);
         return;
       }
@@ -101,45 +128,45 @@ export function StepNote({
           refused = !wrote && d.checklistRuns[runId]?.finished !== undefined;
         });
         if (refused) {
+          // The draft could never be restored into a finished run.
+          dropDraft();
           setNotSaved(true);
           return;
         }
         savedRef.current = next;
         // A save made as the page goes away may not reach IndexedDB: the draft stays for next time.
-        if (!keepDraft) draft.clear(key);
+        if (!keepDraft) dropDraft();
         setNotSaved(false);
         onUnsaved(stepId, false);
       } catch {
         // read-only meanwhile: nothing to save
       }
     },
-    [change, key, onUnsaved, runId, stepId],
+    [change, dropDraft, onUnsaved, runId, stepId],
   );
   const commit = useCallback(() => save(false), [save]);
   const commitLeaving = useCallback(() => save(true), [save]);
   useEffect(() => commit, [commit]);
 
-  // Text typed just before the page went away: take it back and save it.
+  // Save the draft taken back above (unusable ones are just removed). Called through a ref: this
+  // runs once on arrival, and a later change of `commit` is not a new visit.
+  const commitRef = useRef(commit);
   useEffect(() => {
-    const left = draft.read(key);
-    if (left === undefined) return;
-    if (disabled || normalise(left) === savedRef.current) {
-      draft.clear(key);
-      return;
-    }
-    textRef.current = left;
-    setText(left);
-    commit();
-    // Only on arrival: later changes to `commit` or `disabled` are not a new visit.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    commitRef.current = commit;
+  }, [commit]);
+  useEffect(() => {
+    if (restored.current) return;
+    restored.current = true;
+    if (left !== undefined && !disabled) commitRef.current();
+    dropDraft();
+  }, [disabled, dropDraft, left]);
 
   // Leaving the page or hiding the app writes the note now. Capture phase, so the change is made
   // before DocumentProvider's own listeners push pending writes to IndexedDB.
   useEffect(() => {
     const onHidden = () => {
       if (document.visibilityState === 'hidden') commitLeaving();
-      else if (savedRef.current === normalise(textRef.current)) draft.clear(key);
+      else if (savedRef.current === normalise(textRef.current)) dropDraft();
     };
     document.addEventListener('visibilitychange', onHidden, true);
     window.addEventListener('pagehide', commitLeaving, true);
@@ -147,7 +174,7 @@ export function StepNote({
       document.removeEventListener('visibilitychange', onHidden, true);
       window.removeEventListener('pagehide', commitLeaving, true);
     };
-  }, [commitLeaving, key]);
+  }, [commitLeaving, dropDraft]);
 
   useEffect(() => {
     const map = registry.current;
@@ -171,7 +198,8 @@ export function StepNote({
           textRef.current = e.target.value;
           setNotSaved(false);
           onUnsaved(stepId, true);
-          draft.write(key, e.target.value);
+          draftBase.current ??= savedRef.current;
+          draft.write(key, { base: draftBase.current, text: e.target.value });
           setText(e.target.value);
           clearTimeout(timer.current);
           timer.current = setTimeout(commit, NOTE_DEBOUNCE_MS);
