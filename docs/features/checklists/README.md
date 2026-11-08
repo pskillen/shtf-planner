@@ -41,6 +41,10 @@ the screen and saved a moment after you stop, when you leave the box, and when y
 screen, so one keystroke is never one write of the household document. A change arriving from
 another device never replaces text you are typing; it replaces the box only while you have
 nothing unsaved. A note is stored as typed; a note of only spaces counts as empty and removes it.
+The note is also saved when the app is hidden or the page is left. A write begun while the page
+unloads is not reliably kept, so each keystroke also leaves the text in this browser's storage
+(never the household document) and the next visit saves it. If the list was finished elsewhere
+meanwhile, the typed text stays on screen with a short note that it was not saved.
 
 **Finishing.** "Finish this list" at the foot of an open run asks first ("Yes, finish" or "Keep
 going"). Finishing saves every note still being typed and stamps the finish time in one
@@ -50,9 +54,8 @@ changes to the household or the packs do not alter it. The hub lists finished ru
 "Finished lists", newest first, each with its start and finish time; tapping one opens it
 read-only, notes and tick times included.
 
-**Not built.** Printing a run, reopening a finished run, and household-written steps (the
-personal section of the original plan, [#132](https://github.com/pskillen/shtf-planner/issues/132)) are not built; the scenario
-checklists are therefore not the whole of the plan in [D31].
+**Not built.** Printing a run, reopening a finished run and household-written steps are not
+built, so the scenario checklists are not yet the whole of the plan in [D31].
 
 ## Map
 
@@ -240,4 +243,5 @@ checklist pack, and Settings lists the UK pack as "Included for your region" wit
 
 ## Not built yet
 
-Notes on steps, finishing a run, past runs, choosing more scenarios mid-run, and printing. See [#40](https://github.com/pskillen/shtf-planner/issues/40).
+Choosing more scenarios mid-run, printing, reopening a finished run and household-written steps.
+See [#40](https://github.com/pskillen/shtf-planner/issues/40).
