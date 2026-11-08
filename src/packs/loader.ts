@@ -2,6 +2,8 @@ import {
   MEASURE_UNITS,
   PackSchema,
   type AssetType,
+  type ChecklistScenario,
+  type ChecklistStep,
   type Item,
   type Meta,
   type Pack,
@@ -65,6 +67,8 @@ export function loadPacks(raws: ReadonlyArray<{ label: string; raw: unknown }>):
   const assets: Record<string, AssetType> = {};
   const rules: Record<string, Rule> = {};
   const plans: Record<string, PlanDef> = {};
+  const checklistScenarios: Record<string, ChecklistScenario> = {};
+  const checklistSteps: Record<string, ChecklistStep> = {};
   const regions: Partial<Record<Region, RegionDef>> = {};
 
   const claim = <T>(
@@ -252,6 +256,25 @@ export function loadPacks(raws: ReadonlyArray<{ label: string; raw: unknown }>):
       case 'plans':
         pack.items.forEach((item, i) => claim(pack, plans, item.id, item, issues, `items[${i}]`));
         break;
+      case 'checklists': {
+        pack.scenarios.forEach((sc, i) =>
+          claim(pack, checklistScenarios, sc.id, sc, issues, `scenarios[${i}]`),
+        );
+        const own = new Set(pack.scenarios.map((sc) => sc.id));
+        pack.steps.forEach((step, i) => {
+          const where = `steps[${i}]`;
+          claim(pack, checklistSteps, step.id, step, issues, where);
+          step.scenarios.forEach((sid, j) => {
+            if (!own.has(sid))
+              issues.push(`${where}.scenarios[${j}]: scenario "${sid}" is not in this pack`);
+          });
+          if (step.source !== 'assumption' && !sourceDates.has(step.source))
+            issues.push(
+              `${where}.source: ${step.source} is not listed in the pack's sources (with the date checked)`,
+            );
+        });
+        break;
+      }
       case 'regions':
         pack.regions.forEach((region, i) => {
           if (regions[region.id]) issues.push(`regions[${i}]: duplicate region ${region.id}`);
@@ -295,6 +318,14 @@ export function loadPacks(raws: ReadonlyArray<{ label: string; raw: unknown }>):
         }),
       );
     }
+    if (pack.kind === 'checklists') {
+      pack.steps.forEach((step, i) =>
+        step.requires?.asset?.forEach((a) => {
+          if (!assets[a])
+            issues.push(`steps[${i}].requires.asset: asset type "${a}" does not exist`);
+        }),
+      );
+    }
     if (pack.kind === 'regions') {
       pack.regions.forEach((region, i) =>
         region.suggestedPacks.forEach((p) => {
@@ -312,6 +343,8 @@ export function loadPacks(raws: ReadonlyArray<{ label: string; raw: unknown }>):
     assets,
     rules,
     plans,
+    checklistScenarios,
+    checklistSteps,
     regions,
     enabledPacks(settings) {
       const out: Pack[] = [];
