@@ -83,6 +83,8 @@
       "seen": "2026-10-01"
     }
   },
+  "checklistRuns": {},
+  "checklistStepStates": {},
   "home": {
     "area": "ML12",
     "cooking": "induction",
@@ -232,7 +234,7 @@
       "plans-base": 1,
       "regions": 3
     },
-    "schemaVersion": 4
+    "schemaVersion": 5
   },
   "minimums": {
     "loc-pantry|items-base:baked-beans": 6,

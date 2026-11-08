@@ -255,6 +255,8 @@ export function biggarDocument(): Document {
       'plans-base:documents': { note: 'Passports scanned, not printed yet' },
     },
     reviews: {},
+    checklistRuns: {},
+    checklistStepStates: {},
     settings: {
       horizonDays: 3,
       region: 'UK',

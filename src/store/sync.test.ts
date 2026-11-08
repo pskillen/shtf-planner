@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { Document, Env } from '../model';
+import { SCHEMA_VERSION, type Document, type Env } from '../model';
 import { openStore, type DocumentStore } from './documentStore';
 import { DriveAuthError, DrivePopupBlockedError, JSON_FILE_NAME, YJS_FILE_NAME } from './drive';
 import { createFakeCloud, type FakeCloud, type FakePort } from './fakeDrive';
@@ -337,13 +337,13 @@ describe('products (schema 4)', () => {
     expect(b.store.get().products['prod-x']?.name).toBe('Tesco beans');
   });
 
-  it('a sidecar from schema 5 is refused without merging', async () => {
+  it('a sidecar from schema 6 is refused without merging', async () => {
     const cloud = createFakeCloud();
     const a = await device(cloud);
     setProduct(a, 'one');
     await a.sync.connect();
     const sidecar = JSON.parse(cloud.text(JSON_FILE_NAME)!);
-    sidecar.meta.schemaVersion = 5;
+    sidecar.meta.schemaVersion = 6;
     cloud.put(JSON_FILE_NAME, JSON.stringify(sidecar));
     cloud.put(YJS_FILE_NAME, a.store.bytes());
     const b = await device(cloud);
@@ -1093,7 +1093,7 @@ describe('a household on Drive from before schema 4', () => {
     expect(b.store.get().stock).toEqual({});
   });
 
-  it('Replace pushes this household over it, and a second device then loads schema 4', async () => {
+  it('Replace pushes this household over it, and a second device then loads the current schema', async () => {
     const cloud = await oldDrive();
     const b = await device(cloud);
     setItem(b, 'mine', 2);
@@ -1105,7 +1105,7 @@ describe('a household on Drive from before schema 4', () => {
     expect(b.sync.state().oldRemote).toBe(false);
     expect(kind(b)).toBe('synced');
     const onDrive = JSON.parse(cloud.text(JSON_FILE_NAME)!);
-    expect(onDrive.meta.schemaVersion).toBe(4);
+    expect(onDrive.meta.schemaVersion).toBe(SCHEMA_VERSION);
     expect(Object.keys(onDrive.stock)).toEqual(['mine']);
 
     const c = await device(cloud);

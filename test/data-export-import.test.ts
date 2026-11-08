@@ -27,7 +27,7 @@ describe('export', () => {
   it('writes the same document as YAML', () => {
     const file = yamlExport(json());
     expect(file.mime).toBe('application/yaml');
-    expect(file.text).toContain('schemaVersion: 4');
+    expect(file.text).toContain('schemaVersion: 5');
     expect(file.text).toContain('Alex');
   });
 });

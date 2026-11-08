@@ -54,10 +54,28 @@ export interface MigrationStep {
 }
 
 /**
- * Ordered `v(n)` to `v(n+1)` steps. Empty: schema 4 started afresh (the stock model), so nothing
- * older is migrated; the step machinery stays for schema 5 and later.
+ * Schema 4 to 5: scenario checklist runs. Adds only the two empty containers, and leaves a map
+ * that already exists (with its runs) alone, so replaying it after a merge changes nothing.
+ * The name, `from` and `to` seed the fixed client id of each container: never change them.
  */
-export const MIGRATIONS: readonly MigrationStep[] = [];
+export const addChecklistRuns: MigrationStep = {
+  from: 4,
+  to: 5,
+  name: 'add-checklist-runs',
+  up(raw) {
+    return {
+      ...raw,
+      checklistRuns: raw.checklistRuns ?? {},
+      checklistStepStates: raw.checklistStepStates ?? {},
+    };
+  },
+};
+
+/**
+ * Ordered `v(n)` to `v(n+1)` steps. Schema 4 started afresh (the stock model), so nothing older
+ * than 4 is migrated.
+ */
+export const MIGRATIONS: readonly MigrationStep[] = [addChecklistRuns];
 
 function versionOf(raw: unknown): number {
   const meta = (raw as { meta?: { schemaVersion?: unknown } } | null)?.meta;

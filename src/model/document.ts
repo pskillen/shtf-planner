@@ -8,6 +8,7 @@ import {
   RiskTagSchema,
   SizeSchema,
 } from './primitives';
+import { ChecklistPhaseSchema } from './packs';
 
 /**
  * The household document: the one thing a user owns. It lives in a CRDT in the browser and merges
@@ -17,7 +18,7 @@ import {
  * Ids are strings: `crypto.randomUUID()` for instances, `"<packId>:<localId>"` for pack things.
  * Dates are ISO `YYYY-MM-DD`, month-only dates `YYYY-MM`, timestamps ISO strings.
  */
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 
 /** The deploy targets (the footer shows one; `src/util/build-env.ts` re-exports this type). */
 export const ENVS = ['local', 'preview', 'dev', 'next', 'staging', 'prod'] as const;
@@ -205,6 +206,57 @@ export const ReviewSchema = z.object({
 });
 export type Review = z.infer<typeof ReviewSchema>;
 
+/**
+ * One step of a checklist run's catalogue, copied from the packs when the run starts. A run never
+ * recomputes it: the household ticks the steps it saw, whatever the packs say later.
+ */
+export const ChecklistSnapshotStepSchema = z.object({
+  id: Id,
+  packId: Id,
+  text: z.string(),
+  phase: ChecklistPhaseSchema,
+  order: z.number(),
+  scenarios: z.array(z.string()),
+  /** A source URL, or `"assumption"`. */
+  source: z.string(),
+  sourceTitle: z.string().optional(),
+  sourceChecked: z.string().optional(),
+});
+export type ChecklistSnapshotStep = z.infer<typeof ChecklistSnapshotStepSchema>;
+
+/** Everything a run needs from the packs, frozen at the moment the run starts. */
+export const ChecklistCatalogueSnapshotSchema = z.object({
+  packs: z.array(z.object({ id: Id, version: z.number().int() })),
+  /** Every scenario available in the region at start. */
+  scenarios: z.array(z.object({ id: Id, name: z.string() })),
+  /** Every household-applicable step of those scenarios, in canonical order. */
+  steps: z.array(ChecklistSnapshotStepSchema),
+});
+export type ChecklistCatalogueSnapshot = z.infer<typeof ChecklistCatalogueSnapshotSchema>;
+
+/**
+ * A scenario checklist run. `scenarios` is a merged array of strings: two devices adding the same
+ * scenario leave a duplicate, and two removing different ones can leave it empty. Both are valid;
+ * readers de-duplicate. Added in schema 5.
+ */
+export const ChecklistRunSchema = z.object({
+  id: Id,
+  scenarios: z.array(z.string()),
+  started: Timestamp,
+  finished: Timestamp.optional(),
+  catalogue: ChecklistCatalogueSnapshotSchema,
+});
+export type ChecklistRun = z.infer<typeof ChecklistRunSchema>;
+
+/** The tick and note on one snapshotted step of a run. Keyed `${runId}|${stepId}`. Added in schema 5. */
+export const ChecklistStepStateSchema = z.object({
+  runId: Id,
+  stepId: Id,
+  doneAt: Timestamp.optional(),
+  note: z.string().optional(),
+});
+export type ChecklistStepState = z.infer<typeof ChecklistStepStateSchema>;
+
 /** A barcode the household has met: which product it is. Keyed by `normaliseGtin(code)`. */
 export const BarcodeSchema = z.object({
   productId: Id,
@@ -272,6 +324,10 @@ export const DocumentSchema = z.object({
   /** Keyed by pack-namespaced plan item id. */
   plans: z.record(z.string(), PlanItemSchema),
   reviews: z.record(Id, ReviewSchema),
+  /** Scenario checklist runs, keyed by run id. Added in schema 5. */
+  checklistRuns: z.record(Id, ChecklistRunSchema),
+  /** Step ticks and notes, keyed `${runId}|${stepId}`. Added in schema 5. */
+  checklistStepStates: z.record(z.string(), ChecklistStepStateSchema),
   settings: SettingsSchema,
 });
 export type Document = z.infer<typeof DocumentSchema>;
@@ -304,6 +360,8 @@ export function emptyDocument(env: Env, now: string = new Date().toISOString()):
     minimums: {},
     plans: {},
     reviews: {},
+    checklistRuns: {},
+    checklistStepStates: {},
     settings: {
       horizonDays: 3,
       region: 'UK',

@@ -63,7 +63,11 @@ describe('first-run content is frozen', () => {
 
 describe('the frozen content follows the schema it was written for', () => {
   it('equals emptyDocument() apart from the per-device meta', () => {
+    // Containers added by a migration step (schema 5 onward) are not in the frozen literal.
     const { meta: fresh, ...rest } = emptyDocument('local', '2026-01-01T00:00:00.000Z');
+    const migrated: Record<string, unknown> = rest;
+    delete migrated.checklistRuns;
+    delete migrated.checklistStepStates;
     const { meta: frozen, ...frozenRest } = initContent() as Record<string, unknown> & {
       meta: Record<string, unknown>;
     };
