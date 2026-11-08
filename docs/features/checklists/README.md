@@ -1,11 +1,11 @@
 # Scenario checklists
 
-**Status:** Format, selection engine and the UK power-cut, storm and flood scenarios; no screen yet
+**Status:** Format, selection engine and the UK power-cut, storm, flood and heatwave scenarios; no screen yet
 **Tracking:** [#40](https://github.com/pskillen/shtf-planner/issues/40)
 
 Step-by-step checklists for things that happen (a power cut, a flood warning), grouped by when a
-step matters. The content-pack format, its validation, the selection engine and three bundled scenarios (power
-cut, storm and flood, UK) exist; there is no route yet.
+step matters. The content-pack format, its validation, the selection engine and four bundled scenarios (power
+cut, storm, flood and heatwave, UK) exist; there is no route yet.
 
 ## Map
 
@@ -59,7 +59,7 @@ unlisted source, and a `requires.asset` that is not a real asset type.
 ## Bundled content
 
 `src/packs/data/checklists-uk.json` (`checklists-uk`, region `UK`) holds the **Power cut**
-(`risks: ["grid"]`), **Storm** (`risks: ["storm"]`) and **Flood** (`risks: ["flood", "coastal"]`) scenarios. It is offered by region and is not in `DEFAULT_PACKS`: a US household gets no
+(`risks: ["grid"]`), **Storm** (`risks: ["storm"]`) and **Flood** (`risks: ["flood", "coastal"]`) and **Heatwave** (`risks: ["heat"]`) scenarios. It is offered by region and is not in `DEFAULT_PACKS`: a US household gets no
 checklist pack, and Settings lists the UK pack as "Included for your region" with no switch.
 
 - Steps are short and imperative. Power cut uses `coming` and `immediate`; storm adds
@@ -76,6 +76,16 @@ checklist pack, and Settings lists the UK pack as "Included for your region" wit
   generic step is sourced to one nation's page where the other pages fetched agree; a step that
   names a nation cites that nation's page. Gas and water restart rests on the Natural Resources
   Wales and UKHSA (England) pages, and the sea-defence warning on Natural Resources Wales.
+- Heatwave uses `coming` and `immediate`. Its steps cite Ready Scotland (hot weather), NHS inform
+  (hot weather; heatstroke and heat illness), Public Health Wales (keeping cool), UKHSA (England)
+  and two RSPCA pages. Each step cites a page that says it, and every number (35°C for fans,
+  25°C for medicine storage, 11am to 3pm, 30 minutes, 6 months, five seconds on the ground) is in
+  its source. The UKHSA guidance and heat-health alerts cover England only, so no step depends on an
+  alert: the forecast step says to check the forecast and Met Office warnings, and the steps apply
+  whenever it is hot. Heatstroke and heat exhaustion steps are ungated, as are the steps for
+  babies, older people and checking on others, because a visitor or neighbour can need them. Only
+  the three pet steps need a pet (`requires.pets`). No heatwave step is shared with another
+  scenario.
 - One step is shared: `storm-floodwater` ("Never drive through floodwater. Turn around and find
   another route.") serves storm and flood, and is listed once when both are chosen. Elsewhere the
   storm wording differs from the power-cut and flood wording even where the topic overlaps

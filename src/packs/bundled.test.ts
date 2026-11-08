@@ -238,6 +238,30 @@ describe('the bundled packs', () => {
       );
     });
 
+    it('builds a heatwave list with ungated heat illness steps and pet steps that need a pet', () => {
+      const doc = emptyDocument('local');
+      const heat = checklist(doc, packs, ['checklists-uk:heatwave'], '2026-11-08');
+      expect(heat.groups.map((g) => g.phase)).toEqual(['coming', 'immediate']);
+      const ids = heat.groups.flatMap((g) => g.steps.map((s) => s.id));
+      // safety steps reach everyone: no risk, member or asset is recorded
+      for (const id of ['heatstroke', 'exhaustion', 'closed-spaces', 'babies', 'check-others']) {
+        expect(ids, id).toContain(`checklists-uk:heatwave-${id}`);
+      }
+      const petIds = ['pets-shade', 'dog-walks', 'dog-signs'].map(
+        (id) => `checklists-uk:heatwave-${id}`,
+      );
+      for (const id of petIds) expect(ids).not.toContain(id);
+      doc.household.pets = [{ id: 'p', name: 'Bran', species: 'dog', size: 'M' }];
+      const withPet = checklist(doc, packs, ['checklists-uk:heatwave'], '2026-11-08');
+      const petted = withPet.groups.flatMap((g) => g.steps.map((s) => s.id));
+      for (const id of petIds) expect(petted).toContain(id);
+      if (pack.kind !== 'checklists') throw new Error('not a checklists pack');
+      const heatSteps = pack.steps.filter((s) => s.scenarios.includes('checklists-uk:heatwave'));
+      // no heatwave step depends on a risk, member tag or heat-health alert
+      expect(heatSteps.some((s) => s.requires?.risk || s.requires?.memberTag)).toBe(false);
+      expect(heatSteps.every((s) => s.scenarios.length === 1)).toBe(true);
+    });
+
     it('labels every nation-specific flood step with its nation, and filters by none', () => {
       if (pack.kind !== 'checklists') throw new Error('not a checklists pack');
       const byId = Object.fromEntries(pack.steps.map((s) => [s.id, s]));

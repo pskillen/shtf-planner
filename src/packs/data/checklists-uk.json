@@ -2,7 +2,7 @@
   "format": 1,
   "id": "checklists-uk",
   "kind": "checklists",
-  "version": 3,
+  "version": 4,
   "name": "UK scenario checklists",
   "region": "UK",
   "sources": [
@@ -90,6 +90,41 @@
       "url": "https://www.mygov.scot/report-flood",
       "title": "mygov.scot: report a flood",
       "checked": "2026-11-08"
+    },
+    {
+      "url": "https://ready.campaign.gov.scot/hot-weather",
+      "title": "Ready Scotland (Scottish Government): hot weather",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://www.nhsinform.scot/healthy-living/adverse-weather/how-to-stay-safe-in-hot-weather/",
+      "title": "NHS inform (Scotland): how to stay safe in hot weather",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://www.nhsinform.scot/illnesses-and-conditions/a-z/heatstroke-and-heat-illness/",
+      "title": "NHS inform (Scotland): heatstroke and heat illness",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://phw.nhs.wales/knowledge-article/hot-weather/keeping-cool/",
+      "title": "Public Health Wales: keeping cool in hot weather",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://www.gov.uk/government/publications/beat-the-heat-hot-weather-advice/beat-the-heat-staying-safe-in-hot-weather",
+      "title": "UKHSA (England): beat the heat, staying safe in hot weather",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://www.rspca.org.uk/adviceandwelfare/seasonal/summer",
+      "title": "RSPCA: summer pet care",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://www.rspca.org.uk/adviceandwelfare/seasonal/summer/dogs",
+      "title": "RSPCA: dog care in summer",
+      "checked": "2026-11-08"
     }
   ],
   "scenarios": [
@@ -107,6 +142,11 @@
       "id": "checklists-uk:flood",
       "name": "Flood",
       "risks": ["flood", "coastal"]
+    },
+    {
+      "id": "checklists-uk:heatwave",
+      "name": "Heatwave",
+      "risks": ["heat"]
     }
   ],
   "steps": [
@@ -726,6 +766,135 @@
       "phase": "longer-term",
       "order": 10,
       "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:heatwave-forecast",
+      "text": "Check your local weather forecast and the Met Office warnings when hot weather is expected.",
+      "scenarios": ["checklists-uk:heatwave"],
+      "phase": "coming",
+      "order": 10,
+      "source": "https://ready.campaign.gov.scot/hot-weather"
+    },
+    {
+      "id": "checklists-uk:heatwave-plan-day",
+      "text": "Plan exercise and outdoor activities for the cooler parts of the day.",
+      "scenarios": ["checklists-uk:heatwave"],
+      "phase": "coming",
+      "order": 20,
+      "source": "https://ready.campaign.gov.scot/hot-weather"
+    },
+    {
+      "id": "checklists-uk:heatwave-medicines",
+      "text": "If you take prescribed medicines, keep taking them unless a health professional says not to. Check the packaging: most need storing below 25°C or in the fridge. Ask your pharmacist if unsure.",
+      "scenarios": ["checklists-uk:heatwave"],
+      "phase": "coming",
+      "order": 30,
+      "source": "https://www.nhsinform.scot/healthy-living/adverse-weather/how-to-stay-safe-in-hot-weather/"
+    },
+    {
+      "id": "checklists-uk:heatwave-sun",
+      "text": "Stay out of the sun between 11am and 3pm, when it is strongest. Wear loose clothing and sunscreen on exposed skin.",
+      "scenarios": ["checklists-uk:heatwave"],
+      "phase": "immediate",
+      "order": 10,
+      "source": "https://ready.campaign.gov.scot/hot-weather"
+    },
+    {
+      "id": "checklists-uk:heatwave-drink",
+      "text": "Drink fluids throughout the day, especially if you are active. Limit alcohol, which can dehydrate you.",
+      "scenarios": ["checklists-uk:heatwave"],
+      "phase": "immediate",
+      "order": 20,
+      "source": "https://ready.campaign.gov.scot/hot-weather"
+    },
+    {
+      "id": "checklists-uk:heatwave-cool-home",
+      "text": "Close blinds and curtains on windows in direct sunlight. Open windows when it is cooler outside, such as at night, if it is safe. Turn off lights and electrical products you are not using.",
+      "scenarios": ["checklists-uk:heatwave"],
+      "phase": "immediate",
+      "order": 30,
+      "source": "https://www.nhsinform.scot/healthy-living/adverse-weather/how-to-stay-safe-in-hot-weather/"
+    },
+    {
+      "id": "checklists-uk:heatwave-fans",
+      "text": "Electric fans can help below 35°C. Do not point one directly at your body.",
+      "scenarios": ["checklists-uk:heatwave"],
+      "phase": "immediate",
+      "order": 40,
+      "source": "https://phw.nhs.wales/knowledge-article/hot-weather/keeping-cool/"
+    },
+    {
+      "id": "checklists-uk:heatwave-closed-spaces",
+      "text": "Never leave babies, children, older people or pets alone in a parked car or other closed space. It can get dangerously hot very quickly.",
+      "scenarios": ["checklists-uk:heatwave"],
+      "phase": "immediate",
+      "order": 50,
+      "source": "https://www.gov.uk/government/publications/beat-the-heat-hot-weather-advice/beat-the-heat-staying-safe-in-hot-weather"
+    },
+    {
+      "id": "checklists-uk:heatwave-babies",
+      "text": "Babies under 6 months should not be in direct sun at all. If a baby is outdoors in the sun, protect them with shade and clothing. Do not cover a pram with a blanket, cover or plastic.",
+      "scenarios": ["checklists-uk:heatwave"],
+      "phase": "immediate",
+      "order": 60,
+      "source": "https://www.nhsinform.scot/healthy-living/adverse-weather/how-to-stay-safe-in-hot-weather/"
+    },
+    {
+      "id": "checklists-uk:heatwave-check-others",
+      "text": "Keep an eye on children, babies, older people, people who are ill and people who live on their own.",
+      "scenarios": ["checklists-uk:heatwave"],
+      "phase": "immediate",
+      "order": 70,
+      "source": "https://phw.nhs.wales/knowledge-article/hot-weather/keeping-cool/"
+    },
+    {
+      "id": "checklists-uk:heatwave-heatstroke",
+      "text": "Heatstroke is an emergency. Signs include confusion, lack of co-ordination, a seizure or fainting. Call 999, then move them somewhere cooler, remove extra clothing and spray or sponge cool water on their skin while you wait.",
+      "scenarios": ["checklists-uk:heatwave"],
+      "phase": "immediate",
+      "order": 80,
+      "source": "https://www.nhsinform.scot/illnesses-and-conditions/a-z/heatstroke-and-heat-illness/"
+    },
+    {
+      "id": "checklists-uk:heatwave-exhaustion",
+      "text": "If someone feels tired, faint, sick, headachy or crampy, or is sweating heavily, in the heat, it may be heat exhaustion. Move them to a cooler place, remove extra clothing, give water and cool their skin. If they still feel unwell after 30 minutes, call 999.",
+      "scenarios": ["checklists-uk:heatwave"],
+      "phase": "immediate",
+      "order": 85,
+      "source": "https://www.nhsinform.scot/illnesses-and-conditions/a-z/heatstroke-and-heat-illness/"
+    },
+    {
+      "id": "checklists-uk:heatwave-pets-shade",
+      "text": "Never leave pets in cars, conservatories, outbuildings or caravans on a warm day, even for a short while. Give them shade and constant access to fresh water.",
+      "scenarios": ["checklists-uk:heatwave"],
+      "phase": "immediate",
+      "order": 100,
+      "requires": {
+        "pets": true
+      },
+      "source": "https://www.rspca.org.uk/adviceandwelfare/seasonal/summer"
+    },
+    {
+      "id": "checklists-uk:heatwave-dog-walks",
+      "text": "If you have a dog, walk it in the early morning or late evening, and do not run or cycle with it when it is hot. If the ground is too hot to touch with your hand for five seconds, it is too hot for paws.",
+      "scenarios": ["checklists-uk:heatwave"],
+      "phase": "immediate",
+      "order": 110,
+      "requires": {
+        "pets": true
+      },
+      "source": "https://www.rspca.org.uk/adviceandwelfare/seasonal/summer/dogs"
+    },
+    {
+      "id": "checklists-uk:heatwave-dog-signs",
+      "text": "If a dog pants heavily, drools, is drowsy, uncoordinated, vomits or collapses, contact a vet right away.",
+      "scenarios": ["checklists-uk:heatwave"],
+      "phase": "immediate",
+      "order": 120,
+      "requires": {
+        "pets": true
+      },
+      "source": "https://www.rspca.org.uk/adviceandwelfare/seasonal/summer/dogs"
     }
   ]
 }
