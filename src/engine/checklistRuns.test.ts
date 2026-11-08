@@ -15,7 +15,7 @@ const RUN = 'run-1';
 function step(id: string, over: Partial<ChecklistStep> = {}): ChecklistStep {
   return {
     id,
-    text: id,
+    text: `Do the ${id} Thing`,
     scenarios: ['a:power'],
     phase: 'immediate',
     order: 1,
@@ -106,18 +106,103 @@ describe('startRun', () => {
     expect(Object.keys(d.checklistStepStates)).toHaveLength(run!.catalogue.steps.length);
   });
 
-  it('keeps its snapshot when the household and packs change afterwards', () => {
+  it('keeps its snapshot when live data and the packs are changed in place afterwards', () => {
     const d = fresh();
-    startRun(d, packsOf(pack()), input(['a:power']));
+    const p = pack();
+    const live = packsOf(p);
+    startRun(d, live, input(['a:power']));
     const before = structuredClone(d.checklistRuns[RUN]);
+    const statesBefore = structuredClone(d.checklistStepStates);
     d.home.risks = ['grid', 'flood'];
     d.household.pets = [{ id: 'p1', kind: 'dog', name: 'Bran' }] as never;
     d.settings.region = 'US';
-    const changed = packsOf(pack({ version: 4, steps: [step('a:new', { text: 'rewritten' })] }));
-    expect(buildCatalogueSnapshot(d, changed, NOW).steps).toEqual([]);
-    d.settings.region = 'UK';
-    expect(buildCatalogueSnapshot(d, changed, NOW)).not.toEqual(before!.catalogue);
+    p.version = 99;
+    p.name = 'renamed';
+    for (const sc of p.scenarios) sc.name = 'renamed';
+    for (const st of p.steps) {
+      st.text = 'rewritten';
+      st.phase = 'coming';
+      st.order = 50;
+      st.scenarios.push('a:other');
+    }
+    p.steps.length = 1;
     expect(d.checklistRuns[RUN]).toEqual(before);
+    expect(d.checklistStepStates).toEqual(statesBefore);
+    expect(buildCatalogueSnapshot(d, live, NOW).steps).toEqual([]);
+  });
+
+  it('shares no object with the packs', () => {
+    const d = fresh();
+    const p = pack();
+    const run = startRun(d, packsOf(p), input(['a:power']))!;
+    const owned = new Set<object>();
+    const collect = (v: unknown): void => {
+      if (typeof v !== 'object' || v === null || owned.has(v)) return;
+      owned.add(v);
+      Object.values(v).forEach(collect);
+    };
+    collect(p);
+    const shared: string[] = [];
+    const walk = (v: unknown, path: string): void => {
+      if (typeof v !== 'object' || v === null) return;
+      if (owned.has(v)) shared.push(path);
+      Object.entries(v).forEach(([k, c]) => walk(c, `${path}.${k}`));
+    };
+    walk(run, 'run');
+    walk(d.checklistStepStates, 'states');
+    expect(shared).toEqual([]);
+  });
+
+  it('keys states as runId|stepId, literally', () => {
+    expect(checklistStateKey('r1', 's1')).toBe('r1|s1');
+    const d = fresh();
+    startRun(d, packsOf(pack()), input(['a:power']));
+    expect(Object.keys(d.checklistStepStates)).toContain('run-1|a:flood-only');
+    expect(Object.keys(d.checklistStepStates)).not.toContain('a:flood-only|run-1');
+  });
+
+  it('keeps the step text exactly, capitals included', () => {
+    const [s] = buildCatalogueSnapshot(
+      fresh(),
+      packsOf(pack({ steps: [step('a:s', { text: 'Fill the BATH' })] })),
+      NOW,
+    ).steps;
+    expect(s?.text).toBe('Fill the BATH');
+  });
+
+  it("keeps canonical pack order and each pack's own step order across two packs", () => {
+    const b = pack({
+      id: 'b',
+      scenarios: [{ id: 'b:power', name: 'B power' }],
+      steps: [
+        step('b:x', { scenarios: ['b:power'], order: 5 }),
+        step('b:y', { scenarios: ['b:power'], order: 6 }),
+      ],
+    });
+    const a = pack({
+      scenarios: [{ id: 'a:power', name: 'A power' }],
+      steps: [step('a:x', { order: 1 }), step('a:y', { order: 2 })],
+    });
+    const snap = buildCatalogueSnapshot(fresh(), packsOf(b, a), NOW);
+    expect(snap.packs.map((x) => x.id)).toEqual(['b', 'a']);
+    expect(snap.scenarios.map((x) => x.id)).toEqual(['b:power', 'a:power']);
+    expect(snap.steps.map((x) => [x.id, x.order])).toEqual([
+      ['b:x', 5],
+      ['b:y', 6],
+      ['a:x', 1],
+      ['a:y', 2],
+    ]);
+    const d = fresh();
+    startRun(d, packsOf(b, a), input(['a:power', 'b:power']));
+    expect(Object.keys(d.checklistStepStates)).toHaveLength(4);
+  });
+
+  it('writes nothing when the region has no pack', () => {
+    const d = fresh();
+    d.settings.region = 'US';
+    const before = structuredClone(d);
+    expect(startRun(d, packsOf(pack()), input(['a:power']))).toBeUndefined();
+    expect(d).toEqual(before);
   });
 
   it('writes nothing when the run id already exists', () => {

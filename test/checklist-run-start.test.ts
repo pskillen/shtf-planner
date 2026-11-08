@@ -26,4 +26,29 @@ describe('starting a run on the bundled catalogue', () => {
     expect(snap).toEqual(buildCatalogueSnapshot(doc, packs, '2026-11-15'));
     expect(DocumentSchema.safeParse(doc).success).toBe(true);
   });
+
+  it('keeps the run when the live packs are mutated in place after start', () => {
+    const live = bundledPacks();
+    const d = emptyDocument('local', '2026-01-01T00:00:00Z');
+    const ids = checklistPacks(live, d.settings.region).flatMap((p) =>
+      p.scenarios.map((s) => s.id),
+    );
+    startRun(d, live, {
+      runId: 'run-live',
+      started: '2026-11-15T10:00:00Z',
+      asOf: '2026-11-15',
+      scenarioIds: ids.slice(0, 1),
+    });
+    const before = structuredClone(d.checklistRuns['run-live']);
+    for (const p of checklistPacks(live, d.settings.region)) {
+      p.version += 1;
+      for (const sc of p.scenarios) sc.name = 'changed';
+      for (const st of p.steps) {
+        st.text = 'changed';
+        st.order += 100;
+        st.scenarios.push('changed');
+      }
+    }
+    expect(d.checklistRuns['run-live']).toEqual(before);
+  });
 });
