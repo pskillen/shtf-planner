@@ -500,7 +500,7 @@
     },
     {
       "id": "checklists-uk:flood-pets-kit",
-      "text": "Add pet supplies to your flood kit.",
+      "text": "Add pet supplies to your grab bag.",
       "scenarios": ["checklists-uk:flood"],
       "phase": "coming",
       "order": 80,
@@ -644,6 +644,14 @@
       "phase": "first-days",
       "order": 20,
       "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:flood-children-cuts",
+      "text": "Keep children and pets out of contaminated areas. Cover cuts and open sores, and contact your GP if you or a relative has a stomach upset after flooding.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "first-days",
+      "order": 25,
+      "source": "https://www.nidirect.gov.uk/articles/what-do-if-flood-happens"
     },
     {
       "id": "checklists-uk:flood-food",
