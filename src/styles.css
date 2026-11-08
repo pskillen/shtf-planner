@@ -1842,3 +1842,199 @@ button.scans-note {
   border: 1px solid var(--border);
   border-radius: 10px;
 }
+
+/* A printable sheet. Generic: a heading, facts, grouped steps with a box and lines to write on,
+   and a footer. On screen it is a plain preview of the page; `@media print` below turns the app
+   around it off. */
+.print-bar {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.print-sheet {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  overflow-wrap: anywhere;
+}
+
+.print-sheet h1 {
+  margin: 0 0 4px;
+}
+
+.print-fact,
+.print-foot p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.print-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.print-step {
+  display: flex;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+}
+
+.print-box {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  border: 2px solid currentColor;
+  border-radius: 3px;
+  line-height: 16px;
+  text-align: center;
+  font-weight: 700;
+}
+
+.print-step-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.print-step-body p {
+  margin: 0;
+}
+
+.print-small {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.print-note {
+  margin-top: 4px;
+}
+
+.print-note-text {
+  white-space: pre-wrap;
+}
+
+/* Two writing lines made of borders: browsers do not print background images by default. */
+.print-lines {
+  height: 2.4em;
+  border-bottom: 1px solid var(--muted);
+}
+
+.print-lines::before {
+  content: '';
+  display: block;
+  height: 1.2em;
+  border-bottom: 1px solid var(--muted);
+}
+
+.print-foot {
+  margin-top: 16px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+@media print {
+  @page {
+    margin: 14mm;
+  }
+
+  /* Paper is black on white whatever the screen theme. */
+  :root {
+    --bg: #fff;
+    --surface: #fff;
+    --text: #000;
+    --muted: #333;
+    --accent: #000;
+    --border: #999;
+    color-scheme: light;
+  }
+
+  html,
+  body,
+  #root {
+    height: auto;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+    font-size: 11pt;
+    line-height: 1.35;
+  }
+
+  .topbar,
+  .tabbar,
+  .footer,
+  .banner,
+  .sync-backdrop,
+  .toast-region,
+  .toast,
+  .no-print {
+    display: none !important;
+  }
+
+  .shell,
+  .shell.no-tabs {
+    display: block;
+    min-height: 0;
+    padding: 0;
+  }
+
+  .main {
+    max-width: none;
+  }
+
+  .screen {
+    padding: 0;
+  }
+
+  a {
+    color: #000;
+    text-decoration: none;
+  }
+
+  .print-sheet {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: #fff;
+  }
+
+  .print-sheet h1 {
+    font-size: 18pt;
+  }
+
+  .print-sheet h2 {
+    margin: 14pt 0 4pt;
+    font-size: 13pt;
+    break-after: avoid;
+  }
+
+  .print-fact,
+  .print-small,
+  .print-foot p {
+    color: #000;
+  }
+
+  .print-small {
+    font-size: 9pt;
+  }
+
+  .print-step {
+    break-inside: avoid;
+    border-top-color: #999;
+  }
+
+  .print-lines,
+  .print-lines::before {
+    border-bottom-color: #666;
+  }
+
+  .print-foot {
+    break-inside: avoid;
+  }
+}
