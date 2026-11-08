@@ -256,6 +256,7 @@ export function biggarDocument(): Document {
     },
     reviews: {},
     checklistRuns: {
+      // Invented incident. The frozen catalogue is trimmed to 8 steps (real ones would be about 100).
       'run-flood-oct-2026': {
         id: 'run-flood-oct-2026',
         scenarios: ['checklists-uk:flood'],
