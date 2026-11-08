@@ -80,6 +80,16 @@
       "url": "https://www.gov.uk/government/publications/flooding-and-health-public-advice/flooding-and-health-advice-for-the-public",
       "title": "UKHSA (England): flooding and health, advice for the public",
       "checked": "2026-11-08"
+    },
+    {
+      "url": "https://www.nidirect.gov.uk/articles/reporting-flooding",
+      "title": "nidirect (Northern Ireland): reporting flooding",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://www.mygov.scot/report-flood",
+      "title": "mygov.scot: report a flood",
+      "checked": "2026-11-08"
     }
   ],
   "scenarios": [
@@ -599,19 +609,19 @@
     },
     {
       "id": "checklists-uk:flood-report-scotland",
-      "text": "Scotland: find out how to report different kinds of flood on mygov.scot.",
+      "text": "Scotland: report a flood on the SEPA website (find it on mygov.scot) or call Floodline on 0345 988 1188 (24 hours). For sewer flooding, call Scottish Water on 0800 0778 778 (24 hours).",
       "scenarios": ["checklists-uk:flood"],
       "phase": "immediate",
       "order": 110,
-      "source": "https://ready.campaign.gov.scot/flooding"
+      "source": "https://www.mygov.scot/report-flood"
     },
     {
       "id": "checklists-uk:flood-report-ni",
-      "text": "Northern Ireland: report flooding on 0300 2000 100 (24 hours a day, seven days a week).",
+      "text": "Northern Ireland: report flooding on roads, burst water mains and blocked drains on 0300 2000 100 (24 hours a day, seven days a week). It is not an emergency line: call 999 if anyone is in danger.",
       "scenarios": ["checklists-uk:flood"],
       "phase": "immediate",
       "order": 120,
-      "source": "https://www.nidirect.gov.uk/articles/what-do-if-flood-happens"
+      "source": "https://www.nidirect.gov.uk/articles/reporting-flooding"
     },
     {
       "id": "checklists-uk:flood-water-levels",
