@@ -14,6 +14,32 @@ export const checklistsPath = '/app/more/checklists';
 export const previewPath = (scenarioId: string): string =>
   `${checklistsPath}/preview/${encodeURIComponent(scenarioId)}`;
 
+export const runPath = (runId: string): string => `${checklistsPath}/${encodeURIComponent(runId)}`;
+
+const dayFormat = new Intl.DateTimeFormat('en-GB', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
+const timeFormat = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+/** "8 November 2026, 14:05" in the viewer's time zone. */
+export function formatRunStart(iso: string): string {
+  const d = new Date(iso);
+  return `${dayFormat.format(d)}, ${timeFormat.format(d)}`;
+}
+
+/** The time a step was ticked; the date is added when it was not today. */
+export function formatDoneAt(iso: string, now: Date = new Date()): string {
+  const d = new Date(iso);
+  return d.toDateString() === now.toDateString()
+    ? timeFormat.format(d)
+    : `${dayFormat.format(d)}, ${timeFormat.format(d)}`;
+}
+
+/** "3 of 12 done". */
+export const progressText = (done: number, total: number): string => `${done} of ${total} done`;
+
 /** How a step's source reads: its title and date checked, or an honest "no official source". */
 export function sourceLabel(step: {
   source: string;

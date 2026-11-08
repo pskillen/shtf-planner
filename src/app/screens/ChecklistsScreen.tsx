@@ -1,15 +1,16 @@
 import { Link } from 'react-router-dom';
-import { checklistScenarios } from '../../engine';
+import { checklistRunLists, checklistScenarios } from '../../engine';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { useDocument } from '../state';
 import { usePacks } from '../usePacks';
-import { previewPath } from './checklists/view';
+import { formatRunStart, previewPath, progressText, runPath } from './checklists/view';
 
-/** Scenario checklists: the scenarios on offer for the household's region, each with a preview. */
+/** Scenario checklists: lists in progress, then the scenarios on offer for the household's region. */
 export function ChecklistsScreen() {
   const doc = useDocument();
   const packs = usePacks();
   const scenarios = checklistScenarios(doc, packs);
+  const { open } = checklistRunLists(doc);
   return (
     <div>
       <ScreenHeader title="Scenario checklists" back="/app/more" backLabel="More" />
@@ -18,8 +19,28 @@ export function ChecklistsScreen() {
           Step-by-step lists for things that happen. Pick one to see its steps.
         </p>
       ) : null}
-      {/* Lists the household has started will go here. */}
-      <section aria-label="Your lists" />
+      {open.length > 0 ? (
+        <section aria-labelledby="open-lists">
+          <h2 id="open-lists">Your lists</h2>
+          <div className="cards">
+            {open.map((r) => (
+              <Link key={r.id} to={runPath(r.id)} className="card">
+                <span className="card-title">
+                  {r.scenarioNames.length > 0 ? r.scenarioNames.join(', ') : 'Checklist'}
+                </span>
+                <span className="card-body">
+                  {r.needsScenario
+                    ? 'Needs a scenario'
+                    : `${progressText(r.done, r.total)}, started ${formatRunStart(r.started)}`}
+                </span>
+                <span className="card-go" aria-hidden="true">
+                  ›
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
       {scenarios.length === 0 ? (
         <p>
           There are no scenario checklists for your region ({doc.settings.region}) yet. You can

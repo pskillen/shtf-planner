@@ -1789,3 +1789,28 @@ button.scans-note {
   align-items: center;
   min-height: 44px;
 }
+
+.checklist-start {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.checklist-steps .check-row {
+  align-items: flex-start;
+}
+
+.checklist-steps .check-row input {
+  flex-shrink: 0;
+  margin-top: 10px;
+}
+
+.checklist-steps .check-row span {
+  padding: 10px 0;
+}
+
+.checklist-progress {
+  width: 100%;
+  height: 8px;
+  accent-color: var(--accent);
+}

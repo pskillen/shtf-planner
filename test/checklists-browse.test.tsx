@@ -65,7 +65,9 @@ describe('checklist preview', () => {
       .filter((a) => a.getAttribute('href')?.startsWith('https://'));
     expect(external.length).toBeGreaterThan(0);
     expect(external[0]?.getAttribute('rel')).toContain('noopener');
-    expect(screen.queryByRole('button')).toBeNull();
+    expect(screen.getAllByRole('button').map((b) => b.textContent)).toEqual([
+      'Start this checklist',
+    ]);
     expect(screen.queryByRole('checkbox')).toBeNull();
   });
 
