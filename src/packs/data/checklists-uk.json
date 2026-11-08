@@ -70,6 +70,16 @@
       "url": "https://www.nidirect.gov.uk/articles/what-do-if-flood-happens",
       "title": "nidirect (Northern Ireland): what to do if a flood happens",
       "checked": "2026-11-08"
+    },
+    {
+      "url": "https://naturalresources.wales/flooding/what-to-do-after-a-flood/?lang=en",
+      "title": "Natural Resources Wales: what to do after a flood",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://www.gov.uk/government/publications/flooding-and-health-public-advice/flooding-and-health-advice-for-the-public",
+      "title": "UKHSA (England): flooding and health, advice for the public",
+      "checked": "2026-11-08"
     }
   ],
   "scenarios": [
@@ -660,12 +670,28 @@
       "source": "https://ready.campaign.gov.scot/flooding"
     },
     {
+      "id": "checklists-uk:flood-gas-after",
+      "text": "Do not turn your gas or water back on without professional advice. Have your gas and central heating checked by an engineer before you turn them on.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "first-days",
+      "order": 55,
+      "source": "https://naturalresources.wales/flooding/what-to-do-after-a-flood/?lang=en"
+    },
+    {
       "id": "checklists-uk:flood-clean-protect",
       "text": "Flood water can contain harmful bacteria. Wear protective clothing if you need to clean up.",
       "scenarios": ["checklists-uk:flood"],
       "phase": "first-days",
       "order": 60,
       "source": "https://ready.campaign.gov.scot/flooding"
+    },
+    {
+      "id": "checklists-uk:flood-co-drying",
+      "text": "Never use petrol or diesel generators or other fuel-driven equipment indoors, and keep heaters, dryers and fires well ventilated while your home dries out: the exhaust gases contain carbon monoxide, which can poison.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "first-days",
+      "order": 65,
+      "source": "https://www.gov.uk/government/publications/flooding-and-health-public-advice/flooding-and-health-advice-for-the-public"
     },
     {
       "id": "checklists-uk:flood-insurance-record",
