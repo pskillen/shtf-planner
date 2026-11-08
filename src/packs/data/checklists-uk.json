@@ -174,7 +174,7 @@
     },
     {
       "id": "checklists-uk:neighbours",
-      "text": "Check on your neighbours, offer supplies if you can, and share anything you know about when power may return.",
+      "text": "Check in on your neighbours. If you can, offer to share blankets, clothing or food, and pass on any important information you have received about the power cut, such as when power is expected back.",
       "scenarios": ["checklists-uk:power-cut"],
       "phase": "immediate",
       "order": 90,
@@ -182,7 +182,7 @@
     },
     {
       "id": "checklists-uk:emergency-call",
-      "text": "With no working landline in a life-threatening emergency, call 999 or 112 from a mobile.",
+      "text": "With no working landline in a life-threatening emergency, try 999 or 112 from a mobile. Emergency calls can use any available network.",
       "scenarios": ["checklists-uk:power-cut"],
       "phase": "immediate",
       "order": 100,
@@ -190,10 +190,10 @@
     },
     {
       "id": "checklists-uk:radio-news",
-      "text": "Use a battery or wind-up radio for news. Try both FM and digital. Stay inside in severe weather, even if using a car radio.",
+      "text": "Use a battery or wind-up radio for news. Try both FM and digital. In severe weather it may be safer to stay inside than to use your car radio.",
       "scenarios": ["checklists-uk:power-cut"],
-      "phase": "first-days",
-      "order": 10,
+      "phase": "immediate",
+      "order": 110,
       "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
     }
   ]
