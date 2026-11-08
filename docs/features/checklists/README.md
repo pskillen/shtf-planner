@@ -59,7 +59,7 @@ unlisted source, and a `requires.asset` that is not a real asset type.
 ## Bundled content
 
 `src/packs/data/checklists-uk.json` (`checklists-uk`, region `UK`) holds the **Power cut**
-(`risks: ["grid"]`), **Storm** (`risks: ["storm"]`) and **Flood** (`risks: ["flood", "coastal"]`) and **Heatwave** (`risks: ["heat"]`) scenarios. It is offered by region and is not in `DEFAULT_PACKS`: a US household gets no
+(`risks: ["grid"]`), **Storm** (`risks: ["storm"]`), **Flood** (`risks: ["flood", "coastal"]`) and **Heatwave** (`risks: ["heat"]`) scenarios. It is offered by region and is not in `DEFAULT_PACKS`: a US household gets no
 checklist pack, and Settings lists the UK pack as "Included for your region" with no switch.
 
 - Steps are short and imperative. Power cut uses `coming` and `immediate`; storm adds
@@ -77,8 +77,8 @@ checklist pack, and Settings lists the UK pack as "Included for your region" wit
   names a nation cites that nation's page. Gas and water restart rests on the Natural Resources
   Wales and UKHSA (England) pages, and the sea-defence warning on Natural Resources Wales.
 - Heatwave uses `coming` and `immediate`. Its steps cite Ready Scotland (hot weather), NHS inform
-  (hot weather; heatstroke and heat illness), Public Health Wales (keeping cool), UKHSA (England)
-  and two RSPCA pages. Each step cites a page that says it, and every number (35°C for fans,
+  (hot weather; heatstroke and heat illness), Public Health Wales (keeping cool), UK Government
+  Be Ready (hot weather and heatwaves) and two RSPCA pages. Each step cites a page that says it, and every number (35°C for fans,
   25°C for medicine storage, 11am to 3pm, 30 minutes, 6 months, five seconds on the ground) is in
   its source. The UKHSA guidance and heat-health alerts cover England only, so no step depends on an
   alert: the forecast step says to check the forecast and Met Office warnings, and the steps apply
@@ -86,6 +86,15 @@ checklist pack, and Settings lists the UK pack as "Included for your region" wit
   babies, older people and checking on others, because a visitor or neighbour can need them. Only
   the three pet steps need a pet (`requires.pets`). No heatwave step is shared with another
   scenario.
+  The clinical signs and actions in the heatstroke and heat exhaustion steps were cross-checked
+  against the NHS England page (nhs.uk). The heatstroke step says skin can feel hot or cold because
+  the pages disagree (NHS inform says cold, nhs.uk says hot), and "if they are awake and can
+  swallow" before giving water is an editorial hedge. The steps send people to 999 only, never
+  111, because Northern Ireland has no 111 service. No Northern Ireland page is cited: the nidirect
+  hot weather page was read and agrees on never leaving children or animals in cars, water for
+  pets, contacting a vet, and 999 for suspected heatstroke. It differs in resting for a few hours
+  with no 30-minute rule, "hot, red and dry skin" as a heatstroke sign, and advice not to give
+  aspirin or paracetamol, which no second source confirms, so those are not used.
 - One step is shared: `storm-floodwater` ("Never drive through floodwater. Turn around and find
   another route.") serves storm and flood, and is listed once when both are chosen. Elsewhere the
   storm wording differs from the power-cut and flood wording even where the topic overlaps

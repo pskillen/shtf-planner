@@ -112,8 +112,8 @@
       "checked": "2026-11-08"
     },
     {
-      "url": "https://www.gov.uk/government/publications/beat-the-heat-hot-weather-advice/beat-the-heat-staying-safe-in-hot-weather",
-      "title": "UKHSA (England): beat the heat, staying safe in hot weather",
+      "url": "https://beready.campaign.gov.uk/be-informed-about-hazards/hot-weather-and-heatwaves/",
+      "title": "Be Ready (UK Government): hot weather and heatwaves",
       "checked": "2026-11-08"
     },
     {
@@ -785,7 +785,7 @@
     },
     {
       "id": "checklists-uk:heatwave-medicines",
-      "text": "If you take prescribed medicines, keep taking them unless a health professional says not to. Check the packaging: most need storing below 25°C or in the fridge. Ask your pharmacist if unsure.",
+      "text": "If you take prescribed medicines, keep taking them unless a health professional says not to. Most medicines need to be stored below 25°C or in the fridge. Follow the storage instructions on the packaging. Ask your pharmacist if unsure.",
       "scenarios": ["checklists-uk:heatwave"],
       "phase": "coming",
       "order": 30,
@@ -793,7 +793,7 @@
     },
     {
       "id": "checklists-uk:heatwave-sun",
-      "text": "Stay out of the sun between 11am and 3pm, when it is strongest. Wear loose clothing and sunscreen on exposed skin.",
+      "text": "Stay out of the sun between 11am and 3pm, when it is strongest. Wear loose clothing and sunscreen of at least SPF 30.",
       "scenarios": ["checklists-uk:heatwave"],
       "phase": "immediate",
       "order": 10,
@@ -825,15 +825,15 @@
     },
     {
       "id": "checklists-uk:heatwave-closed-spaces",
-      "text": "Never leave babies, children, older people or pets alone in a parked car or other closed space. It can get dangerously hot very quickly.",
+      "text": "Never leave babies, children, older people or pets alone in a parked car or other small closed space. It can get dangerously hot very quickly.",
       "scenarios": ["checklists-uk:heatwave"],
       "phase": "immediate",
       "order": 50,
-      "source": "https://www.gov.uk/government/publications/beat-the-heat-hot-weather-advice/beat-the-heat-staying-safe-in-hot-weather"
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/hot-weather-and-heatwaves/"
     },
     {
       "id": "checklists-uk:heatwave-babies",
-      "text": "Babies under 6 months should not be in direct sun at all. If a baby is outdoors in the sun, protect them with shade and clothing. Do not cover a pram with a blanket, cover or plastic.",
+      "text": "Babies under 6 months should not be in direct sun at all. If a baby is outdoors in the sun, protect them with shade and clothing. Do not shade a pram by covering it with a blanket, cover or plastic. It can get very hot and could make your baby overheat.",
       "scenarios": ["checklists-uk:heatwave"],
       "phase": "immediate",
       "order": 60,
@@ -849,7 +849,7 @@
     },
     {
       "id": "checklists-uk:heatwave-heatstroke",
-      "text": "Heatstroke is an emergency. Signs include confusion, lack of co-ordination, a seizure or fainting. Call 999, then move them somewhere cooler, remove extra clothing and spray or sponge cool water on their skin while you wait.",
+      "text": "Heatstroke is an emergency. Signs include confusion, lack of co-ordination, a seizure or fit, fainting or losing consciousness, severe difficulty breathing, or a high body temperature. Skin can feel hot or cold, so do not rely on it. If you think someone has heatstroke, call 999 now. Then move them somewhere cooler, remove extra clothing and spray or sponge cool water on their skin while you wait. If they lose consciousness, put them in the recovery position.",
       "scenarios": ["checklists-uk:heatwave"],
       "phase": "immediate",
       "order": 80,
@@ -857,7 +857,7 @@
     },
     {
       "id": "checklists-uk:heatwave-exhaustion",
-      "text": "If someone feels tired, faint, sick, headachy or crampy, or is sweating heavily, in the heat, it may be heat exhaustion. Move them to a cooler place, remove extra clothing, give water and cool their skin. If they still feel unwell after 30 minutes, call 999.",
+      "text": "In the heat, tiredness, weakness, feeling faint, headache, cramps, feeling or being sick or heavy sweating can be heat exhaustion. Move them to a cooler place, remove extra clothing and cool their skin with cool water. If they are awake and can swallow, give water to drink. If they still feel unwell after 30 minutes, or show any sign of heatstroke, call 999.",
       "scenarios": ["checklists-uk:heatwave"],
       "phase": "immediate",
       "order": 85,
