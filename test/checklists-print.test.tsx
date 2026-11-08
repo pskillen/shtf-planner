@@ -10,7 +10,14 @@ import {
 import { ChecklistRunScreen } from '../src/app/screens/ChecklistRunScreen';
 import { previewPath, previewPrintPath, runPrintPath } from '../src/app/screens/checklists/view';
 import { StoreContext } from '../src/app/state/storeContext';
-import { checklistRunView, finishRun, setStepDone, setStepNote, startRun } from '../src/engine';
+import {
+  checklistRunView,
+  finishRun,
+  setRunScenarios,
+  setStepDone,
+  setStepNote,
+  startRun,
+} from '../src/engine';
 import type { Document } from '../src/model';
 import { bundledPacks } from '../src/packs';
 import { biggarWithoutRuns } from './helpers/noRuns';
@@ -70,7 +77,7 @@ describe('printing a preview', () => {
     expect(within(sheet).queryAllByRole('link')).toHaveLength(0);
     expect(sheet.textContent).not.toContain('✓');
     expect(within(sheet).queryByText(/^For: /)).toBeNull();
-    expect(within(sheet).getByText(/^Printed /)).toBeTruthy();
+    expect(within(sheet).getByText(/^Printed .*\(.+\)$/)).toBeTruthy();
     expect(within(sheet).getByText(/^Content: checklists-uk version \d+/)).toBeTruthy();
   });
 
@@ -126,6 +133,24 @@ describe('printing a run', () => {
     expect(sheet.querySelector('.print-note-text')!.textContent).toBe(long);
     expect(within(sheet).getAllByText(/^For: /).length).toBeGreaterThan(0);
     expect(within(sheet).getByText(/^Content: checklists-uk version \d+/)).toBeTruthy();
+  });
+
+  it('says so when hidden steps still hold a tick or note', () => {
+    const doc = withRun([FLOOD, STORM], (d) => {
+      const exclusive = checklistRunView(d, 'run-1')!
+        .groups.flatMap((g) => g.steps)
+        .find((s) => s.selectedScenarioIds.length === 1 && s.selectedScenarioIds[0] === STORM)!;
+      setStepDone(d, 'run-1', exclusive.id, '2026-11-08T10:30:00.000Z');
+      setRunScenarios(d, 'run-1', [FLOOD]);
+    });
+    renderAt(doc, runPrintPath('run-1'));
+    const sheet = screen.getByRole('article');
+    expect(
+      within(sheet).getByText('1 step no longer shown keeps a tick or note and is not printed.'),
+    ).toBeTruthy();
+    cleanup();
+    renderAt(withRun([FLOOD]), runPrintPath('run-1'));
+    expect(screen.queryByText(/no longer shown/)).toBeNull();
   });
 
   it('links to the print view from a run', () => {

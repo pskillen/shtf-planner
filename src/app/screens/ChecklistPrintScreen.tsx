@@ -32,7 +32,7 @@ function PrintBar({ back, backLabel }: { back: string; backLabel: string }) {
   );
 }
 
-const printedOn = () => `Printed ${formatRunStart(new Date().toISOString())}`;
+const printedOn = () => `Printed ${formatRunStart(new Date().toISOString())} (${viewerTimeZone()})`;
 
 /** A blank, printable copy of one scenario's steps, or several scenarios' combined. */
 export function ChecklistPreviewPrintScreen() {
@@ -136,6 +136,11 @@ export function ChecklistRunPrintScreen() {
             view.finished !== undefined ? `. Finished ${formatRunStart(view.finished)}` : ''
           }`,
           `${view.done} of ${view.total} done. Saved notes only; times are ${zone}.`,
+          ...(view.hiddenWithState > 0
+            ? [
+                `${view.hiddenWithState} ${view.hiddenWithState === 1 ? 'step' : 'steps'} no longer shown ${view.hiddenWithState === 1 ? 'keeps' : 'keep'} a tick or note and ${view.hiddenWithState === 1 ? 'is' : 'are'} not printed.`,
+              ]
+            : []),
         ]}
         groups={groups}
         footer={[
