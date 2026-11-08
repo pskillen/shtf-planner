@@ -287,8 +287,10 @@ describe('the bundled packs', () => {
       expect(text('evac-shutoffs-leaving')).toMatch(/other than a fire or a smell of gas/);
       // gas leak: no switches, a labelled number, and a Northern Ireland number only for Northern Ireland
       expect(text('evac-gas-leak')).toMatch(/do not touch power or light switches/);
-      expect(text('evac-gas-leak')).toMatch(/neither page says which parts of the UK/);
-      expect(text('evac-gas-leak-ni')).toMatch(/^Northern Ireland only/);
+      expect(text('evac-gas-leak')).toMatch(/0800 111 999 \(Northern Ireland: see next step\)/);
+      expect(text('evac-gas-leak-ni')).toMatch(
+        /^Northern Ireland only: call the Gas Emergency Service on 0800 002 001/,
+      );
       expect(
         pack.scenarios.find((s) => s.id === 'checklists-uk:evacuation')!.risks,
       ).toBeUndefined();

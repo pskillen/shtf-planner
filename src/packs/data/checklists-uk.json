@@ -17,8 +17,8 @@
       "checked": "2026-11-08"
     },
     {
-      "url": "https://www.gasnetworks.ie/gas-safety/emergency-numbers",
-      "title": "Gas Networks Ireland: emergency numbers (Northern Ireland number)",
+      "url": "https://www.nidirect.gov.uk/articles/energy-power-supply-and-utilities",
+      "title": "nidirect (Northern Ireland): energy, power supply and utilities (Gas Emergency Service)",
       "checked": "2026-11-08"
     },
     {
@@ -985,7 +985,7 @@
     },
     {
       "id": "checklists-uk:evac-gas-leak",
-      "text": "If you smell gas, do not touch power or light switches and do not light flames. Open doors and windows, turn the gas off at the mains tap by the meter if you can, and get out. If the leak is in a cellar or basement, do not go in. Once you are safe, call the gas emergency number 0800 111 999 (shown by Cadent and National Gas; neither page says which parts of the UK it covers) and wait for the gas engineer's all-clear before you go back in.",
+      "text": "If you smell gas, do not touch power or light switches and do not light flames. Open doors and windows, turn the gas off at the mains tap by the meter if you can, and get out. If the leak is in a cellar or basement, do not go in. Once you are safe, call the gas emergency number 0800 111 999 (Northern Ireland: see next step) and wait for the gas engineer's all-clear before you go back in.",
       "scenarios": ["checklists-uk:evacuation"],
       "phase": "immediate",
       "order": 12,
@@ -993,11 +993,11 @@
     },
     {
       "id": "checklists-uk:evac-gas-leak-ni",
-      "text": "Northern Ireland only: Gas Networks Ireland gives 0800 085 8851 (+44 800 085 8851) for gas emergencies in Northern Ireland. Use it instead of the number above if you are there.",
+      "text": "Northern Ireland only: call the Gas Emergency Service on 0800 002 001 instead of the number above.",
       "scenarios": ["checklists-uk:evacuation"],
       "phase": "immediate",
       "order": 13,
-      "source": "https://www.gasnetworks.ie/gas-safety/emergency-numbers"
+      "source": "https://www.nidirect.gov.uk/articles/energy-power-supply-and-utilities"
     },
     {
       "id": "checklists-uk:evac-shutoffs-leaving",
