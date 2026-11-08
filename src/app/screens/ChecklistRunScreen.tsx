@@ -44,6 +44,7 @@ export function ChecklistRunScreen() {
     );
   }
   const selected = view.scenarios.filter((s) => s.selected).map((s) => s.name);
+  const nameOf = new Map(view.scenarios.map((s) => [s.id, s.name]));
   const canTick = editable && view.finished === undefined;
 
   function toggle(stepId: string, ticked: boolean) {
@@ -130,6 +131,12 @@ export function ChecklistRunScreen() {
                         />
                         <span>{step.text}</span>
                       </label>
+                      {selected.length > 1 ? (
+                        <span className="checklist-source muted">
+                          For:{' '}
+                          {step.selectedScenarioIds.map((id) => nameOf.get(id) ?? id).join(', ')}
+                        </span>
+                      ) : null}
                       {step.doneAt !== undefined ? (
                         <span className="checklist-source muted">
                           Done {formatDoneAt(step.doneAt)}

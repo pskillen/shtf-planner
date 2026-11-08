@@ -1824,3 +1824,21 @@ button.scans-note {
   height: 8px;
   accent-color: var(--accent);
 }
+
+.checklist-combine {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.checklist-picker {
+  display: grid;
+  gap: 4px;
+  margin: 12px 0;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}

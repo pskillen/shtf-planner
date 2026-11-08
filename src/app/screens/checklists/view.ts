@@ -11,8 +11,19 @@ export const CHECKLIST_PHASE_LABEL: Record<ChecklistPhase, string> = {
 };
 
 export const checklistsPath = '/app/more/checklists';
-export const previewPath = (scenarioId: string): string =>
-  `${checklistsPath}/preview/${encodeURIComponent(scenarioId)}`;
+/**
+ * The preview route for one scenario or several: `/preview/a` or `/preview/a+b`. Each id is
+ * percent-encoded and the ids are joined by a literal `+` (an encoded `+` never occurs in an id).
+ */
+export const previewPath = (scenarioIds: string | readonly string[]): string =>
+  `${checklistsPath}/preview/${(typeof scenarioIds === 'string' ? [scenarioIds] : scenarioIds)
+    .map(encodeURIComponent)
+    .join('+')}`;
+
+/** The scenario ids a preview route parameter holds, each once. */
+export const parsePreviewIds = (param: string): string[] => [
+  ...new Set(param.split('+').filter((id) => id !== '')),
+];
 
 export const runPath = (runId: string): string => `${checklistsPath}/${encodeURIComponent(runId)}`;
 

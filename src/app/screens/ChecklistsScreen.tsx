@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { checklistRunLists, checklistScenarios } from '../../engine';
 import { ScreenHeader } from '../components/ScreenHeader';
@@ -11,6 +12,18 @@ export function ChecklistsScreen() {
   const packs = usePacks();
   const scenarios = checklistScenarios(doc, packs);
   const { open, finished } = checklistRunLists(doc);
+  const [combining, setCombining] = useState(false);
+  const [picked, setPicked] = useState<ReadonlySet<string>>(new Set());
+  // Chosen scenarios in the hub's order, so the link is the same however they were ticked.
+  const chosen = scenarios.filter((s) => picked.has(s.id)).map((s) => s.id);
+  function toggle(id: string, on: boolean) {
+    setPicked((was) => {
+      const next = new Set(was);
+      if (on) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }
   return (
     <div>
       <ScreenHeader title="Scenario checklists" back="/app/more" backLabel="More" />
@@ -49,6 +62,46 @@ export function ChecklistsScreen() {
       ) : (
         <>
           <h2>Scenarios</h2>
+          {scenarios.length > 1 ? (
+            <div className="checklist-start">
+              {combining ? (
+                <fieldset className="checklist-combine">
+                  <legend>Choose two or more to do together</legend>
+                  {scenarios.map((s) => (
+                    <label key={s.id} className="check-row">
+                      <input
+                        type="checkbox"
+                        checked={picked.has(s.id)}
+                        onChange={(e) => toggle(s.id, e.target.checked)}
+                      />
+                      <span>{s.name}</span>
+                    </label>
+                  ))}
+                  {chosen.length > 1 ? (
+                    <Link to={previewPath(chosen)} className="button">
+                      Preview {chosen.length} together
+                    </Link>
+                  ) : (
+                    <p className="muted">Tick at least two scenarios to see them together.</p>
+                  )}
+                  <button
+                    type="button"
+                    className="secondary"
+                    onClick={() => {
+                      setCombining(false);
+                      setPicked(new Set());
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </fieldset>
+              ) : (
+                <button type="button" className="secondary" onClick={() => setCombining(true)}>
+                  Combine scenarios
+                </button>
+              )}
+            </div>
+          ) : null}
           <div className="cards">
             {scenarios.map((s) => (
               <Link key={s.id} to={previewPath(s.id)} className="card">

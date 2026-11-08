@@ -15,6 +15,7 @@ import {
   CHECKLIST_PHASE_LABEL,
   checklistsPath,
   formatRunStart,
+  parsePreviewIds,
   progressText,
   runPath,
   sourceLabel,
@@ -23,14 +24,18 @@ import {
 /** A look at one scenario's steps for this household, with a way to start (or resume) a run. */
 export function ChecklistPreviewScreen() {
   const { scenarioId = '' } = useParams();
+  const requested = parsePreviewIds(scenarioId);
   const doc = useDocument();
   const packs = usePacks();
   const change = useChange();
   const editable = useEditable();
   const navigate = useNavigate();
   const starting = useRef(false);
-  const known = checklistScenarios(doc, packs).find((s) => s.id === scenarioId);
-  if (!known) {
+  const offered = checklistScenarios(doc, packs);
+  const known = offered.filter((s) => requested.includes(s.id));
+  const knownIds = known.map((s) => s.id);
+  const combined = known.length > 1;
+  if (requested.length === 0 || known.length < requested.length) {
     return (
       <div>
         <ScreenHeader title="Scenario checklist" back={checklistsPath} backLabel="Checklists" />
@@ -38,10 +43,17 @@ export function ChecklistPreviewScreen() {
       </div>
     );
   }
-  const view = checklist(doc, packs, [scenarioId], today());
-  const resumable = checklistRunLists(doc).open.filter((r) =>
-    checklistRunView(doc, r.id)?.scenarios.some((s) => s.id === scenarioId && s.selected),
-  );
+  const view = checklist(doc, packs, knownIds, today());
+  const nameOf = new Map(known.map((s) => [s.id, s.name]));
+  // An open run is offered when it includes every scenario selected here.
+  const resumable = checklistRunLists(doc).open.filter((r) => {
+    const selected = new Set(
+      checklistRunView(doc, r.id)
+        ?.scenarios.filter((s) => s.selected)
+        .map((s) => s.id),
+    );
+    return knownIds.every((id) => selected.has(id));
+  });
 
   function start() {
     if (!editable || starting.current) return;
@@ -55,7 +67,7 @@ export function ChecklistPreviewScreen() {
             runId,
             started: new Date().toISOString(),
             asOf: today(),
-            scenarioIds: [scenarioId],
+            scenarioIds: knownIds,
           }) !== undefined;
       });
     } catch {
@@ -67,10 +79,16 @@ export function ChecklistPreviewScreen() {
 
   return (
     <div>
-      <ScreenHeader title={known.name} back={checklistsPath} backLabel="Checklists" />
+      <ScreenHeader
+        title={known.map((s) => s.name).join(', ')}
+        back={checklistsPath}
+        backLabel="Checklists"
+      />
       {resumable.length > 0 ? (
         <section aria-labelledby="resume-heading" className="checklist-start">
-          <h2 id="resume-heading">You already have this list open</h2>
+          <h2 id="resume-heading">
+            {combined ? 'You already have these lists open' : 'You already have this list open'}
+          </h2>
           {resumable.map((r) => (
             <Link key={r.id} to={runPath(r.id)} className="button">
               Resume: {progressText(r.done, r.total)}, started {formatRunStart(r.started)}
@@ -83,7 +101,7 @@ export function ChecklistPreviewScreen() {
       ) : (
         <div className="checklist-start">
           <button type="button" disabled={!editable || view.groups.length === 0} onClick={start}>
-            Start this checklist
+            {combined ? 'Start these checklists together' : 'Start this checklist'}
           </button>
         </div>
       )}
@@ -98,6 +116,11 @@ export function ChecklistPreviewScreen() {
               return (
                 <li key={step.id}>
                   <span>{step.text}</span>
+                  {combined ? (
+                    <span className="checklist-source muted">
+                      For: {step.scenarioIds.map((id) => nameOf.get(id) ?? id).join(', ')}
+                    </span>
+                  ) : null}
                   <span className="checklist-source muted">
                     Source:{' '}
                     {src.href ? (
