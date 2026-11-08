@@ -72,7 +72,10 @@ checklist pack, and Settings lists the UK pack as "Included for your region" wit
   wind); none of those pages gives nation-specific procedure.
 - Flood uses `coming`, `immediate`, `first-days` and `longer-term`. Its steps cite UK Government
   Be Ready (flooding), GOV.UK (get flood warnings), Ready Scotland, two Natural Resources Wales
-  pages and a nidirect page; each step cites the one page that says it.
+  pages, two nidirect pages, mygov.scot and a UKHSA page. Each step cites a page that says it. A
+  generic step is sourced to one nation's page where the other pages fetched agree; a step that
+  names a nation cites that nation's page. Gas and water restart rests on the Natural Resources
+  Wales and UKHSA (England) pages, and the sea-defence warning on Natural Resources Wales.
 - One step is shared: `storm-floodwater` ("Never drive through floodwater. Turn around and find
   another route.") serves storm and flood, and is listed once when both are chosen. Elsewhere the
   storm wording differs from the power-cut and flood wording even where the topic overlaps
@@ -83,7 +86,8 @@ checklist pack, and Settings lists the UK pack as "Included for your region" wit
   agencies, numbers and routes differ, so they are written with the nation in the text: the
   risk-check services for all four, flood warning sign-up and Floodline (England, Scotland, Wales),
   and one reporting step per nation (England, Wales, Scotland, Northern Ireland), plus the Northern
-  Ireland council emergency payment. No service is implied for a nation whose page was not found
+  Ireland council emergency payment. Hardship grants and council accommodation are cited from
+  England and Wales pages. No service is implied for a nation whose page was not found
   to offer it (no Northern Ireland warning sign-up is listed). Nothing is filtered by nation, and
   flood steps never use `requires.risk`, so choosing Flood on a home that has not declared flood
   still shows every general step.
@@ -96,7 +100,7 @@ checklist pack, and Settings lists the UK pack as "Included for your region" wit
   without having recorded anything; where the source's advice is conditional ("if you use a
   generator"), the condition stays in the step text.
 - Step ids are stable and never reused for different advice; bump the pack `version` when content
-  changes (it is 3).
+  changes.
 
 ## Not built yet
 

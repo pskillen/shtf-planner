@@ -257,6 +257,16 @@ describe('the bundled packs', () => {
         g.steps.map((s) => s.id),
       );
       for (const id of Object.keys(labelled)) expect(ids).toContain(id);
+      // steps that name nations mid-sentence
+      const mid: Record<string, string[]> = {
+        'checklists-uk:flood-risk': ['England', 'Wales', 'Scotland', 'Northern Ireland'],
+        'checklists-uk:flood-warnings-signup': ['England', 'Scotland', 'Wales'],
+      };
+      for (const [id, nations] of Object.entries(mid)) {
+        for (const nation of nations) expect(byId[id]!.text, id).toContain(nation);
+      }
+      // no Northern Ireland warning service is claimed
+      expect(byId['checklists-uk:flood-warnings-signup']!.text).not.toContain('Northern Ireland');
       expect(pack.steps.some((s) => s.requires?.risk)).toBe(false);
     });
 
