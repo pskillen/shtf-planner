@@ -295,7 +295,7 @@
     },
     {
       "id": "checklists-uk:storm-limit-travel",
-      "text": "Limit travel. If you must travel, allow extra time, check your operator's latest advice and follow any \"Do Not Travel\" notices.",
+      "text": "Limit travel. If you must travel, allow extra time, check your travel operator's latest advice and follow any \"Do Not Travel\" notices.",
       "scenarios": ["checklists-uk:storm"],
       "phase": "coming",
       "order": 90,
@@ -303,7 +303,7 @@
     },
     {
       "id": "checklists-uk:storm-check-vulnerable",
-      "text": "Check on vulnerable people nearby and offer practical help, such as getting food or medication.",
+      "text": "Check on neighbours and others nearby who may need extra help, and offer practical support, such as getting food or medication.",
       "scenarios": ["checklists-uk:storm"],
       "phase": "coming",
       "order": 100,
@@ -315,6 +315,14 @@
       "scenarios": ["checklists-uk:storm"],
       "phase": "immediate",
       "order": 10,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:storm-sheltered-side",
+      "text": "If you go out, use doors on the sheltered side and close them behind you. Keep away from the sheltered side of boundary walls and fences: if they fail, they fall that way.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "immediate",
+      "order": 15,
       "source": "https://weather.metoffice.gov.uk/warnings-and-advice/seasonal-advice/your-home/stay-safe-in-a-storm"
     },
     {
@@ -359,7 +367,7 @@
     },
     {
       "id": "checklists-uk:storm-coast",
-      "text": "At the coast, stay away from large waves: they can knock you off your feet and carry you out to sea. In an emergency, call 999 and ask for the Coastguard.",
+      "text": "At the coast, beware of large waves, even from the shore: they can knock you off your feet and carry you out to sea. In an emergency, call 999 and ask for the Coastguard.",
       "scenarios": ["checklists-uk:storm"],
       "phase": "immediate",
       "order": 70,
@@ -371,6 +379,14 @@
       "scenarios": ["checklists-uk:storm"],
       "phase": "first-days",
       "order": 10,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:storm-cables-after",
+      "text": "Do not touch electrical or telephone cables that have been blown down or are still hanging.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "first-days",
+      "order": 15,
       "source": "https://beready.campaign.gov.uk/emergencies/storms/"
     },
     {
