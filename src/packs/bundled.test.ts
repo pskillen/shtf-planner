@@ -1,13 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_PACKS, emptyDocument } from '../model';
 import { sizeFits } from '../util';
+import { checklist, checklistPacks } from '../engine';
 import { bundledPacks } from './bundled';
 
 describe('the bundled packs', () => {
   const packs = bundledPacks();
 
   it('all validate and every reference resolves', () => {
-    expect(packs.all.map((p) => p.id).sort()).toEqual([...DEFAULT_PACKS].sort());
+    // checklist packs are offered by region, never switched, so they are not default packs
+    const switchable = packs.all.filter((p) => p.kind !== 'checklists');
+    expect(switchable.map((p) => p.id).sort()).toEqual([...DEFAULT_PACKS].sort());
+    expect(DEFAULT_PACKS).not.toContain('checklists-uk');
   });
 
   it('every default pack exists, and every region suggests real packs', () => {
@@ -158,5 +162,43 @@ describe('the bundled packs', () => {
     const us = { ...uk, region: 'US' as const };
     expect(packs.enabledPacks(us).map((p) => p.id)).toContain('guidance-us-ready');
     expect(packs.enabledPacks(us).map((p) => p.id)).not.toContain('guidance-uk-prepare');
+  });
+
+  describe('the UK checklist pack', () => {
+    const pack = packs.byId['checklists-uk']!;
+
+    it('is offered to a UK household and to nobody else', () => {
+      const uk = emptyDocument('local');
+      expect(checklistPacks(packs, 'UK').map((p) => p.id)).toEqual(['checklists-uk']);
+      expect(checklistPacks(packs, 'US')).toEqual([]);
+      expect(uk.settings.packs).not.toContain('checklists-uk');
+    });
+
+    it('gives every scenario steps, and every step a listed source or "assumption"', () => {
+      if (pack.kind !== 'checklists') throw new Error('not a checklists pack');
+      const listed = new Set((pack.sources ?? []).map((s) => s.url));
+      for (const s of pack.sources ?? []) expect(s.checked, s.url).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      for (const scenario of pack.scenarios) {
+        expect(
+          pack.steps.filter((st) => st.scenarios.includes(scenario.id)).length,
+          scenario.id,
+        ).toBeGreaterThan(0);
+      }
+      for (const st of pack.steps) {
+        expect(st.source === 'assumption' || listed.has(st.source), st.id).toBe(true);
+      }
+    });
+
+    it('builds a phased power-cut list for a UK household', () => {
+      const doc = emptyDocument('local');
+      const list = checklist(doc, packs, ['checklists-uk:power-cut'], '2026-11-08');
+      const phases = list.groups.map((g) => g.phase);
+      expect(phases).toEqual(expect.arrayContaining(['coming', 'immediate']));
+      const ids = list.groups.flatMap((g) => g.steps.map((s) => s.id));
+      expect(ids).toContain('checklists-uk:report');
+      // conditional steps stay hidden for a household with no generator or equipment
+      expect(ids).not.toContain('checklists-uk:generator');
+      expect(ids).not.toContain('checklists-uk:medical-plan');
+    });
   });
 });

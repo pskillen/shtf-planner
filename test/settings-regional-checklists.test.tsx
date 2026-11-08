@@ -20,7 +20,10 @@ const ck = (id: string, region?: 'UK' | 'US') =>
   }) as unknown as Pack;
 
 const withChecklists = (...c: Pack[]): Packs =>
-  ({ ...bundledPacks(), all: [...bundledPacks().all, ...c] }) as Packs;
+  ({
+    ...bundledPacks(),
+    all: [...bundledPacks().all.filter((p) => p.kind !== 'checklists'), ...c],
+  }) as Packs;
 
 describe('Settings, regional checklist packs', () => {
   it('shows this region as included text with no switch, and not the other region', () => {
@@ -38,7 +41,9 @@ describe('Settings, regional checklist packs', () => {
     expect(screen.getByText('Included for your region')).toBeTruthy();
     expect(screen.queryByText(/Checklist us/)).toBeNull();
     expect(screen.queryByRole('switch', { name: /Checklist/ })).toBeNull();
-    expect(screen.getAllByRole('switch')).toHaveLength(bundledPacks().all.length);
+    expect(screen.getAllByRole('switch')).toHaveLength(
+      bundledPacks().all.filter((p) => p.kind !== 'checklists').length,
+    );
     fireEvent.click(screen.getAllByRole('switch')[0]);
     expect(onToggle).toHaveBeenCalledTimes(1);
     expect(doc.settings.packs).toEqual(emptyDocument('local').settings.packs);
@@ -59,7 +64,28 @@ describe('Settings, regional checklist packs', () => {
 
   it('draws no group when no checklist pack is bundled', () => {
     const doc = emptyDocument('local');
-    render(<ContentPacks packs={bundledPacks()} settings={doc.settings} onToggle={vi.fn()} />);
+    const withoutChecklists = {
+      ...bundledPacks(),
+      all: bundledPacks().all.filter((p) => p.kind !== 'checklists'),
+    } as Packs;
+    render(<ContentPacks packs={withoutChecklists} settings={doc.settings} onToggle={vi.fn()} />);
     expect(screen.queryByText('Scenario checklists')).toBeNull();
+  });
+
+  it('lists the real bundled UK checklist pack without a switch on UK, and none on US', () => {
+    const uk = emptyDocument('local').settings;
+    const { unmount } = render(
+      <ContentPacks packs={bundledPacks()} settings={uk} onToggle={vi.fn()} />,
+    );
+    expect(screen.getByText('Scenario checklists')).toBeTruthy();
+    expect(screen.getByText(/UK scenario checklists/)).toBeTruthy();
+    expect(screen.getByText('Included for your region')).toBeTruthy();
+    expect(screen.queryByRole('switch', { name: /scenario checklists/i })).toBeNull();
+    unmount();
+    render(
+      <ContentPacks packs={bundledPacks()} settings={{ ...uk, region: 'US' }} onToggle={vi.fn()} />,
+    );
+    expect(screen.getByText(/No scenario checklists are available/)).toBeTruthy();
+    expect(screen.queryByText(/UK scenario checklists/)).toBeNull();
   });
 });

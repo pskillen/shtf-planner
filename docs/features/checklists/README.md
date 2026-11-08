@@ -1,11 +1,11 @@
 # Scenario checklists
 
-**Status:** Format and selection engine; no scenarios or screen yet
+**Status:** Format, selection engine and the UK power-cut scenario; no screen yet
 **Tracking:** [#40](https://github.com/pskillen/shtf-planner/issues/40)
 
 Step-by-step checklists for things that happen (a power cut, a flood warning), grouped by when a
-step matters. Today the content-pack format, its validation and the selection engine exist: no bundled pack
-and no route.
+step matters. The content-pack format, its validation, the selection engine and one bundled scenario (power
+cut, UK) exist; there is no route yet.
 
 ## Map
 
@@ -56,7 +56,26 @@ unlisted source, and a `requires.asset` that is not a real asset type.
   scenarios were chosen in. Unknown scenario ids contribute nothing. Each step carries its
   source, with the title and date checked when the pack lists it.
 
+## Bundled content
+
+`src/packs/data/checklists-uk.json` (`checklists-uk`, region `UK`) holds the **Power cut** scenario
+(`risks: ["grid"]`). It is offered by region and is not in `DEFAULT_PACKS`: a US household gets no
+checklist pack, and Settings lists the UK pack as "Included for your region" with no switch.
+
+- Steps are short and imperative, in the `coming` and `immediate` phases and `first-days`; a phase
+  with nothing to say is omitted.
+- Every step's `source` is a URL listed in the pack's `sources` with the date it was checked: UK
+  Government Be Ready (power cuts), the NHS carbon monoxide page, the UK CMOs' cold-weather advice
+  and Ofgem's Priority Services Register page.
+- Steps must hold across the UK. The reporting number (105, or 03457 643643 in Northern Ireland) and
+  the Priority Services Register (England, Scotland, Wales; Customer Care Register in Northern
+  Ireland) are labelled by nation in the text. Nothing is filtered by nation.
+- Conditional steps use `requires`: the generator step needs a generator asset, the solar and
+  battery step needs solar PV or a home battery, the medical-equipment plan needs a member tagged
+  `powered-equipment`, and the formula step a member tagged `infant`.
+- Step ids are stable and never reused for different advice; bump the pack `version` when content
+  changes.
+
 ## Not built yet
 
-Bundled scenarios and steps, and the screen. See
-[#40](https://github.com/pskillen/shtf-planner/issues/40).
+Other scenarios, and the screen. See [#40](https://github.com/pskillen/shtf-planner/issues/40).

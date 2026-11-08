@@ -69,11 +69,16 @@ describe('splitPacks', () => {
   it('never makes a checklist pack switchable, and holds the region rule', () => {
     const real = bundledPacks();
     const packs = {
-      all: [...real.all, ck('c-uk', 'UK'), ck('c-us', 'US'), ck('c-any')],
+      all: [
+        ...real.all.filter((p) => p.kind !== 'checklists'),
+        ck('c-uk', 'UK'),
+        ck('c-us', 'US'),
+        ck('c-any'),
+      ],
     } as unknown as Packs;
     const uk = splitPacks(packs, 'UK');
     expect(uk.switchable.some((p) => p.kind === 'checklists')).toBe(false);
-    expect(uk.switchable).toHaveLength(real.all.length);
+    expect(uk.switchable).toHaveLength(real.all.filter((p) => p.kind !== 'checklists').length);
     expect(uk.regional.map((p) => p.id)).toEqual(['c-uk']);
     expect(splitPacks(packs, 'US').regional.map((p) => p.id)).toEqual(['c-us']);
     expect(uk.hasChecklists).toBe(true);

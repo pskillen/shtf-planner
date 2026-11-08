@@ -1,4 +1,5 @@
 import assetsBase from './data/assets-base.json';
+import checklistsUk from './data/checklists-uk.json';
 import guidanceGridFree from './data/guidance-grid-free.json';
 import guidanceUkPrepare from './data/guidance-uk-prepare.json';
 import guidanceUsReady from './data/guidance-us-ready.json';
@@ -16,6 +17,7 @@ export const BUNDLED_PACK_FILES: ReadonlyArray<{ label: string; raw: unknown }> 
   { label: 'guidance-us-ready.json', raw: guidanceUsReady },
   { label: 'plans-base.json', raw: plansBase },
   { label: 'regions.json', raw: regions },
+  { label: 'checklists-uk.json', raw: checklistsUk },
 ];
 
 let cached: Packs | undefined;
