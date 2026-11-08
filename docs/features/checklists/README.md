@@ -9,11 +9,12 @@ cut, storm, flood, heatwave and evacuation, UK) exist; there is no route yet.
 
 ## Map
 
-| Piece   | Where                      | What                                                                                          |
-| ------- | -------------------------- | --------------------------------------------------------------------------------------------- |
-| Schemas | `src/model/packs.ts`       | `ChecklistsPack`, `ChecklistScenario`, `ChecklistStep`, `ChecklistPhase`, `CHECKLIST_PHASES`. |
-| Loader  | `src/packs/loader.ts`      | Validation, and the `checklistScenarios` and `checklistSteps` indexes on `Packs`.             |
-| Engine  | `src/engine/checklists.ts` | `checklistPacks`, `checklistScenarios`, `isStepApplicable`, `checklist`.                      |
+| Piece   | Where                         | What                                                                                          |
+| ------- | ----------------------------- | --------------------------------------------------------------------------------------------- |
+| Schemas | `src/model/packs.ts`          | `ChecklistsPack`, `ChecklistScenario`, `ChecklistStep`, `ChecklistPhase`, `CHECKLIST_PHASES`. |
+| Loader  | `src/packs/loader.ts`         | Validation, and the `checklistScenarios` and `checklistSteps` indexes on `Packs`.             |
+| Engine  | `src/engine/checklists.ts`    | `checklistPacks`, `checklistScenarios`, `isStepApplicable`, `checklist`.                      |
+| Runs    | `src/engine/checklistRuns.ts` | `checklistStateKey`, `buildCatalogueSnapshot`, `startRun`.                                    |
 
 ## The `checklists` pack
 
@@ -55,6 +56,26 @@ unlisted source, and a `requires.asset` that is not a real asset type.
   (empty phases omitted) and ordered by pack, then `order`, then step id, whatever order the
   scenarios were chosen in. Unknown scenario ids contribute nothing. Each step carries its
   source, with the title and date checked when the pack lists it.
+
+## Starting a run (snapshot)
+
+`src/engine/checklistRuns.ts`, pure, no screen yet.
+
+- **Frozen advice.** `startRun(draft, packs, { runId, started, asOf, scenarioIds })` writes, in the
+  caller's single `change`, the run and one empty step state (`checklistStepStates`, keyed
+  `${runId}|${stepId}`) for every snapshotted step. Nothing recomputes the snapshot afterwards:
+  changing members, assets, risks, region or pack content leaves a started run as it was.
+- **What is snapshotted.** `buildCatalogueSnapshot(doc, packs, asOf)` covers every scenario the
+  region offers, not only the selected ones, and every household-applicable step of them, in
+  canonical order (phase, pack, `order`, step id). Each step keeps its text, phase, order,
+  scenarios, source, source title, date checked and pack. The snapshot's `packs` list records the
+  version of each checklist pack used.
+- **Hidden scenarios.** Steps of unselected scenarios are snapshotted and have a state, so a later
+  choice to show another scenario needs no recomputation.
+- **Refusals.** `startRun` returns `undefined` and writes nothing when the run id already exists
+  or no selected scenario is in the catalogue. Unknown and repeated ids are dropped.
+- **Merged scenarios.** A run's `scenarios` is a merged array, so a merged document may hold
+  duplicates or none. The schema accepts both; readers de-duplicate.
 
 ## Bundled content
 
