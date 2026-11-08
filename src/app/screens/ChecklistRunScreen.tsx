@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { checklistRunView, clearStepDone, setStepDone } from '../../engine';
 import { ScreenHeader } from '../components/ScreenHeader';
@@ -10,6 +11,7 @@ import {
   progressText,
   sourceLabel,
 } from './checklists/view';
+import { StepNote, type NoteRegistry } from './checklists/StepNote';
 
 /** An open (or finished) run: the frozen steps with a tick each. Reads and writes only through the engine. */
 export function ChecklistRunScreen() {
@@ -17,6 +19,7 @@ export function ChecklistRunScreen() {
   const doc = useDocument();
   const change = useChange();
   const editable = useEditable();
+  const notes: NoteRegistry = useRef(new Map());
   const view = checklistRunView(doc, runId);
   if (!view) {
     return (
@@ -88,6 +91,16 @@ export function ChecklistRunScreen() {
                         <span className="checklist-source muted">
                           Done {formatDoneAt(step.doneAt)}
                         </span>
+                      ) : null}
+                      {canTick || step.note !== undefined ? (
+                        <StepNote
+                          runId={runId}
+                          stepId={step.id}
+                          label={step.text}
+                          saved={step.note ?? ''}
+                          disabled={!canTick}
+                          registry={notes}
+                        />
                       ) : null}
                       <span className="checklist-source muted">
                         Source:{' '}
