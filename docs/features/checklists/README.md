@@ -1,11 +1,11 @@
 # Scenario checklists
 
-**Status:** Format, selection engine and the UK power-cut, storm, flood and heatwave scenarios; no screen yet
+**Status:** Format, selection engine and the five UK scenarios (power cut, storm, flood, heatwave, evacuation); no screen yet
 **Tracking:** [#40](https://github.com/pskillen/shtf-planner/issues/40)
 
 Step-by-step checklists for things that happen (a power cut, a flood warning), grouped by when a
-step matters. The content-pack format, its validation, the selection engine and four bundled scenarios (power
-cut, storm, flood and heatwave, UK) exist; there is no route yet.
+step matters. The content-pack format, its validation, the selection engine and five bundled scenarios (power
+cut, storm, flood, heatwave and evacuation, UK) exist; there is no route yet.
 
 ## Map
 
@@ -59,7 +59,7 @@ unlisted source, and a `requires.asset` that is not a real asset type.
 ## Bundled content
 
 `src/packs/data/checklists-uk.json` (`checklists-uk`, region `UK`) holds the **Power cut**
-(`risks: ["grid"]`), **Storm** (`risks: ["storm"]`), **Flood** (`risks: ["flood", "coastal"]`) and **Heatwave** (`risks: ["heat"]`) scenarios. It is offered by region and is not in `DEFAULT_PACKS`: a US household gets no
+(`risks: ["grid"]`), **Storm** (`risks: ["storm"]`), **Flood** (`risks: ["flood", "coastal"]`), **Heatwave** (`risks: ["heat"]`) and **Evacuation** (no `risks`: any hazard can lead to leaving home) scenarios. It is offered by region and is not in `DEFAULT_PACKS`: a US household gets no
 checklist pack, and Settings lists the UK pack as "Included for your region" with no switch.
 
 - Steps are short and imperative. Power cut uses `coming` and `immediate`; storm adds
@@ -95,8 +95,23 @@ checklist pack, and Settings lists the UK pack as "Included for your region" wit
   pets, contacting a vet, and 999 for suspected heatstroke. It differs in resting for a few hours
   with no 30-minute rule, "hot, red and dry skin" as a heatstroke sign, and advice not to give
   aspirin or paracetamol, which no second source confirms, so those are not used.
-- One step is shared: `storm-floodwater` ("Never drive through floodwater. Turn around and find
-  another route.") serves storm and flood, and is listed once when both are chosen. Elsewhere the
+- Evacuation uses `coming`, `immediate` and `first-days`; `first-week` and `longer-term` are
+  deliberately empty because no fetched page gives advice for them (no rest-centre or temporary
+  accommodation page was found that holds across the UK). It cites UK Government Be Ready (be
+  ready for emergencies, and its household emergency plan PDF) and two Ready Scotland pages
+  (emergency plan, emergency kit); the kit list is Scotland's, and no other page fetched contradicts it.
+  Leaving may be ordered or a household's own decision, so the steps do not
+  depend on an order: "if the emergency is inside your home, get out" and "if you have to leave
+  home" stand beside the shared "if the council or emergency services ask you to evacuate, go".
+  Nothing is gated: the medication, equipment, baby, pet and assistance-animal steps say "if" in
+  the text, so a household that has recorded nothing still sees them. Four flood steps are shared
+  with it because the instruction is identical and their sources say it generally: the emergency
+  plan, knowing how to turn off gas, electricity and water, leaving when asked, and returning
+  only when the emergency services say it is safe. Gas must not be turned back on by the
+  household; the plan PDF says water and electricity can be, which conflicts with the flood
+  steps, so no evacuation step says it.
+- One step is shared between storm and flood: `storm-floodwater` ("Never drive through floodwater. Turn around and find
+  another route."), listed once when both are chosen. Elsewhere the
   storm wording differs from the power-cut and flood wording even where the topic overlaps
   (power lines, checking on neighbours), so each scenario has its own step. A step is shared only
   when the instruction is identical.
@@ -123,4 +138,4 @@ checklist pack, and Settings lists the UK pack as "Included for your region" wit
 
 ## Not built yet
 
-Further scenarios, and the screen. See [#40](https://github.com/pskillen/shtf-planner/issues/40).
+The screen. See [#40](https://github.com/pskillen/shtf-planner/issues/40).
