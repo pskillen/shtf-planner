@@ -458,11 +458,11 @@
     },
     {
       "id": "checklists-uk:flood-stay-informed",
-      "text": "Check the weather forecast and Met Office weather warnings for your area, on TV, radio or the Met Office app.",
+      "text": "Check local news and weather forecasts. If heavy rain is forecast in your area, expect flooding of low-lying land and roads, and keep an eye on water levels in watercourses near you.",
       "scenarios": ["checklists-uk:flood"],
       "phase": "coming",
       "order": 40,
-      "source": "https://ready.campaign.gov.scot/flooding"
+      "source": "https://www.nidirect.gov.uk/articles/what-do-if-flood-happens"
     },
     {
       "id": "checklists-uk:flood-plan",
@@ -533,27 +533,19 @@
     },
     {
       "id": "checklists-uk:flood-warning-turn-off",
-      "text": "If your area has a flood warning or severe flood warning, turn off your gas, electricity and water if it is safe to do so. Do not touch an electrical switch if you are standing in water.",
+      "text": "If a flood warning is issued or flooding is about to reach your home, turn off your gas, electricity and water if it is safe to do so. Do not touch plugs or other sources of electricity when standing in flood water.",
       "scenarios": ["checklists-uk:flood"],
       "phase": "immediate",
       "order": 20,
-      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+      "source": "https://naturalresources.wales/flooding/what-to-do-in-a-flood/?lang=en"
     },
     {
       "id": "checklists-uk:flood-warning-move",
-      "text": "With a flood warning or severe flood warning, move your family, vehicles, pets and important items to safety, for example upstairs or to higher ground.",
+      "text": "If a flood warning is issued or flooding is about to reach your home, move people, pets and valuables to a safe place, and move your car to higher ground. Put flood gates and other protection equipment in place if you have them, and cover airbricks and vents.",
       "scenarios": ["checklists-uk:flood"],
       "phase": "immediate",
       "order": 30,
-      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
-    },
-    {
-      "id": "checklists-uk:flood-protection-products",
-      "text": "With a flood warning or severe flood warning, put flood protection products in place if you have them, such as flood barriers or air brick covers.",
-      "scenarios": ["checklists-uk:flood"],
-      "phase": "immediate",
-      "order": 40,
-      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+      "source": "https://naturalresources.wales/flooding/what-to-do-in-a-flood/?lang=en"
     },
     {
       "id": "checklists-uk:flood-evacuate",
@@ -573,11 +565,11 @@
     },
     {
       "id": "checklists-uk:flood-higher-ground",
-      "text": "If flooding reaches you, move to higher ground or an upper floor if it is safe. Stay away from shorelines.",
+      "text": "If flooding reaches you and it is safe to do so, move to an upstairs room with a window you could use as an escape route. If you do not have an upstairs, find another safe place.",
       "scenarios": ["checklists-uk:flood"],
       "phase": "immediate",
       "order": 60,
-      "source": "https://ready.campaign.gov.scot/flooding"
+      "source": "https://naturalresources.wales/flooding/what-to-do-in-a-flood/?lang=en"
     },
     {
       "id": "checklists-uk:flood-travel",
