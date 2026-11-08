@@ -89,7 +89,7 @@ the scenarios available, and every household-applicable step, copied when the ru
 recomputed). `checklistStepStates` is keyed `runId|stepId` and holds a step's `doneAt` and `note`;
 unticking removes `doneAt` and keeps the note. A run's `scenarios` is a merged array, so after a
 merge it can hold duplicates or be empty; the schema accepts both and readers de-duplicate. Ticks
-never touch `plans` or the score. Nothing creates a run yet.
+never touch `plans` or the score.
 
 ## Migrations and old clients
 

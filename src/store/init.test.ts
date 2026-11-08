@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import * as Y from 'yjs';
 import { describe, expect, it } from 'vitest';
 import { emptyDocument } from '../model';
+import { MIGRATIONS } from '../model/migrate';
 import { applyInit, hash32, initClientId, initContent } from './init';
 
 const encoded = (schemaVersion: number): Uint8Array => {
@@ -65,13 +66,15 @@ describe('the frozen content follows the schema it was written for', () => {
   it('equals emptyDocument() apart from the per-device meta', () => {
     // Containers added by a migration step (schema 5 onward) are not in the frozen literal.
     const { meta: fresh, ...rest } = emptyDocument('local', '2026-01-01T00:00:00.000Z');
-    const migrated: Record<string, unknown> = rest;
-    delete migrated.checklistRuns;
-    delete migrated.checklistStepStates;
+    const trimmed: Record<string, unknown> = { ...rest };
+    delete trimmed.checklistRuns;
+    delete trimmed.checklistStepStates;
     const { meta: frozen, ...frozenRest } = initContent() as Record<string, unknown> & {
       meta: Record<string, unknown>;
     };
-    expect(frozenRest).toEqual(rest);
+    expect(frozenRest).toEqual(trimmed);
+    // The frozen literal plus the migration steps is the current shape.
+    expect(MIGRATIONS.reduce((doc, step) => step.up(doc), frozenRest)).toEqual(rest);
     expect(frozen).toEqual({ devices: fresh.devices, packVersions: fresh.packVersions });
   });
 });
