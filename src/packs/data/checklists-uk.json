@@ -2,7 +2,7 @@
   "format": 1,
   "id": "checklists-uk",
   "kind": "checklists",
-  "version": 1,
+  "version": 2,
   "name": "UK scenario checklists",
   "region": "UK",
   "sources": [
@@ -20,6 +20,26 @@
       "url": "https://www.gov.uk/government/publications/public-health-advice-from-uk-cmos-during-a-national-power-outage/keeping-warm-or-cool-in-extreme-weather-scripts-for-broadcast-media",
       "title": "UK CMOs: keeping warm or cool in a national power outage (GOV.UK)",
       "checked": "2026-11-08"
+    },
+    {
+      "url": "https://beready.campaign.gov.uk/emergencies/storms/",
+      "title": "Be Ready (UK Government): storms",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://weather.metoffice.gov.uk/warnings-and-advice/seasonal-advice/your-home/stay-safe-in-a-storm",
+      "title": "Met Office: stay safe in a storm",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://weather.metoffice.gov.uk/warnings-and-advice/seasonal-advice/stay-safe-in-strong-wind",
+      "title": "Met Office: stay safe in strong wind",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://weather.metoffice.gov.uk/warnings-and-advice/seasonal-advice/travel/travelling-in-storms-rain-and-wind",
+      "title": "Met Office: driving in storms, rain and strong wind",
+      "checked": "2026-11-08"
     }
   ],
   "scenarios": [
@@ -27,6 +47,11 @@
       "id": "checklists-uk:power-cut",
       "name": "Power cut",
       "risks": ["grid"]
+    },
+    {
+      "id": "checklists-uk:storm",
+      "name": "Storm",
+      "risks": ["storm"]
     }
   ],
   "steps": [
@@ -195,6 +220,166 @@
       "phase": "immediate",
       "order": 110,
       "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
+    },
+    {
+      "id": "checklists-uk:storm-warnings",
+      "text": "Check the Met Office forecast and National Severe Weather Warnings for your area, and follow any advice.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "coming",
+      "order": 10,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:storm-provider",
+      "text": "Know who your power provider is and how to contact them during an outage.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "coming",
+      "order": 20,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:storm-charge",
+      "text": "Charge your phones, power banks and any backup batteries for medical equipment.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "coming",
+      "order": 30,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:storm-loose-items",
+      "text": "Secure loose items such as ladders, trampolines, garden furniture and toys.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "coming",
+      "order": 40,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:storm-doors-windows",
+      "text": "Close and fasten doors and windows, especially those facing the wind, and large doors such as garage doors.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "coming",
+      "order": 50,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:storm-loft",
+      "text": "Close and bolt loft hatches, particularly if your roof pitch is under 30 degrees.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "coming",
+      "order": 60,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:storm-shutters",
+      "text": "If you have storm shutters, close and fasten them.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "coming",
+      "order": 65,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:storm-park",
+      "text": "Park vehicles in a garage if you can. Otherwise keep them away from buildings, trees, walls and fences.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "coming",
+      "order": 70,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:storm-chimney",
+      "text": "If you have tall chimney stacks in poor condition, move beds away from the areas directly below them.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "coming",
+      "order": 80,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:storm-limit-travel",
+      "text": "Limit travel. If you must travel, allow extra time, check your operator's latest advice and follow any \"Do Not Travel\" notices.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "coming",
+      "order": 90,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:storm-check-vulnerable",
+      "text": "Check on vulnerable people nearby and offer practical help, such as getting food or medication.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "coming",
+      "order": 100,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:storm-stay-in",
+      "text": "Stay indoors unless it is essential to go out. Avoid walking or sheltering near buildings, fences, walls and trees.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "immediate",
+      "order": 10,
+      "source": "https://weather.metoffice.gov.uk/warnings-and-advice/seasonal-advice/your-home/stay-safe-in-a-storm"
+    },
+    {
+      "id": "checklists-uk:storm-no-repairs",
+      "text": "Do not go outside to repair damage while the storm is still going.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "immediate",
+      "order": 20,
+      "source": "https://weather.metoffice.gov.uk/warnings-and-advice/seasonal-advice/your-home/stay-safe-in-a-storm"
+    },
+    {
+      "id": "checklists-uk:storm-internal-doors",
+      "text": "Open internal doors only when you need to, and close them behind you.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "immediate",
+      "order": 30,
+      "source": "https://weather.metoffice.gov.uk/warnings-and-advice/seasonal-advice/your-home/stay-safe-in-a-storm"
+    },
+    {
+      "id": "checklists-uk:storm-driving",
+      "text": "If you must drive, avoid exposed routes such as bridges and high open roads where you can. Slow down for crosswinds, especially if towing or driving a high-sided vehicle.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "immediate",
+      "order": 40,
+      "source": "https://weather.metoffice.gov.uk/warnings-and-advice/seasonal-advice/your-home/stay-safe-in-a-storm"
+    },
+    {
+      "id": "checklists-uk:storm-floodwater",
+      "text": "Never drive through floodwater. Turn around and find another route.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "immediate",
+      "order": 50,
+      "source": "https://weather.metoffice.gov.uk/warnings-and-advice/seasonal-advice/travel/travelling-in-storms-rain-and-wind"
+    },
+    {
+      "id": "checklists-uk:storm-fallen-cables",
+      "text": "Keep well away from fallen or damaged power lines, and do not touch fallen or hanging electrical or telephone cables. High-voltage electricity can jump gaps without warning.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "immediate",
+      "order": 60,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:storm-coast",
+      "text": "At the coast, stay away from large waves: they can knock you off your feet and carry you out to sea. In an emergency, call 999 and ask for the Coastguard.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "immediate",
+      "order": 70,
+      "source": "https://weather.metoffice.gov.uk/warnings-and-advice/seasonal-advice/stay-safe-in-strong-wind"
+    },
+    {
+      "id": "checklists-uk:storm-weakened",
+      "text": "Stay clear of walls, buildings and trees, which may have been weakened.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "first-days",
+      "order": 10,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:storm-check-after",
+      "text": "Check that neighbours and relatives who may need extra support are safe, and help them arrange repairs.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "first-days",
+      "order": 20,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
     }
   ]
 }

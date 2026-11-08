@@ -201,5 +201,25 @@ describe('the bundled packs', () => {
       expect(ids).toContain('checklists-uk:no-camping-stove');
       expect(ids).toContain('checklists-uk:medical-plan');
     });
+
+    it('builds a phased storm list, and power cut + storm lists each step once', () => {
+      const doc = emptyDocument('local');
+      const storm = checklist(doc, packs, ['checklists-uk:storm'], '2026-11-08');
+      expect(storm.groups.map((g) => g.phase)).toEqual(['coming', 'immediate', 'first-days']);
+      const stormIds = storm.groups.flatMap((g) => g.steps.map((s) => s.id));
+      // safety warnings are not gated on recorded facts
+      expect(stormIds).toContain('checklists-uk:storm-fallen-cables');
+      expect(stormIds).toContain('checklists-uk:storm-floodwater');
+      const both = checklist(
+        doc,
+        packs,
+        ['checklists-uk:power-cut', 'checklists-uk:storm'],
+        '2026-11-08',
+      );
+      const bothIds = both.groups.flatMap((g) => g.steps.map((s) => s.id));
+      expect(new Set(bothIds).size).toBe(bothIds.length);
+      expect(bothIds).toEqual(expect.arrayContaining(stormIds));
+      expect(bothIds).toContain('checklists-uk:generator');
+    });
   });
 });

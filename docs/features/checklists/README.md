@@ -1,11 +1,11 @@
 # Scenario checklists
 
-**Status:** Format, selection engine and the UK power-cut scenario; no screen yet
+**Status:** Format, selection engine and the UK power-cut and storm scenarios; no screen yet
 **Tracking:** [#40](https://github.com/pskillen/shtf-planner/issues/40)
 
 Step-by-step checklists for things that happen (a power cut, a flood warning), grouped by when a
-step matters. The content-pack format, its validation, the selection engine and one bundled scenario (power
-cut, UK) exist; there is no route yet.
+step matters. The content-pack format, its validation, the selection engine and two bundled scenarios (power
+cut and storm, UK) exist; there is no route yet.
 
 ## Map
 
@@ -58,16 +58,21 @@ unlisted source, and a `requires.asset` that is not a real asset type.
 
 ## Bundled content
 
-`src/packs/data/checklists-uk.json` (`checklists-uk`, region `UK`) holds the **Power cut** scenario
-(`risks: ["grid"]`). It is offered by region and is not in `DEFAULT_PACKS`: a US household gets no
+`src/packs/data/checklists-uk.json` (`checklists-uk`, region `UK`) holds the **Power cut**
+(`risks: ["grid"]`) and **Storm** (`risks: ["storm"]`) scenarios. It is offered by region and is not in `DEFAULT_PACKS`: a US household gets no
 checklist pack, and Settings lists the UK pack as "Included for your region" with no switch.
 
-- Steps are short and imperative, in the `coming` and `immediate` phases; a phase with nothing to
-  say is omitted.
+- Steps are short and imperative. Power cut uses `coming` and `immediate`; storm adds
+  `first-days` for after the storm. A phase with nothing to say is omitted.
 - Every step's `source` is a URL listed in the pack's `sources` with the date it was checked: UK
   Government Be Ready (power cuts), the NHS carbon monoxide page and the UK CMOs' cold-weather
   advice. The CMO page is a set of broadcast scripts for a national power outage, so it sources
-  only the unattended-heating step.
+  only the unattended-heating step. Storm steps cite UK Government Be Ready (storms) and three Met
+  Office pages (stay safe in a storm, stay safe in strong wind, driving in storms, rain and strong
+  wind); none of those pages gives nation-specific procedure.
+- No step is shared between scenarios yet: the storm wording differs from the power-cut wording
+  even where the topic overlaps (power lines, checking on neighbours), so each scenario has its own
+  step. A step is shared only when the instruction is identical.
 - Steps must hold across the UK. The reporting number (105, or 03457 643643 in Northern Ireland) and
   the Priority Services Register (England, Scotland, Wales; Customer Care Register in Northern
   Ireland) are labelled by nation in the text. Nothing is filtered by nation.
@@ -81,4 +86,4 @@ checklist pack, and Settings lists the UK pack as "Included for your region" wit
 
 ## Not built yet
 
-Other scenarios, and the screen. See [#40](https://github.com/pskillen/shtf-planner/issues/40).
+Further scenarios, and the screen. See [#40](https://github.com/pskillen/shtf-planner/issues/40).

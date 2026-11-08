@@ -24,7 +24,7 @@ What to have, and how much, ships as versioned JSON packs validated with Zod. Th
 | `guidance-us-ready.json`   | `guidance`   | Ready.gov: one gallon of water per person per day.                                                                                                   |
 | `guidance-grid-free.json`  | `guidance`   | Region-less rules: heat, cooking, light, phone power, sanitation, medication, mobility, babies, pets.                                                |
 | `plans-base.json`          | `plans`      | Meeting point, shut-offs, documents, grab bags, first aid course, EPS, neighbours, pets.                                                             |
-| `checklists-uk.json`       | `checklists` | UK scenario checklists: the power-cut steps, each sourced; offered by region, not switched.                                                          |
+| `checklists-uk.json`       | `checklists` | UK scenario checklists: the power-cut and storm steps, each sourced; offered by region, not switched.                                                |
 | `regions.json`             | `regions`    | UK and US units, currency, risk links (flood, weather), suggested packs.                                                                             |
 
 ## Format
