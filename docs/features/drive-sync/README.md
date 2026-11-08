@@ -186,7 +186,7 @@ only opens a popup for a tap, so **nothing asks Google unless a tap is behind it
   that state, so edits made here and on the other device meanwhile merge without asking the
   first-connect question again. A different account, or one whose email cannot be read, starts afresh and asks first.
 - **Forget this device's data** revokes the token (best effort, a few seconds at most) and deletes
-  the household and the sync state from this browser too; Drive is untouched, and connecting again
+  the household, the sync state and any unsaved checklist note drafts from this browser too; Drive is untouched, and connecting again
   brings it back.
 
 ## Export and import

@@ -14,7 +14,21 @@ const DEVICE_KEYS = [
   'shtf.recentItemTypes',
 ] as const;
 
+/** Unsaved checklist notes (`StepNote.tsx` in `src/app`): household text, one key per step. */
+const DEVICE_KEY_PREFIXES = ['shtf:checklist-note-draft:'] as const;
+
 function clearDeviceKeys(): void {
+  try {
+    const storage = globalThis.localStorage;
+    const found: string[] = [];
+    for (let i = 0; storage && i < storage.length; i++) {
+      const key = storage.key(i);
+      if (key !== null && DEVICE_KEY_PREFIXES.some((p) => key.startsWith(p))) found.push(key);
+    }
+    for (const key of found) storage.removeItem(key);
+  } catch {
+    // Storage off: nothing was remembered.
+  }
   for (const key of DEVICE_KEYS) {
     try {
       globalThis.localStorage?.removeItem(key);

@@ -59,7 +59,7 @@ Rules the screens rely on:
 - **`meta.env`** is the environment of the last build that wrote the document, stamped when the
   store opens; Drive sync shows it when files come in or go out.
 - **Per-device choices** (last place used, recent items, the date reader's switches, dismissed
-  hints) live in localStorage, never in the document, so they do not sync.
+  hints, an unsaved checklist note) live in localStorage, never in the document, so they do not sync.
 
 `Env` has six values (`local`, `preview`, `dev`, `next`, `staging`, `prod`) and lives in
 `src/model/document.ts`; `src/util/build-env.ts` re-exports the type, so there is one source.

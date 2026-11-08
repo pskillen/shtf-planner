@@ -66,6 +66,19 @@ describe('forgetDeviceData', () => {
     expect(storage.getItem('unrelated')).toBe('kept');
   });
 
+  it('removes unsaved checklist note drafts and nothing else with a similar name', async () => {
+    const storage = memoryStorage();
+    storage.setItem('shtf:checklist-note-draft:run-1|checklists-uk:flood-risk', '{"base":""}');
+    storage.setItem('shtf:checklist-note-draft:run-2|other-step', '{"base":""}');
+    storage.setItem('shtf:checklist-note', 'kept');
+    storage.setItem('unrelated', 'kept');
+    vi.stubGlobal('localStorage', storage);
+    await forgetDeviceData();
+    expect(storage.length).toBe(2);
+    expect(storage.getItem('shtf:checklist-note')).toBe('kept');
+    expect(storage.getItem('unrelated')).toBe('kept');
+  });
+
   it('deletes the household and the sync state', async () => {
     const store = await openStore({ env: 'local', deviceId: 'd', channel: false });
     store.change('x', (d) => {
