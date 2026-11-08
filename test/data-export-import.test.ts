@@ -137,3 +137,22 @@ describe('barcodes and scans in export and import', () => {
     expect(p.summary.scans).toBe(1);
   });
 });
+
+describe('checklist runs in an import', () => {
+  it('counts the runs in the preview and keeps them and their step states', () => {
+    const doc = biggarDocument();
+    doc.checklistRuns.r = {
+      id: 'r',
+      scenarios: [],
+      started: '2026-03-04T10:00:00.000Z',
+      catalogue: { packs: [], scenarios: [], steps: [] },
+    };
+    doc.checklistStepStates['r|s'] = { runId: 'r', stepId: 's', note: 'done early' };
+    const p = previewImport(JSON.stringify(doc));
+    if (!p.ok) throw new Error(p.error);
+    expect(p.summary.checklistRuns).toBe(1);
+    const back = JSON.parse(p.json);
+    expect(back.checklistRuns.r.scenarios).toEqual([]);
+    expect(back.checklistStepStates['r|s'].note).toBe('done early');
+  });
+});

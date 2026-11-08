@@ -326,3 +326,94 @@ describe('review answer conflicts', () => {
     );
   });
 });
+
+describe('checklist runs and step states', () => {
+  const run = (id: string, scenarios: string[]): Document['checklistRuns'][string] => ({
+    id,
+    scenarios,
+    started: '2026-03-04T10:00:00.000Z',
+    catalogue: {
+      packs: [{ id: 'checklists-base', version: 1 }],
+      scenarios: [
+        { id: 'flood', name: 'Flood' },
+        { id: 'power-cut', name: 'Power cut' },
+      ],
+      steps: [
+        {
+          id: 'unplug',
+          packId: 'checklists-base',
+          text: 'Unplug appliances',
+          phase: 'immediate',
+          order: 1,
+          scenarios: ['flood'],
+          source: 'assumption',
+        },
+      ],
+    },
+  });
+
+  it('a household with only checklist data is not blank', () => {
+    expect(isBlank(withDoc((d) => void (d.checklistRuns.r = run('r', ['flood']))))).toBe(false);
+    expect(
+      isBlank(
+        withDoc((d) => void (d.checklistStepStates['r|unplug'] = { runId: 'r', stepId: 'unplug' })),
+      ),
+    ).toBe(false);
+  });
+
+  it('records both collections under collection/id keys', () => {
+    const d = withDoc((x) => {
+      x.checklistRuns.r = run('r', ['flood']);
+      x.checklistStepStates['r|unplug'] = { runId: 'r', stepId: 'unplug' };
+    });
+    expect([...recordsOf(plain(d)).keys()]).toEqual(
+      expect.arrayContaining(['checklistRuns/r', 'checklistStepStates/r|unplug']),
+    );
+  });
+
+  it('titles a run by its scenario names (each once) and start day, a step by its text', () => {
+    const b = withDoc((d) => {
+      d.checklistRuns.r = run('r', ['flood', 'power-cut', 'flood']);
+      d.checklistStepStates['r|unplug'] = { runId: 'r', stepId: 'unplug' };
+    });
+    const l = structuredClone(b);
+    const r = structuredClone(b);
+    l.checklistRuns.r!.finished = '2026-03-05T10:00:00.000Z';
+    r.checklistRuns.r!.finished = '2026-03-06T10:00:00.000Z';
+    l.checklistStepStates['r|unplug']!.note = 'mine';
+    r.checklistStepStates['r|unplug']!.note = 'theirs';
+    const by = Object.fromEntries(
+      classify(plain(b), plain(l), plain(r)).conflicts.map((c) => [c.key, [c.noun, c.title]]),
+    );
+    expect(by['checklistRuns/r']).toEqual([
+      'Checklist run',
+      'Flood, Power cut, started 2026-03-04',
+    ]);
+    expect(by['checklistStepStates/r|unplug']).toEqual(['Checklist step', 'Unplug appliances']);
+  });
+
+  it('titles a step by its key when no run in the snapshots lists it', () => {
+    const b = withDoc((d) => {
+      d.checklistStepStates['gone|x'] = { runId: 'gone', stepId: 'x' };
+    });
+    const l = structuredClone(b);
+    const r = structuredClone(b);
+    l.checklistStepStates['gone|x']!.note = 'a';
+    r.checklistStepStates['gone|x']!.note = 'b';
+    expect(classify(plain(b), plain(l), plain(r)).conflicts[0]).toMatchObject({
+      noun: 'Checklist step',
+      title: 'gone|x',
+    });
+  });
+
+  it('does not ask when both devices only added scenarios to a run', () => {
+    const b = withDoc((d) => void (d.checklistRuns.r = run('r', ['flood'])));
+    const l = structuredClone(b);
+    const r = structuredClone(b);
+    l.checklistRuns.r!.scenarios.push('power-cut');
+    r.checklistRuns.r!.scenarios.push('heatwave');
+    const out = classify(plain(b), plain(l), plain(r));
+    expect(out.conflicts).toEqual([]);
+    expect(out.remoteOnly).toBe(1);
+  });
+});
