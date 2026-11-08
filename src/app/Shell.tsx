@@ -13,6 +13,8 @@ import { AssetsScreen } from './screens/AssetsScreen';
 import { HomeScreen } from './screens/HomeScreen';
 import { HorizonScreen } from './screens/HorizonScreen';
 import { LocationsScreen } from './screens/LocationsScreen';
+import { ChecklistPreviewScreen } from './screens/ChecklistPreviewScreen';
+import { ChecklistsScreen } from './screens/ChecklistsScreen';
 import { MoreScreen } from './screens/MoreScreen';
 import { PeopleScreen } from './screens/PeopleScreen';
 import { RisksScreen } from './screens/RisksScreen';
@@ -125,6 +127,22 @@ export function Shell() {
                 }
               />
               <Route path="more/data" element={<DataScreen />} />
+              <Route
+                path="more/checklists"
+                element={
+                  <Screen>
+                    <ChecklistsScreen />
+                  </Screen>
+                }
+              />
+              <Route
+                path="more/checklists/preview/:scenarioId"
+                element={
+                  <Screen>
+                    <ChecklistPreviewScreen />
+                  </Screen>
+                }
+              />
               <Route
                 path="more/settings"
                 element={
