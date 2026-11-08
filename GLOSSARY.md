@@ -28,6 +28,10 @@ product, then batches. **`src/store`** in code is the document store, not a reso
   (`requires`) and a source. A step can belong to several scenarios. `ChecklistStep`.
 - **Checklist phase.** The heading a step sits under, in order: coming, immediate, first days,
   first week, longer term. Unrelated to delivery phases. `ChecklistPhase`.
+- **Run.** One go at one or more scenarios: when it started, which scenarios were chosen, and a
+  frozen **snapshot** of the steps the household saw. Ticks and notes belong to the run, not to
+  the packs, and never touch the plans or the score. `ChecklistRun`, `doc.checklistRuns`; a step's
+  tick and note are a `ChecklistStepState` in `doc.checklistStepStates`, keyed `runId|stepId`.
 
 ## Inventory
 

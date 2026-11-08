@@ -21,7 +21,7 @@ household. The screens read and write it through the store hooks.
 
 One `Document` per browser profile: `meta`, `household` (members and pets), `home`, and the keyed
 records `locations`, `assets`, `products`, `barcodes`, `stock`, `scans`, `minimums`, `plans`,
-`reviews`, then `settings`. Ids are strings (`crypto.randomUUID()` for things the user makes,
+`reviews`, `checklistRuns`, `checklistStepStates`, then `settings`. Ids are strings (`crypto.randomUUID()` for things the user makes,
 `"<packId>:<localId>"` for pack-defined ids). Dates are `YYYY-MM-DD`, best-before dates `YYYY-MM`,
 timestamps ISO.
 
@@ -83,12 +83,22 @@ one member never clobbers another.
 
 `src/app` reaches the store only through `DocumentProvider`.
 
+**Schema 5** adds scenario checklist **runs**. `checklistRuns` is keyed by run id: the scenarios
+chosen, when the run started and finished, and a catalogue snapshot (the packs and their versions,
+the scenarios available, and every household-applicable step, copied when the run starts and never
+recomputed). `checklistStepStates` is keyed `runId|stepId` and holds a step's `doneAt` and `note`;
+unticking removes `doneAt` and keeps the note. A run's `scenarios` is a merged array, so after a
+merge it can hold duplicates or be empty; the schema accepts both and readers de-duplicate. Ticks
+never touch `plans` or the score. Nothing creates a run yet.
+
 ## Migrations and old clients
 
-`SCHEMA_VERSION` is **4**. Schema 4 is a deliberate break: there is **no migration** from older
-households. `MIGRATIONS` is empty; the step machinery (`migrate`, `reconcile`, `stepContainers`,
-`SchemaTooNewError`, `SchemaTooOldError`) stays for schema 5 onward. `OLDEST_SCHEMA_VERSION` is 4:
-anything with `meta.schemaVersion` below 4 is refused.
+`SCHEMA_VERSION` is **5**. Schema 4 was a deliberate break: there is **no migration** from older
+households, and `OLDEST_SCHEMA_VERSION` is 4: anything with `meta.schemaVersion` below 4 is refused.
+`MIGRATIONS` holds one step, `add-checklist-runs` (4 to 5), which adds the two empty containers
+`checklistRuns` and `checklistStepStates` and replaces nothing that exists. Its name and versions
+seed the fixed client id of each container, so they never change once shipped. A new document
+still starts from the frozen schema-4 literal and gets the containers from this step.
 
 - **Too old on this device.** Opening or importing a schema-1–3 document sets store status
   `too-old`. The app shows a full-screen gate (`TooOld.tsx`): download a copy, then **Start a new
@@ -96,7 +106,7 @@ anything with `meta.schemaVersion` below 4 is refused.
   `forgetDeviceData` with `keepDrive: true`). Nothing is edited until the person starts fresh.
 - **Too new on this device.** If a merge brings `meta.schemaVersion` above this build's,
   `change` throws `SchemaTooNewError` and subscribers get `too-new` ("update this device").
-- **Future steps.** When schema 5 adds a shape change, add a step to `MIGRATIONS` and bump
+- **Future steps.** When a later schema adds a shape change, add a step to `MIGRATIONS` and bump
   `SCHEMA_VERSION`. Then the usual rules apply again:
   - **Steps are idempotent per record**: running one on a record already in the new shape changes
     nothing. After every merge and tab update the store re-runs the steps (`reconcile`) and writes

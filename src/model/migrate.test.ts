@@ -4,6 +4,7 @@ import {
   MIGRATIONS,
   OLDEST_SCHEMA_VERSION,
   SchemaTooNewError,
+  addChecklistRuns,
   SchemaTooOldError,
   migrate,
   migrateWith,
@@ -137,5 +138,75 @@ describe('migration steps', () => {
   it('a gap in the steps stops the walk with SchemaTooOldError at the gap', () => {
     const later: MigrationStep = { from: 7, to: 8, name: 'x', up: (r) => r };
     expect(() => migrateWith(withLoc(), [addSize, later], 8)).toThrow(SchemaTooOldError);
+  });
+});
+
+// The real 4 to 5 step: two empty containers, nothing else.
+describe('add-checklist-runs (schema 4 to 5)', () => {
+  /** A schema-4 document: today's shape without the two containers. */
+  const v4 = (): Record<string, unknown> => {
+    const d = doc() as unknown as Record<string, unknown>;
+    delete d.checklistRuns;
+    delete d.checklistStepStates;
+    return { ...d, meta: { ...(d.meta as object), schemaVersion: 4 } };
+  };
+  const run = (id: string, scenarios: string[] = ['power-cut']) => ({
+    id,
+    scenarios,
+    started: '2026-11-01T10:00:00.000Z',
+    catalogue: { packs: [{ id: 'checklists-base', version: 1 }], scenarios: [], steps: [] },
+  });
+
+  it('migrates a schema-4 document to empty containers and schema 5', () => {
+    const out = migrate(v4());
+    expect(out.meta.schemaVersion).toBe(5);
+    expect(out.checklistRuns).toEqual({});
+    expect(out.checklistStepStates).toEqual({});
+  });
+
+  it('adds only the two containers', () => {
+    const before = v4();
+    const after = addChecklistRuns.up(structuredClone(before));
+    const { checklistRuns, checklistStepStates, ...rest } = after;
+    expect(checklistRuns).toEqual({});
+    expect(checklistStepStates).toEqual({});
+    expect(rest).toEqual(before);
+  });
+
+  it('re-running changes nothing', () => {
+    const once = migrate(v4());
+    expect(reconcile(once)).toEqual(once);
+    expect(addChecklistRuns.up(structuredClone(once) as never)).toEqual(once);
+    expect(migrate(once)).toEqual(once);
+  });
+
+  it('leaves existing maps, and the runs in them, alone', () => {
+    const withRuns = {
+      ...doc(),
+      checklistRuns: { r1: run('r1') },
+      checklistStepStates: { 'r1|s1': { runId: 'r1', stepId: 's1', note: 'x' } },
+    };
+    expect(migrate(withRuns)).toEqual(withRuns);
+    expect(reconcile(withRuns)).toEqual(withRuns);
+    // even a schema-4 stamp with maps present (an offline device's merge) keeps them
+    const stamped = { ...withRuns, meta: { ...withRuns.meta, schemaVersion: 4 } };
+    expect(migrate(stamped).checklistRuns).toEqual(withRuns.checklistRuns);
+  });
+
+  it('still refuses a newer document', () => {
+    expect(() => migrate(at(6))).toThrow(SchemaTooNewError);
+  });
+
+  it('accepts a merged run whose scenarios hold duplicates or are empty', () => {
+    const merged = {
+      ...doc(),
+      checklistRuns: {
+        dup: run('dup', ['power-cut', 'power-cut']),
+        none: run('none', []),
+      },
+    };
+    const out = migrate(merged);
+    expect(out.checklistRuns['dup']!.scenarios).toEqual(['power-cut', 'power-cut']);
+    expect(out.checklistRuns['none']!.scenarios).toEqual([]);
   });
 });
