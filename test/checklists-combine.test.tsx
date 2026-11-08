@@ -98,6 +98,32 @@ describe('a combined preview', () => {
     expect(links[0]!.getAttribute('href')).toContain('both');
   });
 
+  it('starts one run however fast Start is tapped', () => {
+    const h = renderAt(biggarWithoutRuns(), path);
+    const start = screen.getByRole('button', { name: 'Start these checklists together' });
+    fireEvent.click(start);
+    fireEvent.click(start);
+    fireEvent.click(start);
+    expect(checklistRunLists(h.doc()).open).toHaveLength(1);
+  });
+
+  it.each([
+    ['a repeated id', `${previewPath([FLOOD])}+${encodeURIComponent(FLOOD)}`, true],
+    ['an empty part', `${previewPath([FLOOD])}++${encodeURIComponent(STORM)}`, true],
+    ['a trailing separator', `${previewPath([FLOOD])}+`, true],
+    ['a wrong-case id', previewPath(FLOOD.toUpperCase()), false],
+    ['only unknown ids', previewPath('nope+gone'), false],
+    ['a malformed escape', '/app/more/checklists/preview/%E0%A4%A', false],
+  ])('copes with a tampered address: %s', (_name, url, ok) => {
+    renderAt(biggarWithoutRuns(), url);
+    if (ok) {
+      expect(screen.getByRole('button', { name: /Start/ })).toBeTruthy();
+    } else {
+      expect(screen.getByText(/not available/)).toBeTruthy();
+      expect(screen.queryByRole('button', { name: /Start/ })).toBeNull();
+    }
+  });
+
   it('says so when one of the ids is not offered', () => {
     renderAt(biggarWithoutRuns(), `${previewPath([FLOOD])}+nope`);
     expect(screen.getByText(/not available/)).toBeTruthy();
@@ -187,14 +213,35 @@ describe("changing a run's scenarios", () => {
     expect(checklistRunView(h.doc(), 'run-1')!.finished).toBeDefined();
   });
 
-  it('can finish a run that still needs a scenario', () => {
+  it('does not offer Finish on a run that still needs a scenario, and says why', () => {
     const doc = biggarWithoutRuns();
     addRun(doc, [FLOOD], 'run-1');
     doc.checklistRuns['run-1']!.scenarios = [];
     const h = renderAt(doc, '/app/more/checklists/run-1');
-    fireEvent.click(screen.getByRole('button', { name: 'Finish this list' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Yes, finish' }));
-    expect(checklistRunView(h.doc(), 'run-1')!.finished).toBeDefined();
+    expect(screen.queryByRole('button', { name: 'Finish this list' })).toBeNull();
+    expect(screen.getByText('Choose a scenario above to finish this list.')).toBeTruthy();
+    expect(checklistRunView(h.doc(), 'run-1')!.finished).toBeUndefined();
+    fireEvent.click(box('Flood'));
+    expect(screen.getByRole('button', { name: 'Finish this list' })).toBeTruthy();
+    expect(screen.queryByText(/to finish this list/)).toBeNull();
+  });
+
+  it('keeps a pending note when its scenario is removed before it is saved', () => {
+    const doc = biggarWithoutRuns();
+    addRun(doc, [FLOOD, STORM], 'run-1');
+    const h = open(doc);
+    const exclusive = checklistRunView(h.doc(), 'run-1')!
+      .groups.flatMap((g) => g.steps)
+      .find((s) => s.selectedScenarioIds.length === 1 && s.selectedScenarioIds[0] === STORM)!;
+    fireEvent.change(screen.getByLabelText(`Note on: ${exclusive.text}`), {
+      target: { value: 'typed, not blurred' },
+    });
+    fireEvent.click(box('Storm'));
+    expect(screen.queryByText(exclusive.text)).toBeNull();
+    fireEvent.click(box('Storm'));
+    expect((screen.getByLabelText(`Note on: ${exclusive.text}`) as HTMLTextAreaElement).value).toBe(
+      'typed, not blurred',
+    );
   });
 
   it('offers only the scenarios the run froze, whatever the packs hold now', () => {

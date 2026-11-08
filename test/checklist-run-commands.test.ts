@@ -5,6 +5,7 @@ import {
   checklistStateKey,
   clearStepDone,
   finishRun,
+  openRunsIncluding,
   setRunScenarios,
   setStepDone,
   setStepNote,
@@ -183,5 +184,35 @@ describe('checklistRunView', () => {
     expect(l.finished.map((r) => r.id)).toEqual(['r3']);
     expect(l.open[1]).toMatchObject({ scenarioNames: ['Power cut'], done: 1, total: 2 });
     expect(d.plans).toEqual(plans);
+  });
+});
+
+describe('finishing and matching runs', () => {
+  it('refuses to finish a run with no valid selected scenario', () => {
+    const d = fixture();
+    d.checklistRuns['r1']!.scenarios = ['gone'];
+    expect(finishRun(d, 'r1', 'f')).toBe(false);
+    d.checklistRuns['r1']!.scenarios = [];
+    expect(finishRun(d, 'r1', 'f')).toBe(false);
+    expect(d.checklistRuns['r1']!.finished).toBeUndefined();
+    d.checklistRuns['r1']!.scenarios = ['p:flood'];
+    expect(finishRun(d, 'r1', 'f')).toBe(true);
+  });
+
+  it('finds the open runs that include every given scenario', () => {
+    const d = fixture();
+    const both = structuredClone(d.checklistRuns['r1']!);
+    both.id = 'r2';
+    both.scenarios = ['p:power', 'p:flood'];
+    both.started = '2026-11-02T10:00:00Z';
+    d.checklistRuns['r2'] = both;
+    const ids = (want: string[]) => openRunsIncluding(d, want).map((r) => r.id);
+    expect(ids(['p:power'])).toEqual(['r2', 'r1']);
+    expect(ids(['p:flood'])).toEqual(['r2']);
+    expect(ids(['p:power', 'p:flood'])).toEqual(['r2']);
+    expect(ids(['p:power', 'gone'])).toEqual([]);
+    expect(ids([])).toEqual([]);
+    finishRun(d, 'r2', 'f');
+    expect(ids(['p:flood'])).toEqual([]);
   });
 });
