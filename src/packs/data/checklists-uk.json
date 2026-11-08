@@ -20,11 +20,6 @@
       "url": "https://www.gov.uk/government/publications/public-health-advice-from-uk-cmos-during-a-national-power-outage/keeping-warm-or-cool-in-extreme-weather-scripts-for-broadcast-media",
       "title": "UK CMOs: keeping warm or cool in a national power outage (GOV.UK)",
       "checked": "2026-11-08"
-    },
-    {
-      "url": "https://www.ofgem.gov.uk/your-energy-supply/how-manage-your-energy-supply/join-your-suppliers-priority-services-register",
-      "title": "Ofgem: join your supplier's Priority Services Register",
-      "checked": "2026-11-08"
     }
   ],
   "scenarios": [
@@ -69,11 +64,11 @@
     },
     {
       "id": "checklists-uk:register",
-      "text": "If you may qualify, ask your energy supplier or network operator about the Priority Services Register (England, Scotland, Wales). In Northern Ireland, ask about the Customer Care Register.",
+      "text": "If you may qualify, ask your energy supplier about the Priority Services Register (England, Scotland, Wales). In Northern Ireland, ask about the Customer Care Register.",
       "scenarios": ["checklists-uk:power-cut"],
       "phase": "coming",
       "order": 50,
-      "source": "https://www.ofgem.gov.uk/your-energy-supply/how-manage-your-energy-supply/join-your-suppliers-priority-services-register"
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
     },
     {
       "id": "checklists-uk:landline",

@@ -62,11 +62,12 @@ unlisted source, and a `requires.asset` that is not a real asset type.
 (`risks: ["grid"]`). It is offered by region and is not in `DEFAULT_PACKS`: a US household gets no
 checklist pack, and Settings lists the UK pack as "Included for your region" with no switch.
 
-- Steps are short and imperative, in the `coming` and `immediate` phases and `first-days`; a phase
-  with nothing to say is omitted.
+- Steps are short and imperative, in the `coming` and `immediate` phases; a phase with nothing to
+  say is omitted.
 - Every step's `source` is a URL listed in the pack's `sources` with the date it was checked: UK
-  Government Be Ready (power cuts), the NHS carbon monoxide page, the UK CMOs' cold-weather advice
-  and Ofgem's Priority Services Register page.
+  Government Be Ready (power cuts), the NHS carbon monoxide page and the UK CMOs' cold-weather
+  advice. The CMO page is a set of broadcast scripts for a national power outage, so it sources
+  only the unattended-heating step.
 - Steps must hold across the UK. The reporting number (105, or 03457 643643 in Northern Ireland) and
   the Priority Services Register (England, Scotland, Wales; Customer Care Register in Northern
   Ireland) are labelled by nation in the text. Nothing is filtered by nation.
