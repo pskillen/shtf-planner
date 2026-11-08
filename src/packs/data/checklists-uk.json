@@ -561,7 +561,7 @@
     },
     {
       "id": "checklists-uk:flood-no-walk",
-      "text": "Never walk through flood water. It may contain sewage and hide rubbish, wreckage, uneven roads and pavements, or broken drain and manhole covers.",
+      "text": "Never walk through flood water. It can be much deeper than it looks and may contain sewage and hide rubbish, wreckage, uneven roads and pavements, sharp objects, or uncovered and broken drain and manhole covers. Levels can rise and fall for several weeks. If you absolutely must enter it, move slowly and carefully and avoid fast-moving water.",
       "scenarios": ["checklists-uk:flood"],
       "phase": "immediate",
       "order": 55,
@@ -576,12 +576,12 @@
       "source": "https://naturalresources.wales/flooding/what-to-do-in-a-flood/?lang=en"
     },
     {
-      "id": "checklists-uk:flood-travel",
-      "text": "If you need to travel, check for flooding and road traffic information first, and always follow \"Do Not Travel\" notices.",
+      "id": "checklists-uk:flood-sea-defences",
+      "text": "Never walk on sea defences or river banks. Floodwater can lift cars, manhole covers and other heavy objects.",
       "scenarios": ["checklists-uk:flood"],
       "phase": "immediate",
-      "order": 70,
-      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+      "order": 65,
+      "source": "https://naturalresources.wales/flooding/what-to-do-after-a-flood/?lang=en"
     },
     {
       "id": "checklists-uk:flood-check-on-others",
@@ -622,14 +622,6 @@
       "phase": "immediate",
       "order": 120,
       "source": "https://www.nidirect.gov.uk/articles/reporting-flooding"
-    },
-    {
-      "id": "checklists-uk:flood-water-levels",
-      "text": "Do not enter flood water unless absolutely necessary. Levels can rise and fall for weeks, and it can be much deeper than it looks and hide dangers such as uncovered manholes and sharp objects. If you must, move slowly and carefully and avoid fast-moving water.",
-      "scenarios": ["checklists-uk:flood"],
-      "phase": "first-days",
-      "order": 10,
-      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
     },
     {
       "id": "checklists-uk:flood-wash-hands",
