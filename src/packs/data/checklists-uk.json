@@ -452,19 +452,11 @@
     },
     {
       "id": "checklists-uk:flood-warnings-signup",
-      "text": "Sign up for free flood warnings by phone, text or email (England, Scotland, Wales): call Floodline on 0345 988 1188, or sign up online with the Environment Agency (England), SEPA (Scotland) or Natural Resources Wales. In England, you cannot get warnings for surface water (flash) flooding.",
+      "text": "Sign up for free flood warnings by phone, text or email (England, Scotland, Wales): call Floodline on 0345 988 1188 (24 hours), or sign up online with the Environment Agency (England), SEPA (Scotland) or Natural Resources Wales. In England, you cannot get warnings for surface water (flash) flooding.",
       "scenarios": ["checklists-uk:flood"],
       "phase": "coming",
       "order": 20,
       "source": "https://www.gov.uk/get-flood-warnings"
-    },
-    {
-      "id": "checklists-uk:flood-extra-help-floodline",
-      "text": "If you have a disability or need extra help, contact Floodline (0345 988 1188; England, Scotland, Wales) and ask for flood warnings to be sent to a friend or relative on your behalf.",
-      "scenarios": ["checklists-uk:flood"],
-      "phase": "coming",
-      "order": 30,
-      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
     },
     {
       "id": "checklists-uk:flood-stay-informed",
@@ -476,18 +468,10 @@
     },
     {
       "id": "checklists-uk:flood-plan",
-      "text": "Make a flood plan for you and those around you.",
+      "text": "Make an emergency plan for your home. If you or anyone in your household needs extra support or help to leave home safely, agree in advance who can help and include it in your plan.",
       "scenarios": ["checklists-uk:flood"],
       "phase": "coming",
       "order": 50,
-      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
-    },
-    {
-      "id": "checklists-uk:flood-help-to-leave",
-      "text": "If you or anyone in your household needs extra support, or help to leave home safely, agree in advance who can help and include it in your plan.",
-      "scenarios": ["checklists-uk:flood"],
-      "phase": "coming",
-      "order": 60,
       "source": "https://ready.campaign.gov.scot/flooding"
     },
     {
