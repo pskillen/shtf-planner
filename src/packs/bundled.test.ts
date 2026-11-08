@@ -202,7 +202,7 @@ describe('the bundled packs', () => {
       expect(ids).toContain('checklists-uk:medical-plan');
     });
 
-    it('builds a phased storm list, and power cut + storm lists each step once', () => {
+    it('builds a phased storm list with ungated safety steps', () => {
       const doc = emptyDocument('local');
       const storm = checklist(doc, packs, ['checklists-uk:storm'], '2026-11-08');
       expect(storm.groups.map((g) => g.phase)).toEqual(['coming', 'immediate', 'first-days']);
@@ -210,16 +210,37 @@ describe('the bundled packs', () => {
       // safety warnings are not gated on recorded facts
       expect(stormIds).toContain('checklists-uk:storm-fallen-cables');
       expect(stormIds).toContain('checklists-uk:storm-floodwater');
+      expect(stormIds).toContain('checklists-uk:storm-sheltered-side');
+      expect(stormIds).toContain('checklists-uk:storm-cables-after');
+    });
+
+    it('lists a step shared by power cut and storm once (synthetic shared step)', () => {
+      const doc = emptyDocument('local');
+      const real = packs.all.find((p) => p.id === 'checklists-uk');
+      if (!real || real.kind !== 'checklists') throw new Error('checklists-uk missing');
+      const shared = {
+        id: 'checklists-uk:synthetic-shared',
+        text: 'A synthetic step shared by both scenarios.',
+        scenarios: ['checklists-uk:power-cut', 'checklists-uk:storm'],
+        phase: 'immediate' as const,
+        order: 1,
+        source: 'assumption',
+      };
+      const withShared = {
+        ...packs,
+        all: packs.all.map((p) => (p === real ? { ...real, steps: [...real.steps, shared] } : p)),
+      };
       const both = checklist(
         doc,
-        packs,
+        withShared,
         ['checklists-uk:power-cut', 'checklists-uk:storm'],
         '2026-11-08',
       );
       const bothIds = both.groups.flatMap((g) => g.steps.map((s) => s.id));
+      expect(bothIds.filter((id) => id === shared.id)).toHaveLength(1);
       expect(new Set(bothIds).size).toBe(bothIds.length);
-      expect(bothIds).toEqual(expect.arrayContaining(stormIds));
       expect(bothIds).toContain('checklists-uk:generator');
+      expect(bothIds).toContain('checklists-uk:storm-fallen-cables');
     });
   });
 });
