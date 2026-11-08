@@ -1,11 +1,11 @@
 # Scenario checklists
 
-**Status:** Format, selection engine and the UK power-cut and storm scenarios; no screen yet
+**Status:** Format, selection engine and the UK power-cut, storm and flood scenarios; no screen yet
 **Tracking:** [#40](https://github.com/pskillen/shtf-planner/issues/40)
 
 Step-by-step checklists for things that happen (a power cut, a flood warning), grouped by when a
-step matters. The content-pack format, its validation, the selection engine and two bundled scenarios (power
-cut and storm, UK) exist; there is no route yet.
+step matters. The content-pack format, its validation, the selection engine and three bundled scenarios (power
+cut, storm and flood, UK) exist; there is no route yet.
 
 ## Map
 
@@ -59,7 +59,7 @@ unlisted source, and a `requires.asset` that is not a real asset type.
 ## Bundled content
 
 `src/packs/data/checklists-uk.json` (`checklists-uk`, region `UK`) holds the **Power cut**
-(`risks: ["grid"]`) and **Storm** (`risks: ["storm"]`) scenarios. It is offered by region and is not in `DEFAULT_PACKS`: a US household gets no
+(`risks: ["grid"]`), **Storm** (`risks: ["storm"]`) and **Flood** (`risks: ["flood", "coastal"]`) scenarios. It is offered by region and is not in `DEFAULT_PACKS`: a US household gets no
 checklist pack, and Settings lists the UK pack as "Included for your region" with no switch.
 
 - Steps are short and imperative. Power cut uses `coming` and `immediate`; storm adds
@@ -70,9 +70,23 @@ checklist pack, and Settings lists the UK pack as "Included for your region" wit
   only the unattended-heating step. Storm steps cite UK Government Be Ready (storms) and three Met
   Office pages (stay safe in a storm, stay safe in strong wind, driving in storms, rain and strong
   wind); none of those pages gives nation-specific procedure.
-- No step is shared between scenarios yet: the storm wording differs from the power-cut wording
-  even where the topic overlaps (power lines, checking on neighbours), so each scenario has its own
-  step. A step is shared only when the instruction is identical.
+- Flood uses `coming`, `immediate`, `first-days` and `longer-term`. Its steps cite UK Government
+  Be Ready (flooding), GOV.UK (get flood warnings), Ready Scotland, two Natural Resources Wales
+  pages and a nidirect page; each step cites the one page that says it.
+- One step is shared: `storm-floodwater` ("Never drive through floodwater. Turn around and find
+  another route.") serves storm and flood, and is listed once when both are chosen. Elsewhere the
+  storm wording differs from the power-cut and flood wording even where the topic overlaps
+  (power lines, checking on neighbours), so each scenario has its own step. A step is shared only
+  when the instruction is identical.
+- Flood is where nations differ most. The core actions (turn supplies off if safe, move up, never
+  walk or drive through flood water, leave when told, call 999) agree across the four nations. The
+  agencies, numbers and routes differ, so they are written with the nation in the text: the
+  risk-check services for all four, flood warning sign-up and Floodline (England, Scotland, Wales),
+  and one reporting step per nation (England, Wales, Scotland, Northern Ireland), plus the Northern
+  Ireland council emergency payment. No service is implied for a nation whose page was not found
+  to offer it (no Northern Ireland warning sign-up is listed). Nothing is filtered by nation, and
+  flood steps never use `requires.risk`, so choosing Flood on a home that has not declared flood
+  still shows every general step.
 - Steps must hold across the UK. The reporting number (105, or 03457 643643 in Northern Ireland) and
   the Priority Services Register (England, Scotland, Wales; Customer Care Register in Northern
   Ireland) are labelled by nation in the text. Nothing is filtered by nation.
@@ -82,7 +96,7 @@ checklist pack, and Settings lists the UK pack as "Included for your region" wit
   without having recorded anything; where the source's advice is conditional ("if you use a
   generator"), the condition stays in the step text.
 - Step ids are stable and never reused for different advice; bump the pack `version` when content
-  changes.
+  changes (it is 3).
 
 ## Not built yet
 

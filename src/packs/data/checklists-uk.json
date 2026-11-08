@@ -2,7 +2,7 @@
   "format": 1,
   "id": "checklists-uk",
   "kind": "checklists",
-  "version": 2,
+  "version": 3,
   "name": "UK scenario checklists",
   "region": "UK",
   "sources": [
@@ -40,6 +40,36 @@
       "url": "https://weather.metoffice.gov.uk/warnings-and-advice/seasonal-advice/travel/travelling-in-storms-rain-and-wind",
       "title": "Met Office: driving in storms, rain and strong wind",
       "checked": "2026-11-08"
+    },
+    {
+      "url": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/",
+      "title": "Be Ready (UK Government): flooding",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://www.gov.uk/get-flood-warnings",
+      "title": "GOV.UK: get flood warnings (England; points to Scotland and Wales)",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://ready.campaign.gov.scot/flooding",
+      "title": "Ready Scotland: flooding",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://naturalresources.wales/flooding/what-to-do-in-a-flood/?lang=en",
+      "title": "Natural Resources Wales: what to do in a flood",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://naturalresources.wales/flooding/preparing-for-a-flood/?lang=en",
+      "title": "Natural Resources Wales: preparing for a flood",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://www.nidirect.gov.uk/articles/what-do-if-flood-happens",
+      "title": "nidirect (Northern Ireland): what to do if a flood happens",
+      "checked": "2026-11-08"
     }
   ],
   "scenarios": [
@@ -52,6 +82,11 @@
       "id": "checklists-uk:storm",
       "name": "Storm",
       "risks": ["storm"]
+    },
+    {
+      "id": "checklists-uk:flood",
+      "name": "Flood",
+      "risks": ["flood", "coastal"]
     }
   ],
   "steps": [
@@ -352,7 +387,7 @@
     {
       "id": "checklists-uk:storm-floodwater",
       "text": "Never drive through floodwater. Turn around and find another route.",
-      "scenarios": ["checklists-uk:storm"],
+      "scenarios": ["checklists-uk:storm", "checklists-uk:flood"],
       "phase": "immediate",
       "order": 50,
       "source": "https://weather.metoffice.gov.uk/warnings-and-advice/seasonal-advice/travel/travelling-in-storms-rain-and-wind"
@@ -396,6 +431,289 @@
       "phase": "first-days",
       "order": 20,
       "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:flood-risk",
+      "text": "Check your long-term flood risk: England (GOV.UK), Wales (Natural Resources Wales), Scotland (SEPA) or Northern Ireland (nidirect).",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "coming",
+      "order": 10,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:flood-warnings-signup",
+      "text": "Sign up for free flood warnings by phone, text or email (England, Scotland, Wales): call Floodline on 0345 988 1188, or sign up online with the Environment Agency (England), SEPA (Scotland) or Natural Resources Wales. In England, you cannot get warnings for surface water (flash) flooding.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "coming",
+      "order": 20,
+      "source": "https://www.gov.uk/get-flood-warnings"
+    },
+    {
+      "id": "checklists-uk:flood-extra-help-floodline",
+      "text": "If you have a disability or need extra help, contact Floodline (0345 988 1188; England, Scotland, Wales) and ask for flood warnings to be sent to a friend or relative on your behalf.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "coming",
+      "order": 30,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:flood-stay-informed",
+      "text": "Check the weather forecast and Met Office weather warnings for your area, on TV, radio or the Met Office app.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "coming",
+      "order": 40,
+      "source": "https://ready.campaign.gov.scot/flooding"
+    },
+    {
+      "id": "checklists-uk:flood-plan",
+      "text": "Make a flood plan for you and those around you.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "coming",
+      "order": 50,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:flood-help-to-leave",
+      "text": "If you or anyone in your household needs extra support, or help to leave home safely, agree in advance who can help and include it in your plan.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "coming",
+      "order": 60,
+      "source": "https://ready.campaign.gov.scot/flooding"
+    },
+    {
+      "id": "checklists-uk:flood-grab-bag",
+      "text": "Consider packing a grab bag: any medication you need, a first aid kit, important documents, a torch, bottled water, warm waterproof clothing and baby care items if you have a baby. Keep it where you can get to it easily.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "coming",
+      "order": 70,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:flood-pets-kit",
+      "text": "Add pet supplies to your flood kit.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "coming",
+      "order": 80,
+      "requires": {
+        "pets": true
+      },
+      "source": "https://naturalresources.wales/flooding/preparing-for-a-flood/?lang=en"
+    },
+    {
+      "id": "checklists-uk:flood-valuables",
+      "text": "Move sentimental or valuable items upstairs or to a high place. Keep important documents, such as birth certificates, in resealable waterproof plastic bags.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "coming",
+      "order": 90,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:flood-shutoffs",
+      "text": "Find out how to turn off your gas, electricity and water. They are in different places in different homes: usually the water stop tap where the supply comes in, the gas valve by the gas meter, and the electricity cut-off on the fuse board.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "coming",
+      "order": 100,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:flood-insurance",
+      "text": "Check your buildings and contents insurance covers flood damage, and take detailed photos of your home before any flooding.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "coming",
+      "order": 110,
+      "source": "https://ready.campaign.gov.scot/flooding"
+    },
+    {
+      "id": "checklists-uk:flood-999",
+      "text": "Call 999 if you are in immediate danger.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "immediate",
+      "order": 10,
+      "source": "https://naturalresources.wales/flooding/what-to-do-in-a-flood/?lang=en"
+    },
+    {
+      "id": "checklists-uk:flood-warning-turn-off",
+      "text": "If your area has a flood warning or severe flood warning, turn off your gas, electricity and water if it is safe to do so. Do not touch an electrical switch if you are standing in water.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "immediate",
+      "order": 20,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:flood-warning-move",
+      "text": "With a flood warning or severe flood warning, move your family, vehicles, pets and important items to safety, for example upstairs or to higher ground.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "immediate",
+      "order": 30,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:flood-protection-products",
+      "text": "With a flood warning or severe flood warning, put flood protection products in place if you have them, such as flood barriers or air brick covers.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "immediate",
+      "order": 40,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:flood-evacuate",
+      "text": "If your local council or the emergency services ask you to evacuate, go. Not evacuating, or delaying, puts your life at risk and can endanger rescuers if you later need rescuing.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "immediate",
+      "order": 45,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:flood-no-walk",
+      "text": "Never walk through flood water. It may contain sewage and hide rubbish, wreckage, uneven roads and pavements, or broken drain and manhole covers.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "immediate",
+      "order": 55,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:flood-higher-ground",
+      "text": "If flooding reaches you, move to higher ground or an upper floor if it is safe. Stay away from shorelines.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "immediate",
+      "order": 60,
+      "source": "https://ready.campaign.gov.scot/flooding"
+    },
+    {
+      "id": "checklists-uk:flood-travel",
+      "text": "If you need to travel, check for flooding and road traffic information first, and always follow \"Do Not Travel\" notices.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "immediate",
+      "order": 70,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:flood-check-on-others",
+      "text": "If it is safe, check in on people who need extra help during flooding.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "immediate",
+      "order": 80,
+      "source": "https://ready.campaign.gov.scot/flooding"
+    },
+    {
+      "id": "checklists-uk:flood-report-england",
+      "text": "England: report severe river or coastal flooding to the Environment Agency on 0800 80 70 60 (24 hours). Some kinds of flooding are reported to your local council.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "immediate",
+      "order": 90,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:flood-report-wales",
+      "text": "Wales: use Natural Resources Wales's guide to who to contact to report a flooding problem. For sewer flooding, or a toilet or sink backing up, call your local water company.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "immediate",
+      "order": 100,
+      "source": "https://naturalresources.wales/flooding/what-to-do-in-a-flood/?lang=en"
+    },
+    {
+      "id": "checklists-uk:flood-report-scotland",
+      "text": "Scotland: find out how to report different kinds of flood on mygov.scot.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "immediate",
+      "order": 110,
+      "source": "https://ready.campaign.gov.scot/flooding"
+    },
+    {
+      "id": "checklists-uk:flood-report-ni",
+      "text": "Northern Ireland: report flooding on 0300 2000 100 (24 hours a day, seven days a week).",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "immediate",
+      "order": 120,
+      "source": "https://www.nidirect.gov.uk/articles/what-do-if-flood-happens"
+    },
+    {
+      "id": "checklists-uk:flood-water-levels",
+      "text": "Do not enter flood water unless absolutely necessary. Levels can rise and fall for weeks, and it can be much deeper than it looks and hide dangers such as uncovered manholes and sharp objects. If you must, move slowly and carefully and avoid fast-moving water.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "first-days",
+      "order": 10,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:flood-wash-hands",
+      "text": "Wash your hands with warm, soapy water, then rinse and dry thoroughly, after contact with flood water, sewage or anything that has been in the water.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "first-days",
+      "order": 20,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:flood-food",
+      "text": "Do not eat any food that was in flood water.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "first-days",
+      "order": 30,
+      "source": "https://www.nidirect.gov.uk/articles/what-do-if-flood-happens"
+    },
+    {
+      "id": "checklists-uk:flood-return-home",
+      "text": "Only return home when the emergency services say it is safe.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "first-days",
+      "order": 40,
+      "source": "https://ready.campaign.gov.scot/flooding"
+    },
+    {
+      "id": "checklists-uk:flood-electric-after",
+      "text": "Do not switch your electricity back on until a qualified person has checked it.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "first-days",
+      "order": 50,
+      "source": "https://ready.campaign.gov.scot/flooding"
+    },
+    {
+      "id": "checklists-uk:flood-clean-protect",
+      "text": "Flood water can contain harmful bacteria. Wear protective clothing if you need to clean up.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "first-days",
+      "order": 60,
+      "source": "https://ready.campaign.gov.scot/flooding"
+    },
+    {
+      "id": "checklists-uk:flood-insurance-record",
+      "text": "If you are insured, check your policy: insurers may pay for temporary accommodation and clean-up. Take photos or video of all damage, and mark the water level on the wall before it falls. Get your insurer's approval before any repair work.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "first-days",
+      "order": 70,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:flood-uninsured",
+      "text": "If you do not have insurance, contact your local council about hardship grants or charities that may help.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "first-days",
+      "order": 80,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:flood-accommodation",
+      "text": "If your home is flood damaged and you cannot live there, contact your local council for help getting emergency accommodation.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "first-days",
+      "order": 90,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:flood-ni-payment",
+      "text": "Northern Ireland: if heavy rainfall flooded your home, ask your local council about an emergency payment.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "first-days",
+      "order": 100,
+      "source": "https://www.nidirect.gov.uk/articles/what-do-if-flood-happens"
+    },
+    {
+      "id": "checklists-uk:flood-re",
+      "text": "Look into Flood Re, a scheme designed to help people who have experienced a flood find more affordable insurance.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "longer-term",
+      "order": 10,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
     }
   ]
 }

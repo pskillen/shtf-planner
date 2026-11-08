@@ -214,6 +214,69 @@ describe('the bundled packs', () => {
       expect(stormIds).toContain('checklists-uk:storm-cables-after');
     });
 
+    it('builds a phased flood list for a home that has not declared flood', () => {
+      const doc = emptyDocument('local');
+      expect(doc.home.risks).not.toContain('flood');
+      const flood = checklist(doc, packs, ['checklists-uk:flood'], '2026-11-08');
+      expect(flood.groups.map((g) => g.phase)).toEqual([
+        'coming',
+        'immediate',
+        'first-days',
+        'longer-term',
+      ]);
+      const ids = flood.groups.flatMap((g) => g.steps.map((s) => s.id));
+      // safety steps are not gated on recorded facts or the home's risks
+      expect(ids).toContain('checklists-uk:flood-warning-turn-off');
+      expect(ids).toContain('checklists-uk:flood-no-walk');
+      expect(ids).toContain('checklists-uk:flood-evacuate');
+      // the pet step needs a pet
+      expect(ids).not.toContain('checklists-uk:flood-pets-kit');
+      doc.household.pets = [{ id: 'p', name: 'Bran', species: 'dog', size: 'M' }];
+      const withPet = checklist(doc, packs, ['checklists-uk:flood'], '2026-11-08');
+      expect(withPet.groups.flatMap((g) => g.steps.map((s) => s.id))).toContain(
+        'checklists-uk:flood-pets-kit',
+      );
+    });
+
+    it('labels every nation-specific flood step with its nation, and filters by none', () => {
+      if (pack.kind !== 'checklists') throw new Error('not a checklists pack');
+      const byId = Object.fromEntries(pack.steps.map((s) => [s.id, s]));
+      const labelled: Record<string, string> = {
+        'checklists-uk:flood-report-england': 'England',
+        'checklists-uk:flood-report-wales': 'Wales',
+        'checklists-uk:flood-report-scotland': 'Scotland',
+        'checklists-uk:flood-report-ni': 'Northern Ireland',
+        'checklists-uk:flood-ni-payment': 'Northern Ireland',
+      };
+      for (const [id, nation] of Object.entries(labelled)) {
+        expect(byId[id]!.text.startsWith(`${nation}:`), id).toBe(true);
+      }
+      // all four nations' reporting steps reach the same household
+      const doc = emptyDocument('local');
+      const ids = checklist(doc, packs, ['checklists-uk:flood'], '2026-11-08').groups.flatMap((g) =>
+        g.steps.map((s) => s.id),
+      );
+      for (const id of Object.keys(labelled)) expect(ids).toContain(id);
+      expect(pack.steps.some((s) => s.requires?.risk)).toBe(false);
+    });
+
+    it('shares the floodwater driving step between storm and flood, listed once', () => {
+      const doc = emptyDocument('local');
+      const both = checklist(
+        doc,
+        packs,
+        ['checklists-uk:storm', 'checklists-uk:flood'],
+        '2026-11-08',
+      );
+      const ids = both.groups.flatMap((g) => g.steps.map((s) => s.id));
+      expect(ids.filter((id) => id === 'checklists-uk:storm-floodwater')).toHaveLength(1);
+      expect(new Set(ids).size).toBe(ids.length);
+      const floodOnly = checklist(doc, packs, ['checklists-uk:flood'], '2026-11-08');
+      expect(floodOnly.groups.flatMap((g) => g.steps.map((s) => s.id))).toContain(
+        'checklists-uk:storm-floodwater',
+      );
+    });
+
     it('lists a step shared by power cut and storm once (synthetic shared step)', () => {
       const doc = emptyDocument('local');
       const real = packs.all.find((p) => p.id === 'checklists-uk');
