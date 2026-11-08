@@ -164,7 +164,7 @@ describe('an open run', () => {
     Object.values(d.checklistRuns)[0]!.scenarios = [];
     act(() => h.store.change('merge', (draft) => Object.assign(draft, d)));
     expect(screen.getByText(/no scenario selected/)).toBeTruthy();
-    expect(screen.queryByRole('checkbox')).toBeNull();
+    expect(screen.queryByText(/of \d+ done/)).toBeNull();
   });
 
   it('is read-only once finished, even on an editable document', () => {

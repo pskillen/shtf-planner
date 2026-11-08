@@ -1,6 +1,6 @@
 # Scenario checklists
 
-**Status:** Format, selection engine and the five UK scenarios (power cut, storm, flood, heatwave, evacuation), the run commands and read view, and screens to browse and preview scenarios, start or resume a run, tick its steps, keep a note on any step, finish a run and read finished runs; print and household-written steps are not built yet
+**Status:** Format, selection engine and the five UK scenarios (power cut, storm, flood, heatwave, evacuation), the run commands and read view, and screens to browse and preview scenarios, start or resume a run, tick its steps, keep a note on any step, finish a run, combine scenarios and read finished runs; print and household-written steps are not built yet
 **Tracking:** [#40](https://github.com/pskillen/shtf-planner/issues/40)
 
 Step-by-step checklists for things that happen (a power cut, a flood warning), grouped by when a
@@ -27,11 +27,27 @@ open run that includes the scenario, the preview instead leads with a "Resume" l
 "Your lists" above the scenarios when any run is open, newest first, each with its scenarios,
 progress and start time.
 
+**Combining.** On the hub, "Combine scenarios" shows a tick box per scenario; with two or more
+ticked, "Preview N together" opens `/app/more/checklists/preview/:a+:b`, the scenario ids (each
+percent-encoded) joined by `+`. The preview shows the union of their steps, each once, with a "For:"
+line naming the selected scenarios that supplied it. "Start these checklists together" starts one
+run with all of them. If an open run already includes every scenario selected, the preview leads
+with "Resume" links to it instead. An id that is not offered for the region makes the whole
+preview "not available".
+
+**Changing a run's scenarios.** An open run with more than one scenario in its catalogue has
+"Change scenarios", a tick box per scenario the run was started with (never a scenario added to the
+packs since). Changes save at once. The last selected scenario cannot be unticked. Unticking hides
+the steps only that scenario supplied; their ticks and notes are kept and return, with the note
+the person wrote, when it is ticked again; the picker says so. A run left with no scenario (two
+devices merged badly) opens the picker straight away, and choosing one brings its steps back. Such
+a run can also be finished. A finished run has no picker.
+
 **An open run** (`/app/more/checklists/:runId`) shows the scenario names, when it started, "n of m
 done" with a bar, and the steps under the phase headings. Each step is a labelled checkbox; ticking
 records the time and shows "Done 14:05" (with the date when it was not today). Unticking clears it.
 Ticks are saved at once, so reloading keeps them. A run with no valid scenario selected (two
-devices merged badly) says so and shows no steps. An unknown run id says the list was not found. When
+devices merged badly) says so, offers the picker and shows no steps until one is chosen. An unknown run id says the list was not found. When
 the household document is read-only, or the run is finished, the boxes are disabled. Ticks never
 touch the plans or the preparedness score.
 
@@ -62,13 +78,13 @@ built, so the scenario checklists are not yet the whole of the plan in [D31].
 
 ## Map
 
-| Piece   | Where                                                                                                                                           | What                                                                                                                                             |
-| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Schemas | `src/model/packs.ts`                                                                                                                            | `ChecklistsPack`, `ChecklistScenario`, `ChecklistStep`, `ChecklistPhase`, `CHECKLIST_PHASES`.                                                    |
-| Loader  | `src/packs/loader.ts`                                                                                                                           | Validation, and the `checklistScenarios` and `checklistSteps` indexes on `Packs`.                                                                |
-| Engine  | `src/engine/checklists.ts`                                                                                                                      | `checklistPacks`, `checklistScenarios`, `isStepApplicable`, `checklist`.                                                                         |
-| Screens | `src/app/screens/ChecklistsScreen.tsx`, `ChecklistPreviewScreen.tsx`, `ChecklistRunScreen.tsx`, `checklists/view.ts`, `checklists/StepNote.tsx` | The hub, the preview with start and resume, the open or finished run, the debounced note box, and headings, labels and date formats (`view.ts`). |
-| Runs    | `src/engine/checklistRuns.ts`                                                                                                                   | `checklistStateKey`, `buildCatalogueSnapshot`, `startRun`, run commands, `checklistRunView`, `checklistRunLists`.                                |
+| Piece   | Where                                                                                                                                                                            | What                                                                                                                                                                                                         |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Schemas | `src/model/packs.ts`                                                                                                                                                             | `ChecklistsPack`, `ChecklistScenario`, `ChecklistStep`, `ChecklistPhase`, `CHECKLIST_PHASES`.                                                                                                                |
+| Loader  | `src/packs/loader.ts`                                                                                                                                                            | Validation, and the `checklistScenarios` and `checklistSteps` indexes on `Packs`.                                                                                                                            |
+| Engine  | `src/engine/checklists.ts`                                                                                                                                                       | `checklistPacks`, `checklistScenarios`, `isStepApplicable`, `checklist`.                                                                                                                                     |
+| Screens | `src/app/screens/ChecklistsScreen.tsx`, `ChecklistPreviewScreen.tsx`, `ChecklistRunScreen.tsx`, `checklists/view.ts`, `checklists/StepNote.tsx`, `checklists/ScenarioPicker.tsx` | The hub (with combine), the preview with start and resume, the open or finished run, the debounced note box, the scenario picker, and headings, labels, date formats and the preview route form (`view.ts`). |
+| Runs    | `src/engine/checklistRuns.ts`                                                                                                                                                    | `checklistStateKey`, `buildCatalogueSnapshot`, `startRun`, run commands, `checklistRunView`, `checklistRunLists`.                                                                                            |
 
 ## The `checklists` pack
 

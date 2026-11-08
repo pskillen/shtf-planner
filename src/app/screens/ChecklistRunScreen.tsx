@@ -1,6 +1,13 @@
 import { useCallback, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { checklistRunView, clearStepDone, finishRun, setStepDone, setStepNote } from '../../engine';
+import {
+  checklistRunView,
+  clearStepDone,
+  finishRun,
+  setRunScenarios,
+  setStepDone,
+  setStepNote,
+} from '../../engine';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { useChange, useDocument, useEditable } from '../state';
 import {
@@ -11,6 +18,7 @@ import {
   progressText,
   sourceLabel,
 } from './checklists/view';
+import { ScenarioPicker } from './checklists/ScenarioPicker';
 import { StepNote, type NoteRegistry } from './checklists/StepNote';
 
 /** An open (or finished) run: the frozen steps with a tick each. Reads and writes only through the engine. */
@@ -21,6 +29,7 @@ export function ChecklistRunScreen() {
   const editable = useEditable();
   const notes: NoteRegistry = useRef(new Map());
   const [confirming, setConfirming] = useState(false);
+  const [picking, setPicking] = useState(false);
   const [finishRefused, setFinishRefused] = useState(false);
   const [unsaved, setUnsaved] = useState<ReadonlySet<string>>(new Set());
   const markUnsaved = useCallback((stepId: string, on: boolean) => {
@@ -52,6 +61,13 @@ export function ChecklistRunScreen() {
     change(ticked ? 'tick checklist step' : 'untick checklist step', (d) => {
       if (ticked) setStepDone(d, runId, stepId, new Date().toISOString());
       else clearStepDone(d, runId, stepId);
+    });
+  }
+
+  function chooseScenarios(ids: string[]) {
+    if (!canTick) return;
+    change('change checklist scenarios', (d) => {
+      setRunScenarios(d, runId, ids);
     });
   }
 
@@ -87,12 +103,34 @@ export function ChecklistRunScreen() {
         Started {formatRunStart(view.started)}
         {view.finished !== undefined ? `. Finished ${formatRunStart(view.finished)}` : ''}
       </p>
-      {view.needsScenario ? (
-        <p>
-          This list has no scenario selected, which can happen when two devices change it at once.
-          Choosing a scenario again is not possible yet.
-        </p>
-      ) : (
+      {canTick && (picking || view.needsScenario) ? (
+        <>
+          {view.needsScenario ? (
+            <p>
+              This list has no scenario selected, which can happen when two devices change it at
+              once. Choose at least one scenario to see its steps.
+            </p>
+          ) : null}
+          <ScenarioPicker
+            scenarios={view.scenarios}
+            hiddenWithState={view.hiddenWithState}
+            onChange={chooseScenarios}
+          />
+          {!view.needsScenario ? (
+            <button type="button" className="secondary" onClick={() => setPicking(false)}>
+              Done choosing
+            </button>
+          ) : null}
+        </>
+      ) : canTick && view.scenarios.length > 1 ? (
+        <button type="button" className="secondary" onClick={() => setPicking(true)}>
+          Change scenarios
+        </button>
+      ) : null}
+      {view.needsScenario && !canTick ? (
+        <p>This list has no scenario selected, so it shows no steps.</p>
+      ) : null}
+      {view.needsScenario ? null : (
         <>
           <p className="progress">{progressText(view.done, view.total)}</p>
           <progress
@@ -171,30 +209,30 @@ export function ChecklistRunScreen() {
               </ul>
             </section>
           ))}
-          {canTick ? (
-            <div className="checklist-start">
-              {confirming ? (
-                <>
-                  <p>
-                    Finish this list? Your notes are saved and it becomes a read-only record. It
-                    cannot be reopened.
-                  </p>
-                  <button type="button" onClick={finish}>
-                    Yes, finish
-                  </button>
-                  <button type="button" className="secondary" onClick={() => setConfirming(false)}>
-                    Keep going
-                  </button>
-                </>
-              ) : (
-                <button type="button" className="secondary" onClick={() => setConfirming(true)}>
-                  Finish this list
-                </button>
-              )}
-            </div>
-          ) : null}
         </>
       )}
+      {canTick ? (
+        <div className="checklist-start">
+          {confirming ? (
+            <>
+              <p>
+                Finish this list? Your notes are saved and it becomes a read-only record. It cannot
+                be reopened.
+              </p>
+              <button type="button" onClick={finish}>
+                Yes, finish
+              </button>
+              <button type="button" className="secondary" onClick={() => setConfirming(false)}>
+                Keep going
+              </button>
+            </>
+          ) : (
+            <button type="button" className="secondary" onClick={() => setConfirming(true)}>
+              Finish this list
+            </button>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }

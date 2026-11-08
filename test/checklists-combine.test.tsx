@@ -104,3 +104,122 @@ describe('a combined preview', () => {
     expect(screen.queryByRole('button', { name: /Start/ })).toBeNull();
   });
 });
+
+describe("changing a run's scenarios", () => {
+  function open(doc: Document) {
+    const h = renderAt(doc, '/app/more/checklists/run-1');
+    fireEvent.click(screen.getByRole('button', { name: 'Change scenarios' }));
+    return h;
+  }
+  const box = (name: string) => screen.getByRole('checkbox', { name }) as HTMLInputElement;
+  const selected = (h: { doc: () => Document }) => checklistRunView(h.doc(), 'run-1')!.scenarios;
+
+  it('cannot remove the last selected scenario', () => {
+    const doc = biggarWithoutRuns();
+    addRun(doc, [FLOOD, STORM], 'run-1');
+    const h = open(doc);
+    fireEvent.click(box('Storm'));
+    expect(
+      selected(h)
+        .filter((s) => s.selected)
+        .map((s) => s.id),
+    ).toEqual([FLOOD]);
+    expect(box('Flood').disabled).toBe(true);
+    expect(box('Flood').checked).toBe(true);
+  });
+
+  it('hides exclusive steps, and re-adding restores the tick and note', () => {
+    const doc = biggarWithoutRuns();
+    addRun(doc, [FLOOD, STORM], 'run-1');
+    const h = open(doc);
+    const view = checklistRunView(h.doc(), 'run-1')!;
+    const exclusive = view.groups
+      .flatMap((g) => g.steps)
+      .find((s) => s.selectedScenarioIds.length === 1 && s.selectedScenarioIds[0] === STORM)!;
+    fireEvent.click(screen.getByRole('checkbox', { name: exclusive.text }));
+    fireEvent.change(screen.getByLabelText(`Note on: ${exclusive.text}`), {
+      target: { value: 'kept safe' },
+    });
+    fireEvent.blur(screen.getByLabelText(`Note on: ${exclusive.text}`));
+    fireEvent.click(box('Storm'));
+    expect(screen.queryByText(exclusive.text)).toBeNull();
+    expect(screen.getByText(/keeps a tick or note|keep a tick or note/)).toBeTruthy();
+    fireEvent.click(box('Storm'));
+    expect(
+      (screen.getByRole('checkbox', { name: exclusive.text }) as HTMLInputElement).checked,
+    ).toBe(true);
+    expect((screen.getByLabelText(`Note on: ${exclusive.text}`) as HTMLTextAreaElement).value).toBe(
+      'kept safe',
+    );
+  });
+
+  it('counts a shared step once and ticks it once', () => {
+    const doc = biggarWithoutRuns();
+    addRun(doc, [FLOOD, STORM], 'run-1');
+    const h = renderAt(doc, '/app/more/checklists/run-1');
+    const view = checklistRunView(h.doc(), 'run-1')!;
+    const shared = view.groups
+      .flatMap((g) => g.steps)
+      .find((s) => s.selectedScenarioIds.length === 2)!;
+    expect(screen.getAllByRole('checkbox', { name: shared.text })).toHaveLength(1);
+    fireEvent.click(screen.getByRole('checkbox', { name: shared.text }));
+    expect(checklistRunView(h.doc(), 'run-1')!.done).toBe(1);
+  });
+
+  it('recovers a run that needs a scenario, which can then be finished', () => {
+    const doc = biggarWithoutRuns();
+    addRun(doc, [FLOOD], 'run-1');
+    doc.checklistRuns['run-1']!.scenarios = [];
+    const h = renderAt(doc, '/app/more/checklists/run-1');
+    expect(screen.getByText(/no scenario selected/)).toBeTruthy();
+    // The picker is open already, with every catalogue scenario unticked.
+    expect(box('Flood').checked).toBe(false);
+    expect(box('Storm').checked).toBe(false);
+    fireEvent.click(box('Storm'));
+    expect(
+      selected(h)
+        .filter((s) => s.selected)
+        .map((s) => s.id),
+    ).toEqual([STORM]);
+    expect(screen.getByText(/of \d+ done/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Finish this list' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Yes, finish' }));
+    expect(checklistRunView(h.doc(), 'run-1')!.finished).toBeDefined();
+  });
+
+  it('can finish a run that still needs a scenario', () => {
+    const doc = biggarWithoutRuns();
+    addRun(doc, [FLOOD], 'run-1');
+    doc.checklistRuns['run-1']!.scenarios = [];
+    const h = renderAt(doc, '/app/more/checklists/run-1');
+    fireEvent.click(screen.getByRole('button', { name: 'Finish this list' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Yes, finish' }));
+    expect(checklistRunView(h.doc(), 'run-1')!.finished).toBeDefined();
+  });
+
+  it('offers only the scenarios the run froze, whatever the packs hold now', () => {
+    const doc = biggarWithoutRuns();
+    addRun(doc, [FLOOD, STORM], 'run-1');
+    const run = doc.checklistRuns['run-1']!;
+    // As if the packs gained Heatwave and Power cut and lost Evacuation after the run began.
+    run.catalogue.scenarios = run.catalogue.scenarios.filter(
+      (s) => s.id === FLOOD || s.id === STORM,
+    );
+    renderAt(doc, '/app/more/checklists/run-1');
+    fireEvent.click(screen.getByRole('button', { name: 'Change scenarios' }));
+    const names = screen
+      .getAllByRole('checkbox')
+      .map((c) => (c as HTMLInputElement).closest('label')?.textContent)
+      .filter((t) => t === 'Flood' || t === 'Storm' || t === 'Heatwave' || t === 'Evacuation');
+    expect(names.sort()).toEqual(['Flood', 'Storm']);
+    expect(screen.queryByRole('checkbox', { name: 'Heatwave' })).toBeNull();
+  });
+
+  it('has no picker on a finished run', () => {
+    const doc = biggarWithoutRuns();
+    addRun(doc, [FLOOD, STORM], 'run-1');
+    doc.checklistRuns['run-1']!.finished = '2026-11-08T12:00:00.000Z';
+    renderAt(doc, '/app/more/checklists/run-1');
+    expect(screen.queryByRole('button', { name: 'Change scenarios' })).toBeNull();
+  });
+});
