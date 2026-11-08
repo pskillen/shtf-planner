@@ -115,7 +115,7 @@
     },
     {
       "id": "checklists-uk:report",
-      "text": "Report the power cut on your network operator's website. If you cannot, call 105 (England, Scotland, Wales) or 03457 643643 (Northern Ireland). Calls are free.",
+      "text": "Report the power cut on your network operator's website. If you cannot, call 105 (free; England, Scotland, Wales) or 03457 643643 (Northern Ireland).",
       "scenarios": ["checklists-uk:power-cut"],
       "phase": "immediate",
       "order": 10,
