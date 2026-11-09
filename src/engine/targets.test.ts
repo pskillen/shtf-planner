@@ -22,6 +22,14 @@ describe('targets', () => {
     expect(t.rules.reduce((n, r) => n + r.contribution, 0)).toBeCloseTo(t.amount);
   });
 
+  it('counts hygiene in hand cleans, three a person a day', () => {
+    const doc = biggarDocument();
+    const t = byId(targets(doc, packs, NOW, 3), 'sanitation:hygieneUses')!;
+    expect(t.unit).toBe('hand cleans');
+    expect(t.amount).toBe(5 * 3 * 3);
+    expect(t.rules.map((r) => r.text).join(' ')).toMatch(/hand cleans/);
+  });
+
   it("uses the infant's age band for formula and nappies, and moves bands with the date", () => {
     const doc = biggarDocument();
     // Jo, born 2026-08-01, is 3 months on 2026-11-15: band 0-6 months.

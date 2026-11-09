@@ -11,6 +11,17 @@ const at = (days: number, capability: string) =>
   rows.find((h) => h.horizonDays === days)!.rows.find((r) => r.capability === capability)!;
 const HORIZONS = [3, 7, 14, 28];
 
+describe('preview unit notes', () => {
+  it('says what a hand clean is on the hygiene row and nothing on water', () => {
+    for (const h of rows) {
+      const hygiene = h.rows.find((r) => r.title === 'Hygiene supplies')!;
+      expect(hygiene.unit).toBe('hand cleans');
+      expect(hygiene.note).toBe('A hand clean is 1 wipe or 5 ml of hand sanitiser.');
+      expect(h.rows.find((r) => r.title === 'Drinking water')!.note).toBeUndefined();
+    }
+  });
+});
+
 describe('preview examples on the Biggar household', () => {
   it('words every example as an example, keeping the headline amount', () => {
     for (const h of rows)

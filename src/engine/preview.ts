@@ -1,4 +1,10 @@
-import type { CapabilityId, Document, Packs, ResourceId } from '../model';
+import {
+  RESOURCE_EXPLAIN,
+  type CapabilityId,
+  type Document,
+  type Packs,
+  type ResourceId,
+} from '../model';
 import { HORIZONS } from './assumptions';
 import { analyse } from './coverage';
 import { suggestContext } from './gaps';
@@ -20,6 +26,8 @@ export interface PreviewRow {
    * Bottled water (6 × 2 L)". Food is a short mix of staples; see `examples.ts`.
    */
   example: string;
+  /** What the unit means, when it needs saying: "A hand clean is 1 wipe or 5 ml of hand sanitiser." */
+  note?: string;
 }
 
 export interface PreviewHorizon {
@@ -101,6 +109,9 @@ export function preview(doc: Document, packs: Packs, asOf: string): PreviewHoriz
         amount: t.amount,
         unit: t.unit,
         example,
+        ...(t.kind === 'resource' && RESOURCE_EXPLAIN[t.resource as ResourceId]
+          ? { note: RESOURCE_EXPLAIN[t.resource as ResourceId] }
+          : {}),
       });
     }
     return { horizonDays, rows };
