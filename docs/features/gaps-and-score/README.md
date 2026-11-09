@@ -34,14 +34,14 @@ The separate shopping screen can show the full list or the suggestions for one n
   with group headings such as "Food and cooking › Tins".
 - The tick opens Quick add on that item (and product when the engine named one); equipment rows open the equipment
   form.
-- A fuel row for owned equipment links **Open <name>** to that piece's edit form, one link per piece when the
+- A fuel row for owned equipment links `Open <name>` to that piece's edit form, one link per piece when the
   row covers several; an alternative fuel ("or …") keeps the links of its own equipment. The links are separate
   from the tick.
 
 ## Gaps — to do and enough
 
 - **To do.** Plan items with Done (five-second undo toast), tasks with plain reasons, Done list with Undo.
-  A task from blocked equipment (for example fitting an EPS) links **Open <name>** to that piece's edit form.
+  A task from blocked equipment (for example fitting an EPS) links `Open <name>` to that piece's edit form.
 - **Enough.** Needs at or over target, with optional surplus wording for resources.
 
 ## Score
