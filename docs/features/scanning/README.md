@@ -187,7 +187,9 @@ about 10 MB, and kept in their own cache (`date-reader-<hash of the runtime vers
 files>`): same origin only, cache first, so later uses work offline. A new app version with new files
 uses a new cache name and the old cache is deleted at start-up (`src/scan/ocr/cache.ts`). The worker
 claims the page when it first installs (`clientsClaim`), so a first visit is controlled within
-seconds; an update still waits for the Reload tap. Workbox's per-file limit is back at its default.
+seconds; an update still waits for the Reload tap. More → Settings → Date reader says whether it is
+downloaded on this device and has **Download the date reader now**, to have it ready before going
+offline. Workbox's per-file limit is back at its default.
 No Tesseract, no other models, no cloud text reading. Memory (headless Chrome, 50 reads): the renderer goes from
 about 230 MB to 490 MB at the first read and plateaus near 800 MB (the JS heap is under 10 MB; it is
 the wasm runtime and models). Turning off ONNX Runtime's memory pattern and CPU arena changed nothing,

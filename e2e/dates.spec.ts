@@ -163,6 +163,21 @@ test.describe('camera dates', () => {
     expect(await spreadStock(page)).toHaveLength(1);
   });
 
+  test('Settings: download now, then offline, a date reads', async ({ page, context }) => {
+    const hosts = await setUp(page);
+    await page.evaluate(() => navigator.serviceWorker.ready.then(() => true));
+    await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
+    await page.goto('/app/more/settings?debug=1');
+    await expect(page.getByText('Not downloaded yet')).toBeVisible();
+    await page.getByRole('button', { name: 'Download the date reader now' }).click();
+    await expect(page.getByText(/^Downloaded: best-before dates/)).toBeVisible(READ);
+    await context.setOffline(true);
+    await toDateStep(page);
+    await show(page, { text: 'BEST BEFORE 06/2027' });
+    await expect(page.getByTestId('date-result')).toContainText('Jun 2027', READ);
+    await assertPrivate(page, hosts);
+  });
+
   test('the precache leaves the reader out', async ({ page }) => {
     const sw = await (await page.request.get('/sw.js')).text();
     expect(sw).not.toMatch(/url:"[^"]*\.(wasm|onnx)"/);

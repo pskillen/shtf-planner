@@ -31,6 +31,8 @@ export interface FakeLoopOut {
 export const dateState: {
   /** The reader cannot load. */
   unavailable: boolean;
+  /** Whether a reader is already loaded when `peekDateReader` is asked. */
+  loaded: boolean;
   starts: number;
   stops: number;
   aborts: number;
@@ -45,6 +47,7 @@ export const dateState: {
   finish(out: Partial<FakeLoopOut>): void;
 } = {
   unavailable: false,
+  loaded: true,
   starts: 0,
   stops: 0,
   aborts: 0,
@@ -74,6 +77,7 @@ export const dateState: {
 
 export function resetDates(): void {
   dateState.unavailable = false;
+  dateState.loaded = true;
   dateState.starts = 0;
   dateState.stops = 0;
   dateState.aborts = 0;
@@ -101,7 +105,7 @@ export const fakeDateClientModule = () => ({
     },
     terminate: () => undefined,
   }),
-  peekDateReader: () => ({ status: () => dateState.status }),
+  peekDateReader: () => (dateState.loaded ? { status: () => dateState.status } : undefined),
   onReaderChange: (l: () => void) => {
     dateState.listeners.add(l);
     return () => void dateState.listeners.delete(l);
