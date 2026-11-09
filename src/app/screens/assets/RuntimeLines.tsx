@@ -1,19 +1,13 @@
 import type { RuntimeLine } from './runtimeView';
 
 /** The runtime sentences for one piece of equipment, as muted lines. */
-export function RuntimeText({
-  lines,
-  as: Tag = 'span',
-}: {
-  lines: readonly RuntimeLine[];
-  as?: 'span' | 'p';
-}) {
+export function RuntimeText({ lines }: { lines: readonly RuntimeLine[] }) {
   return (
     <>
       {lines.map((l) => (
-        <Tag key={l.key} className="muted">
+        <span key={l.key} className="muted">
           {l.text}
-        </Tag>
+        </span>
       ))}
     </>
   );
