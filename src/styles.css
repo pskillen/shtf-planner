@@ -1075,6 +1075,11 @@ a.row-main {
 .row-item .why {
   flex-basis: 100%;
 }
+
+.row-item .runtime-add {
+  flex-basis: 100%;
+  min-height: 44px;
+}
 .row-item .why summary {
   min-height: 44px;
   display: flex;

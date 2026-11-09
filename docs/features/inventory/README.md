@@ -38,7 +38,8 @@ The Stores tab: what the household has, grouped by **item** (the generic from th
   source, stock total and barcode count. Merge moves **packs** and barcodes to another product and deletes the
   duplicate.
 - **Not scored yet.** (Items and products no target uses; Stores shows an explainer under the group.) Products with no item sit in a last group. Equipment in places is read-only with an
-  Equipment badge, as before.
+  Equipment badge, as before; it shows its runtime line and, with no fuel in stock, a Quick add for
+  that fuel.
 - **Expiry colours.** One rule app-wide (`src/engine/expiry.ts`, `ExpiryBadge`), always a word as well
   as a colour: **Expired** (red) once the best-before month has gone; **Expires soon** (red) from this
   month to `expirySoonMonths` ahead (default 1, 0 to 3); **Before next check** (amber) up to

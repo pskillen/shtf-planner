@@ -221,3 +221,33 @@ describe('best-before words and colours', () => {
     expect(within(rowFor()).getByText(/Feb 2027/).textContent).toBe('Feb 2027 · Expires soon');
   });
 });
+
+describe('equipment runtime on Stores rows', () => {
+  const LINE = "3 days at your plan's use · 7.5 of 43 hours available";
+  const equipment = () => screen.queryByRole('region', { name: 'Equipment' });
+
+  it('shows the BBQ line unfiltered and under its place, and hides it under a category', () => {
+    const s = liveStore(biggarDocument());
+    render(s.wrap(<StoresScreen />));
+    expect(within(equipment()!).getByRole('link', { name: /Gas BBQ/ }).textContent).toContain(LINE);
+
+    fireEvent.change(screen.getByLabelText('Place filter'), { target: { value: 'loc-shed' } });
+    expect(within(equipment()!).getByRole('link', { name: /Gas BBQ/ }).textContent).toContain(LINE);
+
+    fireEvent.change(screen.getByLabelText('Place filter'), { target: { value: 'all' } });
+    const category = screen.getByLabelText('Category filter') as HTMLSelectElement;
+    fireEvent.change(category, { target: { value: category.options[1]!.value } });
+    expect(equipment()).toBeNull();
+  });
+
+  it('puts the no-fuel Quick add outside the link and opens it', () => {
+    const doc = biggarDocument();
+    delete doc.stock['stock-propane'];
+    const s = liveStore(doc);
+    render(s.wrap(<StoresScreen />));
+    const button = screen.getByRole('button', { name: 'Quick add Propane bottle' });
+    expect(button.closest('a')).toBeNull();
+    fireEvent.click(button);
+    expect(screen.getByRole('dialog')).toBeTruthy();
+  });
+});
