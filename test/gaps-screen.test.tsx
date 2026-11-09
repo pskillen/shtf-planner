@@ -211,23 +211,24 @@ describe('links to the exact equipment', () => {
     expect(links).toEqual(['/app/assets?edit=asset-bbq', '/app/assets?edit=asset-heater']);
   });
 
-  it('skips a deleted asset instead of linking another', () => {
-    const doc = month();
-    doc.assets['asset-heater'] = {
-      id: 'asset-heater',
-      typeId: 'assets-base:catalytic-heater',
-      maintenance: {},
-      answers: {},
-    };
+  it('links the equipment of an alternative fuel as well as the main one', () => {
+    const doc = biggarDocument();
+    doc.settings.horizonDays = 3;
     delete doc.stock['stock-propane'];
-    delete doc.assets['asset-bbq'];
+    const heater = (id: string, name: string, lpg: string) => ({
+      id,
+      typeId: 'assets-base:catalytic-heater',
+      name,
+      maintenance: {},
+      answers: { chosenLpg: lpg, fuelConfirmed: true, indoorUse: 'permitted', highRise: 'no' },
+    });
+    doc.assets.a = heater('a', 'Hall heater', 'items-base:butane-bottle');
+    doc.assets.b = heater('b', 'Loft heater', 'items-base:propane-bottle');
     mount('/app/gaps/shopping', doc);
-    expect(screen.queryByRole('link', { name: 'Open Gas BBQ' })).toBeNull();
-    expect(
-      screen
-        .queryAllByRole('link')
-        .filter((a) => /edit=asset-bbq/.test(a.getAttribute('href') ?? '')),
-    ).toHaveLength(0);
+    const li = screen.getByRole('link', { name: 'Open Hall heater' }).closest('li')!;
+    expect(li.textContent).toMatch(/or Propane bottle/);
+    const links = Array.from(li.querySelectorAll('a')).map((a) => a.getAttribute('href'));
+    expect(links).toEqual(['/app/assets?edit=a', '/app/assets?edit=b']);
   });
 
   it('opens Roof solar from the blocked-equipment task', () => {
