@@ -240,6 +240,7 @@ for (const size of [
         const box = async (loc: ReturnType<Page['locator']>) => (await loc.boundingBox())!;
         const strip = page.getByTestId('camera-strip');
         const stripBarcode = await box(strip);
+        const hintBox = hintShown ? await box(page.locator('.stocktake-hint')) : undefined;
         if (hintShown) {
           // The one-line hint leaves "Use this number" above the tab bar on the barcode step.
           const tabTop = (await box(page.getByRole('navigation', { name: 'Main' }))).y;
@@ -260,8 +261,14 @@ for (const size of [
         // One camera size for both steps: it never changes.
         expect(stripAiming.height).toBeCloseTo(stripBarcode.height, 0);
         expect(stripAiming.width).toBeCloseTo(stripBarcode.width, 0);
-        // The strip's top is in the same place on both steps (the page does not jump at the catch).
-        expect(stripAiming.y).toBeCloseTo(stripBarcode.y, 0);
+        if (hintBox) {
+          // The hint hides at the first catch: the strip moves up by at most the hint's height (once per device).
+          expect(stripAiming.y).toBeLessThanOrEqual(stripBarcode.y + 1);
+          expect(stripBarcode.y - stripAiming.y).toBeLessThanOrEqual(hintBox.height + 16);
+        } else {
+          // The strip's top is in the same place on both steps (the page does not jump at the catch).
+          expect(stripAiming.y).toBeCloseTo(stripBarcode.y, 0);
+        }
         // While aiming, the status sits at the top edge of the date box, clear of its middle.
         const s = await box(status);
         const boxTop = stripAiming.y + stripAiming.height * 0.22;
