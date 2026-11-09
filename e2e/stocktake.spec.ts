@@ -393,6 +393,34 @@ test.describe('stocktake with a fake camera', () => {
     expect(okBox!.y).toBeGreaterThanOrEqual(0);
   });
 
+  for (const size of [
+    { width: 360, height: 740 },
+    { width: 412, height: 915 },
+  ]) {
+    test(`date step chips clear the OK bar with the hint not dismissed at ${size.width}x${size.height}`, async ({
+      page,
+      context,
+    }) => {
+      await page.setViewportSize(size);
+      await setUp(page, context);
+      await open(page, '/app/stores/stocktake');
+      await expect(page.getByText(/Red line for the barcode/)).toBeVisible();
+      await show(page, KNOWN);
+      await expect(dateCard(page, SPREAD)).toBeVisible();
+      await page.evaluate(() => window.scrollTo(0, 0));
+      const [chips, okBox] = await Promise.all([
+        page.getByRole('group', { name: /quick choices/ }).boundingBox(),
+        page.getByRole('button', { name: 'OK', exact: true }).boundingBox(),
+      ]);
+      const gap = okBox!.y - 8 - (chips!.y + chips!.height);
+      test.info().annotations.push({
+        type: 'chips',
+        description: `${size.width}x${size.height}: chips ${Math.round(gap)} px clear of the OK bar`,
+      });
+      expect(gap).toBeGreaterThanOrEqual(0);
+    });
+  }
+
   test('Quick add: Scan a barcode, a known code, Add', async ({ page, context }) => {
     await setUp(page, context);
     await open(page, '/app/stores');

@@ -315,8 +315,8 @@ for (const size of [
         const chips = page.getByRole('group', { name: /quick choices/ });
         const cb2 = await box(chips);
         const m2 = await box(month);
-        // With the hint dismissed the quick-choice chips clear the bar too, in both renderings.
-        if (!hintShown) expect(cb2.y + cb2.height).toBeLessThanOrEqual((await barTop()) - 8);
+        // The hint hides at the first catch, so the quick-choice chips clear the bar in every case.
+        expect(cb2.y + cb2.height).toBeLessThanOrEqual((await barTop()) - 8);
         test.info().annotations.push({
           type: 'slack',
           description: `${size.width}x${size.height} hint ${hintShown ? 'on' : 'off'} month ${monthBox}: month field ${Math.round((await barTop()) - (m2.y + m2.height))} px clear of the OK bar, chips ${Math.round((await barTop()) - (cb2.y + cb2.height))} px`,
