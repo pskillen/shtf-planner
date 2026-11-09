@@ -54,6 +54,6 @@ test('with no propane in stock the line says so and Quick add opens on the fuel'
   await expect(row).toContainText('Cooking: no Propane bottle in stock');
   const quick = page.getByRole('button', { name: 'Quick add Propane bottle' });
   await quick.click();
-  await expect(page.getByRole('dialog')).toContainText('Propane bottle');
+  await expect(page.getByRole('dialog')).toContainText('Add Propane 13 kg');
   expect(await noSideScroll(page)).toBe(true);
 });
