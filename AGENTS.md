@@ -66,7 +66,7 @@ Read next: [`docs/design.md`](docs/design.md) (the design overview),
   quantity in a place), **resource** (a named quantity targets count: water litres, food kcal…; not
   "store"), **category** (Food, Water…), **capability** (water, food, heat…). **`src/store`** is the
   document store, not a resource.
-- **Packs.** Content (items, assets, guidance, plans, regions) is JSON in `src/packs/data/`,
+- **Packs.** Content (items, assets, guidance, plans, checklists, regions) is JSON in `src/packs/data/`,
   validated by `src/packs/loader.ts`. Every guidance rule has a `source` URL (listed in the pack's
   `sources` with the date checked) or `"assumption"`; never invent an official number. Bump a
   pack's `version` when its content changes. See `docs/features/content-packs/`.

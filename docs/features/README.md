@@ -23,7 +23,7 @@ The stock model names six levels, then a few everyday words the screens use besi
 | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
 | [App shell](app-shell/README.md)            | Installable PWA shell, landing page with changelog, footer                                                  |
 | [Data model](data-model/README.md)          | The household document, its store, migrations and the test household                                        |
-| [Content packs](content-packs/README.md)    | Versioned JSON packs: items, assets, guidance, plans, regions                                               |
+| [Content packs](content-packs/README.md)    | Versioned JSON packs: items, assets, guidance, plans, checklists, regions                                   |
 | [Engine](engine/README.md)                  | Targets, coverage, gaps, score and horizon preview as pure functions                                        |
 | [Review](review/README.md)                  | Review queue, equipment maintenance and reminders                                                           |
 | [Setup screens](setup/README.md)            | Onboarding, the home hub, people, home, locations, equipment, risks, horizon, settings                      |
