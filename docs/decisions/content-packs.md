@@ -36,10 +36,11 @@ Drinks, Long-life…) in rough supermarket-aisle order; pickers and the shopping
 **Drinks count as water.** Soft drinks and fruit juice count 1 L of water per litre plus the label's
 kcal (diet drinks give 0 kcal). [D183, D192]
 
-**No one-off fixes for awkward items.** A box of 100 gloves is not a reason to special-case
-gloves; the fix is to explain what hygiene "uses" mean or to rework hygiene. The countsAs line is
-the partial answer; the rework is
-[#38](https://github.com/pskillen/shtf-planner/issues/38). [D164]
+**Hygiene is counted in hand cleans, and the screens say what one is.** A hand clean is 1 wipe or
+5 ml of hand sanitiser; hygiene stays one resource. Items that do not fit that measure (a box of
+gloves) are not special-cased: they stay under "Other hygiene and cleaning", listed but not scored.
+Why: the owner chose explaining the measure over splitting hygiene into several resources
+([#38](https://github.com/pskillen/shtf-planner/issues/38)). [D164]
 
 **CoFID kcal figures ship as cited.** Checking the 24 CoFID-cited figures against the CoFID
 workbook is a follow-up ([#59](https://github.com/pskillen/shtf-planner/issues/59)); label kcal replaces them whenever a product has one. [D205]

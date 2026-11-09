@@ -87,6 +87,17 @@ describe('gaps overview', () => {
   });
 });
 
+describe('hand cleans', () => {
+  it('explain the unit on the sanitation need', () => {
+    const s = liveStore(biggarDocument());
+    render(s.wrap(<GapsScreen />));
+    fireEvent.click(screen.getByRole('button', { name: 'Show all needs' }));
+    expect(
+      screen.getAllByText(/A hand clean is 1 wipe or 5 ml of hand sanitiser\./).length,
+    ).toBeGreaterThan(0);
+  });
+});
+
 describe('fuel shopping alternatives', () => {
   it('keeps one actionable exact fuel and its alternative on the full and heat lists', () => {
     const doc = biggarDocument();

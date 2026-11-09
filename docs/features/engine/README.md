@@ -54,7 +54,7 @@ including things listed but not counted (expired, below the minimum, gated) with
 | `light`      | lumen-hours                                      | items that give `lumenHours` (torches, lanterns)                                      |
 | `power`      | Wh for phones and powered equipment              | cells and power banks, batteries and EVs holding Wh, an array's Wh a day, a generator |
 | `comms`      | one radio that needs no mains power              | an item tagged `radio-rx`, or a radio asset                                           |
-| `sanitation` | toilet uses, hygiene uses, nappies by age        | those resources; nappies only while the size fits someone                             |
+| `sanitation` | toilet uses, hand cleans, nappies by age         | those resources; nappies only while the size fits someone                             |
 | `medical`    | doses per medication; one first aid kit          | `unitsOnHand` per medication; first aid items                                         |
 | `mobility`   | a driving range                                  | the best single EV (kWh x 4 km x half charge) or petrol on hand (12 km a litre)       |
 | `plans`      | every applicable plan item, done and not expired | `doc.plans[id].doneAt` (and `expires`, or the plan's `expiresMonths`)                 |
@@ -206,7 +206,7 @@ Numbers worth a look, none of them official:
 | Burner time per person per hot meal        | 0.25 h                                                                                                                                                             | `assumptions.ts`                            |
 | Light                                      | 1,000 lumen-hours a day                                                                                                                                            | `guidance-grid-free:light`                  |
 | Phone power                                | 15 Wh per person per day; x8 for powered equipment                                                                                                                 | `guidance-grid-free:phone-power`            |
-| Toilet and hygiene                         | 5 and 3 uses per person per day                                                                                                                                    | `guidance-grid-free:sanitation`, `:hygiene` |
+| Toilet and hygiene                         | 5 toilet uses and 3 hand cleans per person per day                                                                                                                 | `guidance-grid-free:sanitation`, `:hygiene` |
 | Nappies                                    | 10 a day to 6 months, 8 to 12, 6 to 36                                                                                                                             | `guidance-grid-free:nappies`                |
 | Infant formula                             | 100 g a day under 12 months                                                                                                                                        | `guidance-grid-free:formula`                |
 | Pet food (kcal) and water (L) a day, S/M/L | 300/700/1,200 kcal; 0.25/0.75/1.5 L                                                                                                                                | `:pet-food`, `:pet-water`                   |
