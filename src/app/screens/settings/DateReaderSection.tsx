@@ -38,6 +38,8 @@ export function DateReaderSection() {
     try {
       await getDateReader(readUseWebGpu()).ready;
     } catch {
+      // A failed reader stays in the client until it is stopped: free it so the next tap makes a new one.
+      terminateDateReader();
       setNote('failed');
       setBusy(false);
       return;
