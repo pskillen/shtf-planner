@@ -332,6 +332,14 @@
       "source": "https://www.gov.uk/government/publications/public-health-advice-from-uk-cmos-during-a-national-power-outage/keeping-warm-or-cool-in-extreme-weather-scripts-for-broadcast-media"
     },
     {
+      "id": "checklists-uk:no-indoor-fire",
+      "text": "Do not light a fire indoors unless you have a proper heating appliance for this purpose or a fireplace with a working chimney.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "immediate",
+      "order": 85,
+      "source": "https://www.gov.uk/government/publications/public-health-advice-from-uk-cmos-during-a-national-power-outage/keeping-warm-or-cool-in-extreme-weather-scripts-for-broadcast-media"
+    },
+    {
       "id": "checklists-uk:neighbours",
       "text": "Check in on your neighbours. If you can, offer to share blankets, clothing or food, and pass on any important information you have received about the power cut, such as when power is expected back.",
       "scenarios": ["checklists-uk:power-cut"],
@@ -661,6 +669,14 @@
       "phase": "immediate",
       "order": 65,
       "source": "https://naturalresources.wales/flooding/what-to-do-after-a-flood/?lang=en"
+    },
+    {
+      "id": "checklists-uk:flood-shoreline-scotland",
+      "text": "Scotland (Ready Scotland advice): if it is safe, move to higher ground or upper floors. Stay away from shorelines.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "immediate",
+      "order": 70,
+      "source": "https://ready.campaign.gov.scot/flooding"
     },
     {
       "id": "checklists-uk:flood-check-on-others",
