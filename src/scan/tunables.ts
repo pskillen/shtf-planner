@@ -34,7 +34,7 @@ export interface Box {
 export const BARCODE_BOX: Box = { x: 0.04, y: 0.36, w: 0.92, h: 0.28 };
 
 /** Date step: a taller box (yellow), where the camera reads the best-before date. */
-export const DATE_BOX: Box = { x: 0.06, y: 0.22, w: 0.88, h: 0.56 };
+export const DATE_BOX: Box = { x: 0.04, y: 0.18, w: 0.92, h: 0.64 };
 
 /**
  * zxing's turned attempts look here instead: a tall box in the middle, because a code held

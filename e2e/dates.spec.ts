@@ -264,13 +264,13 @@ for (const size of [
         expect(stripAiming.y).toBeCloseTo(stripBarcode.y, 0);
         // While aiming, the status sits at the top edge of the date box, clear of its middle.
         const s = await box(status);
-        const boxTop = stripAiming.y + stripAiming.height * 0.22;
+        const boxTop = stripAiming.y + stripAiming.height * 0.18;
         const boxMid = stripAiming.y + stripAiming.height * 0.5;
         expect(s.y).toBeGreaterThanOrEqual(boxTop - 2);
         expect(s.y + s.height).toBeLessThan(boxMid - stripAiming.height * 0.1);
         test.info().annotations.push({
           type: 'pill',
-          description: `${size.width}x${size.height}: pill y ${Math.round(s.y - stripAiming.y)}..${Math.round(s.y + s.height - stripAiming.y)} of a ${Math.round(stripAiming.height)} px strip; date box ${Math.round(boxTop - stripAiming.y)}..${Math.round(stripAiming.y + stripAiming.height * 0.78 - stripAiming.y)}`,
+          description: `${size.width}x${size.height}: pill y ${Math.round(s.y - stripAiming.y)}..${Math.round(s.y + s.height - stripAiming.y)} of a ${Math.round(stripAiming.height)} px strip; date box ${Math.round(boxTop - stripAiming.y)}..${Math.round(stripAiming.y + stripAiming.height * 0.82 - stripAiming.y)}`,
         });
         await page.screenshot({
           path: `test-results/p9b-aiming-${size.width}x${size.height}-hint-${hintShown ? 'on' : 'off'}-${monthBox === 'picker' ? 'picker' : 'text'}.png`,
@@ -289,10 +289,10 @@ for (const size of [
           const m = await box(month);
           expect(m.y + m.height).toBeLessThanOrEqual((await barTop()) - MONTH_SLACK);
         }
-        // The date box on the screen is 88% by 56% of the strip.
+        // The date box on the screen is 92% by 64% of the strip.
         test.info().annotations.push({
           type: 'layout',
-          description: `${size.width}x${size.height} hint ${hintShown ? 'showing' : 'dismissed'}: strip ${Math.round(stripAiming.width)}x${Math.round(stripAiming.height)}, date box ${Math.round(stripAiming.width * 0.88)}x${Math.round(stripAiming.height * 0.56)}, month field ${monthState}`,
+          description: `${size.width}x${size.height} hint ${hintShown ? 'showing' : 'dismissed'}: strip ${Math.round(stripAiming.width)}x${Math.round(stripAiming.height)}, date box ${Math.round(stripAiming.width * 0.92)}x${Math.round(stripAiming.height * 0.64)}, month field ${monthState}`,
         });
 
         // After Got it: the month is on the strip, and the strip is the same size.
