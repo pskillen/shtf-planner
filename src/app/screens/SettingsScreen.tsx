@@ -13,6 +13,7 @@ import { usePacks } from '../usePacks';
 import { formatReviewDate } from '../reviewDisplay';
 import { applyRegion } from './region';
 import { DataSection } from './settings/DataSection';
+import { DateReaderSection } from './settings/DateReaderSection';
 import { ContentPacks } from './settings/ContentPacks';
 import { setPack } from './settings/packs';
 
@@ -137,6 +138,7 @@ export function SettingsScreen() {
           onClose={() => setCalendarOpen(false)}
         />
       )}
+      <DateReaderSection />
       <DataSection />
     </div>
   );
