@@ -164,6 +164,28 @@ unlisted source, and a `requires.asset` that is not a real asset type.
 - **Merged scenarios.** A run's `scenarios` is a merged array, so a merged document may hold
   duplicates or none. The schema accepts both; readers de-duplicate.
 
+## Two devices
+
+A run is in the household document, so it merges like the rest of it (the table is in
+[Drive sync](../drive-sync/README.md)). What a reader of a run must expect:
+
+- **The states are pre-created.** `startRun` writes an empty state for every snapshotted step,
+  keyed `runId|stepId`, so two devices ticking different steps write different keys and both
+  ticks survive.
+- **Duplicate or empty `scenarios`.** Two devices adding the same scenario leave it in the array
+  twice; each removing a different one can leave it empty. Readers de-duplicate. An empty run has
+  `needsScenario: true`, shows no steps, opens the picker, and cannot be finished: `finishRun`
+  refuses it and the screen does not offer Finish until a scenario is chosen.
+- **Same value, different times is not a conflict.** When both devices tick one step, or both
+  finish one run, at different times, no "Which copy?" question is raised: the step is done and
+  the run finished either way, and the merge keeps one time, the same on both devices. Agreement
+  should not interrupt anyone during an incident. A tick against an untick on one step is still
+  asked about.
+- **Note drafts are per device.** The `localStorage` draft that survives a page unload (see
+  Notes) is restored only if the saved note still equals the note the draft was typed over, so
+  another device's change is never overwritten. Otherwise it is dropped. "Forget this device's
+  data" clears it.
+
 ## Run commands and the read view
 
 Same module, pure, called inside the caller's single `change`. Each command returns `true` only
@@ -279,6 +301,22 @@ checklist pack, and Settings lists the UK pack as "Included for your region" wit
   generator"), the condition stays in the step text.
 - Step ids are stable and never reused for different advice; bump the pack `version` when content
   changes.
+
+## Content rules
+
+Rules for any step added to a checklist pack. They are enforced by review, not by the schema.
+
+- **Safety warnings are never gated** on owned assets or recorded household facts (`requires.asset`,
+  `requires.risk`, `requires.memberTag`) when a household could meet the hazard anyway. A home with
+  nothing recorded can still meet carbon monoxide, so that step does not wait for an
+  asset. If the advice is conditional ("if you use a generator"), put the condition in the text.
+- **No step depends solely on a trigger some households never receive.** Official warnings and
+  alert services differ by nation (England's heat-health alerts, no 111 in Northern Ireland, no
+  flood warning sign-up listed there). A step says what to do when it is hot or when water is
+  rising, and may mention a warning as one way to find out, never the only one.
+- **A region owns its advice.** A pack with no `region` is offered to no household (see Packs
+  above), so a missing region cannot send one country's numbers or agencies to another. The schema
+  does not require a region; this is the safe default.
 
 ## Not built yet
 

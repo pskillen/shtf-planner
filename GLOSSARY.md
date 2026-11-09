@@ -98,7 +98,7 @@ product, then batches. **`src/store`** in code is the document store, not a reso
 
 ## Content
 
-- **Pack.** Versioned JSON content shipped in the app: items, assets, guidance, plans, regions.
+- **Pack.** Versioned JSON content shipped in the app: items, assets, guidance, plans, checklists, regions.
 - **Guidance rule.** One rule in a guidance pack: a resource per person, pet or household per day
   (or a fixed amount), with multipliers and a source. `Rule`.
 - **Source.** An https URL, listed with the date checked, or `"assumption"`; every number has one.
