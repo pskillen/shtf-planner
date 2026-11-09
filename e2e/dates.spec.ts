@@ -164,7 +164,7 @@ test.describe('camera dates', () => {
   });
 
   test('Settings: download now, then offline, a date reads', async ({ page, context }) => {
-    await setUp(page);
+    const hosts = await setUp(page);
     await page.evaluate(() => navigator.serviceWorker.ready.then(() => true));
     await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
     await page.goto('/app/more/settings?debug=1');
@@ -175,6 +175,7 @@ test.describe('camera dates', () => {
     await toDateStep(page);
     await show(page, { text: 'BEST BEFORE 06/2027' });
     await expect(page.getByTestId('date-result')).toContainText('Jun 2027', READ);
+    await assertPrivate(page, hosts);
   });
 
   test('the precache leaves the reader out', async ({ page }) => {
