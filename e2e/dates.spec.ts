@@ -296,7 +296,8 @@ for (const size of [
         if (hintBox) {
           // The hint hides at the first catch: the strip moves up by at most the hint's height (once per device).
           expect(stripAiming.y).toBeLessThanOrEqual(stripBarcode.y + 1);
-          expect(stripBarcode.y - stripAiming.y).toBeLessThanOrEqual(hintBox.height + 16);
+          // The hint's box plus its 4 px top and bottom margins (.stocktake-hint in styles.css).
+          expect(stripBarcode.y - stripAiming.y).toBeLessThanOrEqual(hintBox.height + 4 + 4);
         } else {
           // The strip's top is in the same place on both steps (the page does not jump at the catch).
           expect(stripAiming.y).toBeCloseTo(stripBarcode.y, 0);
