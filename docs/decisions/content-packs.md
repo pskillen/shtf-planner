@@ -20,8 +20,7 @@ England; Wales and Northern Ireland links are still to add
 ([#57](https://github.com/pskillen/shtf-planner/issues/57)). [D97]
 
 **The US band is the app's choice.** The US guidance pack uses a 14-day band; Ready.gov itself
-asks for "several days" and one gallon per person per day. Differs from the code: the horizon
-sentence in `src/app/labels.ts` says two weeks is "what Ready.gov suggests". [D76]
+asks for "several days" and one gallon per person per day. [D76]
 
 **Items sit at shopping-list level.** Baked beans, chopped tomatoes, tinned soup, tinned veg…, with
 a catch-all per group; label kcal does the fine counting. About 170 items. Why: the household
