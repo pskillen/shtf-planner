@@ -1,3 +1,4 @@
+import { RESOURCE_EXPLAIN } from '../../../model';
 import type { CapabilityScore, Coverage, Score, Target } from '../../../engine';
 import { CAPABILITY_LABEL } from '../../labels';
 import { formatAmount } from '../gaps/view';
@@ -11,7 +12,10 @@ export interface ScoreBar {
   enough: boolean;
   /** What holds it back, in numbers: "Heat: 0 of 18 hours". Empty when there is no coverage to say. */
   shortfall: string;
-  /** The rule's own words for the weakest target, shown after the shortfall in muted type. */
+  /**
+   * The rule's own words for the weakest target, shown after the shortfall in muted type, then
+   * what a unit means ("A hand clean is…") for each such resource the household has a target for.
+   */
   reason: string;
 }
 
@@ -49,6 +53,15 @@ export function scoreView(
   from: { coverage?: readonly Coverage[]; region?: 'UK' | 'US' } = {},
 ): ScoreView {
   const cover = new Map((from.coverage ?? []).map((c) => [c.targetId, c.amount]));
+  const explainers = (capability: string): string[] =>
+    Object.entries(RESOURCE_EXPLAIN).flatMap(([resource, text]) =>
+      cover.has(`${capability}:${resource}`) && text ? [text] : [],
+    );
+  const reasonWithUnits = (c: CapabilityScore): string => {
+    const reason = reasonOf(c.weakestTarget);
+    const extra = explainers(c.capability).filter((text) => !reason.includes(text));
+    return [reason, ...extra].filter((s) => s !== '').join(' ');
+  };
   const planCover = (from.coverage ?? []).filter((c) => c.targetId.startsWith('plan:'));
   const shortfallOf = (c: CapabilityScore): string => {
     const t = c.weakestTarget;
@@ -74,7 +87,7 @@ export function scoreView(
       percent: wholePercent(c.percent),
       enough: c.percent >= 100,
       shortfall: shortfallOf(c),
-      reason: reasonOf(c.weakestTarget),
+      reason: reasonWithUnits(c),
     }));
   return {
     overall: wholePercent(score.overall),

@@ -62,6 +62,12 @@ describe('scoreView', () => {
     expect(v.bars.every((b) => b.reason !== '')).toBe(true);
   });
 
+  it('explains hand cleans on the sanitation bar, not on others', () => {
+    const san = v.bars.find((b) => b.capability === 'sanitation')!;
+    expect(san.reason).toContain('A hand clean is 1 wipe or 5 ml of hand sanitiser.');
+    expect(v.bars.find((b) => b.capability === 'water')!.reason).not.toMatch(/hand clean/);
+  });
+
   it('describes the target by the rule that asks for most of it, not a pets add-on', () => {
     const water = s.capabilities.find((c) => c.capability === 'water')!.weakestTarget!;
     expect(water.rules.length).toBeGreaterThan(1);
