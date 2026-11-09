@@ -117,7 +117,8 @@ then gives cooking first claim, heat second and power third. It chooses the best
 one exact item within a capability, with stable ties; distinct item pools add. Claims are limited to
 the target. This deterministic policy is not a global optimiser. `equipmentRuntime` projects the
 same analysis: available potential after earlier claims, allocated hours, alternatives and lots.
-Unknown quantities remain absent. The heat target is a legacy assumed burner runtime, not an
+Unknown quantities remain absent. The Equipment and Stores screens show `equipmentRuntime` as it
+is, in words, and do none of this arithmetic themselves. The heat target is a legacy assumed burner runtime, not an
 assessment of safe warmth.
 
 ## Dependent capabilities
@@ -256,7 +257,6 @@ No screens (they call these functions), budgeting or minimum suggestions from re
 
 ## Not built yet
 
-- Equipment runtime and per-fuel lot details in the equipment screen: [#28](https://github.com/pskillen/shtf-planner/issues/28).
 - Diesel, vehicles as assets, candles and torch cells as light, no impractical suggestions on big
   shortfalls, the preview's food-mix overshoot:
   [#49](https://github.com/pskillen/shtf-planner/issues/49).
