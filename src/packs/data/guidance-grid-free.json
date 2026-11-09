@@ -2,7 +2,7 @@
   "format": 1,
   "id": "guidance-grid-free",
   "kind": "guidance",
-  "version": 3,
+  "version": 4,
   "name": "Grid-free capability rules (planner assumptions)",
   "sources": [
     {
@@ -84,7 +84,7 @@
     {
       "id": "guidance-grid-free:hygiene",
       "capability": "sanitation",
-      "text": "Hand sanitiser, wet wipes and bathroom products. Three uses per person per day is an assumption.",
+      "text": "Hand sanitiser, wet wipes and bathroom products, counted in hand cleans. Three hand cleans per person per day is an assumption.",
       "perPersonDay": {
         "resource": "hygieneUses",
         "amount": 3

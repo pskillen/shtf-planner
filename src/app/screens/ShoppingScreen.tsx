@@ -15,7 +15,7 @@ import {
   type ShoppingRow,
   type ShoppingSort,
 } from './gaps/view';
-import { equipmentAddPath } from './assets/route';
+import { equipmentAddPath, equipmentEditPath, equipmentName } from './assets/route';
 import { QuickAdd, type QuickAddPrefill } from './stores/QuickAdd';
 
 export function ShoppingScreen() {
@@ -61,6 +61,20 @@ export function ShoppingScreen() {
     </button>
   );
 
+  const shownAlternatives = (r: ShoppingRow) =>
+    (r.alternativeOptions ?? []).filter(
+      (a) => !needLabel || !a.capabilities || a.capabilities.includes(need as CapabilityId),
+    );
+  // One link per piece of equipment the row (and the alternatives shown) is for, none repeated;
+  // a piece that has since been deleted is skipped.
+  const equipmentLinks = (r: ShoppingRow): string[] => [
+    ...new Set(
+      [...(r.assetIds ?? []), ...shownAlternatives(r).flatMap((a) => a.assetIds ?? [])].filter(
+        (id) => doc.assets[id],
+      ),
+    ),
+  ];
+
   const rows = needLabel
     ? view.shopping.filter(
         (r) => r.capability === need || r.capabilities?.includes(need as CapabilityId),
@@ -76,7 +90,10 @@ export function ShoppingScreen() {
             <strong>{r.label}</strong>
             {r.label === 'Choose how you will keep warm' ? (
               <span>
-                Make a heating plan for an outage. <Link to="/app/home">Open Home</Link>
+                Make a heating plan for an outage.{' '}
+                <Link className="row-link" to="/app/home">
+                  Open Home
+                </Link>
               </span>
             ) : null}
             {r.assetTypeId || r.fuelPurchase ? (
@@ -90,22 +107,19 @@ export function ShoppingScreen() {
               {r.closes}
               {r.pricePence !== undefined ? ` · about ${formatPrice(r.pricePence)}` : ''}
             </span>
-            {(r.alternativeOptions ?? []).filter(
-              (a) => !needLabel || !a.capabilities || a.capabilities.includes(need as CapabilityId),
-            ).length > 0 ? (
+            {shownAlternatives(r).length > 0 ? (
               <span className="muted">
                 or{' '}
-                {(r.alternativeOptions ?? [])
-                  .filter(
-                    (a) =>
-                      !needLabel ||
-                      !a.capabilities ||
-                      a.capabilities.includes(need as CapabilityId),
-                  )
+                {shownAlternatives(r)
                   .map((a) => a.label)
                   .join(', ')}
               </span>
             ) : null}
+            {equipmentLinks(r).map((id) => (
+              <Link key={id} className="row-link" to={equipmentEditPath(id)}>
+                Open {equipmentName(doc, packs, id)}
+              </Link>
+            ))}
           </div>
           {tick(r)}
         </li>

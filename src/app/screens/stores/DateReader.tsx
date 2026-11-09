@@ -9,6 +9,7 @@ import {
   type LoopStatus,
 } from '../../../scan/dateLoop';
 import type { Gray } from '../../../scan/ocr/image';
+import { READER_DOWNLOAD_MB, readerDownloaded } from '../../../scan/ocr/cache';
 import { getDateReader, peekDateReader } from '../../../scan/ocr/client';
 import { ExpiryBadge } from '../../components/ExpiryBadge';
 import { EXPIRY_LABEL } from '../../labels';
@@ -120,6 +121,17 @@ export function DateReader({
     null,
   );
   const [suggestions, setSuggestions] = useState<OfferedSuggestion[]>([]);
+  // Whether the reader's files are already kept on this phone (null: not known, or no Cache Storage).
+  const [downloaded, setDownloaded] = useState<boolean | null>(null);
+  useEffect(() => {
+    let gone = false;
+    void readerDownloaded().then((d) => {
+      if (!gone) setDownloaded(d);
+    });
+    return () => {
+      gone = true;
+    };
+  }, []);
   const loopRef = useRef<DateLoop | null>(null);
   const live = useRef({ onResult, onSearched, todayIso, onAgain });
   useEffect(() => {
@@ -219,13 +231,17 @@ export function DateReader({
     line ||
     (peekDateReader()?.status().state === 'ready'
       ? MESSAGE.looking
-      : 'Getting the date reader ready…');
+      : downloaded === false
+        ? `Getting the date reader ready… (about ${READER_DOWNLOAD_MB} MB, once)`
+        : 'Getting the date reader ready…');
 
   if (phase === 'unavailable') {
     return (
       <div className="date-reader">
         <p role="status" aria-live="polite" className="date-status">
-          The date reader isn’t available here; pick the date.
+          {downloaded === false && navigator.onLine === false
+            ? `Connect once to download the date reader (about ${READER_DOWNLOAD_MB} MB). Pick the date for now.`
+            : 'The date reader isn’t available here; pick the date.'}
         </p>
       </div>
     );

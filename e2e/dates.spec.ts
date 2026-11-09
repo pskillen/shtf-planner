@@ -122,19 +122,51 @@ test.describe('camera dates', () => {
     await assertPrivate(page, hosts);
   });
 
-  test('offline after install: a camera date still reads', async ({ page, context }) => {
+  test('first visit: controlled without a reload; online first use, then offline, reads', async ({
+    page,
+    context,
+  }) => {
     const hosts = await setUp(page);
-    // Wait for the service worker to take over: its install precaches the models and the runtime.
     await page.evaluate(() => navigator.serviceWorker.ready.then(() => true));
-    await page.reload();
+    // No reload: the worker claims the first visit's page (clientsClaim).
     await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
-    await context.setOffline(true);
     await toDateStep(page);
     await show(page, { text: 'BEST BEFORE 06/2027' });
     await expect(page.getByTestId('date-result')).toContainText('Jun 2027', READ);
     await ok(page);
-    expect(await spreadStock(page)).toEqual([expect.objectContaining({ bestBefore: '2027-06' })]);
+    // The reader's files are now kept: a later use works with no network.
+    await context.setOffline(true);
+    await toDateStep(page);
+    await show(page, { text: 'BEST BEFORE 03/2028' });
+    await expect(page.getByTestId('date-result')).toContainText('Mar 2028', READ);
     await assertPrivate(page, hosts);
+  });
+
+  test('offline before first use says connect once, and the month picker still saves', async ({
+    page,
+    context,
+  }) => {
+    await setUp(page);
+    await page.evaluate(() => navigator.serviceWorker.ready.then(() => true));
+    await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
+    await context.setOffline(true);
+    await toDateStep(page);
+    await expect(page.getByText('Connect once to download the date reader')).toBeVisible({
+      timeout: 30_000,
+    });
+    await page
+      .getByRole('group', { name: /quick choices/ })
+      .getByRole('button')
+      .first()
+      .click();
+    await ok(page);
+    expect(await spreadStock(page)).toHaveLength(1);
+  });
+
+  test('the precache leaves the reader out', async ({ page }) => {
+    const sw = await (await page.request.get('/sw.js')).text();
+    expect(sw).not.toMatch(/url:"[^"]*\.(wasm|onnx)"/);
+    expect(sw).not.toMatch(/url:"ocr\/paddle\/dict\.txt"/);
   });
 
   test('a finished read survives the page being hidden and shown; a new search can follow', async ({

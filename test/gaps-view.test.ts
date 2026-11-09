@@ -256,3 +256,32 @@ describe('wording', () => {
     expect(closesText(w, 3, 'US')).toMatch(/gal short of 3 days$/);
   });
 });
+
+describe('equipment on shopping rows', () => {
+  const heater = (id: string, lpg: string) => ({
+    id,
+    typeId: 'assets-base:catalytic-heater',
+    maintenance: {},
+    answers: { chosenLpg: lpg, fuelConfirmed: true, indoorUse: 'permitted', highRise: 'no' },
+  });
+
+  it('keeps every asset id on a merged fuel row', () => {
+    const doc = biggarDocument();
+    delete doc.stock['stock-propane'];
+    doc.assets['asset-heater'] = heater('asset-heater', 'items-base:propane-bottle');
+    const row = view(3, 'capability', doc).shopping.find(
+      (r) => r.itemId === 'items-base:propane-bottle',
+    )!;
+    expect(row.assetIds).toEqual(['asset-bbq', 'asset-heater']);
+  });
+
+  it('keeps the asset ids of an alternative fuel option', () => {
+    const doc = biggarDocument();
+    delete doc.stock['stock-propane'];
+    doc.assets.a = heater('a', 'items-base:butane-bottle');
+    doc.assets.b = heater('b', 'items-base:propane-bottle');
+    const row = view(3, 'capability', doc).shopping.find((r) => r.alternativeOptions?.length)!;
+    expect(row.assetIds).toEqual(['a']);
+    expect(row.alternativeOptions![0]!.assetIds).toEqual(['b']);
+  });
+});

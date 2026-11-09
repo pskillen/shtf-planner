@@ -150,7 +150,7 @@ export const HORIZONS = [3, 7, 14, 28] as const;
 export const HORIZON_SENTENCE: Record<(typeof HORIZONS)[number], string> = {
   3: '72 hours: what UK Gov suggests everyone keeps.',
   7: 'One week: a step up for a household that wants more margin.',
-  14: 'Two weeks: what Ready.gov suggests.',
+  14: 'Two weeks: a fuller store for a longer disruption.',
   28: 'Four weeks: a long-haul plan; much more to store.',
 };
 

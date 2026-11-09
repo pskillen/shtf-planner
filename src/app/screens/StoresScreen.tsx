@@ -1,6 +1,7 @@
 import { NOT_SCORED_NOTE, countsAsLine } from './stores/countsAs';
 import { useMemo, useState, type ReactNode } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { equipmentRuntime } from '../../engine';
 import { minimumKey, type Asset, type Item, type Location, type Stock } from '../../model';
 import { formatQty, today } from '../../util';
 import { EditArea } from '../components/EditArea';
@@ -12,10 +13,12 @@ import { useChange, useDocument } from '../state';
 import { usePacks } from '../usePacks';
 import { equipmentEditPath } from './assets/route';
 import { keyAnswer } from './assets/questionnaire';
+import { RuntimeQuickAdd, RuntimeText } from './assets/RuntimeLines';
+import { runtimeLines } from './assets/runtimeView';
 import { ItemPicker } from './stores/ItemPicker';
 import { PlaceWarningBox } from './stores/PlaceWarningBox';
 import { MinimumSheet } from './stores/MinimumSheet';
-import { QuickAdd } from './stores/QuickAdd';
+import { QuickAdd, type QuickAddPrefill } from './stores/QuickAdd';
 import { ScansToSort, ScansToSortNote } from './stores/ScansToSort';
 import { StockSheet } from './stores/StockSheet';
 import {
@@ -59,7 +62,7 @@ export function StoresScreen() {
   const [attentionOnly, setAttentionOnly] = useState(false);
   const [collapsedCats, setCollapsedCats] = useState<ReadonlySet<string>>(new Set());
   const [openItems, setOpenItems] = useState<ReadonlySet<string>>(new Set());
-  const [adding, setAdding] = useState(false);
+  const [adding, setAdding] = useState<QuickAddPrefill | null>(null);
   const [editing, setEditing] = useState<Stock | null>(() => doc.stock[stockId ?? ''] ?? null);
   // Keep local changes until the corresponding URL destination actually changes.
   if (stockId !== lastStockId) {
@@ -192,6 +195,11 @@ export function StoresScreen() {
     return [a.name ?? '', type?.name ?? ''].some((n) => n.toLowerCase().includes(q.toLowerCase()));
   };
 
+  const equipmentLines = useMemo(
+    () => runtimeLines(equipmentRuntime(doc, packs, today()), doc, packs),
+    [doc, packs],
+  );
+
   const equipmentRows = Object.values(doc.assets)
     .filter((a) => {
       if (itemFiltered) return false;
@@ -245,8 +253,12 @@ export function StoresScreen() {
       asset.name && type ? type.name : undefined,
       type ? keyAnswer(type, asset.answers) : undefined,
     ].filter(Boolean);
+    const lines = equipmentLines.get(asset.id) ?? [];
     return (
-      <li className="row-item" key={asset.id}>
+      <li
+        className={lines.some((l) => l.quickAdd) ? 'row-item row-item-wrap' : 'row-item'}
+        key={asset.id}
+      >
         <Link
           className="row-main"
           to={equipmentEditPath(asset.id)}
@@ -256,7 +268,9 @@ export function StoresScreen() {
             {name} <span className="badge">Equipment</span>
           </strong>
           <span className="muted">{detail.join(' · ')}</span>
+          <RuntimeText lines={lines} />
         </Link>
+        <RuntimeQuickAdd lines={lines} onQuickAdd={setAdding} />
       </li>
     );
   };
@@ -544,17 +558,12 @@ export function StoresScreen() {
       </p>
 
       <EditArea>
-        <button
-          type="button"
-          className="fab"
-          aria-label="Add stock"
-          onClick={() => setAdding(true)}
-        >
+        <button type="button" className="fab" aria-label="Add stock" onClick={() => setAdding({})}>
           +
         </button>
       </EditArea>
 
-      {adding ? <QuickAdd onClose={() => setAdding(false)} /> : null}
+      {adding ? <QuickAdd prefill={adding} onClose={() => setAdding(null)} /> : null}
       {sorting ? <ScansToSort onClose={() => setSorting(false)} /> : null}
       {pickMinimumItem ? (
         <Sheet title="Set a minimum" onClose={() => setPickMinimumItem(false)}>
