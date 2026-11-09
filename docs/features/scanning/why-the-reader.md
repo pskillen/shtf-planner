@@ -133,6 +133,9 @@ optimistic.
 - **Steadiness.** The first gate remembered the sharpest frame too long (it faded 2 % a frame) and
   allowed 12 skips in a row, so one sharp frame made the next 35 look blurred: the phone skipped 11
   to 29 frames an item. The gentler gate in the hub took that to 4 to 12, almost all for motion.
+  On the phone that was still too many, almost all for motion, so the gate was loosened to read small
+  moves (26 grey levels) and skip at most two in a row; agreement, unchanged, guards against a loose
+  frame.
 - **Glare.** The 20 to 65 % band is reasoned, not fitted: none of the test photos had real glare.
 - **Preprocessing.** Five pictures of the box, cheapest first, stopping at the first sure pass:
   that cut the desktop median from 0.5 s to 0.19 s against trying every variant at two rotations.

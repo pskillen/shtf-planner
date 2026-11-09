@@ -3,6 +3,7 @@ import type { FrameVerdict } from '../engine/datecode';
 import { startDateLoop, type LoopOptions, type LoopStatus } from './dateLoop';
 import { ReadError } from './ocr/errors';
 import { gray, type Gray } from './ocr/image';
+import { MAX_SKIPS, MOVING_DIFF } from './tunables';
 import { enableTimings, resetTimings, timings } from './timings';
 
 const TODAY = '2026-11-15';
@@ -17,6 +18,8 @@ function frame(lo = 40, hi = 200, blown = 0): Gray {
 }
 const SHARP = () => frame();
 const SHIFTED = () => frame(80, 240); // same edges, a different brightness: "moving"
+/** The same stripes shifted by `d` grey levels: a thumbnail difference of exactly `d`. */
+const nudged = (d: number) => frame(40 + d, 200 + d);
 /** Same average brightness as the sharp frame (so it is not "moving"), but soft edges: "blurred". */
 const SOFT = () => frame(120, 160);
 const FLAT = () => {
@@ -80,13 +83,28 @@ describe('the date loop: what it reads', () => {
     expect(t.captured()).toBeGreaterThan(1);
   });
 
-  it('skips moving frames, at most four in a row, then reads one anyway', async () => {
+  it('skips moving frames, at most MAX_SKIPS in a row, then reads one anyway', async () => {
     const frames = Array.from({ length: 40 }, (_, i) => (i % 2 ? SHIFTED() : SHARP()));
     const t = setup(frames, () => verdict(), { timeoutMs: 1500 });
     const out = await t.loop.result;
-    // the first frame and three moving ones are skipped; the fifth is read
-    expect(t.reads[0]).toBe(frames[4]);
-    expect(out.skippedMotion).toBeGreaterThanOrEqual(4);
+    // the first frame and the moving ones are skipped; frame MAX_SKIPS is read
+    expect(t.reads[0]).toBe(frames[MAX_SKIPS]);
+    expect(out.skippedMotion).toBeGreaterThanOrEqual(MAX_SKIPS);
+  });
+
+  it('reads a frame that moved a little', async () => {
+    const frames = [SHARP(), nudged(MOVING_DIFF - 4), nudged(MOVING_DIFF - 4)];
+    const t = setup(frames, () => verdict(), { timeoutMs: 200 });
+    await t.loop.result;
+    expect(t.reads[0]).toBe(frames[1]);
+  });
+
+  it('skips a frame that moved more than MOVING_DIFF', async () => {
+    const frames = [SHARP(), nudged(MOVING_DIFF + 4), nudged(MOVING_DIFF + 4)];
+    const t = setup(frames, () => verdict(), { timeoutMs: 200 });
+    const out = await t.loop.result;
+    expect(t.reads[0]).not.toBe(frames[1]);
+    expect(out.skippedMotion).toBeGreaterThanOrEqual(2);
   });
 
   it('skips a blurred frame and reads the sharp ones', async () => {

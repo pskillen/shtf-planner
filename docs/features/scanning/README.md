@@ -167,8 +167,8 @@ crop that was read (in memory only).
   no assumed year. A year-assumed or expired read never settles alone.
 - Gates: **glare** (20 to 65 % of the box at 250+ grey: say so, skip; after 25 in a row read
   anyway); **flat** (sharpness under 2: nothing to read); **steadiness** (the first frame is never
-  read; skip a frame that moved more than 18 grey levels or is under half as sharp as the sharpest
-  recently; at most 4 skips in a row, then one is read anyway). One read in flight at a time.
+  read; skip a frame that moved more than 26 grey levels or is under half as sharp as the sharpest
+  recently; at most 2 skips in a row, then one is read anyway). One read in flight at a time.
 
 **The reader.** PaddleOCR (PP-OCRv3 mobile detection and PP-OCRv5 English mobile recognition,
 float16 weights) on onnxruntime-web 1.20.1, in a **web worker** so the screen stays smooth. WebGPU
