@@ -34,10 +34,14 @@ The separate shopping screen can show the full list or the suggestions for one n
   with group headings such as "Food and cooking › Tins".
 - The tick opens Quick add on that item (and product when the engine named one); equipment rows open the equipment
   form.
+- A fuel row for owned equipment links `Open <name>` to that piece's edit form, one link per piece when the
+  row covers several; an alternative fuel ("or …") keeps the links of its own equipment. The links are separate
+  from the tick.
 
 ## Gaps — to do and enough
 
 - **To do.** Plan items with Done (five-second undo toast), tasks with plain reasons, Done list with Undo.
+  A task from blocked equipment (for example fitting an EPS) links `Open <name>` to that piece's edit form.
 - **Enough.** Needs at or over target, with optional surplus wording for resources.
 
 ## Score
@@ -60,14 +64,13 @@ The [review summary](../review/README.md) shows the score snapshots captured bef
 ## Not built yet
 
 - Badges and a review streak ([#61](https://github.com/pskillen/shtf-planner/issues/61)).
-- Shopping rows that deep-link to the equipment and its fuel
-  ([#28](https://github.com/pskillen/shtf-planner/issues/28)); impractical suggestions on very
-  large shortfalls ([#49](https://github.com/pskillen/shtf-planner/issues/49)).
+- Impractical suggestions on very large shortfalls
+  ([#49](https://github.com/pskillen/shtf-planner/issues/49)).
 
 ## Tests
 
 `test/gaps-view.test.ts`, `test/gaps-screen.test.tsx`, `test/score-screen.test.tsx`, `src/engine/gaps.test.ts`,
-Playwright `e2e/inventory.spec.ts`, `e2e/products.spec.ts`.
+Playwright `e2e/inventory.spec.ts`, `e2e/products.spec.ts`, `e2e/equipment-links.spec.ts`.
 
 Fuel suggestions name the exact confirmed fuel for owned equipment. Missing facts become equipment
 checks; without a heater, the shopping list asks for a heating plan instead of pairing a generic

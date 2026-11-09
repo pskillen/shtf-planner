@@ -796,6 +796,13 @@ table.horizon .big td {
   align-items: center;
 }
 
+/* Links inside a list row (Open <equipment>, Open Home): 44 px tap height, like .link-list a. */
+.row-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+}
+
 /* The one nod to the sister game: a handwritten numeral, self-hosted (nothing is fetched). */
 @font-face {
   font-family: 'Caveat';
