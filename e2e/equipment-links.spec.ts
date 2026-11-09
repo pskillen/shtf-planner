@@ -48,5 +48,6 @@ test('Shopping opens the Gas BBQ, and the tick still opens Quick add', async ({ 
   const dialog = page.getByRole('dialog');
   await expect(dialog).toBeVisible();
   await expect(dialog.getByText(/Propane bottle/).first()).toBeVisible();
+  await expect(dialog.getByRole('spinbutton', { name: /^How many/ })).toHaveValue('1');
   expect(await noSideScroll(page)).toBe(true);
 });
