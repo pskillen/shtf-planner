@@ -7,6 +7,7 @@ import { biggarDocument } from '../src/fixtures/household-biggar';
 import { dateState, gotRead, resetDates } from './helpers/fakeDates';
 import { resetScan, scanState } from './helpers/fakeScan';
 import { liveStore } from './helpers/liveStore';
+import { enableTimings, recordTiming, resetTimings } from '../src/scan/timings';
 
 vi.mock('../src/scan/camera', async () => (await import('./helpers/fakeScan')).fakeCameraModule());
 vi.mock('../src/scan/barcode', async () =>
@@ -98,6 +99,44 @@ describe('Stocktake: reading the date with the camera', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Copy summary' }));
     await waitFor(() => expect(write).toHaveBeenCalled());
     expect(write.mock.calls[0]![0]).not.toMatch(/2028|BB|\d{8,}/);
+  });
+
+  describe('Copy summary and the debug timing list', () => {
+    afterEach(() => {
+      resetTimings();
+      enableTimings(false);
+    });
+
+    const copied = async (): Promise<string> => {
+      await toDateStep();
+      await act(async () => dateState.finish(gotRead(6, 2028)));
+      await screen.findByTestId('date-result');
+      ok();
+      fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+      const write = vi.fn<(text: string) => Promise<void>>(async () => undefined);
+      Object.defineProperty(navigator, 'clipboard', {
+        value: { writeText: write },
+        configurable: true,
+      });
+      fireEvent.click(screen.getByRole('button', { name: 'Copy summary' }));
+      await waitFor(() => expect(write).toHaveBeenCalled());
+      return write.mock.calls[0]![0];
+    };
+
+    it('carries the reader lines when timings are on', async () => {
+      resetTimings();
+      enableTimings(true);
+      recordTiming({ kind: 'load', ep: 'wasm', loadMs: 4210 });
+      recordTiming({ kind: 'read', ms: 1520, wallMs: 1600, pictures: 3, settled: true });
+      const text = await copied();
+      expect(text).toContain('reader WASM: load 4210 ms; 1 reads');
+      expect(text).not.toMatch(/2028|BB|\d{8,}/);
+    });
+
+    it('leaves them out when timings are off', async () => {
+      enableTimings(false);
+      expect(await copied()).not.toContain('reader WASM:');
+    });
   });
 
   it('no date found: suggestions with their colour, and a tap saves that month', async () => {

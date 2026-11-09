@@ -20,6 +20,7 @@ engines and models compared, what the parser had to handle, what was rejected).
 | Barcode loop        | `src/scan/barcode.ts`                                                                               | `BarcodeDetector` where it has EAN, else zxing (lazy chunk); every other zxing attempt turned 90 degrees |
 | Open Food Facts     | `src/scan/openFoodFacts.ts`                                                                         | `offClient()`: lookup, own rate limit, the identification string                                         |
 | Date reader         | `src/scan/ocr/` (`client.ts`, `ocr.worker.ts`, `paddle.ts`, `reader.ts`, `image.ts`, `provider.ts`) | PaddleOCR in a web worker on onnxruntime-web, WebGPU or WASM; grey-image helpers                         |
+| Debug timings       | `src/scan/timings.ts`, `src/app/state/debugScan.ts`                                                 | With `?debug=1`: in-memory list of load, read and date-step timings, copied with the Done summary        |
 | Date loop           | `src/scan/dateLoop.ts`                                                                              | Capture, gates (glare, flat, moving, blurred), one read at a time, agreement, timeout                    |
 | Date parser, tally  | `src/engine/datecode/`                                                                              | Reader text to month-years; passes to a frame verdict; frames to an answer. Pure                         |
 | Date card           | `screens/stores/DateReader.tsx`, `ReadDateSheet.tsx`, `DateAbout.tsx`                               | Status and month on the strip, Stop, Read again, suggestions; quick add's sheet; the About line          |
@@ -148,6 +149,9 @@ crop that was read (in memory only).
   date** sets the field and closes; the person still taps Add.
 - **Done summary** adds "dates by camera 9 · picked 4 · from a suggestion 1 · date step 3.2 s
   (median)" and a **Copy summary** button (counts and times only: no text read, no codes, no images).
+  With `?debug=1` the copy also carries the reader's timing list (each load's back end and time; per
+  read the worker and round-trip ms and the pictures tried; per date step the outcome, frames and
+  skips), counts and times only, and `window.__shtf.scan.timings()` returns it.
 
 **Agreement and gates.** The numbers are named constants: the tally ones in
 `src/engine/datecode/tally.ts`, the loop's in `src/scan/tunables.ts`.
@@ -278,7 +282,8 @@ Apache-2.0) is its own lazily loaded chunk, so the main bundle does not carry it
   `test/scan-resolve.test.tsx`, `test/stocktake.test.tsx`, `test/lint-fence.test.ts` (the `src/scan`
   fence).
 - Date reading: `src/engine/datecode/*.test.ts` (152 parser cases, agreement rules),
-  `src/scan/dateLoop.test.ts` (scripted camera and reader), `src/scan/ocr/*.test.ts` (images, the
+  `src/scan/dateLoop.test.ts` (scripted camera and reader), `src/scan/timings.test.ts` (the debug
+  timing list and its summary, including that it holds no text), `src/scan/ocr/*.test.ts` (images, the
   provider choice, the worker client with a fake worker, and `paddle.node.test.ts`, which runs the
   real float16 models on WASM in node over the synthetic labels in `test/fixtures/datecodes/`, made
   by `scripts/datecode-fixtures.mjs`), `test/date-reader.test.tsx` (screens with a fake reader).
