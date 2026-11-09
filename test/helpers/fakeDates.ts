@@ -105,8 +105,7 @@ export const fakeDateClientModule = () => ({
     },
     terminate: () => undefined,
   }),
-  peekDateReader: () =>
-    dateState.loaded ? { status: () => dateState.status } : undefined,
+  peekDateReader: () => (dateState.loaded ? { status: () => dateState.status } : undefined),
   onReaderChange: (l: () => void) => {
     dateState.listeners.add(l);
     return () => void dateState.listeners.delete(l);
