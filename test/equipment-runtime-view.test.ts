@@ -63,6 +63,25 @@ describe('runtimeLines', () => {
     expect(lines(doc, 'asset-bbq')[0]).toMatch(/shares the Propane bottle with Cabinet/);
   });
 
+  it('says power comes after heat when a generator shares the bottle with the heater', () => {
+    const doc = biggarFuelDocument();
+    doc.assets.gen = {
+      id: 'gen',
+      typeId: 'assets-base:generator',
+      maintenance: {},
+      answers: {
+        fuel: 'lpg',
+        chosenLpg: 'items-base:butane-bottle',
+        fuelConfirmed: true,
+        watts: 800,
+        fuelPerHour: 0.5,
+      },
+    };
+    const [line] = lines(doc, 'gen');
+    expect(line).toContain(', after heat');
+    expect(lines(doc, 'asset-butane-heater')[0]).not.toContain('after');
+  });
+
   it('counts one of two same-fuel heaters and calls the other an alternative', () => {
     const doc = biggarFuelDocument();
     doc.assets.second = {
