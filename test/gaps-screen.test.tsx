@@ -154,3 +154,85 @@ it.each([
     expect(button.closest('li')?.textContent).toMatch(/equipment manual/i);
   },
 );
+
+describe('links to the exact equipment', () => {
+  const mount = (path: string, doc = biggarDocument(), screen_: 'shop' | 'gaps' = 'shop') => {
+    const s = liveStore(doc);
+    return render(
+      <MemoryRouter initialEntries={[path]}>
+        <StoreContext.Provider value={s.store}>
+          {screen_ === 'shop' ? <ShoppingScreen /> : <GapsScreen />}
+        </StoreContext.Provider>
+      </MemoryRouter>,
+    );
+  };
+  const month = () => {
+    const doc = biggarDocument();
+    doc.settings.horizonDays = 28;
+    return doc;
+  };
+
+  it.each(['/app/gaps/shopping', '/app/gaps/shopping?need=cooking'])(
+    'shopping %s opens the Gas BBQ, and the tick still opens Quick add',
+    (path) => {
+      mount(path, month());
+      const link = screen.getByRole('link', { name: 'Open Gas BBQ' });
+      expect(link.getAttribute('href')).toBe('/app/assets?edit=asset-bbq');
+      expect(link.closest('button')).toBeNull();
+      fireEvent.click(screen.getByRole('button', { name: /Bought: Propane bottle/ }));
+      expect(screen.getByRole('dialog')).toBeTruthy();
+    },
+  );
+
+  it('keeps the link when grouped by aisle', () => {
+    mount('/app/gaps/shopping', month());
+    fireEvent.click(screen.getByRole('radio', { name: 'By aisle' }));
+    expect(screen.getByRole('link', { name: 'Open Gas BBQ' })).toBeTruthy();
+  });
+
+  it('shows one link per piece of equipment on a merged row', () => {
+    const doc = month();
+    delete doc.stock['stock-propane'];
+    doc.assets['asset-heater'] = {
+      id: 'asset-heater',
+      typeId: 'assets-base:catalytic-heater',
+      name: 'Hall heater',
+      maintenance: {},
+      answers: {
+        chosenLpg: 'items-base:propane-bottle',
+        fuelConfirmed: true,
+        indoorUse: 'permitted',
+        highRise: 'no',
+      },
+    };
+    mount('/app/gaps/shopping', doc);
+    const li = screen.getByRole('button', { name: /Bought: .*for your equipment/ }).closest('li')!;
+    const links = Array.from(li.querySelectorAll('a')).map((a) => a.getAttribute('href'));
+    expect(links).toEqual(['/app/assets?edit=asset-bbq', '/app/assets?edit=asset-heater']);
+  });
+
+  it('skips a deleted asset instead of linking another', () => {
+    const doc = month();
+    doc.assets['asset-heater'] = {
+      id: 'asset-heater',
+      typeId: 'assets-base:catalytic-heater',
+      maintenance: {},
+      answers: {},
+    };
+    delete doc.stock['stock-propane'];
+    delete doc.assets['asset-bbq'];
+    mount('/app/gaps/shopping', doc);
+    expect(screen.queryByRole('link', { name: 'Open Gas BBQ' })).toBeNull();
+    expect(
+      screen
+        .queryAllByRole('link')
+        .filter((a) => /edit=asset-bbq/.test(a.getAttribute('href') ?? '')),
+    ).toHaveLength(0);
+  });
+
+  it('opens Roof solar from the blocked-equipment task', () => {
+    mount('/app/gaps', biggarDocument(), 'gaps');
+    const link = screen.getByRole('link', { name: 'Open Roof solar' });
+    expect(link.getAttribute('href')).toBe('/app/assets?edit=asset-solar');
+  });
+});

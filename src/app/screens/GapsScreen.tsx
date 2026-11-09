@@ -10,7 +10,7 @@ import { usePacks } from '../usePacks';
 import { buildGapsView } from './gaps/view';
 import { scoreView } from './score/view';
 import type { CapabilityId } from '../../model';
-import { equipmentEditPath } from './assets/route';
+import { equipmentEditPath, equipmentName } from './assets/route';
 import { completePlan } from './review/actions';
 
 /**
@@ -197,10 +197,7 @@ export function GapsScreen() {
                   </span>
                   {r.assetId ? (
                     <Link to={equipmentEditPath(r.assetId)}>
-                      Open{' '}
-                      {doc.assets[r.assetId]?.name ??
-                        packs.assets[doc.assets[r.assetId]?.typeId ?? '']?.name ??
-                        'Equipment'}
+                      Open {equipmentName(doc, packs, r.assetId)}
                     </Link>
                   ) : r.assetTypeId ? (
                     <Link to="/app/assets">Open Equipment</Link>

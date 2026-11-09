@@ -34,7 +34,7 @@ export interface ShoppingRow {
   assetTypeId?: string;
   qty?: number;
   alternatives: string[];
-  alternativeOptions?: { label: string; capabilities?: CapabilityId[] }[];
+  alternativeOptions?: { label: string; capabilities?: CapabilityId[]; assetIds?: string[] }[];
   critical?: boolean;
 }
 
@@ -174,6 +174,7 @@ function shoppingRowsFor(gap: Gap, horizonDays: number, region: 'UK' | 'US', at:
           alternativeOptions: alternatives.map((a) => ({
             label: a.label,
             ...(a.capabilities ? { capabilities: a.capabilities } : {}),
+            ...(a.assetIds?.length ? { assetIds: a.assetIds } : {}),
           })),
         }
       : {}),
