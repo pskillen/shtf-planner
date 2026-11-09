@@ -4,6 +4,7 @@ import { ReadError } from './errors';
 import type { Gray } from './image';
 import type { FromWorker, ToWorker } from './messages';
 import { READER_IDLE_MS } from '../tunables';
+import { recordTiming } from '../timings';
 import type { Provider } from './paddle';
 
 /** The part of a `Worker` the client uses (a fake in tests). */
@@ -88,6 +89,7 @@ export function createDateReader(opts: ReaderOptions = {}): DateReader {
     const m = e.data;
     if (m.type === 'ready') {
       const info = { ep: m.ep, loadMs: m.loadMs, reason: m.reason };
+      recordTiming({ kind: 'load', ep: m.ep, loadMs: m.loadMs });
       status = { state: 'ready', ...info };
       settleReady.resolve(info);
       notify();

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { FrameVerdict } from '../../engine/datecode';
 import {
   createDateReader,
@@ -9,6 +9,7 @@ import {
   type WorkerLike,
 } from './client';
 import { gray } from './image';
+import { enableTimings, resetTimings, timings } from '../timings';
 import type { FromWorker, ToWorker } from './messages';
 
 class FakeWorker implements WorkerLike {
@@ -175,5 +176,28 @@ describe('the date reader client', () => {
       vi.useRealTimers();
       vi.unstubAllGlobals();
     }
+  });
+});
+
+describe('the date reader client: the debug timing list', () => {
+  afterEach(() => {
+    resetTimings();
+    enableTimings(false);
+  });
+
+  it('records the load with its back end when timings are on', () => {
+    resetTimings();
+    enableTimings(true);
+    const { w } = make();
+    w.say({ type: 'ready', ep: 'webgpu', loadMs: 3900.4, reason: '' });
+    expect(timings()).toEqual([{ kind: 'load', ep: 'webgpu', loadMs: 3900 }]);
+  });
+
+  it('records nothing when they are off', () => {
+    resetTimings();
+    enableTimings(false);
+    const { w } = make();
+    w.say({ type: 'ready', ep: 'wasm', loadMs: 1500, reason: '' });
+    expect(timings()).toEqual([]);
   });
 });
