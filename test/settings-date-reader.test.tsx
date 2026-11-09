@@ -34,13 +34,25 @@ describe('Settings, Date reader', () => {
     );
   });
 
-  it('download: Downloading…, then Downloaded, and the reader is freed', async () => {
+  it('download: Downloading…, then Downloaded, and the reader it made is stopped', async () => {
     readerDownloaded.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    dateState.loaded = false;
     render(<DateReaderSection />);
     fireEvent.click(await screen.findByRole('button', { name: BUTTON }));
     expect(screen.getByRole('button', { name: 'Downloading…' })).toBeTruthy();
     expect(await screen.findByText(/^Downloaded: best-before dates/)).toBeTruthy();
-    expect(dateState.terminated + dateState.released).toBeGreaterThan(0);
+    expect(dateState.terminated).toBe(1);
+    expect(dateState.released).toBe(0);
+  });
+
+  it('download with a reader already loaded: it is released, not stopped', async () => {
+    readerDownloaded.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    dateState.loaded = true;
+    render(<DateReaderSection />);
+    fireEvent.click(await screen.findByRole('button', { name: BUTTON }));
+    expect(await screen.findByText(/^Downloaded: best-before dates/)).toBeTruthy();
+    expect(dateState.released).toBe(1);
+    expect(dateState.terminated).toBe(0);
   });
 
   it('failure: says so and offers the button again', async () => {
