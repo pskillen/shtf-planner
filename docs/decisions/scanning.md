@@ -22,8 +22,9 @@ wait in a queue in the document and are sorted later. [D64, D146, D168]
 **Dates are read on the phone, never in the cloud.** Date photos never leave the phone. [D125]
 
 **The date reader: PaddleOCR FP16 only, in a worker.** It ships the float16 PP-OCRv3 detection and
-PP-OCRv5 recognition pair (about 4.8 MB), precached by the service worker (Workbox's per-file limit
-raised for it), and runs in a web worker. No Tesseract in the app. Why: on the photo bench
+PP-OCRv5 recognition pair (about 4.8 MB), fetched on first use and kept in its own cache, same origin only, so a
+household that never reads dates never downloads it ([#37](https://github.com/pskillen/shtf-planner/issues/37)),
+and runs in a web worker. No Tesseract in the app. Why: on the photo bench
 Tesseract read 3 of 9 dates and Paddle 8 of 9. [D131 → D144, D133]
 
 **One onnxruntime wasm for both back ends.** WebGPU when the browser has it and it passes a
