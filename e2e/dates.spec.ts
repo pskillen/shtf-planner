@@ -287,6 +287,7 @@ for (const size of [
         const box = async (loc: ReturnType<Page['locator']>) => (await loc.boundingBox())!;
         const strip = page.getByTestId('camera-strip');
         const stripBarcode = await box(strip);
+        const hintBox = hintShown ? await box(page.locator('.stocktake-hint')) : undefined;
         if (hintShown) {
           // The one-line hint leaves "Use this number" above the tab bar on the barcode step.
           const tabTop = (await box(page.getByRole('navigation', { name: 'Main' }))).y;
@@ -307,8 +308,15 @@ for (const size of [
         // One camera size for both steps: it never changes.
         expect(stripAiming.height).toBeCloseTo(stripBarcode.height, 0);
         expect(stripAiming.width).toBeCloseTo(stripBarcode.width, 0);
-        // The strip's top is in the same place on both steps (the page does not jump at the catch).
-        expect(stripAiming.y).toBeCloseTo(stripBarcode.y, 0);
+        if (hintBox) {
+          // The hint hides at the first catch: the strip moves up by at most the hint's height (once per device).
+          expect(stripAiming.y).toBeLessThanOrEqual(stripBarcode.y + 1);
+          // The hint's box plus its 4 px top and bottom margins (.stocktake-hint in styles.css).
+          expect(stripBarcode.y - stripAiming.y).toBeLessThanOrEqual(hintBox.height + 4 + 4);
+        } else {
+          // The strip's top is in the same place on both steps (the page does not jump at the catch).
+          expect(stripAiming.y).toBeCloseTo(stripBarcode.y, 0);
+        }
         // While aiming, the status sits at the top edge of the date box, clear of its middle.
         const s = await box(status);
         const boxTop = stripAiming.y + stripAiming.height * 0.22;
@@ -362,8 +370,8 @@ for (const size of [
         const chips = page.getByRole('group', { name: /quick choices/ });
         const cb2 = await box(chips);
         const m2 = await box(month);
-        // With the hint dismissed the quick-choice chips clear the bar too, in both renderings.
-        if (!hintShown) expect(cb2.y + cb2.height).toBeLessThanOrEqual((await barTop()) - 8);
+        // The hint hides at the first catch, so the quick-choice chips clear the bar in every case.
+        expect(cb2.y + cb2.height).toBeLessThanOrEqual((await barTop()) - 8);
         test.info().annotations.push({
           type: 'slack',
           description: `${size.width}x${size.height} hint ${hintShown ? 'on' : 'off'} month ${monthBox}: month field ${Math.round((await barTop()) - (m2.y + m2.height))} px clear of the OK bar, chips ${Math.round((await barTop()) - (cb2.y + cb2.height))} px`,

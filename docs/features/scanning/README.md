@@ -39,10 +39,12 @@ engines and models compared, what the parser had to handle, what was rejected).
 **Stores, Stocktake** (also "Stocktake a pile" in Quick add) opens a full screen under the Stores tab.
 
 1. **Counting into: Pantry.** The place for the whole session; it starts at the last place used and
-   can change at any time (on the date step it is named on the item card instead). The first time,
-   a one-line banner ("Red line for the barcode, yellow box for the date." with **Got it**) sits under it; it is one
-   line so the month field and "Use this number" stay above the tab bar at 360 by 740. Got it hides
-   it for good on this device.
+   can change at any time (the select stays on both steps). The first time, a one-line banner ("Red
+   line for the barcode, yellow box for the date." with **Got it**) sits under it. It hides itself at
+   the first barcode caught, by the camera or typed (it has done its job), or with Got it, and stays
+   hidden on this device. Showing, it is one line so "Use this number" stays above the tab bar at 360
+   by 740; hiding at the first catch keeps the date step's month field and quick-choice chips clear of
+   the OK bar. On that one catch the content below the place row moves up by the banner's height.
 2. **1 BARCODE.** The camera looks continuously. The strip is one size for the whole stocktake: it
    never grows or shrinks between steps. A **red line** across the middle is the barcode target (a
    faint wide box shows what is read). Under the strip: torch, zoom (slider with minus and plus) and
@@ -318,6 +320,4 @@ Apache-2.0) is its own lazily loaded chunk, so the main bundle does not carry it
 ## Not built yet
 
 Scanning, round 2 ([#33](https://github.com/pskillen/shtf-planner/issues/33)): a phone-propped
-stocktake (dexterity is the biggest cost), a looser motion gate, measuring the worker on a phone,
-and the stocktake chips
-that sit under the OK bar while the first-use hint shows.
+stocktake (dexterity is the biggest cost), a looser motion gate, and measuring the worker on a phone.

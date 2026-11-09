@@ -160,6 +160,11 @@ export function StocktakeScreen() {
     buzz('barcode');
     setFlash((n) => n + 1);
     setCode(next);
+    // The hint has done its job at the first catch: hide it for good so the date step fits.
+    if (hint) {
+      writeHint();
+      setHint(false);
+    }
   }
 
   function startDate(productId: string, from?: string): void {
