@@ -90,7 +90,10 @@ export function ShoppingScreen() {
             <strong>{r.label}</strong>
             {r.label === 'Choose how you will keep warm' ? (
               <span>
-                Make a heating plan for an outage. <Link to="/app/home">Open Home</Link>
+                Make a heating plan for an outage.{' '}
+                <Link className="row-link" to="/app/home">
+                  Open Home
+                </Link>
               </span>
             ) : null}
             {r.assetTypeId || r.fuelPurchase ? (
@@ -113,7 +116,7 @@ export function ShoppingScreen() {
               </span>
             ) : null}
             {equipmentLinks(r).map((id) => (
-              <Link key={id} to={equipmentEditPath(id)}>
+              <Link key={id} className="row-link" to={equipmentEditPath(id)}>
                 Open {equipmentName(doc, packs, id)}
               </Link>
             ))}

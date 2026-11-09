@@ -196,11 +196,13 @@ export function GapsScreen() {
                     {r.closes ? ` · ${r.closes}` : ''}
                   </span>
                   {r.assetId ? (
-                    <Link to={equipmentEditPath(r.assetId)}>
+                    <Link className="row-link" to={equipmentEditPath(r.assetId)}>
                       Open {equipmentName(doc, packs, r.assetId)}
                     </Link>
                   ) : r.assetTypeId ? (
-                    <Link to="/app/assets">Open Equipment</Link>
+                    <Link className="row-link" to="/app/assets">
+                      Open Equipment
+                    </Link>
                   ) : null}
                 </div>
                 {r.planItemId ? (

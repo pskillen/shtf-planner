@@ -26,7 +26,9 @@ test.use({ viewport: { width: 360, height: 740 } });
 
 test('Gaps to do opens the Roof solar form from its EPS task', async ({ page }) => {
   await fixture(page, '/app/gaps');
-  await page.getByRole('link', { name: 'Open Roof solar' }).click();
+  const open = page.getByRole('link', { name: 'Open Roof solar' });
+  expect((await open.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  await open.click();
   await expect(page.getByText('Edit Roof solar')).toBeVisible();
 });
 
@@ -36,7 +38,9 @@ test('Shopping opens the Gas BBQ, and the tick still opens Quick add', async ({ 
   await shtf(page, 'flush');
   await page.goto('/app/gaps/shopping?need=cooking&debug=1');
   expect(await noSideScroll(page)).toBe(true);
-  await page.getByRole('link', { name: 'Open Gas BBQ' }).click();
+  const open = page.getByRole('link', { name: 'Open Gas BBQ' });
+  expect((await open.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  await open.click();
   await expect(page.getByText('Edit Gas BBQ')).toBeVisible();
 
   await page.goto('/app/gaps/shopping?need=cooking&debug=1');
