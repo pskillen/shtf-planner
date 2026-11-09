@@ -1,13 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_PACKS, emptyDocument } from '../model';
 import { sizeFits } from '../util';
+import { checklist, checklistPacks } from '../engine';
 import { bundledPacks } from './bundled';
 
 describe('the bundled packs', () => {
   const packs = bundledPacks();
 
   it('all validate and every reference resolves', () => {
-    expect(packs.all.map((p) => p.id).sort()).toEqual([...DEFAULT_PACKS].sort());
+    // checklist packs are offered by region, never switched, so they are not default packs
+    const switchable = packs.all.filter((p) => p.kind !== 'checklists');
+    expect(switchable.map((p) => p.id).sort()).toEqual([...DEFAULT_PACKS].sort());
+    expect(DEFAULT_PACKS).not.toContain('checklists-uk');
   });
 
   it('every default pack exists, and every region suggests real packs', () => {
@@ -158,5 +162,257 @@ describe('the bundled packs', () => {
     const us = { ...uk, region: 'US' as const };
     expect(packs.enabledPacks(us).map((p) => p.id)).toContain('guidance-us-ready');
     expect(packs.enabledPacks(us).map((p) => p.id)).not.toContain('guidance-uk-prepare');
+  });
+
+  describe('the UK checklist pack', () => {
+    const pack = packs.byId['checklists-uk']!;
+
+    it('is offered to a UK household and to nobody else', () => {
+      const uk = emptyDocument('local');
+      expect(checklistPacks(packs, 'UK').map((p) => p.id)).toEqual(['checklists-uk']);
+      expect(checklistPacks(packs, 'US')).toEqual([]);
+      expect(uk.settings.packs).not.toContain('checklists-uk');
+    });
+
+    it('gives every scenario steps, and every step a listed source or "assumption"', () => {
+      if (pack.kind !== 'checklists') throw new Error('not a checklists pack');
+      const listed = new Set((pack.sources ?? []).map((s) => s.url));
+      for (const s of pack.sources ?? []) expect(s.checked, s.url).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      for (const scenario of pack.scenarios) {
+        expect(
+          pack.steps.filter((st) => st.scenarios.includes(scenario.id)).length,
+          scenario.id,
+        ).toBeGreaterThan(0);
+      }
+      for (const st of pack.steps) {
+        expect(st.source === 'assumption' || listed.has(st.source), st.id).toBe(true);
+      }
+    });
+
+    it('builds a phased power-cut list for a UK household', () => {
+      const doc = emptyDocument('local');
+      const list = checklist(doc, packs, ['checklists-uk:power-cut'], '2026-11-08');
+      const phases = list.groups.map((g) => g.phase);
+      expect(phases).toEqual(expect.arrayContaining(['coming', 'immediate']));
+      const ids = list.groups.flatMap((g) => g.steps.map((s) => s.id));
+      expect(ids).toContain('checklists-uk:report');
+      // safety warnings are not gated on recorded assets or household facts
+      expect(ids).toContain('checklists-uk:generator');
+      expect(ids).toContain('checklists-uk:no-camping-stove');
+      expect(ids).toContain('checklists-uk:medical-plan');
+    });
+
+    it('builds a phased storm list with ungated safety steps', () => {
+      const doc = emptyDocument('local');
+      const storm = checklist(doc, packs, ['checklists-uk:storm'], '2026-11-08');
+      expect(storm.groups.map((g) => g.phase)).toEqual(['coming', 'immediate', 'first-days']);
+      const stormIds = storm.groups.flatMap((g) => g.steps.map((s) => s.id));
+      // safety warnings are not gated on recorded facts
+      expect(stormIds).toContain('checklists-uk:storm-fallen-cables');
+      expect(stormIds).toContain('checklists-uk:storm-floodwater');
+      expect(stormIds).toContain('checklists-uk:storm-sheltered-side');
+      expect(stormIds).toContain('checklists-uk:storm-cables-after');
+    });
+
+    it('builds a phased flood list for a home that has not declared flood', () => {
+      const doc = emptyDocument('local');
+      expect(doc.home.risks).not.toContain('flood');
+      const flood = checklist(doc, packs, ['checklists-uk:flood'], '2026-11-08');
+      expect(flood.groups.map((g) => g.phase)).toEqual([
+        'coming',
+        'immediate',
+        'first-days',
+        'longer-term',
+      ]);
+      const ids = flood.groups.flatMap((g) => g.steps.map((s) => s.id));
+      // safety steps are not gated on recorded facts or the home's risks
+      expect(ids).toContain('checklists-uk:flood-warning-turn-off');
+      expect(ids).toContain('checklists-uk:flood-no-walk');
+      expect(ids).toContain('checklists-uk:flood-evacuate');
+      // the pet step needs a pet
+      expect(ids).not.toContain('checklists-uk:flood-pets-kit');
+      doc.household.pets = [{ id: 'p', name: 'Bran', species: 'dog', size: 'M' }];
+      const withPet = checklist(doc, packs, ['checklists-uk:flood'], '2026-11-08');
+      expect(withPet.groups.flatMap((g) => g.steps.map((s) => s.id))).toContain(
+        'checklists-uk:flood-pets-kit',
+      );
+    });
+
+    it('builds a heatwave list with ungated heat illness steps and pet steps that need a pet', () => {
+      const doc = emptyDocument('local');
+      const heat = checklist(doc, packs, ['checklists-uk:heatwave'], '2026-11-08');
+      expect(heat.groups.map((g) => g.phase)).toEqual(['coming', 'immediate']);
+      const ids = heat.groups.flatMap((g) => g.steps.map((s) => s.id));
+      // safety steps reach everyone: no risk, member or asset is recorded
+      for (const id of ['heatstroke', 'exhaustion', 'closed-spaces', 'babies', 'check-others']) {
+        expect(ids, id).toContain(`checklists-uk:heatwave-${id}`);
+      }
+      const petIds = ['pets-shade', 'dog-walks', 'dog-signs'].map(
+        (id) => `checklists-uk:heatwave-${id}`,
+      );
+      for (const id of petIds) expect(ids).not.toContain(id);
+      doc.household.pets = [{ id: 'p', name: 'Bran', species: 'dog', size: 'M' }];
+      const withPet = checklist(doc, packs, ['checklists-uk:heatwave'], '2026-11-08');
+      const petted = withPet.groups.flatMap((g) => g.steps.map((s) => s.id));
+      for (const id of petIds) expect(petted).toContain(id);
+      if (pack.kind !== 'checklists') throw new Error('not a checklists pack');
+      const heatSteps = pack.steps.filter((s) => s.scenarios.includes('checklists-uk:heatwave'));
+      // no heatwave step depends on a risk, member tag or heat-health alert
+      expect(heatSteps.some((s) => s.requires?.risk || s.requires?.memberTag)).toBe(false);
+      expect(heatSteps.every((s) => s.scenarios.length === 1)).toBe(true);
+    });
+
+    it('builds an evacuation list that works for a self-initiated and an ordered evacuation', () => {
+      if (pack.kind !== 'checklists') throw new Error('not a checklists pack');
+      const doc = emptyDocument('local');
+      const list = checklist(doc, packs, ['checklists-uk:evacuation'], '2026-11-08');
+      expect(list.groups.map((g) => g.phase)).toEqual(['coming', 'immediate', 'first-days']);
+      const ids = list.groups.flatMap((g) => g.steps.map((s) => s.id));
+      // leaving does not depend on an order to evacuate, on pets or on recorded members
+      for (const id of ['evac-inside', 'evac-take-and-go', 'evac-grab-bag', 'evac-equipment']) {
+        expect(ids, id).toContain(`checklists-uk:${id}`);
+      }
+      expect(ids).toContain('checklists-uk:flood-evacuate');
+      const evac = pack.steps.filter((s) => s.scenarios.includes('checklists-uk:evacuation'));
+      // conditions are in the text, not gates
+      expect(evac.some((s) => s.requires)).toBe(false);
+      const text = (id: string) => pack.steps.find((s) => s.id === `checklists-uk:${id}`)!.text;
+      // a fire evacuee is never told to collect the grab bag, and leaving never overrides "get out"
+      const order = (id: string) => pack.steps.find((s) => s.id === `checklists-uk:${id}`)!.order;
+      expect(order('evac-inside')).toBeLessThan(order('evac-take-and-go'));
+      expect(text('evac-inside')).toMatch(/do not stop to investigate or to collect belongings/i);
+      expect(text('evac-take-and-go')).toMatch(/safe to do so/);
+      expect(text('evac-take-and-go')).toMatch(/emergency services tell you/);
+      // switching things off is not advised for a fire or a gas leak
+      expect(text('evac-shutoffs-leaving')).toMatch(/other than a fire or a smell of gas/);
+      // gas leak: no switches, a labelled number, and a Northern Ireland number only for Northern Ireland
+      expect(text('evac-gas-leak')).toMatch(/do not touch power or light switches/);
+      expect(text('evac-gas-leak')).toMatch(/0800 111 999 \(Northern Ireland: see next step\)/);
+      expect(text('evac-gas-leak-ni')).toMatch(
+        /^Northern Ireland only: call the Gas Emergency Service on 0800 002 001/,
+      );
+      expect(
+        pack.scenarios.find((s) => s.id === 'checklists-uk:evacuation')!.risks,
+      ).toBeUndefined();
+    });
+
+    it('has the five scenarios, and shares only the audited step ids', () => {
+      if (pack.kind !== 'checklists') throw new Error('not a checklists pack');
+      expect(pack.scenarios.map((s) => s.id)).toEqual([
+        'checklists-uk:power-cut',
+        'checklists-uk:storm',
+        'checklists-uk:flood',
+        'checklists-uk:heatwave',
+        'checklists-uk:evacuation',
+      ]);
+      const shared = pack.steps
+        .filter((s) => s.scenarios.length > 1)
+        .map((s) => s.id)
+        .sort();
+      expect(shared).toEqual([
+        'checklists-uk:flood-evacuate',
+        'checklists-uk:flood-plan',
+        'checklists-uk:flood-return-home',
+        'checklists-uk:flood-shutoffs',
+        'checklists-uk:storm-floodwater',
+      ]);
+      // every listed source is used by at least one step
+      const used = new Set(pack.steps.map((s) => s.source));
+      for (const src of pack.sources ?? []) expect(used.has(src.url), src.url).toBe(true);
+    });
+
+    it('orders the combined list the same whatever order scenarios are chosen in', () => {
+      const doc = emptyDocument('local');
+      const all = [
+        'checklists-uk:power-cut',
+        'checklists-uk:storm',
+        'checklists-uk:flood',
+        'checklists-uk:heatwave',
+        'checklists-uk:evacuation',
+      ];
+      const a = checklist(doc, packs, all, '2026-11-08');
+      const b = checklist(doc, packs, [...all].reverse(), '2026-11-08');
+      const flat = (l: typeof a) => l.groups.flatMap((g) => g.steps.map((s) => s.id));
+      expect(flat(b)).toEqual(flat(a));
+      expect(new Set(flat(a)).size).toBe(flat(a).length);
+    });
+
+    it('labels every nation-specific flood step with its nation, and filters by none', () => {
+      if (pack.kind !== 'checklists') throw new Error('not a checklists pack');
+      const byId = Object.fromEntries(pack.steps.map((s) => [s.id, s]));
+      const labelled: Record<string, string> = {
+        'checklists-uk:flood-report-england': 'England',
+        'checklists-uk:flood-report-wales': 'Wales',
+        'checklists-uk:flood-report-scotland': 'Scotland',
+        'checklists-uk:flood-report-ni': 'Northern Ireland',
+        'checklists-uk:flood-ni-payment': 'Northern Ireland',
+      };
+      for (const [id, nation] of Object.entries(labelled)) {
+        expect(byId[id]!.text.startsWith(`${nation}:`), id).toBe(true);
+      }
+      // all four nations' reporting steps reach the same household
+      const doc = emptyDocument('local');
+      const ids = checklist(doc, packs, ['checklists-uk:flood'], '2026-11-08').groups.flatMap((g) =>
+        g.steps.map((s) => s.id),
+      );
+      for (const id of Object.keys(labelled)) expect(ids).toContain(id);
+      // steps that name nations mid-sentence
+      const mid: Record<string, string[]> = {
+        'checklists-uk:flood-risk': ['England', 'Wales', 'Scotland', 'Northern Ireland'],
+        'checklists-uk:flood-warnings-signup': ['England', 'Scotland', 'Wales'],
+      };
+      for (const [id, nations] of Object.entries(mid)) {
+        for (const nation of nations) expect(byId[id]!.text, id).toContain(nation);
+      }
+      // no Northern Ireland warning service is claimed
+      expect(byId['checklists-uk:flood-warnings-signup']!.text).not.toContain('Northern Ireland');
+      expect(pack.steps.some((s) => s.requires?.risk)).toBe(false);
+    });
+
+    it('shares the floodwater driving step between storm and flood, listed once', () => {
+      const doc = emptyDocument('local');
+      const both = checklist(
+        doc,
+        packs,
+        ['checklists-uk:storm', 'checklists-uk:flood'],
+        '2026-11-08',
+      );
+      const ids = both.groups.flatMap((g) => g.steps.map((s) => s.id));
+      expect(ids.filter((id) => id === 'checklists-uk:storm-floodwater')).toHaveLength(1);
+      expect(new Set(ids).size).toBe(ids.length);
+      const floodOnly = checklist(doc, packs, ['checklists-uk:flood'], '2026-11-08');
+      expect(floodOnly.groups.flatMap((g) => g.steps.map((s) => s.id))).toContain(
+        'checklists-uk:storm-floodwater',
+      );
+    });
+
+    it('lists a step shared by power cut and storm once (synthetic shared step)', () => {
+      const doc = emptyDocument('local');
+      const real = packs.all.find((p) => p.id === 'checklists-uk');
+      if (!real || real.kind !== 'checklists') throw new Error('checklists-uk missing');
+      const shared = {
+        id: 'checklists-uk:synthetic-shared',
+        text: 'A synthetic step shared by both scenarios.',
+        scenarios: ['checklists-uk:power-cut', 'checklists-uk:storm'],
+        phase: 'immediate' as const,
+        order: 1,
+        source: 'assumption',
+      };
+      const withShared = {
+        ...packs,
+        all: packs.all.map((p) => (p === real ? { ...real, steps: [...real.steps, shared] } : p)),
+      };
+      const both = checklist(
+        doc,
+        withShared,
+        ['checklists-uk:power-cut', 'checklists-uk:storm'],
+        '2026-11-08',
+      );
+      const bothIds = both.groups.flatMap((g) => g.steps.map((s) => s.id));
+      expect(bothIds.filter((id) => id === shared.id)).toHaveLength(1);
+      expect(new Set(bothIds).size).toBe(bothIds.length);
+      expect(bothIds).toContain('checklists-uk:generator');
+      expect(bothIds).toContain('checklists-uk:storm-fallen-cables');
+    });
   });
 });

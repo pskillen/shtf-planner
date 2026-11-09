@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { packLabel, packSwitch, setPack } from '../src/app/screens/settings/packs';
-import { emptyDocument } from '../src/model';
+import { packLabel, packSwitch, setPack, splitPacks } from '../src/app/screens/settings/packs';
+import { emptyDocument, type Pack, type Packs } from '../src/model';
 import { bundledPacks } from '../src/packs';
 
 const US = { id: 'guidance-us-ready', region: 'US' as const };
@@ -50,5 +50,37 @@ describe('the content pack switches', () => {
     const regions = Object.fromEntries(bundledPacks().all.map((p) => [p.id, p.region]));
     expect(regions[US.id]).toBe('US');
     expect(regions[UK.id]).toBe('UK');
+  });
+});
+
+describe('splitPacks', () => {
+  const ck = (id: string, region?: 'UK' | 'US') =>
+    ({
+      format: 1,
+      id,
+      version: 2,
+      name: id,
+      kind: 'checklists',
+      ...(region ? { region } : {}),
+      scenarios: [],
+      steps: [],
+    }) as unknown as Pack;
+
+  it('never makes a checklist pack switchable, and holds the region rule', () => {
+    const real = bundledPacks();
+    const packs = {
+      all: [
+        ...real.all.filter((p) => p.kind !== 'checklists'),
+        ck('c-uk', 'UK'),
+        ck('c-us', 'US'),
+        ck('c-any'),
+      ],
+    } as unknown as Packs;
+    const uk = splitPacks(packs, 'UK');
+    expect(uk.switchable.some((p) => p.kind === 'checklists')).toBe(false);
+    expect(uk.switchable).toHaveLength(real.all.filter((p) => p.kind !== 'checklists').length);
+    expect(uk.regional.map((p) => p.id)).toEqual(['c-uk']);
+    expect(splitPacks(packs, 'US').regional.map((p) => p.id)).toEqual(['c-us']);
+    expect(uk.hasChecklists).toBe(true);
   });
 });

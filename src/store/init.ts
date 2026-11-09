@@ -38,8 +38,8 @@ export function hash32(text: string): number {
 
 /**
  * The values and containers of a new document that are the same on every device: the schema-4
- * content, frozen as a literal (it equals `emptyDocument()` apart from the per-device `meta`, and a
- * test checks that). Schema 4 started afresh: households from before it are refused, not migrated,
+ * content, frozen as a literal (it equals `emptyDocument()` apart from the per-device `meta` and the
+ * containers added by migration steps, and a test checks that). Schema 4 started afresh: households from before it are refused, not migrated,
  * so the frozen schema-1 content was replaced once, on purpose. The containers a later schema adds
  * are created by the migration step that adds them.
  */

@@ -6,6 +6,13 @@ export function MoreScreen() {
     <div>
       <h1>More</h1>
       <div className="cards">
+        <Link to="/app/more/checklists" className="card">
+          <span className="card-title">Scenario checklists</span>
+          <span className="card-body">Step-by-step lists for a power cut, a flood and more</span>
+          <span className="card-go" aria-hidden="true">
+            ›
+          </span>
+        </Link>
         <Link to="/app/more/settings" className="card">
           <span className="card-title">Settings</span>
           <span className="card-body">Region, content packs, reminders, your data</span>

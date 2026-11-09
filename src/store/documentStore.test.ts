@@ -264,8 +264,8 @@ describe('export and import', () => {
   });
 
   it('importJson on a store holding a newer document throws and writes nothing', async () => {
-    const newer = await open({ schemaVersion: 5, steps: [...MIGRATIONS, addSize] });
-    const old = await open({ schemaVersion: 4, steps: MIGRATIONS, validate: false });
+    const newer = await open({ schemaVersion: 6, steps: [...MIGRATIONS, addSize] });
+    const old = await open({ schemaVersion: 5, steps: MIGRATIONS, validate: false });
     old.mergeBytes(newer.bytes());
     const status = old.status();
     expect(status.kind).toBe('too-new');
@@ -274,7 +274,7 @@ describe('export and import', () => {
     expect(() => old.importJson(valid, 'replace')).toThrow(SchemaTooNewError);
     expect(old.heads()).toBe(before);
     expect(old.status().kind).toBe('too-new');
-    expect(old.get().meta.schemaVersion).toBe(5);
+    expect(old.get().meta.schemaVersion).toBe(6);
   });
 
   it('importJson still recovers a store whose document is invalid', async () => {
@@ -410,10 +410,10 @@ describe('merging between devices', () => {
   });
 });
 
-// A fake schema 5 (schema 4 is the real one): every location gets `litres` it lacked. Per record, idempotent.
+// A fake schema 6 (schema 5 is the real one): every location gets `litres` it lacked. Per record, idempotent.
 const addSize: MigrationStep = {
-  from: 4,
-  to: 5,
+  from: 5,
+  to: 6,
   name: 'locations get litres',
   up(raw) {
     const locations = { ...(raw.locations as Record<string, Record<string, unknown>>) };
@@ -427,8 +427,8 @@ const addSize: MigrationStep = {
 describe('schema drift between devices', () => {
   it('a fresh device on a bumped build starts at the target shape', async () => {
     const horizon: MigrationStep = {
-      from: 4,
-      to: 5,
+      from: 5,
+      to: 6,
       name: 'default horizon 3 to 7',
       up(raw) {
         const settings = raw.settings as Record<string, unknown>;
@@ -445,11 +445,11 @@ describe('schema drift between devices', () => {
       env: 'local',
       deviceId: 'new',
       channel: false,
-      schemaVersion: 5,
+      schemaVersion: 6,
       steps: [...MIGRATIONS, horizon],
     });
     seen.push(fresh.get().settings.horizonDays);
-    expect(fresh.get().meta.schemaVersion).toBe(5);
+    expect(fresh.get().meta.schemaVersion).toBe(6);
     expect(fresh.status()).toEqual({ kind: 'ok' });
     await fresh.close();
     const again = await openStore({
@@ -457,7 +457,7 @@ describe('schema drift between devices', () => {
       env: 'local',
       deviceId: 'new',
       channel: false,
-      schemaVersion: 5,
+      schemaVersion: 6,
       steps: [...MIGRATIONS, horizon],
     });
     seen.push(again.get().settings.horizonDays);
@@ -466,8 +466,8 @@ describe('schema drift between devices', () => {
   });
 
   it('goes read-only when a merge brings a newer schema, and subscribers hear it', async () => {
-    const newer = await open({ schemaVersion: 5, steps: [...MIGRATIONS, addSize] });
-    const old = await open({ schemaVersion: 4, steps: MIGRATIONS, validate: false });
+    const newer = await open({ schemaVersion: 6, steps: [...MIGRATIONS, addSize] });
+    const old = await open({ schemaVersion: 5, steps: MIGRATIONS, validate: false });
     const states: string[] = [];
     old.subscribe((_doc, status) => states.push(status.kind));
     old.mergeBytes(newer.bytes());
@@ -476,24 +476,24 @@ describe('schema drift between devices', () => {
     expect(() => old.change('x', () => {})).toThrow(SchemaTooNewError);
     const status = old.status();
     if (status.kind !== 'too-new') throw new Error('unreachable');
-    expect(status.found).toBe(5);
-    expect(status.supported).toBe(4);
+    expect(status.found).toBe(6);
+    expect(status.supported).toBe(5);
   });
 
   it('brings old-shaped records an old client wrote into a migrated document forward', async () => {
     // A shared starting point: a schema-2 document with a location that has no litres yet.
-    const v1 = await open({ schemaVersion: 4, steps: MIGRATIONS, validate: false });
+    const v1 = await open({ schemaVersion: 5, steps: MIGRATIONS, validate: false });
     v1.change('add', (d) => {
       d.locations['l1'] = location('l1', 'Pantry');
     });
     // Device A is on the new build: merging brings the document to schema 3 and migrates l1.
-    const a = await open({ schemaVersion: 5, steps: [...MIGRATIONS, addSize] });
+    const a = await open({ schemaVersion: 6, steps: [...MIGRATIONS, addSize] });
     a.mergeBytes(v1.bytes());
     expect(a.status().kind).toBe('ok');
-    expect(a.get().meta.schemaVersion).toBe(5);
+    expect(a.get().meta.schemaVersion).toBe(6);
     expect(a.get().locations['l1']!.litres).toBe(100);
     // An old client branched from v1 before A migrated, and edits offline.
-    const old = await open({ schemaVersion: 4, steps: MIGRATIONS, validate: false });
+    const old = await open({ schemaVersion: 5, steps: MIGRATIONS, validate: false });
     old.mergeBytes(v1.bytes());
     old.change('offline edit', (d) => {
       d.locations['l2'] = location('l2', 'Shed');
@@ -501,7 +501,7 @@ describe('schema drift between devices', () => {
     // Its old-shaped record merges into the migrated document and is brought forward.
     a.mergeBytes(old.bytes());
     expect(a.status().kind).toBe('ok');
-    expect(a.get().meta.schemaVersion).toBe(5);
+    expect(a.get().meta.schemaVersion).toBe(6);
     expect(a.get().locations['l2']!.litres).toBe(100);
     expect(a.get().locations['l1']!.litres).toBe(100);
     // and the old client, merging back, learns it must update
@@ -516,7 +516,7 @@ describe('schema drift between devices', () => {
       env: 'local',
       deviceId: 'd',
       channel: false,
-      schemaVersion: 4,
+      schemaVersion: 5,
       steps: MIGRATIONS,
       validate: false,
     });
@@ -529,10 +529,10 @@ describe('schema drift between devices', () => {
       env: 'local',
       deviceId: 'd',
       channel: false,
-      schemaVersion: 5,
+      schemaVersion: 6,
       steps: [...MIGRATIONS, addSize],
     });
-    expect(v2.get().meta.schemaVersion).toBe(5);
+    expect(v2.get().meta.schemaVersion).toBe(6);
     expect(v2.get().locations['l1']!.litres).toBe(100);
     await v2.close();
   });
@@ -544,7 +544,7 @@ describe('schema drift between devices', () => {
       env: 'local',
       deviceId: 'd',
       channel: false,
-      schemaVersion: 5,
+      schemaVersion: 6,
       steps: [...MIGRATIONS, addSize],
     });
     await v2.close();
@@ -553,7 +553,7 @@ describe('schema drift between devices', () => {
       env: 'local',
       deviceId: 'd',
       channel: false,
-      schemaVersion: 4,
+      schemaVersion: 5,
       steps: MIGRATIONS,
       validate: false,
     });

@@ -182,6 +182,9 @@ function ImportSection() {
             <li>{plural(preview.summary.stock, 'stock entry', 'stock entries')}</li>
             <li>{plural(preview.summary.barcodes, 'remembered barcode')}</li>
             <li>{plural(preview.summary.scans, 'scan to sort', 'scans to sort')}</li>
+            {preview.summary.checklistRuns > 0 && (
+              <li>{plural(preview.summary.checklistRuns, 'checklist run')}</li>
+            )}
           </ul>
           <EnvLine fileEnv={preview.fileEnv} buildEnv={__BUILD_ENV__} />
           <p>Importing replaces everything on this device.</p>

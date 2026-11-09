@@ -1,4 +1,5 @@
-import type { Document, Region } from '../../../model';
+import { checklistPacks } from '../../../engine';
+import type { ChecklistsPack, Document, Packs, Pack, Region } from '../../../model';
 
 /**
  * A pack's name and version for its switch. A comma, not brackets: some names already end in a
@@ -28,4 +29,20 @@ export function setPack(draft: Document, pack: { id: string; region?: Region }, 
   if (packSwitch(pack, draft.settings).wrongRegion) return;
   const rest = draft.settings.packs.filter((id) => id !== pack.id);
   draft.settings.packs = on ? [...rest, pack.id] : rest;
+}
+
+/**
+ * Splits the bundled packs for Settings. Checklist packs are never switchable: they are offered
+ * by region alone and stay out of `settings.packs`. `regional` is what this region gets;
+ * `hasChecklists` says whether any checklist pack is bundled at all (for any region).
+ */
+export function splitPacks(
+  packs: Packs,
+  region: Region,
+): { switchable: Pack[]; regional: ChecklistsPack[]; hasChecklists: boolean } {
+  return {
+    switchable: packs.all.filter((p) => p.kind !== 'checklists'),
+    regional: checklistPacks(packs, region),
+    hasChecklists: packs.all.some((p) => p.kind === 'checklists'),
+  };
 }

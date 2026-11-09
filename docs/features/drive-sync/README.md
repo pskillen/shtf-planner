@@ -70,6 +70,32 @@ Automatic. The pill says where things stand.
   ("Merge them" or "Not now"), then merges both and shows what it changed. With nothing on Drive,
   the first push creates the files.
 
+### Checklist runs across devices
+
+Scenario checklist **runs** (`checklistRuns`) and their **step states** (`checklistStepStates`)
+are records like any other, and appear in the which-copy dialog as "Checklist run" (titled by its
+scenario names and start day) and "Checklist step" (titled by the step's text, read from the run's
+snapshot). Tests with two real stores (`src/store/syncChecklists.test.ts`) pin what happens:
+
+| Two devices, offline                         | Result                                                                                                          |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Tick different steps                         | Both ticks kept, no question                                                                                    |
+| One ticks a step, the other writes its note  | Both kept, no question                                                                                          |
+| Both write a note on one step                | Question with both notes; the CRDT has already picked one, the same on both devices                             |
+| One unticks a step, the other ticks it again | Question on the tick (cleared against set); the tick stands (a concurrent set beats a delete); the note is kept |
+| Both tick a step, at any times               | No question, the step is done either way; one time stands on both devices; notes kept                           |
+| Both finish a run, at different times        | No question; one finish time stands on both devices                                                             |
+| Each adds a different scenario to a run      | Both kept, no question; the steps of every scenario stay, hidden ones included                                  |
+| Both add the same scenario                   | No question; the merged array holds it twice and readers see it once; removing it later removes both            |
+| One removes a scenario, the other adds one   | Question on the scenarios; the merge keeps the addition and the other scenarios                                 |
+| Each removes a different scenario            | Question on the scenarios; the run can end up with none, which is valid                                         |
+| One finishes a run, the other edits a step   | Both kept, no question                                                                                          |
+| Each starts a run                            | Two runs, no question                                                                                           |
+
+**Finishing is not a lock across devices.** A device that is offline can still tick steps or write
+notes in a run another device has finished; after the sync both are visible and the run stays
+finished. Nothing reopens it.
+
 Drive moving things under us is handled quietly: files are listed oldest first, so if two devices
 raced to create `household.yjs` the oldest one is used by everyone; and when the remembered folder
 or a file has been deleted or trashed (a 404, which is not "offline") the ids are forgotten, the
@@ -160,7 +186,7 @@ only opens a popup for a tap, so **nothing asks Google unless a tap is behind it
   that state, so edits made here and on the other device meanwhile merge without asking the
   first-connect question again. A different account, or one whose email cannot be read, starts afresh and asks first.
 - **Forget this device's data** revokes the token (best effort, a few seconds at most) and deletes
-  the household and the sync state from this browser too; Drive is untouched, and connecting again
+  the household, the sync state and any unsaved checklist note drafts from this browser too; Drive is untouched, and connecting again
   brings it back.
 
 ## Export and import

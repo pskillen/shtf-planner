@@ -1,6 +1,6 @@
 import * as Y from 'yjs';
 import { describe, expect, it } from 'vitest';
-import type { MigrationStep } from '../model';
+import { MIGRATIONS, type MigrationStep } from '../model';
 import { applyInit } from './init';
 import { createdContainers, ensureStepContainers, stepClientId } from './stepContainers';
 import { toPlain, toY } from './yconvert';
@@ -162,5 +162,70 @@ describe('per-record containers created by a migration step', () => {
     entry(b, 'a1', 'from-b');
     sync(a.ydoc, b.ydoc);
     expect(maintenanceOfA1(a)).toHaveLength(1);
+  });
+});
+
+// The real schema 4 to 5 step, over replicas that both start from the frozen schema-4 first run.
+describe('add-checklist-runs on two real replicas', () => {
+  const v4 = (() => {
+    const d = new Y.Doc();
+    applyInit(d, d.getMap('doc'), 4);
+    return Y.encodeStateAsUpdate(d);
+  })();
+  const migrateReal = (r: ReturnType<typeof replica>) =>
+    ensureStepContainers(r.ydoc, r.root, toPlain(r.root), MIGRATIONS, 5);
+  const addRun = (r: ReturnType<typeof replica>, id: string) => {
+    r.ydoc.transact(() => {
+      (r.root.get('checklistRuns') as Y.Map<unknown>).set(
+        id,
+        toY({
+          id,
+          scenarios: ['power-cut'],
+          started: '2026-11-01T10:00:00.000Z',
+          catalogue: { packs: [], scenarios: [], steps: [] },
+        }),
+      );
+      (r.root.get('checklistStepStates') as Y.Map<unknown>).set(
+        `${id}|s1`,
+        toY({ runId: id, stepId: 's1', doneAt: '2026-11-01T10:05:00.000Z' }),
+      );
+    });
+  };
+
+  it('starts without the containers: the first-run literal is frozen at schema 4', () => {
+    const r = replica(v4);
+    const plain = toPlain(r.root) as Record<string, unknown>;
+    expect(plain.checklistRuns).toBeUndefined();
+    expect(plain.checklistStepStates).toBeUndefined();
+  });
+
+  it('both devices migrate offline, each starts a run, and both runs survive the merge', () => {
+    const a = replica(v4);
+    const b = replica(v4);
+    migrateReal(a);
+    migrateReal(b);
+    addRun(a, 'run-a');
+    addRun(b, 'run-b');
+    sync(a.ydoc, b.ydoc);
+    for (const r of [a, b]) {
+      const plain = toPlain(r.root) as {
+        checklistRuns: Record<string, unknown>;
+        checklistStepStates: Record<string, unknown>;
+      };
+      expect(Object.keys(plain.checklistRuns).sort()).toEqual(['run-a', 'run-b']);
+      expect(Object.keys(plain.checklistStepStates).sort()).toEqual(['run-a|s1', 'run-b|s1']);
+    }
+  });
+
+  it('replaying the migration after the merge writes nothing', () => {
+    const a = replica(v4);
+    migrateReal(a);
+    addRun(a, 'run-a');
+    const before = Y.encodeStateVector(a.ydoc);
+    migrateReal(a);
+    expect(Y.encodeStateVector(a.ydoc)).toEqual(before);
+    expect(Object.keys((toPlain(a.root) as { checklistRuns: object }).checklistRuns)).toEqual([
+      'run-a',
+    ]);
   });
 });

@@ -451,3 +451,82 @@ describe('converter fuel references', () => {
     ).toThrow(/outdoor-only/);
   });
 });
+
+describe('checklist packs', () => {
+  const checklists = () => ({
+    ...base,
+    id: 'check-t',
+    kind: 'checklists',
+    sources: [{ url: 'https://example.org/ready', title: 'Ready', checked: '2026-11-01' }],
+    scenarios: [{ id: 'check-t:power-cut', name: 'Power cut', risks: ['flood'] }],
+    steps: [
+      {
+        id: 'check-t:torch',
+        text: 'Find a torch',
+        scenarios: ['check-t:power-cut'],
+        phase: 'immediate',
+        order: 1,
+        requires: { asset: ['assets-t:pv'], pets: true, memberTag: 'takes-medication' },
+        source: 'https://example.org/ready',
+      },
+    ],
+  });
+  type Raw = ReturnType<typeof checklists>;
+  const edit = (fn: (c: Raw) => void) => {
+    const c = checklists();
+    fn(c);
+    return c;
+  };
+  const load = (c: unknown) => loadPacks([file(items), file(assets), file(c)]);
+
+  it('loads a valid pack, with an asset from another pack, and indexes it', () => {
+    const packs = load(checklists());
+    expect(packs.checklistScenarios['check-t:power-cut']!.name).toBe('Power cut');
+    expect(packs.checklistSteps['check-t:torch']!.phase).toBe('immediate');
+  });
+
+  it('rejects ids outside the namespace and duplicates', () => {
+    expect(() => load(edit((c) => (c.scenarios[0]!.id = 'other:power-cut')))).toThrow(
+      /scenarios\[0\]: id "other:power-cut" must start with "check-t:"/,
+    );
+    expect(() => load(edit((c) => (c.steps[0]!.id = 'other:torch')))).toThrow(
+      /steps\[0\]: id "other:torch" must start/,
+    );
+    expect(() => load(edit((c) => c.scenarios.push(structuredClone(c.scenarios[0]!))))).toThrow(
+      /scenarios\[1\]: duplicate id/,
+    );
+    expect(() => load(edit((c) => c.steps.push(structuredClone(c.steps[0]!))))).toThrow(
+      /steps\[1\]: duplicate id/,
+    );
+  });
+
+  it('rejects empty or repeated scenarios and one missing from the pack', () => {
+    expect(() => load(edit((c) => (c.steps[0]!.scenarios = [])))).toThrow(/steps\[0\]\.scenarios/);
+    expect(() =>
+      load(edit((c) => (c.steps[0]!.scenarios = ['check-t:power-cut', 'check-t:power-cut']))),
+    ).toThrow(/steps\[0\]\.scenarios: scenarios must not repeat/);
+    expect(() => load(edit((c) => (c.steps[0]!.scenarios = ['check-t:flood'])))).toThrow(
+      /steps\[0\]\.scenarios\[0\]: scenario "check-t:flood" is not in this pack/,
+    );
+  });
+
+  it('rejects a bad phase and a non-integer order', () => {
+    expect(() => load(edit((c) => ((c.steps[0] as { phase: string }).phase = 'soon')))).toThrow(
+      /steps\[0\]\.phase/,
+    );
+    expect(() => load(edit((c) => (c.steps[0]!.order = 1.5)))).toThrow(/steps\[0\]\.order/);
+  });
+
+  it('rejects a source that is neither "assumption" nor listed', () => {
+    expect(() => load(edit((c) => (c.steps[0]!.source = 'https://example.org/other')))).toThrow(
+      /steps\[0\]\.source: https:\/\/example.org\/other is not listed/,
+    );
+    expect(() => load(edit((c) => (c.steps[0]!.source = 'assumption')))).not.toThrow();
+  });
+
+  it('rejects a required asset type that does not exist', () => {
+    expect(() => load(edit((c) => (c.steps[0]!.requires!.asset = ['assets-t:nope'])))).toThrow(
+      /steps\[0\]\.requires\.asset: asset type "assets-t:nope" does not exist/,
+    );
+  });
+});

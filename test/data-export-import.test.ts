@@ -27,7 +27,7 @@ describe('export', () => {
   it('writes the same document as YAML', () => {
     const file = yamlExport(json());
     expect(file.mime).toBe('application/yaml');
-    expect(file.text).toContain('schemaVersion: 4');
+    expect(file.text).toContain('schemaVersion: 5');
     expect(file.text).toContain('Alex');
   });
 });
@@ -135,5 +135,24 @@ describe('barcodes and scans in export and import', () => {
     if (!p.ok) throw new Error(p.error);
     expect(p.summary.barcodes).toBe(1);
     expect(p.summary.scans).toBe(1);
+  });
+});
+
+describe('checklist runs in an import', () => {
+  it('counts the runs in the preview and keeps them and their step states', () => {
+    const doc = biggarDocument();
+    doc.checklistRuns.r = {
+      id: 'r',
+      scenarios: [],
+      started: '2026-03-04T10:00:00.000Z',
+      catalogue: { packs: [], scenarios: [], steps: [] },
+    };
+    doc.checklistStepStates['r|s'] = { runId: 'r', stepId: 's', note: 'done early' };
+    const p = previewImport(JSON.stringify(doc));
+    if (!p.ok) throw new Error(p.error);
+    expect(p.summary.checklistRuns).toBe(2);
+    const back = JSON.parse(p.json);
+    expect(back.checklistRuns.r.scenarios).toEqual([]);
+    expect(back.checklistStepStates['r|s'].note).toBe('done early');
   });
 });

@@ -13,7 +13,8 @@ import { usePacks } from '../usePacks';
 import { formatReviewDate } from '../reviewDisplay';
 import { applyRegion } from './region';
 import { DataSection } from './settings/DataSection';
-import { packLabel, packSwitch, setPack } from './settings/packs';
+import { ContentPacks } from './settings/ContentPacks';
+import { setPack } from './settings/packs';
 
 /** Region, content packs, review cadence, anonymising and (later) the data section. */
 export function SettingsScreen() {
@@ -53,22 +54,11 @@ export function SettingsScreen() {
           The lists of items, equipment and guidance the plan is built from. Packs for the other
           region stay off.
         </p>
-        <ul className="row-list">
-          {packs.all.map((p) => {
-            const { on, wrongRegion } = packSwitch(p, settings);
-            return (
-              <li key={p.id} className="row-item">
-                <Switch
-                  label={packLabel(p)}
-                  hint={wrongRegion ? `${p.region} only` : undefined}
-                  checked={on}
-                  disabled={wrongRegion}
-                  onChange={(checked) => change('packs', (d) => setPack(d, p, checked))}
-                />
-              </li>
-            );
-          })}
-        </ul>
+        <ContentPacks
+          packs={packs}
+          settings={settings}
+          onToggle={(p, checked) => change('packs', (d) => setPack(d, p, checked))}
+        />
 
         <FieldGroup
           label="Review reminder"

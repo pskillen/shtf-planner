@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { SCHEMA_VERSION } from '../src/model/document';
 
 type Shtf = {
   doc: () => Promise<{
@@ -162,7 +163,7 @@ test('Quick add: nine items, two of them added again, each in few taps', async (
   await page.evaluate(() => (window as unknown as { __shtf: Shtf }).__shtf.flush());
   await page.goto('/app/stores?debug=1');
   const after = await doc(page);
-  expect(after.meta.schemaVersion).toBe(4);
+  expect(after.meta.schemaVersion).toBe(SCHEMA_VERSION);
   expect(Object.keys(after.stock).length).toBeGreaterThan(15);
 
   // The score and the shopping list move with the stock.

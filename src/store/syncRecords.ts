@@ -69,6 +69,8 @@ export function isBlank(doc: Document): boolean {
     Object.keys(doc.minimums).length === 0 &&
     Object.keys(doc.plans).length === 0 &&
     Object.keys(doc.reviews).length === 0 &&
+    Object.keys(doc.checklistRuns).length === 0 &&
+    Object.keys(doc.checklistStepStates).length === 0 &&
     doc.household.members.length === 0 &&
     doc.household.pets.length === 0
   );
@@ -84,6 +86,8 @@ const COLLECTIONS = [
   'minimums',
   'plans',
   'reviews',
+  'checklistRuns',
+  'checklistStepStates',
 ] as const;
 const LISTS = ['members', 'pets'] as const;
 
@@ -148,6 +152,8 @@ const NOUNS: Record<string, string> = {
   minimums: 'Minimum',
   plans: 'Plan item',
   reviews: 'Review',
+  checklistRuns: 'Checklist run',
+  checklistStepStates: 'Checklist step',
   barcodes: 'Barcode',
   scans: 'Scan to sort',
   'household.members': 'Member',
@@ -158,11 +164,35 @@ const NOUNS: Record<string, string> = {
 
 /** Product id to name, from the records of the documents being compared. */
 type ProductNames = ReadonlyMap<string, string>;
+/** Step state key (`runId|stepId`) to the step's text, from the runs' catalogues. */
+type StepTexts = ReadonlyMap<string, string>;
+
+const day = (iso: unknown): string => (typeof iso === 'string' ? iso.slice(0, 10) : '');
+
+/** A run reads as its scenario names (each once) and the day it started. */
+function runTitle(r: Obj, id: string): string {
+  const catalogue = isObj(r.catalogue) ? r.catalogue : {};
+  const known = new Map<string, string>();
+  if (Array.isArray(catalogue.scenarios)) {
+    for (const s of catalogue.scenarios) {
+      if (isObj(s) && typeof s.id === 'string' && typeof s.name === 'string') {
+        known.set(s.id, s.name);
+      }
+    }
+  }
+  const picked = Array.isArray(r.scenarios) ? r.scenarios.filter((x) => typeof x === 'string') : [];
+  const names = Array.from(new Set(picked.map((s) => known.get(s) ?? s)));
+  const started = day(r.started);
+  const label = names.join(', ');
+  if (label && started) return `${label}, started ${started}`;
+  return label || (started ? `Started ${started}` : id);
+}
 
 function describe(
   key: string,
   record: unknown,
   products: ProductNames = new Map(),
+  steps: StepTexts = new Map(),
 ): { noun: string; title: string } {
   const slash = key.indexOf('/');
   const collection = slash < 0 ? key : key.slice(0, slash);
@@ -175,6 +205,8 @@ function describe(
   if (collection === 'barcodes') return { noun, title: id };
   if (collection === 'scans') return { noun, title: typeof r.code === 'string' ? r.code : id };
   if (collection === 'minimums') return { noun, title: id };
+  if (collection === 'checklistRuns') return { noun, title: runTitle(r, id) };
+  if (collection === 'checklistStepStates') return { noun, title: steps.get(id) || id };
   if (collection === 'stock') {
     const productId = typeof r.productId === 'string' ? r.productId : undefined;
     return { noun, title: (productId && products.get(productId)) || id };
@@ -194,6 +226,16 @@ const additiveStrings = (base: unknown, side: unknown): boolean =>
   base.every((x) => typeof x === 'string' && side.includes(x)) &&
   side.every((x) => typeof x === 'string');
 
+/**
+ * Two devices that each ticked a step (or each finished a run), at different moments, agree it is
+ * done: the timestamps are not worth a question. A side that cleared the field is not exempt.
+ */
+const bothSet = (key: string, field: string, l: unknown, r: unknown): boolean =>
+  ((key.startsWith('checklistStepStates/') && field === 'doneAt') ||
+    (key.startsWith('checklistRuns/') && field === 'finished')) &&
+  get(l, field) !== undefined &&
+  get(r, field) !== undefined;
+
 /** Compares base, local and remote record by record. */
 export function classify(base: Obj, local: Obj, remote: Obj): Classified {
   const b = recordsOf(base);
@@ -205,6 +247,20 @@ export function classify(base: Obj, local: Obj, remote: Obj): Classified {
     for (const [k, v] of side) {
       if (k.startsWith('products/') && isObj(v) && typeof v.name === 'string') {
         products.set(k.slice('products/'.length), v.name);
+      }
+    }
+  }
+  const steps = new Map<string, string>();
+  for (const side of [b, r, l]) {
+    for (const [k, v] of side) {
+      if (!k.startsWith('checklistRuns/') || !isObj(v) || !isObj(v.catalogue)) continue;
+      const runId = k.slice('checklistRuns/'.length);
+      const list = v.catalogue.steps;
+      if (!Array.isArray(list)) continue;
+      for (const st of list) {
+        if (isObj(st) && typeof st.id === 'string' && typeof st.text === 'string') {
+          steps.set(`${runId}|${st.id}`, st.text);
+        }
       }
     }
   }
@@ -230,11 +286,12 @@ export function classify(base: Obj, local: Obj, remote: Obj): Classified {
         .filter(
           (f) =>
             !(
-              key.startsWith('reviews/') &&
-              f === 'resolved' &&
+              ((key.startsWith('reviews/') && f === 'resolved') ||
+                (key.startsWith('checklistRuns/') && f === 'scenarios')) &&
               additiveStrings(get(bv, f), get(lv, f)) &&
               additiveStrings(get(bv, f), get(rv, f))
             ) &&
+            !bothSet(key, f, lv, rv) &&
             !deepEqual(get(bv, f), get(lv, f)) &&
             !deepEqual(get(bv, f), get(rv, f)) &&
             !deepEqual(get(lv, f), get(rv, f)),
@@ -255,7 +312,7 @@ export function classify(base: Obj, local: Obj, remote: Obj): Classified {
     } else {
       fields = [{ field: 'value', mine: lv, theirs: rv }];
     }
-    const { noun, title } = describe(key, lv ?? rv, products);
+    const { noun, title } = describe(key, lv ?? rv, products, steps);
     conflicts.push({
       key,
       title,

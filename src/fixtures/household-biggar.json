@@ -83,6 +83,196 @@
       "seen": "2026-10-01"
     }
   },
+  "checklistRuns": {
+    "run-flood-oct-2026": {
+      "catalogue": {
+        "packs": [
+          {
+            "id": "checklists-uk",
+            "version": 5
+          }
+        ],
+        "scenarios": [
+          {
+            "id": "checklists-uk:power-cut",
+            "name": "Power cut"
+          },
+          {
+            "id": "checklists-uk:storm",
+            "name": "Storm"
+          },
+          {
+            "id": "checklists-uk:flood",
+            "name": "Flood"
+          },
+          {
+            "id": "checklists-uk:heatwave",
+            "name": "Heatwave"
+          },
+          {
+            "id": "checklists-uk:evacuation",
+            "name": "Evacuation"
+          }
+        ],
+        "steps": [
+          {
+            "id": "checklists-uk:flood-risk",
+            "order": 10,
+            "packId": "checklists-uk",
+            "phase": "coming",
+            "scenarios": [
+              "checklists-uk:flood"
+            ],
+            "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/",
+            "sourceChecked": "2026-11-08",
+            "sourceTitle": "Be Ready (UK Government): flooding",
+            "text": "Check your long-term flood risk: England (GOV.UK), Wales (Natural Resources Wales), Scotland (SEPA) or Northern Ireland (nidirect)."
+          },
+          {
+            "id": "checklists-uk:flood-warnings-signup",
+            "order": 20,
+            "packId": "checklists-uk",
+            "phase": "coming",
+            "scenarios": [
+              "checklists-uk:flood"
+            ],
+            "source": "https://www.gov.uk/get-flood-warnings",
+            "sourceChecked": "2026-11-08",
+            "sourceTitle": "GOV.UK: get flood warnings (England; points to Scotland and Wales)",
+            "text": "Sign up for free flood warnings by phone, text or email (England, Scotland, Wales): call Floodline on 0345 988 1188 (24 hours), or sign up online with the Environment Agency (England), SEPA (Scotland) or Natural Resources Wales. In England, you cannot get warnings for surface water (flash) flooding."
+          },
+          {
+            "id": "checklists-uk:flood-shutoffs",
+            "order": 100,
+            "packId": "checklists-uk",
+            "phase": "coming",
+            "scenarios": [
+              "checklists-uk:flood",
+              "checklists-uk:evacuation"
+            ],
+            "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/",
+            "sourceChecked": "2026-11-08",
+            "sourceTitle": "Be Ready (UK Government): flooding",
+            "text": "Find out how to turn off your gas, electricity and water. They are in different places in different homes: usually the water stop tap where the supply comes in, the gas valve by the gas meter, and the electricity cut-off on the fuse board."
+          },
+          {
+            "id": "checklists-uk:flood-valuables",
+            "order": 90,
+            "packId": "checklists-uk",
+            "phase": "coming",
+            "scenarios": [
+              "checklists-uk:flood"
+            ],
+            "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/",
+            "sourceChecked": "2026-11-08",
+            "sourceTitle": "Be Ready (UK Government): flooding",
+            "text": "Move sentimental or valuable items upstairs or to a high place. Keep important documents, such as birth certificates, in resealable waterproof plastic bags."
+          },
+          {
+            "id": "checklists-uk:flood-warning-turn-off",
+            "order": 20,
+            "packId": "checklists-uk",
+            "phase": "immediate",
+            "scenarios": [
+              "checklists-uk:flood"
+            ],
+            "source": "https://naturalresources.wales/flooding/what-to-do-in-a-flood/?lang=en",
+            "sourceChecked": "2026-11-08",
+            "sourceTitle": "Natural Resources Wales: what to do in a flood",
+            "text": "If a flood warning is issued or flooding is about to reach your home, turn off your gas, electricity and water if it is safe to do so. Do not touch plugs or other sources of electricity when standing in flood water."
+          },
+          {
+            "id": "checklists-uk:flood-no-walk",
+            "order": 55,
+            "packId": "checklists-uk",
+            "phase": "immediate",
+            "scenarios": [
+              "checklists-uk:flood"
+            ],
+            "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/",
+            "sourceChecked": "2026-11-08",
+            "sourceTitle": "Be Ready (UK Government): flooding",
+            "text": "Never walk through flood water. It can be much deeper than it looks and may contain sewage and hide rubbish, wreckage, uneven roads and pavements, sharp objects, or uncovered and broken drain and manhole covers. Levels can rise and fall for several weeks. If you absolutely must enter it, move slowly and carefully and avoid fast-moving water."
+          },
+          {
+            "id": "checklists-uk:flood-return-home",
+            "order": 40,
+            "packId": "checklists-uk",
+            "phase": "first-days",
+            "scenarios": [
+              "checklists-uk:flood",
+              "checklists-uk:evacuation"
+            ],
+            "source": "https://ready.campaign.gov.scot/flooding",
+            "sourceChecked": "2026-11-08",
+            "sourceTitle": "Ready Scotland: flooding",
+            "text": "Only return home when the emergency services say it is safe."
+          },
+          {
+            "id": "checklists-uk:flood-electric-after",
+            "order": 50,
+            "packId": "checklists-uk",
+            "phase": "first-days",
+            "scenarios": [
+              "checklists-uk:flood"
+            ],
+            "source": "https://ready.campaign.gov.scot/flooding",
+            "sourceChecked": "2026-11-08",
+            "sourceTitle": "Ready Scotland: flooding",
+            "text": "Do not switch your electricity back on until a qualified person has checked it."
+          }
+        ]
+      },
+      "finished": "2026-10-20T08:30:00.000Z",
+      "id": "run-flood-oct-2026",
+      "scenarios": [
+        "checklists-uk:flood"
+      ],
+      "started": "2026-10-19T17:40:00.000Z"
+    }
+  },
+  "checklistStepStates": {
+    "run-flood-oct-2026|checklists-uk:flood-electric-after": {
+      "runId": "run-flood-oct-2026",
+      "stepId": "checklists-uk:flood-electric-after"
+    },
+    "run-flood-oct-2026|checklists-uk:flood-no-walk": {
+      "note": "Burn stayed in its banks; we did not need to go out",
+      "runId": "run-flood-oct-2026",
+      "stepId": "checklists-uk:flood-no-walk"
+    },
+    "run-flood-oct-2026|checklists-uk:flood-return-home": {
+      "runId": "run-flood-oct-2026",
+      "stepId": "checklists-uk:flood-return-home"
+    },
+    "run-flood-oct-2026|checklists-uk:flood-risk": {
+      "doneAt": "2026-10-19T17:52:00.000Z",
+      "runId": "run-flood-oct-2026",
+      "stepId": "checklists-uk:flood-risk"
+    },
+    "run-flood-oct-2026|checklists-uk:flood-shutoffs": {
+      "doneAt": "2026-10-19T18:20:00.000Z",
+      "note": "Stopcock is under the kitchen sink",
+      "runId": "run-flood-oct-2026",
+      "stepId": "checklists-uk:flood-shutoffs"
+    },
+    "run-flood-oct-2026|checklists-uk:flood-valuables": {
+      "doneAt": "2026-10-19T18:45:00.000Z",
+      "runId": "run-flood-oct-2026",
+      "stepId": "checklists-uk:flood-valuables"
+    },
+    "run-flood-oct-2026|checklists-uk:flood-warning-turn-off": {
+      "doneAt": "2026-10-19T19:10:00.000Z",
+      "runId": "run-flood-oct-2026",
+      "stepId": "checklists-uk:flood-warning-turn-off"
+    },
+    "run-flood-oct-2026|checklists-uk:flood-warnings-signup": {
+      "doneAt": "2026-10-19T17:55:00.000Z",
+      "note": "Signed up both our mobiles; Sam is on the landline list too",
+      "runId": "run-flood-oct-2026",
+      "stepId": "checklists-uk:flood-warnings-signup"
+    }
+  },
   "home": {
     "area": "ML12",
     "cooking": "induction",
@@ -232,7 +422,7 @@
       "plans-base": 1,
       "regions": 3
     },
-    "schemaVersion": 4
+    "schemaVersion": 5
   },
   "minimums": {
     "loc-pantry|items-base:baked-beans": 6,

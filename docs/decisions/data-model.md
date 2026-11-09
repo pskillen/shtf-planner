@@ -41,7 +41,7 @@ instead ([#90](https://github.com/pskillen/shtf-planner/issues/90)). [D193]
 an edit followed by a reload lost the write in 13 of 20 tries. [D95]
 
 **Per-device choices stay on the device.** Quick add's last place and recent items, and similar
-screen conveniences, live in `localStorage`, never the document. [D103]
+screen conveniences, and an unsaved checklist note, live in `localStorage`, never the document. [D103]
 
 **The test household is invented.** Fixtures and examples use an invented family in Biggar; the
 owner's real data or export never enters the repo. [D41]

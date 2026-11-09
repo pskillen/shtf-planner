@@ -16,15 +16,16 @@ What to have, and how much, ships as versioned JSON packs validated with Zod. Th
 
 ## The packs
 
-| Pack file                  | Kind       | Holds                                                                                                                                                |
-| -------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `items-base.json`          | `items`    | About 170 generic items (shopping-list level: baked beans, chopped tomatoes, soft drinks…), with headings, size chips, and what each counts towards. |
-| `assets-base.json`         | `assets`   | Heaters, stoves, power sources (solar, home battery, EV, generator), water butt, alarms, radios, with questions, contributions and maintenance.      |
-| `guidance-uk-prepare.json` | `guidance` | UK Government "Be Ready": 3 days, 3 litres of water per person per day.                                                                              |
-| `guidance-us-ready.json`   | `guidance` | Ready.gov: one gallon of water per person per day.                                                                                                   |
-| `guidance-grid-free.json`  | `guidance` | Region-less rules: heat, cooking, light, phone power, sanitation, medication, mobility, babies, pets.                                                |
-| `plans-base.json`          | `plans`    | Meeting point, shut-offs, documents, grab bags, first aid course, EPS, neighbours, pets.                                                             |
-| `regions.json`             | `regions`  | UK and US units, currency, risk links (flood, weather), suggested packs.                                                                             |
+| Pack file                  | Kind         | Holds                                                                                                                                                |
+| -------------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `items-base.json`          | `items`      | About 170 generic items (shopping-list level: baked beans, chopped tomatoes, soft drinks…), with headings, size chips, and what each counts towards. |
+| `assets-base.json`         | `assets`     | Heaters, stoves, power sources (solar, home battery, EV, generator), water butt, alarms, radios, with questions, contributions and maintenance.      |
+| `guidance-uk-prepare.json` | `guidance`   | UK Government "Be Ready": 3 days, 3 litres of water per person per day.                                                                              |
+| `guidance-us-ready.json`   | `guidance`   | Ready.gov: one gallon of water per person per day.                                                                                                   |
+| `guidance-grid-free.json`  | `guidance`   | Region-less rules: heat, cooking, light, phone power, sanitation, medication, mobility, babies, pets.                                                |
+| `plans-base.json`          | `plans`      | Meeting point, shut-offs, documents, grab bags, first aid course, EPS, neighbours, pets.                                                             |
+| `checklists-uk.json`       | `checklists` | UK scenario checklists: the power-cut, storm, flood and heatwave steps, each sourced; offered by region, not switched.                               |
+| `regions.json`             | `regions`    | UK and US units, currency, risk links (flood, weather), suggested packs.                                                                             |
 
 ## Format
 
@@ -69,6 +70,10 @@ assetTypeId?, offCategories?, source? }`. **`measure`** is `mass`, `volume` or `
   `appliesTo`, `requires`, `multipliers`, `minHorizonDays`, and a `source`. With `ageBands`, a
   person in no band needs none. Each quantity names a **`resource`** (`ResourceId`), not a "store".
 - **`plans`**: `items: PlanDef[]`; `requires` may name a risk, asset types (any of) or `pets`.
+- **`checklists`**: `scenarios` and `steps`; a step names its scenarios (in the same pack), a
+  `phase`, an integer `order`, optional `requires` (risk, asset types, pets, member tag) and a
+  `source` (an `https` URL listed in the pack's `sources`, or `"assumption"`, as a rule has). See
+  [Scenario checklists](../checklists/README.md).
 - **`regions`**: units, currency, `riskLinks`, `subregions`, `suggestedPacks`.
 
 `CapabilityId`: `water food heat cooking light power comms sanitation medical mobility plans`.
@@ -108,6 +113,15 @@ It throws `PackError` whose message names the pack and the field of each problem
 `enabledPacks(settings)` returns the packs listed in `settings.packs`, in order, minus those whose
 `region` is not `settings.region`; unknown ids are skipped. `recordPackVersions` and
 `packVersionReport` keep `meta.packVersions` honest: a mismatch is reported, not fatal.
+
+## In Settings
+
+Settings draws a switch for each pack except `checklists` packs. A checklist pack is not switched
+on or off and is never written to `settings.packs` (nor to `DEFAULT_PACKS`): it is offered by
+region alone (the pack's `region` must equal the household's; a pack with no region is offered to
+nobody). Under the switches, a "Scenario checklists" group lists this region's checklist packs as
+plain text ("Included for your region"), or says none are available for the region. The group is
+not drawn while no checklist pack is bundled at all.
 
 ## Adding or changing a pack
 

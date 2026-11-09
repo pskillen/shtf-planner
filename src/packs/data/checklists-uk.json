@@ -1,0 +1,1043 @@
+{
+  "format": 1,
+  "id": "checklists-uk",
+  "kind": "checklists",
+  "version": 5,
+  "name": "UK scenario checklists",
+  "region": "UK",
+  "sources": [
+    {
+      "url": "https://beready.campaign.gov.uk/be-informed-about-hazards/fires-in-the-home/",
+      "title": "Be Ready (UK Government): fires in the home",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://cadentgas.com/smell-gas",
+      "title": "Cadent: if you smell gas (gas distribution network; page does not state its area)",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://www.nidirect.gov.uk/articles/energy-power-supply-and-utilities",
+      "title": "nidirect (Northern Ireland): energy, power supply and utilities (Gas Emergency Service)",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://beready.campaign.gov.uk/emergencies/power-cuts/",
+      "title": "Be Ready (UK Government): power cuts",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://www.nhs.uk/conditions/carbon-monoxide-poisoning/",
+      "title": "NHS: carbon monoxide poisoning",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://www.gov.uk/government/publications/public-health-advice-from-uk-cmos-during-a-national-power-outage/keeping-warm-or-cool-in-extreme-weather-scripts-for-broadcast-media",
+      "title": "UK CMOs: keeping warm or cool in a national power outage (GOV.UK)",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://beready.campaign.gov.uk/emergencies/storms/",
+      "title": "Be Ready (UK Government): storms",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://weather.metoffice.gov.uk/warnings-and-advice/seasonal-advice/your-home/stay-safe-in-a-storm",
+      "title": "Met Office: stay safe in a storm",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://weather.metoffice.gov.uk/warnings-and-advice/seasonal-advice/stay-safe-in-strong-wind",
+      "title": "Met Office: stay safe in strong wind",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://weather.metoffice.gov.uk/warnings-and-advice/seasonal-advice/travel/travelling-in-storms-rain-and-wind",
+      "title": "Met Office: driving in storms, rain and strong wind",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/",
+      "title": "Be Ready (UK Government): flooding",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://www.gov.uk/get-flood-warnings",
+      "title": "GOV.UK: get flood warnings (England; points to Scotland and Wales)",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://ready.campaign.gov.scot/flooding",
+      "title": "Ready Scotland: flooding",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://naturalresources.wales/flooding/what-to-do-in-a-flood/?lang=en",
+      "title": "Natural Resources Wales: what to do in a flood",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://naturalresources.wales/flooding/preparing-for-a-flood/?lang=en",
+      "title": "Natural Resources Wales: preparing for a flood",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://www.nidirect.gov.uk/articles/what-do-if-flood-happens",
+      "title": "nidirect (Northern Ireland): what to do if a flood happens",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://naturalresources.wales/flooding/what-to-do-after-a-flood/?lang=en",
+      "title": "Natural Resources Wales: what to do after a flood",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://www.gov.uk/government/publications/flooding-and-health-public-advice/flooding-and-health-advice-for-the-public",
+      "title": "UKHSA (England): flooding and health, advice for the public",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://www.nidirect.gov.uk/articles/reporting-flooding",
+      "title": "nidirect (Northern Ireland): reporting flooding",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://www.mygov.scot/report-flood",
+      "title": "mygov.scot: report a flood",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://ready.campaign.gov.scot/hot-weather",
+      "title": "Ready Scotland (Scottish Government): hot weather",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://www.nhsinform.scot/healthy-living/adverse-weather/how-to-stay-safe-in-hot-weather/",
+      "title": "NHS inform (Scotland): how to stay safe in hot weather",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://www.nhsinform.scot/illnesses-and-conditions/a-z/heatstroke-and-heat-illness/",
+      "title": "NHS inform (Scotland): heatstroke and heat illness",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://phw.nhs.wales/knowledge-article/hot-weather/keeping-cool/",
+      "title": "Public Health Wales: keeping cool in hot weather",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://beready.campaign.gov.uk/be-informed-about-hazards/hot-weather-and-heatwaves/",
+      "title": "Be Ready (UK Government): hot weather and heatwaves",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://www.rspca.org.uk/adviceandwelfare/seasonal/summer",
+      "title": "RSPCA: summer pet care",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://www.rspca.org.uk/adviceandwelfare/seasonal/summer/dogs",
+      "title": "RSPCA: dog care in summer",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://beready.campaign.gov.uk/be-ready-for-emergencies/",
+      "title": "Be Ready (UK Government): be ready for emergencies",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://beready.campaign.gov.uk/wp-content/uploads/sites/252/2026/10/Be-Ready_Household_Emergency_Plan_English_Final.pdf",
+      "title": "Be Ready (UK Government): household emergency plan (PDF)",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://ready.campaign.gov.scot/emergency-plan",
+      "title": "Ready Scotland (Scottish Government): emergency plan",
+      "checked": "2026-11-08"
+    },
+    {
+      "url": "https://ready.campaign.gov.scot/emergency-kit",
+      "title": "Ready Scotland (Scottish Government): emergency kit",
+      "checked": "2026-11-08"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "checklists-uk:power-cut",
+      "name": "Power cut",
+      "risks": ["grid"]
+    },
+    {
+      "id": "checklists-uk:storm",
+      "name": "Storm",
+      "risks": ["storm"]
+    },
+    {
+      "id": "checklists-uk:flood",
+      "name": "Flood",
+      "risks": ["flood", "coastal"]
+    },
+    {
+      "id": "checklists-uk:heatwave",
+      "name": "Heatwave",
+      "risks": ["heat"]
+    },
+    {
+      "id": "checklists-uk:evacuation",
+      "name": "Evacuation"
+    }
+  ],
+  "steps": [
+    {
+      "id": "checklists-uk:torch",
+      "text": "Keep a battery or wind-up torch and spare batteries where you can find them in the dark. Torches are safer than candles.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "coming",
+      "order": 10,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
+    },
+    {
+      "id": "checklists-uk:number",
+      "text": "Write down the power-cut number and save it in your phone: 105 (England, Scotland, Wales) or 03457 643643 (Northern Ireland).",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "coming",
+      "order": 20,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
+    },
+    {
+      "id": "checklists-uk:radio",
+      "text": "Keep a battery or wind-up radio with spare batteries. Write the frequencies of local and national stations on paper.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "coming",
+      "order": 30,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
+    },
+    {
+      "id": "checklists-uk:cash",
+      "text": "Keep a small amount of cash for essentials in case card payments or cash machines are down.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "coming",
+      "order": 40,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
+    },
+    {
+      "id": "checklists-uk:register",
+      "text": "If you may qualify, ask your energy supplier about the Priority Services Register (England, Scotland, Wales). In Northern Ireland, ask about the Customer Care Register.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "coming",
+      "order": 50,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
+    },
+    {
+      "id": "checklists-uk:landline",
+      "text": "If you rely on a landline for emergency calls, or have telecare on it, ask your provider whether it works in a power cut.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "coming",
+      "order": 60,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
+    },
+    {
+      "id": "checklists-uk:medical-plan",
+      "text": "If anyone uses medical equipment that needs power, make a plan with their care provider or clinical team: what to do, and who to contact, if the power goes off.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "coming",
+      "order": 70,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
+    },
+    {
+      "id": "checklists-uk:formula",
+      "text": "If you use infant formula, keep some ready-made. It is the safest choice if tap water is unavailable.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "coming",
+      "order": 80,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/",
+      "requires": {
+        "memberTag": "infant"
+      }
+    },
+    {
+      "id": "checklists-uk:solar-backup",
+      "text": "Ask your installer whether your solar or battery system keeps running in a power cut. Some only do if designed to work without the grid.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "coming",
+      "order": 90,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/",
+      "requires": {
+        "asset": ["assets-base:solar-pv", "assets-base:home-battery"]
+      }
+    },
+    {
+      "id": "checklists-uk:report",
+      "text": "Report the power cut on your network operator's website. If you cannot, call 105 (free; England, Scotland, Wales) or 03457 643643 (Northern Ireland).",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "immediate",
+      "order": 10,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
+    },
+    {
+      "id": "checklists-uk:power-lines",
+      "text": "Keep well away from power lines. High-voltage electricity can jump gaps without warning.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "immediate",
+      "order": 20,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
+    },
+    {
+      "id": "checklists-uk:appliances",
+      "text": "Turn off irons, ovens, electric fires and fryers. Unplug your TV and computer to protect them from a surge when power returns.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "immediate",
+      "order": 30,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
+    },
+    {
+      "id": "checklists-uk:fridge-doors",
+      "text": "Keep fridge and freezer doors shut so food stays cold for several hours.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "immediate",
+      "order": 40,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
+    },
+    {
+      "id": "checklists-uk:warm",
+      "text": "Stay warm: wear layers, use blankets, close doors to rooms you are not using and draw the curtains.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "immediate",
+      "order": 50,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
+    },
+    {
+      "id": "checklists-uk:no-camping-stove",
+      "text": "Never use a barbecue or camping stove indoors or inside a tent. The fumes contain carbon monoxide, which can kill.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "immediate",
+      "order": 60,
+      "source": "https://www.nhs.uk/conditions/carbon-monoxide-poisoning/"
+    },
+    {
+      "id": "checklists-uk:generator",
+      "text": "If you use a generator, never run it indoors or in an enclosed space such as a garage. Portable generators produce carbon monoxide, which can kill.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "immediate",
+      "order": 70,
+      "source": "https://www.nhs.uk/conditions/carbon-monoxide-poisoning/"
+    },
+    {
+      "id": "checklists-uk:unattended",
+      "text": "Never leave a fire, portable heater or generator running unattended. In heaters and stoves, use only the recommended fuel.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "immediate",
+      "order": 80,
+      "source": "https://www.gov.uk/government/publications/public-health-advice-from-uk-cmos-during-a-national-power-outage/keeping-warm-or-cool-in-extreme-weather-scripts-for-broadcast-media"
+    },
+    {
+      "id": "checklists-uk:no-indoor-fire",
+      "text": "Do not light a fire indoors unless you have a proper heating appliance for this purpose or a fireplace with a working chimney.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "immediate",
+      "order": 85,
+      "source": "https://www.gov.uk/government/publications/public-health-advice-from-uk-cmos-during-a-national-power-outage/keeping-warm-or-cool-in-extreme-weather-scripts-for-broadcast-media"
+    },
+    {
+      "id": "checklists-uk:neighbours",
+      "text": "Check in on your neighbours. If you can, offer to share blankets, clothing or food, and pass on any important information you have received about the power cut, such as when power is expected back.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "immediate",
+      "order": 90,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
+    },
+    {
+      "id": "checklists-uk:emergency-call",
+      "text": "With no working landline in a life-threatening emergency, try 999 or 112 from a mobile. Emergency calls can use any available network.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "immediate",
+      "order": 100,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
+    },
+    {
+      "id": "checklists-uk:radio-news",
+      "text": "Use a battery or wind-up radio for news. Try both FM and digital. In severe weather it may be safer to stay inside than to use your car radio.",
+      "scenarios": ["checklists-uk:power-cut"],
+      "phase": "immediate",
+      "order": 110,
+      "source": "https://beready.campaign.gov.uk/emergencies/power-cuts/"
+    },
+    {
+      "id": "checklists-uk:storm-warnings",
+      "text": "Check the Met Office forecast and National Severe Weather Warnings for your area, and follow any advice.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "coming",
+      "order": 10,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:storm-provider",
+      "text": "Know who your power provider is and how to contact them during an outage.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "coming",
+      "order": 20,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:storm-charge",
+      "text": "Charge your phones, power banks and any backup batteries for medical equipment.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "coming",
+      "order": 30,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:storm-loose-items",
+      "text": "Secure loose items such as ladders, trampolines, garden furniture and toys.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "coming",
+      "order": 40,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:storm-doors-windows",
+      "text": "Close and fasten doors and windows, especially those facing the wind, and large doors such as garage doors.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "coming",
+      "order": 50,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:storm-loft",
+      "text": "Close and bolt loft hatches, particularly if your roof pitch is under 30 degrees.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "coming",
+      "order": 60,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:storm-shutters",
+      "text": "If you have storm shutters, close and fasten them.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "coming",
+      "order": 65,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:storm-park",
+      "text": "Park vehicles in a garage if you can. Otherwise keep them away from buildings, trees, walls and fences.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "coming",
+      "order": 70,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:storm-chimney",
+      "text": "If you have tall chimney stacks in poor condition, move beds away from the areas directly below them.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "coming",
+      "order": 80,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:storm-limit-travel",
+      "text": "Limit travel. If you must travel, allow extra time, check your travel operator's latest advice and follow any \"Do Not Travel\" notices.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "coming",
+      "order": 90,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:storm-check-vulnerable",
+      "text": "Check on neighbours and others nearby who may need extra help, and offer practical support, such as getting food or medication.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "coming",
+      "order": 100,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:storm-stay-in",
+      "text": "Stay indoors unless it is essential to go out. Avoid walking or sheltering near buildings, fences, walls and trees.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "immediate",
+      "order": 10,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:storm-sheltered-side",
+      "text": "If you go out, use doors on the sheltered side and close them behind you. Keep away from the sheltered side of boundary walls and fences: if they fail, they fall that way.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "immediate",
+      "order": 15,
+      "source": "https://weather.metoffice.gov.uk/warnings-and-advice/seasonal-advice/your-home/stay-safe-in-a-storm"
+    },
+    {
+      "id": "checklists-uk:storm-no-repairs",
+      "text": "Do not go outside to repair damage while the storm is still going.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "immediate",
+      "order": 20,
+      "source": "https://weather.metoffice.gov.uk/warnings-and-advice/seasonal-advice/your-home/stay-safe-in-a-storm"
+    },
+    {
+      "id": "checklists-uk:storm-internal-doors",
+      "text": "Open internal doors only when you need to, and close them behind you.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "immediate",
+      "order": 30,
+      "source": "https://weather.metoffice.gov.uk/warnings-and-advice/seasonal-advice/your-home/stay-safe-in-a-storm"
+    },
+    {
+      "id": "checklists-uk:storm-driving",
+      "text": "If you must drive, avoid exposed routes such as bridges and high open roads where you can. Slow down for crosswinds, especially if towing or driving a high-sided vehicle.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "immediate",
+      "order": 40,
+      "source": "https://weather.metoffice.gov.uk/warnings-and-advice/seasonal-advice/your-home/stay-safe-in-a-storm"
+    },
+    {
+      "id": "checklists-uk:storm-floodwater",
+      "text": "Never drive through floodwater. Turn around and find another route.",
+      "scenarios": ["checklists-uk:storm", "checklists-uk:flood"],
+      "phase": "immediate",
+      "order": 50,
+      "source": "https://weather.metoffice.gov.uk/warnings-and-advice/seasonal-advice/travel/travelling-in-storms-rain-and-wind"
+    },
+    {
+      "id": "checklists-uk:storm-fallen-cables",
+      "text": "Keep well away from fallen or damaged power lines, and do not touch fallen or hanging electrical or telephone cables. High-voltage electricity can jump gaps without warning.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "immediate",
+      "order": 60,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:storm-coast",
+      "text": "At the coast, beware of large waves, even from the shore: they can knock you off your feet and carry you out to sea. In an emergency, call 999 and ask for the Coastguard.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "immediate",
+      "order": 70,
+      "source": "https://weather.metoffice.gov.uk/warnings-and-advice/seasonal-advice/stay-safe-in-strong-wind"
+    },
+    {
+      "id": "checklists-uk:storm-weakened",
+      "text": "Stay clear of walls, buildings and trees, which may have been weakened.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "first-days",
+      "order": 10,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:storm-cables-after",
+      "text": "Do not touch electrical or telephone cables that have been blown down or are still hanging.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "first-days",
+      "order": 15,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:storm-check-after",
+      "text": "Check that neighbours and relatives who may need extra support are safe, and help them arrange repairs.",
+      "scenarios": ["checklists-uk:storm"],
+      "phase": "first-days",
+      "order": 20,
+      "source": "https://beready.campaign.gov.uk/emergencies/storms/"
+    },
+    {
+      "id": "checklists-uk:flood-risk",
+      "text": "Check your long-term flood risk: England (GOV.UK), Wales (Natural Resources Wales), Scotland (SEPA) or Northern Ireland (nidirect).",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "coming",
+      "order": 10,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:flood-warnings-signup",
+      "text": "Sign up for free flood warnings by phone, text or email (England, Scotland, Wales): call Floodline on 0345 988 1188 (24 hours), or sign up online with the Environment Agency (England), SEPA (Scotland) or Natural Resources Wales. In England, you cannot get warnings for surface water (flash) flooding.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "coming",
+      "order": 20,
+      "source": "https://www.gov.uk/get-flood-warnings"
+    },
+    {
+      "id": "checklists-uk:flood-stay-informed",
+      "text": "Check local news and weather forecasts. If heavy rain is forecast in your area, expect flooding of low-lying land and roads, and keep an eye on water levels in watercourses near you.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "coming",
+      "order": 40,
+      "source": "https://www.nidirect.gov.uk/articles/what-do-if-flood-happens"
+    },
+    {
+      "id": "checklists-uk:flood-plan",
+      "text": "Make an emergency plan for your home. If you or anyone in your household needs extra support or help to leave home safely, agree in advance who can help and include it in your plan.",
+      "scenarios": ["checklists-uk:flood", "checklists-uk:evacuation"],
+      "phase": "coming",
+      "order": 50,
+      "source": "https://ready.campaign.gov.scot/flooding"
+    },
+    {
+      "id": "checklists-uk:flood-grab-bag",
+      "text": "Consider packing a grab bag: any medication you need, a first aid kit, important documents, a torch, bottled water, warm waterproof clothing and baby care items if you have a baby. Keep it where you can get to it easily.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "coming",
+      "order": 70,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:flood-pets-kit",
+      "text": "Add pet supplies to your grab bag.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "coming",
+      "order": 80,
+      "requires": {
+        "pets": true
+      },
+      "source": "https://naturalresources.wales/flooding/preparing-for-a-flood/?lang=en"
+    },
+    {
+      "id": "checklists-uk:flood-valuables",
+      "text": "Move sentimental or valuable items upstairs or to a high place. Keep important documents, such as birth certificates, in resealable waterproof plastic bags.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "coming",
+      "order": 90,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:flood-shutoffs",
+      "text": "Find out how to turn off your gas, electricity and water. They are in different places in different homes: usually the water stop tap where the supply comes in, the gas valve by the gas meter, and the electricity cut-off on the fuse board.",
+      "scenarios": ["checklists-uk:flood", "checklists-uk:evacuation"],
+      "phase": "coming",
+      "order": 100,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:flood-insurance",
+      "text": "Check your buildings and contents insurance covers flood damage, and take detailed photos of your home before any flooding.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "coming",
+      "order": 110,
+      "source": "https://ready.campaign.gov.scot/flooding"
+    },
+    {
+      "id": "checklists-uk:flood-999",
+      "text": "Call 999 if you are in immediate danger.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "immediate",
+      "order": 10,
+      "source": "https://naturalresources.wales/flooding/what-to-do-in-a-flood/?lang=en"
+    },
+    {
+      "id": "checklists-uk:flood-warning-turn-off",
+      "text": "If a flood warning is issued or flooding is about to reach your home, turn off your gas, electricity and water if it is safe to do so. Do not touch plugs or other sources of electricity when standing in flood water.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "immediate",
+      "order": 20,
+      "source": "https://naturalresources.wales/flooding/what-to-do-in-a-flood/?lang=en"
+    },
+    {
+      "id": "checklists-uk:flood-warning-move",
+      "text": "If a flood warning is issued or flooding is about to reach your home, move people, pets and valuables to a safe place, and move your car to higher ground. Put flood gates and other protection equipment in place if you have them, and cover airbricks and vents.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "immediate",
+      "order": 30,
+      "source": "https://naturalresources.wales/flooding/what-to-do-in-a-flood/?lang=en"
+    },
+    {
+      "id": "checklists-uk:flood-evacuate",
+      "text": "If your local council or the emergency services ask you to evacuate, go. Not evacuating, or delaying, can put your life at risk and can endanger rescuers if you later need rescuing.",
+      "scenarios": ["checklists-uk:flood", "checklists-uk:evacuation"],
+      "phase": "immediate",
+      "order": 45,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:flood-no-walk",
+      "text": "Never walk through flood water. It can be much deeper than it looks and may contain sewage and hide rubbish, wreckage, uneven roads and pavements, sharp objects, or uncovered and broken drain and manhole covers. Levels can rise and fall for several weeks. If you absolutely must enter it, move slowly and carefully and avoid fast-moving water.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "immediate",
+      "order": 55,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:flood-higher-ground",
+      "text": "If flooding reaches you and it is safe to do so, move to an upstairs room with a window you could use as an escape route. If you do not have an upstairs, find another safe place.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "immediate",
+      "order": 60,
+      "source": "https://naturalresources.wales/flooding/what-to-do-in-a-flood/?lang=en"
+    },
+    {
+      "id": "checklists-uk:flood-sea-defences",
+      "text": "Never walk on sea defences or river banks. Floodwater can lift cars, manhole covers and other heavy objects.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "immediate",
+      "order": 65,
+      "source": "https://naturalresources.wales/flooding/what-to-do-after-a-flood/?lang=en"
+    },
+    {
+      "id": "checklists-uk:flood-shoreline-scotland",
+      "text": "Scotland (Ready Scotland advice): if it is safe, move to higher ground or upper floors. Stay away from shorelines.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "immediate",
+      "order": 70,
+      "source": "https://ready.campaign.gov.scot/flooding"
+    },
+    {
+      "id": "checklists-uk:flood-check-on-others",
+      "text": "If it is safe, check in on people who need extra help during flooding.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "immediate",
+      "order": 80,
+      "source": "https://ready.campaign.gov.scot/flooding"
+    },
+    {
+      "id": "checklists-uk:flood-report-england",
+      "text": "England: report severe river or coastal flooding to the Environment Agency on 0800 80 70 60 (24 hours). Some kinds of flooding are reported to your local council.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "immediate",
+      "order": 90,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:flood-report-wales",
+      "text": "Wales: use Natural Resources Wales's guide to who to contact to report a flooding problem. For sewer flooding, or a toilet or sink backing up, call your local water company.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "immediate",
+      "order": 100,
+      "source": "https://naturalresources.wales/flooding/what-to-do-in-a-flood/?lang=en"
+    },
+    {
+      "id": "checklists-uk:flood-report-scotland",
+      "text": "Scotland: report a flood on the SEPA website (find it on mygov.scot) or call Floodline on 0345 988 1188 (24 hours). For sewer flooding, call Scottish Water on 0800 0778 778 (24 hours).",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "immediate",
+      "order": 110,
+      "source": "https://www.mygov.scot/report-flood"
+    },
+    {
+      "id": "checklists-uk:flood-report-ni",
+      "text": "Northern Ireland: report flooding on roads, burst water mains and blocked drains on 0300 2000 100 (24 hours a day, seven days a week). It is not an emergency line: call 999 if anyone is in danger.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "immediate",
+      "order": 120,
+      "source": "https://www.nidirect.gov.uk/articles/reporting-flooding"
+    },
+    {
+      "id": "checklists-uk:flood-wash-hands",
+      "text": "Wash your hands with warm, soapy water, then rinse and dry thoroughly, after contact with flood water, sewage or anything that has been in the water.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "first-days",
+      "order": 20,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:flood-children-cuts",
+      "text": "Keep children and pets out of contaminated areas. Cover cuts and open sores, and contact your GP if you or a relative has a stomach upset after flooding.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "first-days",
+      "order": 25,
+      "source": "https://www.nidirect.gov.uk/articles/what-do-if-flood-happens"
+    },
+    {
+      "id": "checklists-uk:flood-food",
+      "text": "Do not eat any food that was in flood water.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "first-days",
+      "order": 30,
+      "source": "https://www.nidirect.gov.uk/articles/what-do-if-flood-happens"
+    },
+    {
+      "id": "checklists-uk:flood-return-home",
+      "text": "Only return home when the emergency services say it is safe.",
+      "scenarios": ["checklists-uk:flood", "checklists-uk:evacuation"],
+      "phase": "first-days",
+      "order": 40,
+      "source": "https://ready.campaign.gov.scot/flooding"
+    },
+    {
+      "id": "checklists-uk:flood-electric-after",
+      "text": "Do not switch your electricity back on until a qualified person has checked it.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "first-days",
+      "order": 50,
+      "source": "https://ready.campaign.gov.scot/flooding"
+    },
+    {
+      "id": "checklists-uk:flood-gas-after",
+      "text": "Do not turn your gas or water back on without professional advice. Have your gas and central heating checked by an engineer before you turn them on.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "first-days",
+      "order": 55,
+      "source": "https://naturalresources.wales/flooding/what-to-do-after-a-flood/?lang=en"
+    },
+    {
+      "id": "checklists-uk:flood-clean-protect",
+      "text": "Flood water can contain harmful bacteria. Wear protective clothing if you need to clean up.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "first-days",
+      "order": 60,
+      "source": "https://ready.campaign.gov.scot/flooding"
+    },
+    {
+      "id": "checklists-uk:flood-co-drying",
+      "text": "Never use petrol or diesel generators or other fuel-driven equipment indoors, and keep heaters, dryers and fires well ventilated while your home dries out: the exhaust gases contain carbon monoxide, which can poison.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "first-days",
+      "order": 65,
+      "source": "https://www.gov.uk/government/publications/flooding-and-health-public-advice/flooding-and-health-advice-for-the-public"
+    },
+    {
+      "id": "checklists-uk:flood-insurance-record",
+      "text": "If you are insured, check your policy: insurers may pay for temporary accommodation and clean-up. Take photos or video of all damage, and mark the water level on the wall before it falls. Get your insurer's approval before any repair work.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "first-days",
+      "order": 70,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:flood-uninsured",
+      "text": "If you do not have insurance, contact your local council about hardship grants or charities that may help.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "first-days",
+      "order": 80,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:flood-accommodation",
+      "text": "If your home is flood damaged and you cannot live there, contact your local council for help getting emergency accommodation.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "first-days",
+      "order": 90,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:flood-ni-payment",
+      "text": "Northern Ireland: if heavy rainfall flooded your home, ask your local council about an emergency payment.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "first-days",
+      "order": 100,
+      "source": "https://www.nidirect.gov.uk/articles/what-do-if-flood-happens"
+    },
+    {
+      "id": "checklists-uk:flood-re",
+      "text": "Look into Flood Re, a scheme designed to help people who have experienced a flood find more affordable insurance.",
+      "scenarios": ["checklists-uk:flood"],
+      "phase": "longer-term",
+      "order": 10,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/flooding/"
+    },
+    {
+      "id": "checklists-uk:heatwave-forecast",
+      "text": "Check your local weather forecast and the Met Office warnings when hot weather is expected.",
+      "scenarios": ["checklists-uk:heatwave"],
+      "phase": "coming",
+      "order": 10,
+      "source": "https://ready.campaign.gov.scot/hot-weather"
+    },
+    {
+      "id": "checklists-uk:heatwave-plan-day",
+      "text": "Plan exercise and outdoor activities for the cooler parts of the day.",
+      "scenarios": ["checklists-uk:heatwave"],
+      "phase": "coming",
+      "order": 20,
+      "source": "https://ready.campaign.gov.scot/hot-weather"
+    },
+    {
+      "id": "checklists-uk:heatwave-medicines",
+      "text": "If you take prescribed medicines, keep taking them unless a health professional says not to. Most medicines need to be stored below 25°C or in the fridge. Follow the storage instructions on the packaging. Ask your pharmacist if unsure.",
+      "scenarios": ["checklists-uk:heatwave"],
+      "phase": "coming",
+      "order": 30,
+      "source": "https://www.nhsinform.scot/healthy-living/adverse-weather/how-to-stay-safe-in-hot-weather/"
+    },
+    {
+      "id": "checklists-uk:heatwave-sun",
+      "text": "Stay out of the sun between 11am and 3pm, when it is strongest. Wear loose clothing and sunscreen of at least SPF 30.",
+      "scenarios": ["checklists-uk:heatwave"],
+      "phase": "immediate",
+      "order": 10,
+      "source": "https://ready.campaign.gov.scot/hot-weather"
+    },
+    {
+      "id": "checklists-uk:heatwave-drink",
+      "text": "Drink fluids throughout the day, especially if you are active. Limit alcohol, which can dehydrate you.",
+      "scenarios": ["checklists-uk:heatwave"],
+      "phase": "immediate",
+      "order": 20,
+      "source": "https://ready.campaign.gov.scot/hot-weather"
+    },
+    {
+      "id": "checklists-uk:heatwave-cool-home",
+      "text": "Close blinds and curtains on windows in direct sunlight. Open windows when it is cooler outside, such as at night, if it is safe. Turn off lights and electrical products you are not using.",
+      "scenarios": ["checklists-uk:heatwave"],
+      "phase": "immediate",
+      "order": 30,
+      "source": "https://www.nhsinform.scot/healthy-living/adverse-weather/how-to-stay-safe-in-hot-weather/"
+    },
+    {
+      "id": "checklists-uk:heatwave-fans",
+      "text": "Electric fans can help below 35°C. Do not point one directly at your body.",
+      "scenarios": ["checklists-uk:heatwave"],
+      "phase": "immediate",
+      "order": 40,
+      "source": "https://phw.nhs.wales/knowledge-article/hot-weather/keeping-cool/"
+    },
+    {
+      "id": "checklists-uk:heatwave-closed-spaces",
+      "text": "Never leave babies, children, older people or pets alone in a parked car or other small closed space. It can get dangerously hot very quickly.",
+      "scenarios": ["checklists-uk:heatwave"],
+      "phase": "immediate",
+      "order": 50,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/hot-weather-and-heatwaves/"
+    },
+    {
+      "id": "checklists-uk:heatwave-babies",
+      "text": "Babies under 6 months should not be in direct sun at all. If a baby is outdoors in the sun, protect them with shade and clothing. Do not shade a pram by covering it with a blanket, cover or plastic. It can get very hot and could make your baby overheat.",
+      "scenarios": ["checklists-uk:heatwave"],
+      "phase": "immediate",
+      "order": 60,
+      "source": "https://www.nhsinform.scot/healthy-living/adverse-weather/how-to-stay-safe-in-hot-weather/"
+    },
+    {
+      "id": "checklists-uk:heatwave-check-others",
+      "text": "Keep an eye on children, babies, older people, people who are ill and people who live on their own.",
+      "scenarios": ["checklists-uk:heatwave"],
+      "phase": "immediate",
+      "order": 70,
+      "source": "https://phw.nhs.wales/knowledge-article/hot-weather/keeping-cool/"
+    },
+    {
+      "id": "checklists-uk:heatwave-heatstroke",
+      "text": "Heatstroke is an emergency. Signs include confusion, lack of co-ordination, a seizure or fit, fainting or losing consciousness, severe difficulty breathing, or a high body temperature. Skin can feel hot or cold, so do not rely on it. If you think someone has heatstroke, call 999 now. Then move them somewhere cooler, remove extra clothing and spray or sponge cool water on their skin while you wait. If they lose consciousness, put them in the recovery position.",
+      "scenarios": ["checklists-uk:heatwave"],
+      "phase": "immediate",
+      "order": 80,
+      "source": "https://www.nhsinform.scot/illnesses-and-conditions/a-z/heatstroke-and-heat-illness/"
+    },
+    {
+      "id": "checklists-uk:heatwave-exhaustion",
+      "text": "In the heat, tiredness, weakness, feeling faint, headache, cramps, feeling or being sick or heavy sweating can be heat exhaustion. Move the person to a cooler place, remove extra clothing and cool their skin with cool water. If they are awake and can swallow, give water to drink. If they still feel unwell after 30 minutes, or show any sign of heatstroke, call 999.",
+      "scenarios": ["checklists-uk:heatwave"],
+      "phase": "immediate",
+      "order": 85,
+      "source": "https://www.nhsinform.scot/illnesses-and-conditions/a-z/heatstroke-and-heat-illness/"
+    },
+    {
+      "id": "checklists-uk:heatwave-pets-shade",
+      "text": "Never leave pets in cars, conservatories, outbuildings or caravans on a warm day, even for a short while. Give them shade and constant access to fresh water.",
+      "scenarios": ["checklists-uk:heatwave"],
+      "phase": "immediate",
+      "order": 100,
+      "requires": {
+        "pets": true
+      },
+      "source": "https://www.rspca.org.uk/adviceandwelfare/seasonal/summer"
+    },
+    {
+      "id": "checklists-uk:heatwave-dog-walks",
+      "text": "If you have a dog, walk it in the early morning or late evening, and do not run or cycle with it when it is hot. If the ground is too hot to touch with your hand for five seconds, it is too hot for paws.",
+      "scenarios": ["checklists-uk:heatwave"],
+      "phase": "immediate",
+      "order": 110,
+      "requires": {
+        "pets": true
+      },
+      "source": "https://www.rspca.org.uk/adviceandwelfare/seasonal/summer/dogs"
+    },
+    {
+      "id": "checklists-uk:heatwave-dog-signs",
+      "text": "If a dog pants heavily, drools, is drowsy, uncoordinated, vomits or collapses, contact a vet right away.",
+      "scenarios": ["checklists-uk:heatwave"],
+      "phase": "immediate",
+      "order": 120,
+      "requires": {
+        "pets": true
+      },
+      "source": "https://www.rspca.org.uk/adviceandwelfare/seasonal/summer/dogs"
+    },
+    {
+      "id": "checklists-uk:evac-meeting-point",
+      "text": "Agree one meeting place for everyone in your home, to use if you have to leave. Choose somewhere close by that has shelter, is safe in bad weather and can be reached by everyone, including children, older people and people with additional needs.",
+      "scenarios": ["checklists-uk:evacuation"],
+      "phase": "coming",
+      "order": 10,
+      "source": "https://ready.campaign.gov.scot/emergency-plan"
+    },
+    {
+      "id": "checklists-uk:evac-escape-route",
+      "text": "Work out the best way out of your home if there is a fire. Talk it through with everyone you live with, including children.",
+      "scenarios": ["checklists-uk:evacuation"],
+      "phase": "coming",
+      "order": 20,
+      "source": "https://beready.campaign.gov.uk/be-ready-for-emergencies/"
+    },
+    {
+      "id": "checklists-uk:evac-grab-bag",
+      "text": "Keep some essentials in a waterproof bag so you can leave at short notice: a copy of your household emergency plan, copies of important documents, essential medication and medical information for anyone who needs them, a torch, a phone charger, a first aid kit, water, blankets and spare keys. Add baby supplies if you have a baby.",
+      "scenarios": ["checklists-uk:evacuation"],
+      "phase": "coming",
+      "order": 60,
+      "source": "https://ready.campaign.gov.scot/emergency-kit"
+    },
+    {
+      "id": "checklists-uk:evac-equipment",
+      "text": "If anyone relies on equipment, keep spares in your grab bag: spare glasses or contact lenses, hearing aids and batteries, a walking stick or other mobility device, and spare chargers or power banks.",
+      "scenarios": ["checklists-uk:evacuation"],
+      "phase": "coming",
+      "order": 62,
+      "source": "https://ready.campaign.gov.scot/emergency-kit"
+    },
+    {
+      "id": "checklists-uk:evac-pets",
+      "text": "If you have pets, add pet supplies to your grab bag. If you have an assistance animal, add its documents or supplies.",
+      "scenarios": ["checklists-uk:evacuation"],
+      "phase": "coming",
+      "order": 64,
+      "source": "https://ready.campaign.gov.scot/emergency-kit"
+    },
+    {
+      "id": "checklists-uk:evac-inside",
+      "text": "If the emergency is inside your home, get out, stay out and call 999. Do not stop to investigate or to collect belongings.",
+      "scenarios": ["checklists-uk:evacuation"],
+      "phase": "immediate",
+      "order": 10,
+      "source": "https://beready.campaign.gov.uk/be-informed-about-hazards/fires-in-the-home/"
+    },
+    {
+      "id": "checklists-uk:evac-gas-leak",
+      "text": "If you smell gas, do not touch power or light switches and do not light flames. Open doors and windows, turn the gas off at the mains tap by the meter if you can, and get out. If the leak is in a cellar or basement, do not go in. Once you are safe, call the gas emergency number 0800 111 999 (Northern Ireland: see next step) and wait for the gas engineer's all-clear before you go back in.",
+      "scenarios": ["checklists-uk:evacuation"],
+      "phase": "immediate",
+      "order": 12,
+      "source": "https://cadentgas.com/smell-gas"
+    },
+    {
+      "id": "checklists-uk:evac-gas-leak-ni",
+      "text": "Northern Ireland only: call the Gas Emergency Service on 0800 002 001 instead of the number above.",
+      "scenarios": ["checklists-uk:evacuation"],
+      "phase": "immediate",
+      "order": 13,
+      "source": "https://www.nidirect.gov.uk/articles/energy-power-supply-and-utilities"
+    },
+    {
+      "id": "checklists-uk:evac-shutoffs-leaving",
+      "text": "If you are leaving for a reason other than a fire or a smell of gas, and you have time and it is safe to do so, you may need to turn off your mains water, gas and electricity before you leave.",
+      "scenarios": ["checklists-uk:evacuation"],
+      "phase": "immediate",
+      "order": 46,
+      "source": "https://beready.campaign.gov.uk/wp-content/uploads/sites/252/2026/10/Be-Ready_Household_Emergency_Plan_English_Final.pdf"
+    },
+    {
+      "id": "checklists-uk:evac-take-and-go",
+      "text": "If you have to leave home and it is safe to do so, take your grab bag if you have one. Go to your agreed meeting place, or wherever the emergency services tell you to go.",
+      "scenarios": ["checklists-uk:evacuation"],
+      "phase": "immediate",
+      "order": 50,
+      "source": "https://beready.campaign.gov.uk/be-ready-for-emergencies/"
+    },
+    {
+      "id": "checklists-uk:evac-gas-back",
+      "text": "If you turned off your gas, do not turn it back on yourself. A qualified engineer must do it.",
+      "scenarios": ["checklists-uk:evacuation"],
+      "phase": "first-days",
+      "order": 45,
+      "source": "https://beready.campaign.gov.uk/wp-content/uploads/sites/252/2026/10/Be-Ready_Household_Emergency_Plan_English_Final.pdf"
+    }
+  ]
+}

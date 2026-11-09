@@ -1,6 +1,7 @@
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 import { parse, stringify } from 'yaml';
 import { createBackend, installFakeGoogle, type Backend } from './fakeGoogle';
+import { SCHEMA_VERSION } from '../src/model/document';
 
 type Shtf = {
   doc: () => Promise<{ household: { members: { name: string }[] }; home: { area?: string } }>;
@@ -265,7 +266,7 @@ test('export downloads JSON and YAML; importing YAML replaces the household and 
   ]);
   expect(yamlDownload.suggestedFilename()).toMatch(/^household-local-\d{4}-\d{2}-\d{2}\.yaml$/);
   const yaml = readFileSync(await yamlDownload.path(), 'utf8');
-  expect(yaml).toContain('schemaVersion: 4');
+  expect(yaml).toContain(`schemaVersion: ${SCHEMA_VERSION}`);
   expect(yaml).toContain('name: Alex');
 
   // Import: a smaller household, from the YAML export edited, replaces the loaded one.

@@ -424,6 +424,60 @@ export const PlansPackSchema = z.strictObject({
   items: z.array(PlanDefSchema),
 });
 
+// ---- checklists ----
+
+/** The five checklist headings, in the order a household meets them. */
+export const CHECKLIST_PHASES = [
+  'coming',
+  'immediate',
+  'first-days',
+  'first-week',
+  'longer-term',
+] as const;
+export const ChecklistPhaseSchema = z.enum(CHECKLIST_PHASES);
+export type ChecklistPhase = z.infer<typeof ChecklistPhaseSchema>;
+
+/** A thing that can happen ("Power cut", "Flood warning"); its steps name it in `scenarios`. */
+export const ChecklistScenarioSchema = z.strictObject({
+  id: NamespacedId,
+  name: Text,
+  /** The local risks that make this scenario worth showing. */
+  risks: z.array(LocalRiskSchema).optional(),
+});
+export type ChecklistScenario = z.infer<typeof ChecklistScenarioSchema>;
+
+export const ChecklistStepSchema = z.strictObject({
+  id: NamespacedId,
+  text: Text,
+  /** The scenarios this step belongs to: at least one, no repeats, all in the same pack. */
+  scenarios: z
+    .array(NamespacedId)
+    .min(1)
+    .refine((a) => new Set(a).size === a.length, { message: 'scenarios must not repeat' }),
+  phase: ChecklistPhaseSchema,
+  /** Position inside its phase. */
+  order: z.number().int(),
+  /** Shown only when the household has the risk, one of the asset types, pets, or a person with the tag. */
+  requires: z
+    .strictObject({
+      risk: LocalRiskSchema.optional(),
+      asset: z.array(NamespacedId).optional(),
+      pets: z.boolean().optional(),
+      memberTag: RiskTagSchema.optional(),
+    })
+    .optional(),
+  /** An https URL listed in the pack's `sources`, or `"assumption"`. */
+  source: z.union([Url, z.literal('assumption')]),
+});
+export type ChecklistStep = z.infer<typeof ChecklistStepSchema>;
+
+export const ChecklistsPackSchema = z.strictObject({
+  ...packBase,
+  kind: z.literal('checklists'),
+  scenarios: z.array(ChecklistScenarioSchema),
+  steps: z.array(ChecklistStepSchema),
+});
+
 // ---- regions ----
 
 const RiskLink = z.strictObject({ risk: LocalRiskSchema, label: Text, url: Url });
@@ -450,6 +504,7 @@ export const PackSchema = z.discriminatedUnion('kind', [
   AssetsPackSchema,
   GuidancePackSchema,
   PlansPackSchema,
+  ChecklistsPackSchema,
   RegionsPackSchema,
 ]);
 export type Pack = z.infer<typeof PackSchema>;
@@ -458,6 +513,7 @@ export type ItemsPack = z.infer<typeof ItemsPackSchema>;
 export type AssetsPack = z.infer<typeof AssetsPackSchema>;
 export type GuidancePack = z.infer<typeof GuidancePackSchema>;
 export type PlansPack = z.infer<typeof PlansPackSchema>;
+export type ChecklistsPack = z.infer<typeof ChecklistsPackSchema>;
 export type RegionsPack = z.infer<typeof RegionsPackSchema>;
 
 /**
@@ -472,6 +528,8 @@ export interface Packs {
   assets: Readonly<Record<string, AssetType>>;
   rules: Readonly<Record<string, Rule>>;
   plans: Readonly<Record<string, PlanDef>>;
+  checklistScenarios: Readonly<Record<string, ChecklistScenario>>;
+  checklistSteps: Readonly<Record<string, ChecklistStep>>;
   regions: Readonly<Partial<Record<Region, RegionDef>>>;
   /**
    * The packs a household uses: those in `settings.packs` (in that order), minus any whose

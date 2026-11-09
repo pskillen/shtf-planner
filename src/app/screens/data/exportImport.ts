@@ -45,6 +45,7 @@ export interface ImportSummary {
   barcodes: number;
   scans: number;
   reviews: number;
+  checklistRuns: number;
 }
 
 export type ImportPreview =
@@ -99,6 +100,7 @@ export function previewImport(text: string): ImportPreview {
       barcodes: Object.keys(doc.barcodes).length,
       scans: Object.keys(doc.scans).length,
       reviews: Object.keys(doc.reviews).length,
+      checklistRuns: Object.keys(doc.checklistRuns).length,
     },
   };
 }
