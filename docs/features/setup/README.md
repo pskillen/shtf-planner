@@ -106,7 +106,7 @@ leaving half-way.
 - **Review reminder.** Choose every 3 or 6 months and see the next date immediately. Home shows
   when a review is due; Add to calendar opens a selection preview for a local snapshot. See [review](../review/README.md).
 - **Equipment runtime.** Each piece of equipment that burns fuel says, in a line under its name on
-  Home, Equipment and on its row in Stores, what its fuel gives it: "Cooking: 3 days at your plan's
+  the Equipment list, in its form, and on its row in Stores, what its fuel gives it: "Cooking: 3 days at your plan's
   use · 7.5 of 43 hours available · on 1 × Propane 13 kg". The numbers are the engine's
   `equipmentRuntime` as is; the screens only pick, name and round them down. Three different things
   are never mixed up: _available_ hours are what the fuel left after higher-priority claims could
