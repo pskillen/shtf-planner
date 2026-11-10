@@ -109,6 +109,71 @@ describe('Stocktake: propped mode', () => {
   });
 });
 
+describe('useWakeLock: the page hides and comes back', () => {
+  const setVisibility = (state: 'hidden' | 'visible') => {
+    Object.defineProperty(document, 'visibilityState', { value: state, configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  };
+  afterEach(() => Reflect.deleteProperty(document, 'visibilityState'));
+
+  it('forgets the lock when hidden, asks again when visible', async () => {
+    const { view } = await open();
+    fireEvent.click(proppedSwitch());
+    await waitFor(() => expect(request).toHaveBeenCalledTimes(1));
+    await act(async () => undefined);
+    await act(async () => setVisibility('hidden'));
+    expect(request).toHaveBeenCalledTimes(1); // nothing asked while hidden
+    await act(async () => setVisibility('visible'));
+    await waitFor(() => expect(request).toHaveBeenCalledTimes(2));
+    await act(async () => undefined);
+    view.unmount();
+    expect(release).toHaveBeenCalledTimes(1); // only the new lock is ours to release
+  });
+});
+
+describe('Stocktake: the tones themselves', () => {
+  it('plays an oscillator and stops it, with no network', async () => {
+    vi.resetModules();
+    const fetchSpy = vi.fn();
+    vi.stubGlobal('fetch', fetchSpy);
+    const oscillators: { start: ReturnType<typeof vi.fn>; stop: ReturnType<typeof vi.fn> }[] = [];
+    const param = () => ({
+      value: 0,
+      setValueAtTime: vi.fn(),
+      exponentialRampToValueAtTime: vi.fn(),
+    });
+    class FakeAudio {
+      state = 'running';
+      currentTime = 0;
+      destination = {};
+      resume = vi.fn(() => Promise.resolve());
+      createOscillator() {
+        const o = { frequency: param(), connect: vi.fn(), start: vi.fn(), stop: vi.fn() };
+        oscillators.push(o);
+        return o;
+      }
+      createGain() {
+        return { gain: param(), connect: vi.fn() };
+      }
+    }
+    vi.stubGlobal('AudioContext', FakeAudio);
+    try {
+      const mod = await import('../src/app/screens/stores/stocktakeTunables');
+      mod.cues.beep('barcode');
+      expect(oscillators).toHaveLength(1);
+      mod.cues.beep('date');
+      expect(oscillators).toHaveLength(3);
+      for (const o of oscillators) {
+        expect(o.start).toHaveBeenCalledTimes(1);
+        expect(o.stop).toHaveBeenCalledTimes(1);
+      }
+      expect(fetchSpy).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
 describe('Stocktake: the sound with each buzz', () => {
   it('beeps with a barcode and with a camera date while Propped and Sound are on', async () => {
     await open();
