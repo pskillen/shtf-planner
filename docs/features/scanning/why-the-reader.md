@@ -155,6 +155,25 @@ optimistic.
 - **Steadiness.** The first gate remembered the sharpest frame too long (it faded 2 % a frame) and
   allowed 12 skips in a row, so one sharp frame made the next 35 look blurred: the phone skipped 11
   to 29 frames an item. The gentler gate in the hub took that to 4 to 12, almost all for motion.
+  On the phone that was still too many, almost all for motion, so the gate was loosened to read small
+  moves (26 grey levels) and skip at most two in a row; agreement, unchanged, guards against a loose
+  frame. Measured on the same phone, both runs on WebGPU (the gate at 26 / 2 with a slightly larger
+  box, against the old one):
+
+  |                              | Old gate      | 26 / 2, larger box    |
+  | ---------------------------- | ------------- | --------------------- |
+  | Items a minute               | 1.6           | 3.4                   |
+  | Dates by camera              | 7 of 10       | 8 of 10               |
+  | Date step on screen (median) | 14.0 s        | 8.6 s                 |
+  | Loop step median             | 11.9 s        | 4.0 s                 |
+  | Skips a step (median)        | 9             | 3                     |
+  | Skipped for motion, blur     | 84, 6         | 64, 0 (over 15 steps) |
+  | Wrong reads                  | none reported | none reported         |
+
+  The date step fell 40 % and no wrong read was reported, so the values stay. The two misses were
+  half-missing ink and a 2023 code. The 2 s step bar is still not met; what remains is mostly the
+  person aiming.
+
 - **Glare.** The 20 to 65 % band is reasoned, not fitted: none of the test photos had real glare.
 - **Preprocessing.** Five pictures of the box, cheapest first, stopping at the first sure pass:
   that cut the desktop median from 0.5 s to 0.19 s against trying every variant at two rotations.

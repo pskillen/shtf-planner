@@ -1497,7 +1497,7 @@ button.scans-note {
 /* While aiming, the status sits just inside the top edge of the date box, so nothing covers the label. */
 .centre-pill:not([data-phase='got']) {
   position: absolute;
-  top: calc(22% + 6px); /* DATE_BOX.y */
+  top: calc(18% + 6px); /* DATE_BOX.y */
   left: 50%;
   transform: translateX(-50%);
   max-width: 84%;

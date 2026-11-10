@@ -34,7 +34,7 @@ export interface Box {
 export const BARCODE_BOX: Box = { x: 0.04, y: 0.36, w: 0.92, h: 0.28 };
 
 /** Date step: a taller box (yellow), where the camera reads the best-before date. */
-export const DATE_BOX: Box = { x: 0.06, y: 0.22, w: 0.88, h: 0.56 };
+export const DATE_BOX: Box = { x: 0.04, y: 0.18, w: 0.92, h: 0.64 };
 
 /**
  * zxing's turned attempts look here instead: a tall box in the middle, because a code held
@@ -77,13 +77,13 @@ export const GLARE_MAX = 0.65;
 export const MAX_GLARE_RUN = 25;
 
 /** A frame is "moving" when its thumbnail differs from the last by more than this many grey levels. */
-export const MOVING_DIFF = 18;
+export const MOVING_DIFF = 26;
 /** A frame is "blurred" when its sharpness is under this share of the sharpest so far. */
 export const BLUR_RATIO = 0.5;
 /** The sharpest-so-far memory decays by this each frame, so one sharp frame does not make the rest look blurred. */
 export const SHARP_DECAY = 0.9;
 /** Never skip more than this many frames in a row: read one anyway. */
-export const MAX_SKIPS = 4;
+export const MAX_SKIPS = 2;
 /** Mean edge strength under this means nothing to read in the box. */
 export const FLAT_SHARPNESS = 2;
 
