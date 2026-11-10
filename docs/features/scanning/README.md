@@ -20,6 +20,7 @@ engines and models compared, what the parser had to handle, what was rejected).
 | Barcode loop        | `src/scan/barcode.ts`                                                                               | `BarcodeDetector` where it has EAN, else zxing (lazy chunk); every other zxing attempt turned 90 degrees |
 | Open Food Facts     | `src/scan/openFoodFacts.ts`                                                                         | `offClient()`: lookup, own rate limit, the identification string                                         |
 | Date reader         | `src/scan/ocr/` (`client.ts`, `ocr.worker.ts`, `paddle.ts`, `reader.ts`, `image.ts`, `provider.ts`) | PaddleOCR in a web worker on onnxruntime-web, WebGPU or WASM; grey-image helpers                         |
+| Debug timings       | `src/scan/timings.ts`, `src/app/state/debugScan.ts`                                                 | With `?debug=1`: in-memory list of load, read and date-step timings, copied with the Done summary        |
 | Date loop           | `src/scan/dateLoop.ts`                                                                              | Capture, gates (glare, flat, moving, blurred), one read at a time, agreement, timeout                    |
 | Date parser, tally  | `src/engine/datecode/`                                                                              | Reader text to month-years; passes to a frame verdict; frames to an answer. Pure                         |
 | Date card           | `screens/stores/DateReader.tsx`, `ReadDateSheet.tsx`, `DateAbout.tsx`                               | Status and month on the strip, Stop, Read again, suggestions; quick add's sheet; the About line          |
@@ -153,6 +154,9 @@ crop that was read (in memory only).
   date** sets the field and closes; the person still taps Add.
 - **Done summary** adds "dates by camera 9 · picked 4 · from a suggestion 1 · date step 3.2 s
   (median)" and a **Copy summary** button (counts and times only: no text read, no codes, no images).
+  With `?debug=1` the copy also carries the reader's timing list (each load's back end and time, the list starting afresh when the back end changes; per
+  read the worker and round-trip ms and the pictures tried; per date step the outcome, frames and
+  skips; the summary's "loop step median" is not the screen's "date step" wall time), counts and times only, and `window.__shtf.scan.timings()` returns it.
 
 **Agreement and gates.** The numbers are named constants: the tally ones in
 `src/engine/datecode/tally.ts`, the loop's in `src/scan/tunables.ts`.
@@ -289,7 +293,8 @@ Apache-2.0) is its own lazily loaded chunk, so the main bundle does not carry it
   `test/scan-resolve.test.tsx`, `test/stocktake.test.tsx`, `test/lint-fence.test.ts` (the `src/scan`
   fence).
 - Date reading: `src/engine/datecode/*.test.ts` (152 parser cases, agreement rules),
-  `src/scan/dateLoop.test.ts` (scripted camera and reader), `src/scan/ocr/*.test.ts` (images, the
+  `src/scan/dateLoop.test.ts` (scripted camera and reader), `src/scan/timings.test.ts` (the debug
+  timing list and its summary, including that it holds no text), `src/scan/ocr/*.test.ts` (images, the
   provider choice, the worker client with a fake worker, and `paddle.node.test.ts`, which runs the
   real float16 models on WASM in node over the synthetic labels in `test/fixtures/datecodes/`, made
   by `scripts/datecode-fixtures.mjs`), `test/date-reader.test.tsx` (screens with a fake reader).
@@ -307,9 +312,11 @@ Apache-2.0) is its own lazily loaded chunk, so the main bundle does not carry it
 
 - The fake camera proves the flow, not the optics; the e2e reads synthetic labels.
 - A code held sideways is read by zxing's retry only if its whole length fits the tall box.
-- Accuracy on real print was measured on the spike's reader (main thread, WASM), not on the shipped
-  worker: how long a read takes on a phone, whether WebGPU helps there and how much memory the
-  models use are unmeasured ([#36](https://github.com/pskillen/shtf-planner/issues/36)).
+- Accuracy on real print: the spike's reader was measured with the old gate; the shipped worker
+  was timed on one phone (see [Why the reader](why-the-reader.md)): WebGPU reads in a median 1.2 s
+  and read 7 of 10 dates by camera, WASM in 4.0 s and 4 of 9. The 2 s date-step bar was missed,
+  mostly waiting for stillness. Memory use is unmeasured, and only one phone and one stocktake per
+  back end were run ([#36](https://github.com/pskillen/shtf-planner/issues/36)).
 - Only upright text is read (no rotation); day-level dates are stored as month-year; a misaligned
   print is not re-aimable (no nudging the crop).
 - A remembered barcode can be corrected with Not this item? but not forgotten.
@@ -320,4 +327,4 @@ Apache-2.0) is its own lazily loaded chunk, so the main bundle does not carry it
 ## Not built yet
 
 Scanning, round 2 ([#33](https://github.com/pskillen/shtf-planner/issues/33)): a phone-propped
-stocktake (dexterity is the biggest cost), a looser motion gate, and measuring the worker on a phone.
+stocktake (dexterity is the biggest cost), a looser motion gate, and measuring the worker's memory.

@@ -23,6 +23,7 @@ import {
   SHARP_DECAY,
   type Box,
 } from './tunables';
+import { recordTiming } from './timings';
 
 /** What the loop needs from the camera (the real `CameraStream` has it). */
 export interface DateCamera {
@@ -156,7 +157,7 @@ async function run(
   ): LoopOut => {
     const end = tally.finish();
     const total = now() - t0;
-    return {
+    const result: LoopOut = {
       outcome,
       settled,
       crop,
@@ -171,6 +172,18 @@ async function run(
       suggestions: settled ? [] : end.suggestions,
       ...extra,
     };
+    recordTiming({
+      kind: 'step',
+      outcome: result.outcome,
+      frames: result.frames,
+      skippedMotion: result.skippedMotion,
+      skippedBlur: result.skippedBlur,
+      glare: result.glare,
+      totalMs: result.totalMs,
+      aimMs: result.aimMs,
+      computeMs: result.computeMs,
+    });
+    return result;
   };
 
   for (;;) {
@@ -230,6 +243,13 @@ async function run(
           // The person moved on while this frame was being read: drop the answer.
           if (isAborted()) return out('stopped', null, last);
           const settled = tally.addFrame(verdict, at);
+          recordTiming({
+            kind: 'read',
+            ms: verdict.ms,
+            wallMs: now() - at,
+            pictures: verdict.passes.length,
+            settled: Boolean(settled),
+          });
           // Stop pressed during the read wins over an answer that arrives after it.
           if (isStopped()) return out('none', null, last);
           if (settled) return out('got', settled, crop);

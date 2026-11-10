@@ -1,8 +1,9 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { FrameVerdict } from '../engine/datecode';
 import { startDateLoop, type LoopOptions, type LoopStatus } from './dateLoop';
 import { ReadError } from './ocr/errors';
 import { gray, type Gray } from './ocr/image';
+import { enableTimings, resetTimings, timings } from './timings';
 
 const TODAY = '2026-11-15';
 
@@ -264,5 +265,54 @@ describe('the date loop: a read the worker could not do, and Stop mid-read', () 
     const out = await t.loop.result;
     expect(out.outcome).toBe('none');
     expect(out.settled).toBeNull();
+  });
+});
+
+describe('the date loop: the debug timing list', () => {
+  beforeEach(() => {
+    resetTimings();
+    enableTimings(true);
+  });
+  afterEach(() => {
+    resetTimings();
+    enableTimings(false);
+  });
+
+  it('records each read and one step when two frames agree', async () => {
+    const t = setup([SHARP()], () => june(0.5));
+    const out = await t.loop.result;
+    const list = timings();
+    const reads = list.filter((x) => x.kind === 'read');
+    expect(reads).toHaveLength(2);
+    expect(reads[0]).toMatchObject({ ms: 100, pictures: 0, settled: false });
+    expect(reads[1]).toMatchObject({ settled: true });
+    const steps = list.filter((x) => x.kind === 'step');
+    expect(steps).toHaveLength(1);
+    expect(steps[0]).toMatchObject({
+      outcome: 'got',
+      frames: 2,
+      skippedMotion: out.skippedMotion,
+      skippedBlur: out.skippedBlur,
+      glare: out.glare,
+    });
+    expect(JSON.stringify(list)).not.toContain('2028');
+  });
+
+  it('records a stopped loop as none, and keeps the frame that was read', async () => {
+    let release!: (v: FrameVerdict) => void;
+    const t = setup(
+      [SHARP()],
+      () =>
+        new Promise<FrameVerdict>((r) => {
+          release = r;
+        }),
+    );
+    await vi.waitFor(() => expect(t.reader.read).toHaveBeenCalled());
+    t.loop.stop();
+    release(june(0.95));
+    await t.loop.result;
+    const list = timings();
+    expect(list.filter((x) => x.kind === 'read')).toHaveLength(1);
+    expect(list.filter((x) => x.kind === 'step')).toMatchObject([{ outcome: 'none' }]);
   });
 });

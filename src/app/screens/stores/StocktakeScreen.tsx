@@ -9,6 +9,7 @@ import {
   releaseDateReader,
   terminateDateReader,
 } from '../../../scan/ocr/client';
+import { timingsEnabled, timingSummary } from '../../../scan/timings';
 import { CameraStrip } from '../../components/CameraStrip';
 import { Field, Switch } from '../../components/controls';
 import { ExpiryBadge } from '../../components/ExpiryBadge';
@@ -282,7 +283,11 @@ export function StocktakeScreen() {
 
   const dateText = dateSummaryText(dateCounts, dateMs);
   const copySummary = (): void => {
-    const text = [summaryText(savedCount, finishedAfter, sortLater), dateText]
+    const text = [
+      summaryText(savedCount, finishedAfter, sortLater),
+      dateText,
+      timingsEnabled() ? timingSummary() : '',
+    ]
       .filter(Boolean)
       .join('\n');
     void navigator.clipboard?.writeText(text).then(
