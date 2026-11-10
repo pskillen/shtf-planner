@@ -45,3 +45,5 @@ batch code looked like a date. [D139]
 [D135]
 
 **A stocktake adds stock; it does not recount.** It adds exactly like quick add; recounting a place is a separate review action. [D149, D157]
+
+**A propped stocktake still saves on a tap.** Propped mode keeps the screen awake, makes the status and OK big and plays a short sound with each buzz, but nothing is saved until OK or a tapped suggestion. Why: the owner chose one tap per item over auto-saving a settled read of a known product after a three-second Undo countdown ([#34](https://github.com/pskillen/shtf-planner/issues/34)).

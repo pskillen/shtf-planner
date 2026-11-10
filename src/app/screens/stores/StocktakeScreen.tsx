@@ -18,10 +18,19 @@ import { QtyField } from '../../components/QtyField';
 import { Toast } from '../../components/Toast';
 import { useChange, useDocument } from '../../state';
 import { usePacks } from '../../usePacks';
+import { useWakeLock } from '../../useWakeLock';
 import { equipmentAddPath } from '../assets/route';
 import { DateAbout } from './DateAbout';
 import { DateReader, type DateRead } from './DateReader';
-import { readUseCamera, readUseWebGpu, writeUseCamera } from './dateSettings';
+import {
+  readPropped,
+  readSound,
+  readUseCamera,
+  readUseWebGpu,
+  writePropped,
+  writeSound,
+  writeUseCamera,
+} from './dateSettings';
 import { MonthField } from './MonthField';
 import { ScanResolve } from './ScanResolve';
 import {
@@ -48,7 +57,7 @@ import {
   writeLastLocation,
   type StockAddition,
 } from './stock';
-import { UNDO_MS, buzz } from './stocktakeTunables';
+import { UNDO_MS, buzz, setCueSound } from './stocktakeTunables';
 import { useScanQueue } from './useScanQueue';
 
 const HINT_KEY = 'shtf.stocktake.hintSeen';
@@ -138,6 +147,16 @@ export function StocktakeScreen() {
   const dateSource = useRef<DateSource | null>(null);
   const dateStarted = useRef(0);
   const [copied, setCopied] = useState(false);
+  const [propped, setPropped] = useState(readPropped);
+  const [sound, setSound] = useState(readSound);
+
+  // Propped: the screen stays on while counting; the sound with each buzz is for this screen only
+  // (Quick add shares `buzz` and never beeps).
+  useWakeLock(propped && phase !== 'done');
+  useEffect(() => {
+    setCueSound(propped && sound);
+    return () => setCueSound(false);
+  }, [propped, sound]);
 
   // Start loading the models while the first barcode is being scanned; keep them a while after leaving.
   useEffect(() => {
@@ -308,7 +327,7 @@ export function StocktakeScreen() {
 
   if (phase === 'done') {
     return (
-      <section className="screen stocktake">
+      <section className={propped ? 'screen stocktake propped' : 'screen stocktake'}>
         <h1>Stocktake done</h1>
         <p role="status" data-testid="stocktake-summary">
           {summaryText(savedCount, finishedAfter, sortLater)}
@@ -332,7 +351,7 @@ export function StocktakeScreen() {
   }
 
   return (
-    <section className="screen stocktake">
+    <section className={propped ? 'screen stocktake propped' : 'screen stocktake'}>
       <h1 className="visually-hidden">Stocktake</h1>
       {locations.length === 0 ? (
         <p className="note">
@@ -523,6 +542,25 @@ export function StocktakeScreen() {
         )
       ) : null}
 
+      <Switch
+        label="Propped"
+        hint="The phone stands on its own: the screen stays on, the status and OK are big, and each buzz makes a sound."
+        checked={propped}
+        onChange={(next) => {
+          setPropped(next);
+          writePropped(next);
+        }}
+      />
+      {propped ? (
+        <Switch
+          label="Sound with each buzz"
+          checked={sound}
+          onChange={(next) => {
+            setSound(next);
+            writeSound(next);
+          }}
+        />
+      ) : null}
       <Switch
         label="Read dates with the camera"
         checked={useCamera}
