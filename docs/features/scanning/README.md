@@ -174,6 +174,7 @@ crop that was read (in memory only).
   anyway); **flat** (sharpness under 2: nothing to read); **steadiness** (the first frame is never
   read; skip a frame that moved more than 26 grey levels or is under half as sharp as the sharpest
   recently; at most 2 skips in a row, then one is read anyway). One read in flight at a time.
+  On the phone (WebGPU) this took the date step from 14.0 s to 8.6 s and the skips a step from 9 to 3.
 
 **The reader.** PaddleOCR (PP-OCRv3 mobile detection and PP-OCRv5 English mobile recognition,
 float16 weights) on onnxruntime-web 1.20.1, in a **web worker** so the screen stays smooth. WebGPU
@@ -327,4 +328,4 @@ Apache-2.0) is its own lazily loaded chunk, so the main bundle does not carry it
 ## Not built yet
 
 Scanning, round 2 ([#33](https://github.com/pskillen/shtf-planner/issues/33)): a phone-propped
-stocktake (dexterity is the biggest cost), a looser motion gate, and measuring the worker's memory.
+stocktake (dexterity is the biggest cost) and measuring the worker's memory.
