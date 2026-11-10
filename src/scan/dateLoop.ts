@@ -4,7 +4,7 @@ import {
   type OfferedSuggestion,
   type Settled,
 } from '../engine/datecode';
-import { ReadError } from './ocr/errors';
+import { ReadError, ReaderStopped } from './ocr/errors';
 import { frameDiff, saturatedShare, sharpness, thumb, type Gray } from './ocr/image';
 import {
   BLUR_RATIO,
@@ -228,7 +228,8 @@ async function run(
         try {
           verdict = await reader.read(crop, opts.todayIso);
         } catch (e) {
-          if (isAborted()) return out('stopped', null, last);
+          // A reader shut down on purpose (the page was hidden) is a stop, not a fault.
+          if (isAborted() || e instanceof ReaderStopped) return out('stopped', null, last);
           if (!(e instanceof ReadError)) {
             return out('failed', null, last, {
               message: e instanceof Error ? e.message : String(e),

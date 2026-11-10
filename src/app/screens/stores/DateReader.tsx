@@ -10,7 +10,8 @@ import {
 } from '../../../scan/dateLoop';
 import type { Gray } from '../../../scan/ocr/image';
 import { READER_DOWNLOAD_MB, readerDownloaded } from '../../../scan/ocr/cache';
-import { getDateReader, peekDateReader } from '../../../scan/ocr/client';
+import { getDateReader, peekDateReader, terminateDateReader } from '../../../scan/ocr/client';
+import { ReaderStopped } from '../../../scan/ocr/errors';
 import { ExpiryBadge } from '../../components/ExpiryBadge';
 import { EXPIRY_LABEL } from '../../labels';
 import { useDocument } from '../../state';
@@ -147,6 +148,10 @@ export function DateReader({
     if (!cam || !autoStart || paused) return;
     if (phaseRef.current === 'got' || phaseRef.current === 'none') return;
     let gone = false;
+    // A restart (a new camera stream after the page was shown again) is a load, whatever the last
+    // run left on the line: "unavailable" or a stale "Reading…" must not sit over a live camera.
+    setPhase('loading');
+    setLine('');
     // A browser with no Worker throws here: that is "not available", like a failed load.
     const loaded = Promise.resolve()
       .then(() => getDateReader(readUseWebGpu()))
@@ -197,8 +202,9 @@ export function DateReader({
           }
         });
       },
-      () => {
-        if (!gone) setPhase('unavailable');
+      (e: unknown) => {
+        // A reader shut down on purpose (the page was hidden) is not a fault: a new stream reloads it.
+        if (!gone && !(e instanceof ReaderStopped)) setPhase('unavailable');
       },
     );
     return () => {
@@ -216,6 +222,11 @@ export function DateReader({
     setPhase('loading');
     setRun((n) => n + 1);
     live.current.onAgain?.();
+  };
+  /** The reader failed: let it go (a failed reader would be handed out again) and start a new one on this item. */
+  const tryAgain = (): void => {
+    terminateDateReader();
+    again();
   };
   // Before the first status arrives the line says what the wait is: the reader's first load, or the start.
   const looking = phaseState === 'idle' || phaseState === 'loading' || phaseState === 'running';
@@ -243,6 +254,9 @@ export function DateReader({
             ? `Connect once to download the date reader (about ${READER_DOWNLOAD_MB} MB). Pick the date for now.`
             : 'The date reader isn’t available here; pick the date.'}
         </p>
+        <button type="button" className="secondary" onClick={tryAgain}>
+          Try again
+        </button>
       </div>
     );
   }

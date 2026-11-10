@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { FrameVerdict } from '../engine/datecode';
 import { startDateLoop, type LoopOptions, type LoopStatus } from './dateLoop';
-import { ReadError } from './ocr/errors';
+import { ReadError, ReaderStopped } from './ocr/errors';
 import { gray, type Gray } from './ocr/image';
 import { MAX_SKIPS, MOVING_DIFF } from './tunables';
 import { enableTimings, resetTimings, timings } from './timings';
@@ -237,6 +237,15 @@ describe('the date loop: what it answers', () => {
     });
     const out = await t.loop.result;
     expect(out).toMatchObject({ outcome: 'failed', message: 'The date reader failed' });
+  });
+
+  it('a reader shut down mid-read (the page was hidden) ends stopped, not failed', async () => {
+    const t = setup([SHARP()], () => {
+      throw new ReaderStopped();
+    });
+    const out = await t.loop.result;
+    expect(out.outcome).toBe('stopped');
+    expect(out.message).toBeUndefined();
   });
 });
 
