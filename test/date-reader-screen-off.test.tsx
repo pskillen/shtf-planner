@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // The page goes hidden (the screen turns off) while a date read is in flight. The real client and
 // the real date loop and DateReader run; only the Worker and the camera are fakes.
-import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { DateReader } from '../src/app/screens/stores/DateReader';
 import { biggarDocument } from '../src/fixtures/household-biggar';
@@ -81,4 +81,19 @@ it('hidden mid-read: never says unavailable; a new stream reloads the reader, sa
   await act(async () => FakeWorker.made[1]!.ready());
   await waitFor(() => expect(FakeWorker.made[1]!.reads).toBeGreaterThan(0), { timeout: 3000 });
   expect(screen.queryByText(UNAVAILABLE)).toBeNull();
+});
+
+it('a real worker crash: says unavailable, with a Try again that makes a new reader and reads on the same item', async () => {
+  const s = liveStore(biggarDocument());
+  render(s.wrap(<DateReader cam={cam()} {...props} />));
+  await waitFor(() => expect(FakeWorker.made[0]!.reads).toBe(1), { timeout: 3000 });
+  await act(async () => FakeWorker.made[0]!.onerror?.({ message: 'crashed' }));
+  expect(await screen.findByText(UNAVAILABLE)).toBeTruthy();
+
+  fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+  await waitFor(() => expect(FakeWorker.made).toHaveLength(2));
+  expect(FakeWorker.made[0]!.terminated).toBe(true);
+  await waitFor(() => expect(FakeWorker.made[1]!.reads).toBeGreaterThan(0), { timeout: 3000 });
+  expect(screen.queryByText(UNAVAILABLE)).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Try again' })).toBeNull();
 });

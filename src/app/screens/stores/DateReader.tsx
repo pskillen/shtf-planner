@@ -10,7 +10,7 @@ import {
 } from '../../../scan/dateLoop';
 import type { Gray } from '../../../scan/ocr/image';
 import { READER_DOWNLOAD_MB, readerDownloaded } from '../../../scan/ocr/cache';
-import { getDateReader, peekDateReader } from '../../../scan/ocr/client';
+import { getDateReader, peekDateReader, terminateDateReader } from '../../../scan/ocr/client';
 import { ReaderStopped } from '../../../scan/ocr/errors';
 import { ExpiryBadge } from '../../components/ExpiryBadge';
 import { EXPIRY_LABEL } from '../../labels';
@@ -223,6 +223,11 @@ export function DateReader({
     setRun((n) => n + 1);
     live.current.onAgain?.();
   };
+  /** The reader failed: let it go (a failed reader would be handed out again) and start a new one on this item. */
+  const tryAgain = (): void => {
+    terminateDateReader();
+    again();
+  };
   // Before the first status arrives the line says what the wait is: the reader's first load, or the start.
   const looking = phaseState === 'idle' || phaseState === 'loading' || phaseState === 'running';
   const phase: Phase | 'paused' =
@@ -249,6 +254,9 @@ export function DateReader({
             ? `Connect once to download the date reader (about ${READER_DOWNLOAD_MB} MB). Pick the date for now.`
             : 'The date reader isn’t available here; pick the date.'}
         </p>
+        <button type="button" className="secondary" onClick={tryAgain}>
+          Try again
+        </button>
       </div>
     );
   }
