@@ -56,8 +56,11 @@ engines and models compared, what the parser had to handle, what was rejected).
    suggested item, pick another, count towards nothing, or **Decide later**. The choice is
    remembered for that barcode, for the whole household, on all its devices.
 4. **2 DATE.** The strip shows the yellow date box instead of the red line, and the status and the
-   read month are drawn in its centre (see Reading dates). Below it: the item card with the month
-   field and chips, then the quantity. A date set from a chip or a month gives two buzzes; the expiry
+   read month are drawn in its centre (see Reading dates). Starting this step scrolls the page back
+   to the top so the strip is in view (instantly when the phone asks for reduced motion). Below it:
+   the item card (the name, then a muted line with the product's stored size, such as "100 g" or
+   "4 × 100 g", or "Size not set", and what it counts as), the month field and chips, then the
+   quantity. A date set from a chip or a month gives two buzzes; the expiry
    word and colour show beside it. **OK** saves and goes straight to the next barcode, with a **6
    second Undo** that takes exactly that addition back (a merged addition gives back only its own
    quantity, and its date count in the Done summary) and puts the card back.
@@ -95,13 +98,19 @@ count as?** and says what that means: the item in the plan this product stands i
 (for things that are not in the plan, with a line saying so) and **Decide later** come first, then a search box
 and the common items; recent products are not offered here. After an item comes a **New product** form if the size
 is not already known: the **Product name** first (filled from Open Food Facts where it knows one), then the size
-(the first suggestion already chosen; tap another or **Another size**), then **Save product**. The name is required (a product named after its item is no help): Open Food Facts' name fills it where it knows one. **Not scored in the plan** on a code nobody knows asks for a name the same way. Products you already
+(the first suggestion already chosen; tap another or **Another size**), then **Save product**. With
+**Another size** open, **Save product** saves the size typed there (there is no separate "Use this
+size" button; tapping a chip closes the form and chooses that chip). "Same as a product you already
+have?" sits above the size. The name is required (a product named after its item is no help): Open Food Facts' name fills it where it knows one. **Not scored in the plan** on a code nobody knows asks for a name the same way. Products you already
 have of that item are under "Same as a product you already have?". **Change** goes back to the item search. After
 saving comes the date (stocktake) or Add (quick add).
 
 ## Product from Open Food Facts
 
-The app builds a household **product**: name and size from the label, optional **label kcal per 100 g or 100 ml**
+The app builds a household **product**: name and size from the label. The size is its own field: when Open
+Food Facts' quantity text parses into a size, the name leaves it out ("Chipotle paste", size 100 g); when it
+does not parse, the text stays in the name so nothing is lost. Existing products keep their names.
+It also stores an optional **label kcal per 100 g or 100 ml**
 when OFF provides it. Calories count from the label when present, else the item's typical figure; the product list
 shows which ("label: …" or "typical for …").
 
