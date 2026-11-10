@@ -16,13 +16,17 @@ vi.mock('../src/scan/barcode', async () =>
   (await import('./helpers/fakeScan')).fakeBarcodeModule(),
 );
 
+const scrollTo = vi.fn();
 beforeEach(() => {
   localStorage.clear();
   resetScan();
+  scrollTo.mockClear();
+  window.scrollTo = scrollTo as unknown as typeof window.scrollTo; // jsdom does not implement it
 });
 afterEach(() => {
   cleanup();
   vi.useRealTimers();
+  Reflect.deleteProperty(window, 'matchMedia');
 });
 
 const KNOWN = '3017620422003'; // fixture: prod-spread (Test spread 400 g)
@@ -73,6 +77,23 @@ describe('Stocktake: the step machine', () => {
     // straight back to a barcode, with the toast
     expect(screen.getByText('1 BARCODE')).toBeTruthy();
     expect(screen.getByTestId('stocktake-saved').textContent).toContain(`Saved 1 × ${SPREAD}`);
+  });
+
+  it('scrolls to the top for the date step, smoothly unless reduced motion is asked for', async () => {
+    await open();
+    await read(KNOWN);
+    await screen.findByText(SPREAD);
+    expect(scrollTo).toHaveBeenLastCalledWith({ top: 0, behavior: 'smooth' });
+    cleanup();
+
+    scrollTo.mockClear();
+    window.matchMedia = ((query: string) => ({
+      matches: query.includes('prefers-reduced-motion'),
+    })) as unknown as typeof window.matchMedia;
+    await open();
+    await read(KNOWN);
+    await screen.findByText(SPREAD);
+    expect(scrollTo).toHaveBeenLastCalledWith({ top: 0, behavior: 'auto' });
   });
 
   it('the place applies to every item', async () => {
