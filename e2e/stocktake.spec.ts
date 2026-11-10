@@ -196,6 +196,73 @@ test.describe('stocktake with a fake camera', () => {
     expect(Object.keys(d.scans)).toHaveLength(0);
   });
 
+  for (const size of [
+    { width: 360, height: 740 },
+    { width: 412, height: 915 },
+  ]) {
+    test(`propped: three tins at ${size.width} by ${size.height}`, async ({ page, context }) => {
+      await page.setViewportSize(size);
+      const net = await setUp(page, context);
+      await open(page, '/app/stores/stocktake');
+      await page.getByLabel('Counting into').selectOption({ label: 'Pantry' });
+      // Headless Chrome may refuse the wake lock; nothing here depends on it.
+      await page.getByRole('switch', { name: /^Propped/ }).check();
+      await expect(page.getByRole('switch', { name: 'Sound with each buzz' })).toBeChecked();
+
+      const bounds = async (loc: ReturnType<Page['locator']>) => {
+        const b = await loc.boundingBox();
+        if (!b) throw new Error('not on screen');
+        return b;
+      };
+      const checkBig = async (name: string) => {
+        await expect(dateCard(page, name)).toBeVisible();
+        const okBox = await bounds(page.getByRole('button', { name: 'OK', exact: true }));
+        expect(okBox.height).toBeGreaterThanOrEqual(88);
+        const month = await bounds(page.locator('input[type="month"]'));
+        // The chips may scroll under the big OK at this size; the month field stays above it.
+        expect(month.y + month.height).toBeLessThanOrEqual(okBox.y);
+      };
+
+      // 1. A known barcode: straight to the date.
+      await show(page, KNOWN);
+      await checkBig(SPREAD);
+      await page.screenshot({
+        path: `test-results/propped-date-${size.width}x${size.height}.png`,
+      });
+      await cam(page, 'clear');
+      await firstChip(page);
+      await ok(page);
+      await expect(page.getByText('1 BARCODE')).toBeVisible();
+      expect(net.offUrls).toHaveLength(0);
+
+      // 2. A new one, confirmed once.
+      await show(page, BEANS);
+      await expect(page.getByRole('heading', { name: 'Counts as: Baked beans?' })).toBeVisible();
+      await cam(page, 'clear');
+      await page.getByRole('button', { name: 'Yes' }).click();
+      await checkBig(BEANS_PRODUCT);
+      await firstChip(page);
+      await ok(page);
+      await expect(page.getByText('1 BARCODE')).toBeVisible();
+
+      // 3. The same one again.
+      await show(page, BEANS);
+      await checkBig(BEANS_PRODUCT);
+      await cam(page, 'clear');
+      await firstChip(page);
+      await ok(page);
+      await expect(page.getByText('1 BARCODE')).toBeVisible();
+
+      const d = await doc(page);
+      const barcode = Object.values(d.stock).filter((i) => i.source === 'barcode');
+      const spread = barcode.find((i) => i.productId === 'prod-spread');
+      const beans = barcode.find((i) => i.productId !== 'prod-spread');
+      expect(spread).toMatchObject({ qty: 1, locationId: 'loc-pantry' });
+      expect(beans).toMatchObject({ qty: 2, locationId: 'loc-pantry' });
+      expect(Object.keys(d.scans)).toHaveLength(0);
+    });
+  }
+
   test('Zx Cola: counts as soft drinks and gives 7.92 L of water', async ({ page, context }) => {
     const net = await setUp(page, context);
     await open(page, '/app/stores/stocktake');
