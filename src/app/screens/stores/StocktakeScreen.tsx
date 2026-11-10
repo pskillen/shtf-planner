@@ -594,18 +594,6 @@ function FindByName({
           onChange={(e) => setQuery(e.target.value)}
         />
       </Field>
-      {equipment.length > 0 ? (
-        <ul className="row-list" aria-label="Equipment: add to your home">
-          {equipment.map((t) => (
-            <li className="row-item" key={t.id}>
-              <Link className="row-main" to={equipmentAddPath(t.id)}>
-                <strong>{t.name}</strong>
-                <span className="muted">Opens the equipment form, not stock</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      ) : null}
       <ul className="row-list">
         {shown.map((t) => (
           <li className="row-item" key={t.id}>
@@ -616,6 +604,21 @@ function FindByName({
           </li>
         ))}
       </ul>
+      {equipment.length > 0 ? (
+        <section aria-label="Equipment: add to your home">
+          <h3>Equipment: add to your home</h3>
+          <ul className="row-list">
+            {equipment.map((t) => (
+              <li className="row-item" key={t.id}>
+                <Link className="row-main" to={equipmentAddPath(t.id)}>
+                  <strong>{t.name}</strong>
+                  <span className="muted">Opens the equipment form, not stock</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </Sheet>
   );
 }

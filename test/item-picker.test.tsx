@@ -71,6 +71,27 @@ describe('ItemPicker', () => {
     expect(row.textContent).toMatch(/label's kcal/i);
   });
 
+  it('orders a search: items, then your products, then equipment', () => {
+    renderPicker();
+    fireEvent.change(screen.getByLabelText('What is it?'), { target: { value: 'water' } });
+    const items = screen.getByRole('region', { name: 'Items' });
+    const products = screen.getByRole('region', { name: 'Your products' });
+    const equipment = screen.getByRole('region', { name: 'Equipment: add to your home' });
+    const before = (a: Element, b: Element) =>
+      Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(before(items, products)).toBe(true);
+    expect(before(products, equipment)).toBe(true);
+  });
+
+  it('puts the equipment link last when not searching', () => {
+    renderPicker();
+    const browse = screen.getByText('Browse everything by category');
+    const link = screen.getByRole('link', { name: /Equipment: add to your home/ });
+    expect(Boolean(browse.compareDocumentPosition(link) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(
+      true,
+    );
+  });
+
   it('routes equipment matches to the equipment form', () => {
     renderPicker();
     fireEvent.change(screen.getByLabelText('What is it?'), { target: { value: 'camping stove' } });

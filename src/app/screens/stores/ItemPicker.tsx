@@ -134,23 +134,17 @@ export function ItemPicker({
           onChange={(e) => setQuery(e.target.value)}
         />
       </Field>
-      {equipmentShown.length > 0 ? (
-        <section aria-label="Equipment: add to your home" className="equipment-route">
-          <h3>Equipment: add to your home</h3>
-          <ul className="row-list">
-            {equipmentShown.map((t) => (
-              <li className="row-item" key={t.id}>
-                <Link className="row-main" to={equipmentAddPath(t.id)}>
-                  <strong>{t.name}</strong>
-                  <span className="muted">Opens the equipment form, not stock</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
       {searching ? (
         <>
+          {shown.length === 0 && productMatches.length === 0 && equipmentShown.length === 0 ? (
+            <p className="muted">Nothing matches “{query}”.</p>
+          ) : null}
+          {shown.length > 0 ? (
+            <section aria-label="Items" className="recent">
+              <h3>Items</h3>
+              <ul className="row-list">{shown.map(itemRow)}</ul>
+            </section>
+          ) : null}
           {productMatches.length > 0 ? (
             <section aria-label="Your products" className="recent">
               <h3>Your products</h3>
@@ -174,10 +168,6 @@ export function ItemPicker({
               </ul>
             </section>
           ) : null}
-          {shown.length === 0 && productMatches.length === 0 && equipmentShown.length === 0 ? (
-            <p className="muted">Nothing matches “{query}”.</p>
-          ) : null}
-          <ul className="row-list">{shown.map(itemRow)}</ul>
         </>
       ) : (
         <>
@@ -200,12 +190,6 @@ export function ItemPicker({
               <ul className="row-list">{common.map(itemRow)}</ul>
             </section>
           )}
-          {showEquipmentLink ? (
-            <Link className="row-main equipment-route" to={EQUIPMENT_PATH}>
-              <strong>Equipment: add to your home</strong>
-              <span className="muted">Stoves, heaters, generators, batteries and panels</span>
-            </Link>
-          ) : null}
           <details className="type-group" onToggle={(e) => setBrowsing(e.currentTarget.open)}>
             <summary>Browse everything by category</summary>
             {browsing
@@ -228,8 +212,29 @@ export function ItemPicker({
                 ))
               : null}
           </details>
+          {showEquipmentLink ? (
+            <Link className="row-main equipment-route" to={EQUIPMENT_PATH}>
+              <strong>Equipment: add to your home</strong>
+              <span className="muted">Stoves, heaters, generators, batteries and panels</span>
+            </Link>
+          ) : null}
         </>
       )}
+      {equipmentShown.length > 0 ? (
+        <section aria-label="Equipment: add to your home" className="equipment-route">
+          <h3>Equipment: add to your home</h3>
+          <ul className="row-list">
+            {equipmentShown.map((t) => (
+              <li className="row-item" key={t.id}>
+                <Link className="row-main" to={equipmentAddPath(t.id)}>
+                  <strong>{t.name}</strong>
+                  <span className="muted">Opens the equipment form, not stock</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </>
   );
 }
