@@ -123,6 +123,16 @@ the strip's box is dashed and the picture dim, and the status says "Getting the 
 loaded for 5 minutes (`READER_IDLE_MS`) after the screen that used them closes, and are freed at once when the
 page is hidden or the camera switch is turned off.
 
+When the screen goes off mid-step, the page is hidden: the reader is freed (a read in flight ends as
+stopped, not as a fault) and the camera is let go. When the screen comes back the strip opens a new
+stream, the step restarts and says "Getting the date reader ready…" while a new reader loads (5 to 15 s),
+then reads on the same item. It never says the reader is not available for that. Quick add's **Read the
+date** sheet shares the reader and behaves the same.
+
+**When the reader really fails** (the worker crashes, or the files cannot load) the strip says "The date
+reader isn’t available here; pick the date." with a **Try again** button: it frees the failed reader and
+loads a new one for the same item. The month box works throughout.
+
 **The flow.** The strip shows the yellow date box and the reader starts by itself when "Read dates
 with the camera" is on. That switch lives below the item card on the stocktake screen (on by
 default, remembered per device) and applies to the stocktake only: Quick add's **Read the date**
@@ -320,6 +330,8 @@ Apache-2.0) is its own lazily loaded chunk, so the main bundle does not carry it
   back end were run ([#36](https://github.com/pskillen/shtf-planner/issues/36)).
 - Only upright text is read (no rotation); day-level dates are stored as month-year; a misaligned
   print is not re-aimable (no nudging the crop).
+- There is no read timeout: a real GPU device loss that hangs a read (rather than failing it) would
+  leave the step on "Reading…" until Stop is tapped or the page is hidden. Not seen on a phone yet.
 - A remembered barcode can be corrected with Not this item? but not forgotten.
 - iOS Safari is not a target.
 - A date reader loaded in the first seconds of the very first visit, before the service worker is
