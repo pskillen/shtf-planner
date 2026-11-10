@@ -218,6 +218,10 @@ test.describe('stocktake with a fake camera', () => {
         await expect(dateCard(page, name)).toBeVisible();
         const okBox = await bounds(page.getByRole('button', { name: 'OK', exact: true }));
         expect(okBox.height).toBeGreaterThanOrEqual(88);
+        const cancelBox = await bounds(page.getByRole('button', { name: 'Cancel', exact: true }));
+        // OK is about three times Cancel's width (flex 3 to 1).
+        expect(okBox.width / cancelBox.width).toBeGreaterThan(2.5);
+        expect(okBox.width / cancelBox.width).toBeLessThan(3.5);
         const month = await bounds(page.locator('input[type="month"]'));
         // The chips may scroll under the big OK at this size; the month field stays above it.
         expect(month.y + month.height).toBeLessThanOrEqual(okBox.y);
