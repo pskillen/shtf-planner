@@ -27,7 +27,6 @@ afterEach(() => {
 
 const KNOWN = '3017620422003'; // fixture: prod-spread (Test spread 400 g)
 const UNKNOWN = '5000169005743';
-const BEANS_PRODUCT = 'Test beans 415 g';
 const beans = {
   found: true as const,
   name: 'Test beans',
@@ -59,7 +58,7 @@ describe('Stocktake: the step machine', () => {
     await read(KNOWN);
     expect(await screen.findByText(SPREAD)).toBeTruthy();
     expect(screen.getByText(/Test spread 400 g/)).toBeTruthy(); // the remembered product name
-    expect(screen.getByText('Counts as Peanut butter')).toBeTruthy();
+    expect(screen.getByText(/Counts as Peanut butter/)).toBeTruthy();
     expect(screen.getByText('2 DATE', { selector: '.camera-chip' })).toBeTruthy();
     chip('+1 y');
     ok();

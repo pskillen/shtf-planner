@@ -144,6 +144,14 @@ export function StocktakeScreen() {
     return () => releaseDateReader();
   }, []);
 
+  // The date step starts with the camera strip in view: the add-product form may have left the
+  // page scrolled down. The strip sits at the top of the page, so that is where to go.
+  useEffect(() => {
+    if (phase !== 'date') return;
+    const calm = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    window.scrollTo?.({ top: 0, behavior: calm ? 'auto' : 'smooth' });
+  }, [phase]);
+
   useEffect(() => {
     if (!saved) return;
     const t = setTimeout(() => setSaved(null), UNDO_MS);
@@ -474,10 +482,12 @@ export function StocktakeScreen() {
                   </button>
                 ) : null}
               </div>
-              <p className="muted" data-testid="product-size">
-                {product?.size ? formatSize(product.size) : 'Size not set'}
+              <p className="muted">
+                <span data-testid="product-size">
+                  {product?.size ? formatSize(product.size) : 'Size not set'}
+                </span>
+                {packItem ? ` · Counts as ${packItem.name}` : null}
               </p>
-              {packItem ? <p className="muted">Counts as {packItem.name}</p> : null}
               {warning ? (
                 <p className="warn" role="status">
                   ⚠ {warning}

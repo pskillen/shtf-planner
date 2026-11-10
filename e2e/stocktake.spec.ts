@@ -28,7 +28,7 @@ type Doc = {
   >;
 };
 const SPREAD = 'Test spread 400 g';
-const BEANS_PRODUCT = 'Test beans 415 g';
+const BEANS_PRODUCT = 'Test beans'; // the size (415 g) is its own field, not part of the name
 type Shtf = {
   doc: () => Promise<Doc>;
   loadFixture: () => Promise<void>;
@@ -241,6 +241,31 @@ test.describe('stocktake with a fake camera', () => {
     expect(net.offUrls).toHaveLength(1);
     const d = await doc(page);
     expect(Object.values(d.stock).some((s) => s.source === 'barcode')).toBe(true);
+  });
+
+  test('after adding a product the page is back at the camera, on a 360 by 740 phone', async ({
+    page,
+    context,
+  }) => {
+    await page.setViewportSize({ width: 360, height: 740 });
+    await setUp(page, context);
+    await open(page, '/app/stores/stocktake');
+    await show(page, NOT_FOUND);
+    await expect(page.getByText(/does not have this one/)).toBeVisible();
+    await cam(page, 'clear');
+    await page.getByLabel('Search for what it counts as').fill('tinned soup');
+    await page.getByRole('button', { name: /^Tinned soup / }).click();
+    await page.getByLabel(/^Product name/).fill('Tinned soup 400 g');
+    const save = page.getByRole('button', { name: 'Save product' });
+    await save.scrollIntoViewIfNeeded();
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+    await save.click();
+    await expect(page.getByRole('heading', { name: /Tinned soup 400 g/i })).toBeVisible();
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+    const strip = await page.locator('.camera-strip').boundingBox();
+    expect(strip!.y).toBeGreaterThanOrEqual(0);
+    expect(strip!.y + strip!.height).toBeLessThanOrEqual(740);
   });
 
   test('offline unknown: decide later and sort without another lookup', async ({
