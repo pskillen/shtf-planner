@@ -1,6 +1,6 @@
 import type { FrameVerdict } from '../../engine/datecode';
 import { today } from '../../util';
-import { ReadError } from './errors';
+import { ReadError, ReaderStopped } from './errors';
 import type { Gray } from './image';
 import type { FromWorker, ToWorker } from './messages';
 import { READER_IDLE_MS } from '../tunables';
@@ -120,7 +120,7 @@ export function createDateReader(opts: ReaderOptions = {}): DateReader {
     ready,
     status: () => status,
     read(frame, todayIso) {
-      if (stopped) return Promise.reject(new Error('The date reader was stopped'));
+      if (stopped) return Promise.reject(new ReaderStopped());
       if (status.state === 'failed') return Promise.reject(new Error(status.message));
       return new Promise<FrameVerdict>((resolve, reject) => {
         const id = nextId++;
@@ -134,7 +134,7 @@ export function createDateReader(opts: ReaderOptions = {}): DateReader {
       if (stopped) return;
       stopped = true;
       worker.terminate();
-      const err = new Error('The date reader was stopped');
+      const err = new ReaderStopped();
       settleReady.reject(err);
       for (const p of pending.values()) p.reject(err);
       pending.clear();

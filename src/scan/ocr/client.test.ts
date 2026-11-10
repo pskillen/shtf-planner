@@ -8,6 +8,7 @@ import {
   releaseDateReader,
   type WorkerLike,
 } from './client';
+import { ReaderStopped } from './errors';
 import { gray } from './image';
 import { enableTimings, resetTimings, timings } from '../timings';
 import type { FromWorker, ToWorker } from './messages';
@@ -123,8 +124,8 @@ describe('the date reader client', () => {
     const waiting = reader.read(gray(4, 4), '2026-11-15');
     reader.terminate();
     expect(w.terminated).toBe(true);
-    await expect(waiting).rejects.toThrow(/stopped/);
-    await expect(reader.read(gray(4, 4), '2026-11-15')).rejects.toThrow(/stopped/);
+    await expect(waiting).rejects.toBeInstanceOf(ReaderStopped);
+    await expect(reader.read(gray(4, 4), '2026-11-15')).rejects.toBeInstanceOf(ReaderStopped);
   });
 
   it('the page keeps one reader until it is terminated, then makes a new one', () => {

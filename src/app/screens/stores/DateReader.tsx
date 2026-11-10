@@ -11,6 +11,7 @@ import {
 import type { Gray } from '../../../scan/ocr/image';
 import { READER_DOWNLOAD_MB, readerDownloaded } from '../../../scan/ocr/cache';
 import { getDateReader, peekDateReader } from '../../../scan/ocr/client';
+import { ReaderStopped } from '../../../scan/ocr/errors';
 import { ExpiryBadge } from '../../components/ExpiryBadge';
 import { EXPIRY_LABEL } from '../../labels';
 import { useDocument } from '../../state';
@@ -197,8 +198,9 @@ export function DateReader({
           }
         });
       },
-      () => {
-        if (!gone) setPhase('unavailable');
+      (e: unknown) => {
+        // A reader shut down on purpose (the page was hidden) is not a fault: a new stream reloads it.
+        if (!gone && !(e instanceof ReaderStopped)) setPhase('unavailable');
       },
     );
     return () => {
