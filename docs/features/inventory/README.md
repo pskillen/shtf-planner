@@ -33,7 +33,11 @@ The Stores tab: what the household has, grouped by **item** (the generic from th
 - **Quick add.** Pick an item (search, recent products, or browse by category and heading), then a **size** (your
   products of that item, suggested chips, or another size with optional name). Same item + name + size reuses the
   product. No custom items. After Add you return to search or the scanner with **Added …** and **Edit** for the
-  row just saved. Scan a barcode and Stocktake a pile sit above the search box.
+  row just saved. Scan a barcode and Stocktake a pile sit above the search box. A search lists **Items**
+  (the generic pack items) first, then **Your products** (named products), then **Equipment: add to
+  your home** last, since equipment is the least used. Without a search, the Equipment link is the
+  last thing on the screen, below Browse everything by category. Stocktake's "Find it by name" orders
+  its items and equipment the same way.
 - **Your products.** Footer link and each product's › in Stores open the list: every product by item, with kcal
   source, stock total and barcode count. Merge moves **packs** and barcodes to another product and deletes the
   duplicate.
