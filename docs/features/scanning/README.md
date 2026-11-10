@@ -25,7 +25,7 @@ engines and models compared, what the parser had to handle, what was rejected).
 | Date parser, tally  | `src/engine/datecode/`                                                                              | Reader text to month-years; passes to a frame verdict; frames to an answer. Pure                         |
 | Date card           | `screens/stores/DateReader.tsx`, `ReadDateSheet.tsx`, `DateAbout.tsx`                               | Status and month on the strip, Stop, Read again, suggestions; quick add's sheet; the About line          |
 | Models, notice      | `public/ocr/`                                                                                       | FP16 PaddleOCR models, `NOTICE.md`, Apache-2.0 text, the self-test label                                 |
-| Tunables            | `src/scan/tunables.ts`, `screens/stores/stocktakeTunables.ts`                                       | Intervals, zoom, timeouts, limits, box shapes, Undo time, buzz patterns: one line each                   |
+| Tunables            | `src/scan/tunables.ts`, `screens/stores/stocktakeTunables.ts`                                       | Intervals, zoom, timeouts, limits, box shapes, Undo time, buzz patterns, beep tones: one line each       |
 | Camera strip        | `src/app/components/CameraStrip.tsx`                                                                | The live strip, red line or date box, catch tick, centre overlay, torch, zoom, tap to focus              |
 | The card for a code | `screens/stores/ScanResolve.tsx`                                                                    | Counts-as card, item picker, size step, Decide later                                                     |
 | Quick add's scanner | `screens/stores/ScanSheet.tsx`                                                                      | The strip, type the barcode number, find it by name                                                      |
@@ -69,6 +69,17 @@ engines and models compared, what the parser had to handle, what was rejected).
    same). Undo gives the undone item's card back only when nothing else is in progress; **Decide
    later** is off, with the reason, when there is no place to keep the scan in.
 5. **Done** says "14 items in 5 min (2.8 a minute) · 2 to sort later", then the date counts.
+
+**Propped.** For a stocktake with the phone standing on a shelf or against a tin and both hands on
+the packs. A **Propped** switch below the item card (off by default, remembered per device) keeps the
+screen awake while the stocktake is open (Screen Wake Lock, where the browser has it; asked for
+again when the page comes back to the front), makes the status in the strip and the read month
+large, makes **OK** big (at least 88 px tall, three times the width of Cancel), and plays a short
+sound with each buzz: one beep on a barcode, two on a date. A **Sound with each buzz** switch under
+it (on by default, remembered per device, shown only while Propped is on) mutes the sound; Quick add
+never beeps. Nothing is saved without OK or a tapped suggestion: one tap per item, no auto-save. At
+360 by 740 the big OK covers the lower month chips, which scroll under it; the month field stays
+above it. The strip's size does not change.
 
 A stocktake **adds** stock, like Quick add. It does not recount a place. An equipment type is never
 offered as stock: a search that matches a stove routes to the equipment form.
@@ -348,5 +359,5 @@ Apache-2.0) is its own lazily loaded chunk, so the main bundle does not carry it
 
 ## Not built yet
 
-Scanning, round 2 ([#33](https://github.com/pskillen/shtf-planner/issues/33)): a phone-propped
-stocktake (dexterity is the biggest cost) and measuring the worker's memory.
+Scanning, round 2 ([#33](https://github.com/pskillen/shtf-planner/issues/33)): measuring the
+worker's memory.

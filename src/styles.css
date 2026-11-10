@@ -2050,3 +2050,23 @@ button.scans-note {
     break-inside: avoid;
   }
 }
+
+/* Propped stocktake: the phone stands on its own, so the status and OK are big. The strip's size
+   does not change. At 360 x 740 the month chips may scroll under the big OK; the month field stays above. */
+.stocktake.propped .centre-pill:not([data-phase='got']) {
+  font-size: 1.1rem;
+}
+
+.stocktake.propped .centre-result .date-month {
+  font-size: 2.2rem;
+}
+
+.stocktake.propped .sticky-bar > :first-child {
+  flex: 1;
+}
+
+.stocktake.propped .sticky-bar > :last-child {
+  flex: 3;
+  min-height: 88px;
+  font-size: 1.4rem;
+}

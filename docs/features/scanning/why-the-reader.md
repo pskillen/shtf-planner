@@ -58,6 +58,10 @@ from the widest crop, where it picked up other text on the label.
 | Reader alone, re-run     | 7 of 10       | 1 (10 %) | median 2.0 s; phone compute 1.5 s (desktop 0.2 s)                        |
 | Timed stocktake, round 2 | 5 of 7        | 1        | 3.5 items a minute; date step 4.0 s, of which aiming 3.8 s               |
 | Timed stocktake, round 4 | 6 of 9 (67 %) | 0        | date step median 7.2 to 8.2 s: aiming 4.1 to 5.0 s, compute 2.2 to 2.5 s |
+| Stocktake, propped       | not counted   | n/a      | owner check, printed barcodes: "all seems fine"; no timing taken         |
+
+The propped row is a brief owner check on the preview with printed barcodes, not a timed run: the
+original 10-pack pile was not to hand, so the owner accepted it as it is.
 
 Against the bar: right was met (67 %) and wrong was met (0 % in the last run); **the 2 s step was
 not** (phone compute alone was over 2 s). The owner called the stocktake "pretty good, very usable"

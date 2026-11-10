@@ -1,12 +1,15 @@
 import type { ReaderStatus } from '../../../scan/ocr/client';
 
 /**
- * Two per-device switches for reading dates with the camera, kept in this browser only (they are
- * about this phone, not the household): "Read dates with the camera" (on by default) and "Use the
- * graphics chip (WebGPU) when available" (on by default).
+ * Four per-device switches, kept in this browser only (they are about this phone, not the
+ * household): "Read dates with the camera" (on by default), "Use the graphics chip (WebGPU) when
+ * available" (on by default), the stocktake's "Propped" (off by default) and its "Sound with each
+ * buzz" (on by default, heard only while Propped is on).
  */
 const CAMERA_KEY = 'shtf.dates.camera';
 const WEBGPU_KEY = 'shtf.dates.webgpu';
+const PROPPED_KEY = 'shtf.stocktake.propped';
+const SOUND_KEY = 'shtf.stocktake.sound';
 
 function read(key: string): boolean {
   try {
@@ -24,10 +27,22 @@ function write(key: string, on: boolean): void {
   }
 }
 
+function readOff(key: string): boolean {
+  try {
+    return globalThis.localStorage?.getItem(key) === '1';
+  } catch {
+    return false;
+  }
+}
+
 export const readUseCamera = (): boolean => read(CAMERA_KEY);
 export const writeUseCamera = (on: boolean): void => write(CAMERA_KEY, on);
 export const readUseWebGpu = (): boolean => read(WEBGPU_KEY);
 export const writeUseWebGpu = (on: boolean): void => write(WEBGPU_KEY, on);
+export const readPropped = (): boolean => readOff(PROPPED_KEY);
+export const writePropped = (on: boolean): void => write(PROPPED_KEY, on);
+export const readSound = (): boolean => read(SOUND_KEY);
+export const writeSound = (on: boolean): void => write(SOUND_KEY, on);
 
 /** Whether this browser can open a camera at all (the Read the date button is shown only then). */
 export function hasCamera(): boolean {
