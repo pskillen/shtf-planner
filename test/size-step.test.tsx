@@ -46,6 +46,64 @@ describe('SizeStep as a new product form (confirm)', () => {
   });
 });
 
+describe('SizeStep new product form: a typed size', () => {
+  it('is saved by Save product, with no separate Use this size button', () => {
+    const onDone = vi.fn();
+    const s = liveStore(biggarDocument());
+    const water = bundledPacks().items['items-base:water-container']!;
+    const drink = {
+      ...water,
+      measure: 'volume' as const,
+      sizes: [{ amount: 500, unit: 'ml' as const }],
+    };
+    render(s.wrap(<SizeStep confirm item={drink} initialName="Cola" onDone={onDone} />));
+    fireEvent.click(screen.getByRole('button', { name: 'Another size' }));
+    expect(screen.queryByRole('button', { name: 'Use this size' })).toBeNull();
+    fireEvent.change(screen.getByLabelText('Amount'), { target: { value: '330' } });
+    fireEvent.click(screen.getByRole('radio', { name: 'ml' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save product' }));
+    expect(onDone).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Cola', size: { amount: 330, unit: 'ml' } }),
+    );
+  });
+
+  it('keeps the highlighted chip when the form is closed by tapping a chip', () => {
+    const onDone = vi.fn();
+    const s = liveStore(biggarDocument());
+    render(s.wrap(<SizeStep confirm item={beans()} initialName="Beans" onDone={onDone} />));
+    fireEvent.click(screen.getByRole('button', { name: 'Another size' }));
+    fireEvent.change(screen.getByLabelText('Amount'), { target: { value: '330' } });
+    fireEvent.click(screen.getByRole('button', { name: '415 g' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save product' }));
+    expect(onDone).toHaveBeenCalledWith(expect.objectContaining({ size: beans().sizes[0] }));
+  });
+
+  it('disables Save product while the Amount is blank, so a stale size cannot be saved', () => {
+    const onDone = vi.fn();
+    const s = liveStore(biggarDocument());
+    render(s.wrap(<SizeStep confirm item={beans()} initialName="Beans" onDone={onDone} />));
+    fireEvent.click(screen.getByRole('button', { name: 'Another size' }));
+    const amount = screen.getByLabelText('Amount');
+    fireEvent.change(amount, { target: { value: '330' } });
+    const save = screen.getByRole('button', { name: 'Save product' }) as HTMLButtonElement;
+    expect(save.disabled).toBe(false);
+    fireEvent.change(amount, { target: { value: '' } });
+    expect(save.disabled).toBe(true);
+    fireEvent.click(save);
+    expect(onDone).not.toHaveBeenCalled();
+  });
+
+  it('puts "Same as a product you already have?" before the size, not between it and Save', () => {
+    const s = liveStore(biggarDocument());
+    render(s.wrap(<SizeStep confirm item={beans()} onDone={vi.fn()} />));
+    const same = screen.getByText('Same as a product you already have?');
+    const save = screen.getByRole('button', { name: 'Save product' });
+    const size = screen.getByRole('heading', { name: 'Size' });
+    expect(same.compareDocumentPosition(size) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(same.compareDocumentPosition(save) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+});
+
 describe('SizeStep', () => {
   it('reuses an existing product for the same item, name and size', () => {
     const onDone = vi.fn();

@@ -10,7 +10,7 @@ import { usePacks } from '../../usePacks';
 import { ItemPicker } from './ItemPicker';
 import { SizeStep, type SizeStepDone } from './SizeStep';
 import { ensureProduct, rememberBarcode, type NewProduct } from './stock';
-import { offFactsOf, offPreviewText, productLine, useStockItems } from './scanHelpers';
+import { offFactsOf, offPreviewText, productName, useStockItems } from './scanHelpers';
 
 type Phase = 'countsAs' | 'pickItem' | 'size' | 'name';
 
@@ -103,7 +103,7 @@ export function ScanResolve({
   if (known) return null;
 
   const labelKcal = off?.kcalPer100 !== undefined ? off.kcalPer100 : undefined;
-  const offName = off ? productLine(off) : undefined;
+  const offName = off ? productName(off) || undefined : undefined;
 
   function rememberProduct(productId: string): void {
     change('remember barcode', (d) => {

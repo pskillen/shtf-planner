@@ -14,6 +14,21 @@ export function productLine(p: { name?: string; brand?: string; quantity?: strin
     : base;
 }
 
+/**
+ * The name for a new product made from what Open Food Facts said. The size lives in the product's
+ * own `size`, so the quantity text is left off when it was parsed into one, and kept when it was
+ * not, so nothing is lost.
+ */
+export function productName(p: {
+  name?: string;
+  brand?: string;
+  quantity?: string;
+  size?: unknown;
+}): string {
+  const base = p.name ?? p.brand ?? '';
+  return p.size && base ? base : productLine(p);
+}
+
 /** A kcal figure for display: whole numbers; OFF's label values arrive with a long tail. */
 export function roundKcal(n: number): number {
   return Math.round(n);

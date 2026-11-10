@@ -39,7 +39,7 @@ export function SizeStep({
   const defaultUnit = item.sizes[0]?.unit ?? units[0]!;
 
   const [custom, setCustom] = useState(false);
-  const [amount, setAmount] = useState(item.sizes[0]?.amount ?? 1);
+  const [amount, setAmount] = useState<number | undefined>(item.sizes[0]?.amount ?? 1);
   const [unit, setUnit] = useState<SizeUnit>(defaultUnit);
   const [multipack, setMultipack] = useState<number | undefined>(undefined);
   const [name, setName] = useState(initialName ?? '');
@@ -71,24 +71,27 @@ export function SizeStep({
     }
   };
 
-  const finishCustom = () => {
-    if (!Number.isFinite(amount) || amount <= 0) return;
+  /** The "Another size" form's values as a size, or undefined while the amount is not valid. */
+  const customSize = (): Size | undefined => {
+    if (amount === undefined || !Number.isFinite(amount) || amount <= 0) return undefined;
     const count = multipack !== undefined && multipack >= 2 ? Math.round(multipack) : undefined;
-    const size: Size = { amount, unit, ...(count ? { count } : {}) };
-    if (confirm) {
-      setChosen(size);
-      setCustom(false);
-      return;
-    }
-    pickSize(size);
+    return { amount, unit, ...(count ? { count } : {}) };
   };
+
+  const finishCustom = () => {
+    const size = customSize();
+    if (size) pickSize(size);
+  };
+
+  // In the new product form the open "Another size" form is the size being saved.
+  const toSave = confirm && custom ? customSize() : chosen;
 
   const placeholder = defaultProductName(item, item.sizes[0] ?? { amount: 1, unit: units[0]! });
 
   const same = (a: Size, b: Size | undefined): boolean =>
     b !== undefined && formatSize(a) === formatSize(b);
   const chips =
-    confirm && chosen && !item.sizes.some((z) => same(z, chosen))
+    confirm && chosen && !custom && !item.sizes.some((z) => same(z, chosen))
       ? [...item.sizes, chosen]
       : item.sizes;
 
@@ -125,19 +128,29 @@ export function SizeStep({
   return (
     <>
       {confirm ? nameField : yoursList}
+      {confirm && yoursList ? (
+        <details className="type-group">
+          <summary>Same as a product you already have?</summary>
+          {yoursList}
+        </details>
+      ) : null}
       {chips.length > 0 ? (
         <section aria-label="Suggested sizes">
           <h3>{confirm ? 'Size' : 'Suggested sizes'}</h3>
           <ul className="row-list chip-list">
             {chips.map((size) => {
-              const on = confirm && same(size, chosen);
+              const on = confirm && !custom && same(size, chosen);
               return (
                 <li key={formatSize(size)}>
                   <button
                     type="button"
                     className={on ? 'chip on' : 'chip'}
                     aria-pressed={confirm ? on : undefined}
-                    onClick={() => (confirm ? setChosen(size) : pickSize(size))}
+                    onClick={() => {
+                      if (!confirm) return pickSize(size);
+                      setChosen(size);
+                      setCustom(false);
+                    }}
                   >
                     {formatSize(size)}
                   </button>
@@ -159,7 +172,7 @@ export function SizeStep({
               min={0.01}
               step="any"
               ariaLabel="Amount, number"
-              onChange={(n) => n !== undefined && setAmount(n)}
+              onChange={setAmount}
             />
           </Field>
           <div className="segmented" role="radiogroup" aria-label="Unit">
@@ -186,23 +199,19 @@ export function SizeStep({
               onChange={setMultipack}
             />
           </Field>
-          <button type="button" onClick={finishCustom}>
-            Use this size
-          </button>
+          {confirm ? null : (
+            <button type="button" onClick={finishCustom}>
+              Use this size
+            </button>
+          )}
         </section>
       )}
       {confirm ? null : nameField}
-      {confirm && yoursList ? (
-        <details className="type-group">
-          <summary>Same as a product you already have?</summary>
-          {yoursList}
-        </details>
-      ) : null}
       {confirm ? (
         <button
           type="button"
-          disabled={!chosen || name.trim() === ''}
-          onClick={() => chosen && pickSize(chosen)}
+          disabled={!toSave || name.trim() === ''}
+          onClick={() => toSave && pickSize(toSave)}
         >
           Save product
         </button>

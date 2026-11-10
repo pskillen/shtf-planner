@@ -2,7 +2,7 @@ import { countsAsLine } from './countsAs';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { Item, OffFacts } from '../../../model';
-import { today } from '../../../util';
+import { formatSize, today } from '../../../util';
 import type { CameraStream } from '../../../scan/camera';
 import {
   preloadDateReader,
@@ -144,6 +144,14 @@ export function StocktakeScreen() {
     if (readUseCamera()) preloadDateReader(readUseWebGpu());
     return () => releaseDateReader();
   }, []);
+
+  // The date step starts with the camera strip in view: the add-product form may have left the
+  // page scrolled down. The strip sits at the top of the page, so that is where to go.
+  useEffect(() => {
+    if (phase !== 'date') return;
+    const calm = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    window.scrollTo?.({ top: 0, behavior: calm ? 'auto' : 'smooth' });
+  }, [phase]);
 
   useEffect(() => {
     if (!saved) return;
@@ -479,7 +487,12 @@ export function StocktakeScreen() {
                   </button>
                 ) : null}
               </div>
-              {packItem ? <p className="muted">Counts as {packItem.name}</p> : null}
+              <p className="muted">
+                <span data-testid="product-size">
+                  {product?.size ? formatSize(product.size) : 'Size not set'}
+                </span>
+                {packItem ? ` · Counts as ${packItem.name}` : null}
+              </p>
               {warning ? (
                 <p className="warn" role="status">
                   ⚠ {warning}

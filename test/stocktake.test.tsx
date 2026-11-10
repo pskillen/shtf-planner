@@ -16,18 +16,21 @@ vi.mock('../src/scan/barcode', async () =>
   (await import('./helpers/fakeScan')).fakeBarcodeModule(),
 );
 
+const scrollTo = vi.fn();
 beforeEach(() => {
   localStorage.clear();
   resetScan();
+  scrollTo.mockClear();
+  window.scrollTo = scrollTo as unknown as typeof window.scrollTo; // jsdom does not implement it
 });
 afterEach(() => {
   cleanup();
   vi.useRealTimers();
+  Reflect.deleteProperty(window, 'matchMedia');
 });
 
 const KNOWN = '3017620422003'; // fixture: prod-spread (Test spread 400 g)
 const UNKNOWN = '5000169005743';
-const BEANS_PRODUCT = 'Test beans 415 g';
 const beans = {
   found: true as const,
   name: 'Test beans',
@@ -59,7 +62,7 @@ describe('Stocktake: the step machine', () => {
     await read(KNOWN);
     expect(await screen.findByText(SPREAD)).toBeTruthy();
     expect(screen.getByText(/Test spread 400 g/)).toBeTruthy(); // the remembered product name
-    expect(screen.getByText('Counts as Peanut butter')).toBeTruthy();
+    expect(screen.getByText(/Counts as Peanut butter/)).toBeTruthy();
     expect(screen.getByText('2 DATE', { selector: '.camera-chip' })).toBeTruthy();
     chip('+1 y');
     ok();
@@ -74,6 +77,23 @@ describe('Stocktake: the step machine', () => {
     // straight back to a barcode, with the toast
     expect(screen.getByText('1 BARCODE')).toBeTruthy();
     expect(screen.getByTestId('stocktake-saved').textContent).toContain(`Saved 1 × ${SPREAD}`);
+  });
+
+  it('scrolls to the top for the date step, smoothly unless reduced motion is asked for', async () => {
+    await open();
+    await read(KNOWN);
+    await screen.findByText(SPREAD);
+    expect(scrollTo).toHaveBeenLastCalledWith({ top: 0, behavior: 'smooth' });
+    cleanup();
+
+    scrollTo.mockClear();
+    window.matchMedia = ((query: string) => ({
+      matches: query.includes('prefers-reduced-motion'),
+    })) as unknown as typeof window.matchMedia;
+    await open();
+    await read(KNOWN);
+    await screen.findByText(SPREAD);
+    expect(scrollTo).toHaveBeenLastCalledWith({ top: 0, behavior: 'auto' });
   });
 
   it('the place applies to every item', async () => {
@@ -187,13 +207,39 @@ describe('Stocktake: the step machine', () => {
     await screen.findByText(SPREAD);
     expect(screen.queryByText(/Red line for the barcode/)).toBeNull();
   });
+  it('shows the stored size under the name, and the new product name leaves the size out of it', async () => {
+    fakeOff({ [UNKNOWN]: beans });
+    const s = await open();
+    await read(UNKNOWN);
+    await screen.findByRole('heading', { name: 'Counts as: Baked beans?' });
+    fireEvent.click(screen.getByRole('button', { name: 'Yes' }));
+    await screen.findByRole('heading', { name: 'Test beans' });
+    expect(screen.getByTestId('product-size').textContent).toBe('415 g');
+    const made = s.doc().products[s.doc().barcodes[UNKNOWN]!.productId]!;
+    expect(made.name).toBe('Test beans');
+    expect(made.size).toEqual({ amount: 415, unit: 'g' });
+  });
+  it('keeps the quantity text in the name when it did not parse into a size', async () => {
+    fakeOff({ [UNKNOWN]: { ...beans, size: undefined } });
+    await open();
+    await read(UNKNOWN);
+    expect(await screen.findByText(/Test beans 415 g/)).toBeTruthy();
+  });
+  it('shows a multipack size with its count', async () => {
+    const doc = biggarDocument();
+    doc.products['prod-spread']!.size = { count: 4, amount: 100, unit: 'g' };
+    const s = await open(doc);
+    await read(KNOWN);
+    await waitFor(() => expect(screen.getByTestId('product-size').textContent).toBe('4 × 100 g'));
+    expect(s.doc().products['prod-spread']).toBeDefined();
+  });
   it('Undo after a scan that made a product leaves the product and barcode remembered', async () => {
     fakeOff({ [UNKNOWN]: beans });
     const s = await open();
     await read(UNKNOWN);
     await screen.findByRole('heading', { name: 'Counts as: Baked beans?' });
     fireEvent.click(screen.getByRole('button', { name: 'Yes' }));
-    await screen.findByText(BEANS_PRODUCT);
+    await screen.findByRole('heading', { name: 'Test beans' });
     chip('+1 y');
     ok();
     const pid = s.doc().barcodes[UNKNOWN]?.productId;
