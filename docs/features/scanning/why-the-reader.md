@@ -76,9 +76,11 @@ is the wall time the person waits.
 | Model load                   | 7.3 s                    | 26.8 s               |
 | Pictures tried per read      | 6 (median)               | 2 (median)           |
 | Dates by camera (of items)   | 7 of 10                  | 4 of 9               |
-| Date step on screen (median) | 14.0 s                   | 22.6 s               |
+| Date step on screen (median) | 14.0 s                   | 22.6 s \*            |
 | Skipped for motion           | 84                       | 59                   |
 | Items a minute               | 1.6                      | 1.6                  |
+
+\* The WASM figure is the second run's cumulative median, so it includes the first run's steps.
 
 Against the go bar: **right** (60 %) was met on WebGPU (7 of 10 by camera) and missed on WASM (4 of
 9); **wrong** (under 5 %) had none reported in either run; **the 2 s step was missed** by both. The
@@ -170,7 +172,7 @@ optimistic.
   | Skipped for motion, blur     | 84, 6         | 64, 0 (over 15 steps) |
   | Wrong reads                  | none reported | none reported         |
 
-  The date step fell 40 % and no wrong read was reported, so the values stay. The two misses were
+  The date step fell about 40 % (14.0 to 8.6 s) and no wrong read was reported, so the values stay. The two misses were
   half-missing ink and a 2023 code. The 2 s step bar is still not met; what remains is mostly the
   person aiming.
 
