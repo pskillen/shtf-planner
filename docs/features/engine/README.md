@@ -54,7 +54,7 @@ including things listed but not counted (expired, below the minimum, gated) with
 | `light`      | lumen-hours                                      | items that give `lumenHours` (torches, lanterns)                                      |
 | `power`      | Wh for phones and powered equipment              | cells and power banks, batteries and EVs holding Wh, an array's Wh a day, a generator |
 | `comms`      | one radio that needs no mains power              | an item tagged `radio-rx`, or a radio asset                                           |
-| `sanitation` | toilet uses, hygiene uses, nappies by age        | those resources; nappies only while the size fits someone                             |
+| `sanitation` | toilet uses, hand cleans, nappies by age         | those resources; nappies only while the size fits someone                             |
 | `medical`    | doses per medication; one first aid kit          | `unitsOnHand` per medication; first aid items                                         |
 | `mobility`   | a driving range                                  | the best single EV (kWh x 4 km x half charge) or petrol on hand (12 km a litre)       |
 | `plans`      | every applicable plan item, done and not expired | `doc.plans[id].doneAt` (and `expires`, or the plan's `expiresMonths`)                 |
@@ -117,7 +117,8 @@ then gives cooking first claim, heat second and power third. It chooses the best
 one exact item within a capability, with stable ties; distinct item pools add. Claims are limited to
 the target. This deterministic policy is not a global optimiser. `equipmentRuntime` projects the
 same analysis: available potential after earlier claims, allocated hours, alternatives and lots.
-Unknown quantities remain absent. The heat target is a legacy assumed burner runtime, not an
+Unknown quantities remain absent. The Equipment and Stores screens show `equipmentRuntime` as it
+is, in words, and do none of this arithmetic themselves. The heat target is a legacy assumed burner runtime, not an
 assessment of safe warmth.
 
 ## Dependent capabilities
@@ -206,7 +207,7 @@ Numbers worth a look, none of them official:
 | Burner time per person per hot meal        | 0.25 h                                                                                                                                                             | `assumptions.ts`                            |
 | Light                                      | 1,000 lumen-hours a day                                                                                                                                            | `guidance-grid-free:light`                  |
 | Phone power                                | 15 Wh per person per day; x8 for powered equipment                                                                                                                 | `guidance-grid-free:phone-power`            |
-| Toilet and hygiene                         | 5 and 3 uses per person per day                                                                                                                                    | `guidance-grid-free:sanitation`, `:hygiene` |
+| Toilet and hygiene                         | 5 toilet uses and 3 hand cleans per person per day                                                                                                                 | `guidance-grid-free:sanitation`, `:hygiene` |
 | Nappies                                    | 10 a day to 6 months, 8 to 12, 6 to 36                                                                                                                             | `guidance-grid-free:nappies`                |
 | Infant formula                             | 100 g a day under 12 months                                                                                                                                        | `guidance-grid-free:formula`                |
 | Pet food (kcal) and water (L) a day, S/M/L | 300/700/1,200 kcal; 0.25/0.75/1.5 L                                                                                                                                | `:pet-food`, `:pet-water`                   |
@@ -256,7 +257,6 @@ No screens (they call these functions), budgeting or minimum suggestions from re
 
 ## Not built yet
 
-- Equipment runtime and per-fuel lot details in the equipment screen: [#28](https://github.com/pskillen/shtf-planner/issues/28).
 - Diesel, vehicles as assets, candles and torch cells as light, no impractical suggestions on big
   shortfalls, the preview's food-mix overshoot:
   [#49](https://github.com/pskillen/shtf-planner/issues/49).

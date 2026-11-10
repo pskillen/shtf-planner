@@ -58,11 +58,18 @@ export const RESOURCE_INFO = {
   formulaG: { name: 'infant formula', unit: 'g' },
   petFoodKcal: { name: 'pet food', unit: 'kcal' },
   sanitationUses: { name: 'toilet uses', unit: 'uses' },
-  hygieneUses: { name: 'hygiene supplies', unit: 'uses' },
+  hygieneUses: { name: 'hygiene supplies', unit: 'hand cleans' },
   medicationDays: { name: 'medication', unit: 'days' },
   lumenHours: { name: 'light', unit: 'lumen-hours' },
 } as const;
 export type ResourceId = keyof typeof RESOURCE_INFO;
+/**
+ * One line saying what a resource's unit means, for the units a household cannot guess from the
+ * name alone. Screens show it beside the amount; a resource not listed needs no note.
+ */
+export const RESOURCE_EXPLAIN: Partial<Record<ResourceId, string>> = {
+  hygieneUses: 'A hand clean is 1 wipe or 5 ml of hand sanitiser.',
+};
 export const RESOURCE_IDS = Object.keys(RESOURCE_INFO) as [ResourceId, ...ResourceId[]];
 export const ResourceIdSchema = z.enum(RESOURCE_IDS);
 

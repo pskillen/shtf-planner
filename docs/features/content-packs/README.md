@@ -157,10 +157,11 @@ re-checked against its sources at any time.
   The product's label kcal does the precise counting, so the item only needs a typical figure.
 - **Drinks count as water.** Soft drinks and long-life fruit juice give 1 L of water per litre plus
   the label's kcal (diet drinks 0; juice falls back to a typical figure).
-- **Hygiene "uses".** A use is one hand clean, and the target is three a person a day; a wipe is one
-  use, a soap and sanitiser kit 30. Things that do not fit that measure (gloves, for one) are not
-  given a special item; how hygiene is modelled is an open question
-  ([#38](https://github.com/pskillen/shtf-planner/issues/38)).
+- **Hygiene in hand cleans.** Hygiene is one resource counted in hand cleans, three a person a day (an
+  assumption; guidance pack version 4). A hand clean is 1 wipe or 5 ml of hand sanitiser, a soap and
+  sanitiser kit 30; Score, Gaps and the horizon table say so beside the amount
+  (`RESOURCE_EXPLAIN`). Things that do not fit that measure (gloves, for one) are not given a
+  special item and are not scored ([#38](https://github.com/pskillen/shtf-planner/issues/38)).
 - **Water containers** are stock "kept filled": they count the litres they hold, and a suggestion for
   one says to fill it from the tap.
 - **Calories.** 24 kcal figures cite CoFID; checking them against the CoFID workbook is still to do
