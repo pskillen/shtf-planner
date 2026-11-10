@@ -187,13 +187,39 @@ describe('Stocktake: the step machine', () => {
     await screen.findByText(SPREAD);
     expect(screen.queryByText(/Red line for the barcode/)).toBeNull();
   });
+  it('shows the stored size under the name, and the new product name leaves the size out of it', async () => {
+    fakeOff({ [UNKNOWN]: beans });
+    const s = await open();
+    await read(UNKNOWN);
+    await screen.findByRole('heading', { name: 'Counts as: Baked beans?' });
+    fireEvent.click(screen.getByRole('button', { name: 'Yes' }));
+    await screen.findByRole('heading', { name: 'Test beans' });
+    expect(screen.getByTestId('product-size').textContent).toBe('415 g');
+    const made = s.doc().products[s.doc().barcodes[UNKNOWN]!.productId]!;
+    expect(made.name).toBe('Test beans');
+    expect(made.size).toEqual({ amount: 415, unit: 'g' });
+  });
+  it('keeps the quantity text in the name when it did not parse into a size', async () => {
+    fakeOff({ [UNKNOWN]: { ...beans, size: undefined } });
+    await open();
+    await read(UNKNOWN);
+    expect(await screen.findByText(/Test beans 415 g/)).toBeTruthy();
+  });
+  it('shows a multipack size with its count', async () => {
+    const doc = biggarDocument();
+    doc.products['prod-spread']!.size = { count: 4, amount: 100, unit: 'g' };
+    const s = await open(doc);
+    await read(KNOWN);
+    await waitFor(() => expect(screen.getByTestId('product-size').textContent).toBe('4 × 100 g'));
+    expect(s.doc().products['prod-spread']).toBeDefined();
+  });
   it('Undo after a scan that made a product leaves the product and barcode remembered', async () => {
     fakeOff({ [UNKNOWN]: beans });
     const s = await open();
     await read(UNKNOWN);
     await screen.findByRole('heading', { name: 'Counts as: Baked beans?' });
     fireEvent.click(screen.getByRole('button', { name: 'Yes' }));
-    await screen.findByText(BEANS_PRODUCT);
+    await screen.findByRole('heading', { name: 'Test beans' });
     chip('+1 y');
     ok();
     const pid = s.doc().barcodes[UNKNOWN]?.productId;

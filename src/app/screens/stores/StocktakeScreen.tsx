@@ -2,7 +2,7 @@ import { countsAsLine } from './countsAs';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { Item, OffFacts } from '../../../model';
-import { today } from '../../../util';
+import { formatSize, today } from '../../../util';
 import type { CameraStream } from '../../../scan/camera';
 import {
   preloadDateReader,
@@ -474,6 +474,9 @@ export function StocktakeScreen() {
                   </button>
                 ) : null}
               </div>
+              <p className="muted" data-testid="product-size">
+                {product?.size ? formatSize(product.size) : 'Size not set'}
+              </p>
               {packItem ? <p className="muted">Counts as {packItem.name}</p> : null}
               {warning ? (
                 <p className="warn" role="status">
