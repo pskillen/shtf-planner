@@ -8,6 +8,7 @@ import {
   timingSummary,
   type ReadTiming,
   type StepTiming,
+  type Timing,
 } from './timings';
 
 const read = (ms: number, over: Partial<ReadTiming> = {}): ReadTiming => ({
@@ -75,7 +76,7 @@ describe('the timing list', () => {
   it('summarises reads by the load before them, and the steps', () => {
     recordTiming({ kind: 'load', ep: 'webgpu', loadMs: 3900 });
     for (const ms of [1000, 2000, 3000]) recordTiming(read(ms));
-    recordTiming({ kind: 'load', ep: 'wasm', loadMs: 4210 });
+    recordTiming({ kind: 'load', ep: 'webgpu', loadMs: 4210 });
     for (const ms of [500, 600]) recordTiming(read(ms, { pictures: 5 }));
     recordTiming(step());
     recordTiming(step({ outcome: 'none', skippedMotion: 9, skippedBlur: 0 }));
@@ -83,12 +84,31 @@ describe('the timing list', () => {
     expect(text).toContain(
       'reader WebGPU: load 3900 ms; 3 reads, median 2000 ms, p90 3000 ms (round trip median 2100 ms), pictures median 3',
     );
-    expect(text).toContain('reader WASM: load 4210 ms; 2 reads, median 500 ms');
+    expect(text).toContain('reader WebGPU: load 4210 ms; 2 reads, median 500 ms');
+    expect(text).toContain('loop step median 2000 ms');
     expect(text).toContain('pictures median 5');
     expect(text).toContain('date steps 2: got 1, none 1');
     expect(text).toContain('skipped for motion 12, blur 1, glare 0');
     expect(text).toContain('skips a step median 4');
     expect(text).toContain('read ms: 1000 2000 3000 500 600');
+  });
+
+  it('returns a copy, so a caller cannot change the list', () => {
+    recordTiming(read(100));
+    (timings() as Timing[]).push(read(999));
+    expect(timings()).toEqual([read(100)]);
+  });
+
+  it('starts a fresh list when the back end changes, and keeps it for a reload on the same one', () => {
+    recordTiming({ kind: 'load', ep: 'webgpu', loadMs: 3900 });
+    recordTiming(read(1000));
+    recordTiming({ kind: 'load', ep: 'webgpu', loadMs: 4100 });
+    recordTiming(read(1100));
+    expect(timings()).toHaveLength(4);
+    recordTiming({ kind: 'load', ep: 'wasm', loadMs: 9000 });
+    recordTiming(read(4000));
+    expect(timings()).toEqual([{ kind: 'load', ep: 'wasm', loadMs: 9000 }, read(4000)]);
+    expect(timingSummary()).not.toContain('WebGPU');
   });
 
   it('puts a read before any load under "reader ?"', () => {

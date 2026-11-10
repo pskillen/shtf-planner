@@ -71,12 +71,17 @@ export function recordTiming(t: Timing): void {
       computeMs: whole(t.computeMs),
     };
   }
+  if (rounded.kind === 'load') {
+    // A different back end starts a fresh list, so a run on one never carries the other's lines.
+    const lastLoad = [...list].reverse().find((x): x is LoadTiming => x.kind === 'load');
+    if (lastLoad && lastLoad.ep !== rounded.ep) list = [];
+  }
   list.push(rounded);
   if (list.length > MAX_ENTRIES) list = list.slice(list.length - MAX_ENTRIES);
 }
 
 export function timings(): readonly Timing[] {
-  return list;
+  return [...list];
 }
 export function resetTimings(): void {
   list = [];
@@ -128,7 +133,7 @@ export function timingSummary(source: readonly Timing[] = list): string {
       steps.reduce((n, s) => n + s[k], 0);
     const skips = steps.map((s) => s.skippedMotion + s.skippedBlur);
     lines.push(
-      `date steps ${steps.length}: got ${count('got')}, none ${count('none')}, stopped ${count('stopped')}, failed ${count('failed')}; skipped for motion ${sum('skippedMotion')}, blur ${sum('skippedBlur')}, glare ${sum('glare')}; skips a step median ${median(skips)}; step median ${median(steps.map((s) => s.totalMs))} ms`,
+      `date steps ${steps.length}: got ${count('got')}, none ${count('none')}, stopped ${count('stopped')}, failed ${count('failed')}; skipped for motion ${sum('skippedMotion')}, blur ${sum('skippedBlur')}, glare ${sum('glare')}; skips a step median ${median(skips)}; loop step median ${median(steps.map((s) => s.totalMs))} ms`,
     );
   }
 

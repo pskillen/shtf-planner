@@ -62,9 +62,31 @@ from the widest crop, where it picked up other text on the label.
 Against the bar: right was met (67 %) and wrong was met (0 % in the last run); **the 2 s step was
 not** (phone compute alone was over 2 s). The owner called the stocktake "pretty good, very usable"
 and the reader shipped anyway, because the person confirms every date (nothing is saved without OK)
-and a fallback is one tap. The shipped reader runs in a worker, with WebGPU where it passes a
-self-test; its time on the phone has not been measured yet
-([#36](https://github.com/pskillen/shtf-planner/issues/36)).
+and a fallback is one tap.
+
+**On the phone, the shipped worker** ([#36](https://github.com/pskillen/shtf-planner/issues/36)).
+Two six-minute timed stocktakes on an Android phone, Chrome, one per back end, with the `?debug=1`
+timing list. "Step" below is the loop's own median per date step; the screen's "date step" figure
+is the wall time the person waits.
+
+| Per back end                 | WebGPU (shipped default) | WASM (single thread) |
+| ---------------------------- | ------------------------ | -------------------- |
+| Reads                        | 76                       | 39                   |
+| Per-read median, p90         | 1.2 s, 2.1 s             | 4.0 s, 6.8 s         |
+| Model load                   | 7.3 s                    | 26.8 s               |
+| Pictures tried per read      | 6 (median)               | 2 (median)           |
+| Dates by camera (of items)   | 7 of 10                  | 4 of 9               |
+| Date step on screen (median) | 14.0 s                   | 22.6 s               |
+| Skipped for motion           | 84                       | 59                   |
+| Items a minute               | 1.6                      | 1.6                  |
+
+Against the go bar: **right** (60 %) was met on WebGPU (7 of 10 by camera) and missed on WASM (4 of
+9); **wrong** (under 5 %) had none reported in either run; **the 2 s step was missed** by both. The
+reads themselves took 1.2 s on WebGPU, but the step took 12 to 14 s, mostly waiting for the phone to
+be still: about 9 frames skipped a step, nearly all for motion (the gate fix is below). WebGPU is
+3.3 times faster on reads and 3.7 times on load, so it stays the default. On WASM the first load
+took long enough that the owner thought it had hung, and reads that found the date often failed to
+agree twice in a row, because slow reads make consecutive frames differ more.
 
 The biggest cost in a real stocktake is not reading at all: it is **dexterity** (holding the pack
 and the phone, lining the date up and keeping it still). Barcodes are caught so fast that the buzz
