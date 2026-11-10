@@ -40,10 +40,12 @@ engines and models compared, what the parser had to handle, what was rejected).
 **Stores, Stocktake** (also "Stocktake a pile" in Quick add) opens a full screen under the Stores tab.
 
 1. **Counting into: Pantry.** The place for the whole session; it starts at the last place used and
-   can change at any time (on the date step it is named on the item card instead). The first time,
-   a one-line banner ("Red line for the barcode, yellow box for the date." with **Got it**) sits under it; it is one
-   line so the month field and "Use this number" stay above the tab bar at 360 by 740. Got it hides
-   it for good on this device.
+   can change at any time (the select stays on both steps). The first time, a one-line banner ("Red
+   line for the barcode, yellow box for the date." with **Got it**) sits under it. It hides itself at
+   the first barcode caught, by the camera or typed (it has done its job), or with Got it, and stays
+   hidden on this device. Showing, it is one line so "Use this number" stays above the tab bar at 360
+   by 740; hiding at the first catch keeps the date step's month field and quick-choice chips clear of
+   the OK bar. On that one catch the content below the place row moves up by the banner's height.
 2. **1 BARCODE.** The camera looks continuously. The strip is one size for the whole stocktake: it
    never grows or shrinks between steps. A **red line** across the middle is the barcode target (a
    faint wide box shows what is read). Under the strip: torch, zoom (slider with minus and plus) and
@@ -110,13 +112,14 @@ Multipacks (e.g. 24 × 330 ml) are stored as count × amount; water and food fro
 ## Reading dates
 
 On the date step (stocktake) and in Quick add's **Read the date** sheet, the camera reads the
-best-before month off the pack, on the phone, with no network once installed. The person sees what
+best-before month off the pack, on the phone, with no network once the reader has been downloaded. The person sees what
 was read with its expiry colour, and **nothing is saved until they OK it** (or tap a suggestion in
 the stocktake).
 
-**Loading.** The models (about 0.5 GB in memory, no network once installed) start loading as soon as the
+**Loading.** The models (about 0.5 GB in memory, no network once downloaded) start loading as soon as the
 stocktake opens, or a barcode sheet opens, so they are usually ready by the first date step. While they load
-the strip's box is dashed and the picture dim, and the status says "Getting the date reader ready…". They stay
+the strip's box is dashed and the picture dim, and the status says "Getting the date reader ready…"
+(with "(about 10 MB, once)" while the files have not been downloaded yet: the first use downloads about 10 MB). They stay
 loaded for 5 minutes (`READER_IDLE_MS`) after the screen that used them closes, and are freed at once when the
 page is hidden or the camera switch is turned off.
 
@@ -144,7 +147,9 @@ crop that was read (in memory only).
 - **A read the worker could not do** is tried once more on the next frame; a second one ends the
   search as "No date found", with **Read again**.
 - **Not available** (models not downloaded and offline, or the load failed): the status says so and
-  the month field works as before.
+  the month field works as before. Offline before the first download it says "Connect once to
+  download the date reader (about 10 MB). Pick the date for now."; online it says the reader isn't
+  available here.
 - **Quick add**: **Read the date** opens a sheet with the strip and the same overlay; **Use this
   date** sets the field and closes; the person still taps Add.
 - **Done summary** adds "dates by camera 9 · picked 4 · from a suggestion 1 · date step 3.2 s
@@ -181,11 +186,17 @@ sign-in. A collapsed **About the date reader** line shows, live, "WebGPU · last
 stopped when the stocktake or the sheet goes away, and when the page is hidden; the next use
 reloads from the cache.
 
-**Offline and size.** The service worker precaches the worker, the single hashed ORT wasm
-(21,663,894 B, 20.7 MiB, 5.2 MB gzipped), the two models and `dict.txt` (5,301,452 B). The whole
-precache is about 27.4 MiB, roughly 10 MB downloaded once at install. Workbox's per-file limit is
-raised to 24 MiB; Cloudflare Pages refuses files over 25 MiB, so the wasm fits. No Tesseract, no
-other models, no cloud text reading. Memory (headless Chrome, 50 reads): the renderer goes from
+**Offline and size.** The service worker's precache holds the app and the worker script (about
+1.9 MiB, 19 entries; it was 27.4 MiB when the reader was precached). The single hashed ORT wasm
+(21,663,894 B, 5.2 MB gzipped), the two models and `dict.txt` (5,301,452 B) are fetched on first use,
+about 10 MB, and kept in their own cache (`date-reader-<hash of the runtime version and model
+files>`): same origin only, cache first, so later uses work offline. A new app version with new files
+uses a new cache name and the old cache is deleted at start-up (`src/scan/ocr/cache.ts`). The worker
+claims the page when it first installs (`clientsClaim`), so a first visit is controlled within
+seconds; an update still waits for the Reload tap. More → Settings → Date reader says whether it is
+downloaded on this device and has **Download the date reader now**, to have it ready before going
+offline. Workbox's per-file limit is back at its default.
+No Tesseract, no other models, no cloud text reading. Memory (headless Chrome, 50 reads): the renderer goes from
 about 230 MB to 490 MB at the first read and plateaus near 800 MB (the JS heap is under 10 MB; it is
 the wasm runtime and models). Turning off ONNX Runtime's memory pattern and CPU arena changed nothing,
 so they are not set; the plain wasm build (11 MB) is the lever left (a later change)
@@ -291,7 +302,8 @@ Apache-2.0) is its own lazily loaded chunk, so the main bundle does not carry it
   `getUserMedia` returns a canvas stream and `window.__fakeCam.show({ ean, sideways, text })` draws
   a rendered EAN-13 or a text label. It can report Chrome's controls or none, and install a fake
   `BarcodeDetector` or remove it so zxing runs, so it needs no real camera and runs in CI. The date
-  tests use the real worker and models, read offline after install, check the unavailable fallback,
+  tests use the real worker and models, read offline after a first online use, check that a first visit is controlled without a reload and that
+  the precache leaves the reader out, check the unavailable fallback,
   quick add, privacy, and that the strip, status, month and OK bar fit a 360 by 740 and a 412 by 915
   phone. Headless Chrome has no WebGPU adapter, so they run the WASM path. With `?debug=1`,
   `window.__shtf.scan.code('...')` injects a code into the active scanner.
@@ -307,10 +319,10 @@ Apache-2.0) is its own lazily loaded chunk, so the main bundle does not carry it
   print is not re-aimable (no nudging the crop).
 - A remembered barcode can be corrected with Not this item? but not forgotten.
 - iOS Safari is not a target.
+- A date reader loaded in the first seconds of the very first visit, before the service worker is
+  running, is not kept; the next online use keeps it.
 
 ## Not built yet
 
 Scanning, round 2 ([#33](https://github.com/pskillen/shtf-planner/issues/33)): a phone-propped
-stocktake (dexterity is the biggest cost), a looser motion gate, measuring the worker on a phone,
-a lazily cached model to shrink the install (about 27 MB precached today), and the stocktake chips
-that sit under the OK bar while the first-use hint shows.
+stocktake (dexterity is the biggest cost), a looser motion gate, and measuring the worker on a phone.

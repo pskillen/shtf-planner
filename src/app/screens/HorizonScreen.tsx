@@ -94,7 +94,10 @@ export function HorizonScreen({ embedded = false }: { embedded?: boolean }) {
           <tbody>
             {needs.map((need) => (
               <tr key={rowKey(need)} className={big.has(rowKey(need)) ? 'big' : undefined}>
-                <th scope="row">{need.title}</th>
+                <th scope="row">
+                  {need.title}
+                  {need.note ? <div className="muted">{need.note}</div> : null}
+                </th>
                 {preview.map((p) => {
                   const row = p.rows.find((r) => rowKey(r) === rowKey(need));
                   return (

@@ -28,7 +28,7 @@ const TODAY = '2026-09-01';
 const PACK_VERSIONS: Record<string, number> = {
   'assets-base': 6,
   'items-base': 9,
-  'guidance-grid-free': 3,
+  'guidance-grid-free': 4,
   'guidance-uk-prepare': 3,
   'guidance-us-ready': 4,
   regions: 3,

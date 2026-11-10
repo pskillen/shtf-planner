@@ -8,7 +8,8 @@ server of any kind; a proxy would arrive only with AI review
 ([#66](https://github.com/pskillen/shtf-planner/issues/66)). [D12]
 
 **Updates wait for a tap.** The PWA uses `registerType: 'prompt'` with an update toast, never
-`autoUpdate`: a new version must never reload the page under an edit. [D67]
+`autoUpdate`: a new version must never reload the page under an edit. The worker claims open pages when it
+first installs, so a first visit is served offline at once; an update still waits for the tap. [D67]
 
 **Environments.** dev (push to `dev`), next (push to `main`), staging (pre-release), prod
 (release), plus `preview` for pull requests and `local`. The build-env vocabulary is
@@ -27,4 +28,4 @@ Drive; `src/scan` may import model, util, engine and packages, never React, app,
 Why: the logic stays testable without a browser. [D154]
 
 **Heavy work runs in a worker.** The date reader runs in a web worker so the screen stays smooth,
-and its model and wasm files are precached so it works offline. [D133]
+and its model and wasm files are kept after first use so it works offline. [D133]

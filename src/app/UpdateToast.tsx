@@ -12,8 +12,9 @@ export function UpdateToast() {
 
   const reload = () => {
     void updateServiceWorker(true);
-    // The worker does not claim clients, so on a first-ever visit this page is uncontrolled and
-    // the library's own reload (on controllerchange) never fires: reload it ourselves.
+    // The worker claims pages when it first installs, so this only matters for a page that is
+    // somehow uncontrolled: the library's own reload (on controllerchange) never fires there, so
+    // reload it ourselves.
     if (!navigator.serviceWorker?.controller) window.location.reload();
   };
   return (

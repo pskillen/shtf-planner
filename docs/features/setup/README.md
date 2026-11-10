@@ -22,7 +22,7 @@ leaving half-way.
 | Equipment            | `/app/assets`, `AssetsScreen.tsx`       | Grouped by category. Add: search the asset types of the enabled packs (category chips narrow the list: All, Heat, Power, Water and so on, only those with a type), answer the type's questions, say where it is and when it was bought. The form says in words what it gives with the answers applied. Maintenance jobs show their last and next dates; recording a job saves immediately, and due jobs are flagged in the list. |
 | Risks                | `/app/risks`, `RisksScreen.tsx`         | The local-risk chips, and for each chosen risk the region's "check" links (open in a new tab).                                                                                                                                                                                                                                                                                                                                   |
 | How long to plan for | `/app/horizon`, `HorizonScreen.tsx`     | Pick 3, 7, 14 or 28 days (a sentence says what each means). Below it the table of what that is for this household at every horizon.                                                                                                                                                                                                                                                                                              |
-| More, Settings       | `/app/more`, `/app/more/settings`       | Region, content packs (name, version, on or off), review reminder (3 or 6 months), expiry colours (how soon counts as "Expires soon" and how far ahead is "Before next check"), anonymise names. The data section (`settings/DataSection.tsx`) links to the Data screen (see [Drive sync](../drive-sync/README.md)).                                                                                                             |
+| More, Settings       | `/app/more`, `/app/more/settings`       | Region, content packs (name, version, on or off), review reminder (3 or 6 months), expiry colours (how soon counts as "Expires soon" and how far ahead is "Before next check"), anonymise names, the date reader (downloaded or not, Download now). The data section (`settings/DataSection.tsx`) links to the Data screen (see [Drive sync](../drive-sync/README.md)).                                                          |
 | Read-only notice     | `StoreBanner.tsx`, `Shell.tsx`          | A document saved by a newer version shows a banner and the controls that write are disabled; an unreadable one points to More, Settings, data. See "Read-only".                                                                                                                                                                                                                                                                  |
 | Shared controls      | `src/app/components/`                   | `Sheet` (bottom sheet), `controls.tsx` (chips, segmented buttons, switch, number box, field), `ScreenHeader`, `useDeferredDelete` (delete with undo), `EditArea` (read-only), `useSavedChange` ("Saved").                                                                                                                                                                                                                        |
 | Pure helpers         | `src/util/`, `src/app/screens/**`       | `age.ts`, `medication.ts`, `units.ts`; `assets/questionnaire.ts` (answers and the in-words description); `region.ts` (risk links, region, all-electric); `memberTags.ts` (medication and dietary tags); `locations.ts` (delete cascade); `settings/packs.ts` (pack switches); `horizon/previewSource.ts`.                                                                                                                        |
@@ -105,6 +105,20 @@ leaving half-way.
   looked up, because a lookup would send the location out of the browser.
 - **Review reminder.** Choose every 3 or 6 months and see the next date immediately. Home shows
   when a review is due; Add to calendar opens a selection preview for a local snapshot. See [review](../review/README.md).
+- **Equipment runtime.** Each piece of equipment that burns fuel says, in a line under its name on
+  the Equipment list, in its form, and on its row in Stores, what its fuel gives it: "Cooking: 3 days at your plan's
+  use · 7.5 of 43 hours available · on 1 × Propane 13 kg". The numbers are the engine's
+  `equipmentRuntime` as is; the screens only pick, name and round them down. Three different things
+  are never mixed up: _available_ hours are what the fuel left after higher-priority claims could
+  run it, _allocated_ hours are the part counted against the horizon, and _days_ are the allocated
+  hours at the plan's daily use (left out when no daily target applies, which gives hours only).
+  When two pieces share one bottle the line says so and which claims first (cooking, then heat, then
+  power). A second converter on the same fuel says it could use that fuel instead and is not
+  counted on top. With no fuel in stock the line says so and a **Quick add** button opens Quick add
+  on that fuel. Unconfirmed or blocked equipment says "not counted until its checks are done" (the
+  Blocked badge and Why? give the check). The form previews the line for the answers as they stand
+  and says "With these answers:" until they are saved. Heat is assumed burner hours at the plan's
+  use, never a claim of warmth.
 - **Stored, not yet read.** Anonymise names is saved for a future feature that sends household text
   out (there is none).
 
@@ -114,7 +128,6 @@ leaving half-way.
 
 ## Not built yet
 
-- Equipment runtime and fuel lot details: [#28](https://github.com/pskillen/shtf-planner/issues/28).
 - Natural Resources Wales and DfI flood links, diesel, vehicles as assets:
   [#49](https://github.com/pskillen/shtf-planner/issues/49).
 - Scenario checklists (power cut, flood, storm, heatwave, evacuate), tracked and printable:
@@ -128,7 +141,8 @@ leaving half-way.
 `test/member-tags.test.ts`, `test/locations.test.ts`, `test/settings-packs.test.ts`,
 `test/deferred-delete.test.tsx`, `test/sheet.test.tsx`, `test/tabs.test.ts`,
 `test/autosave.test.tsx`, `test/home-questions.test.tsx`, `test/accessible-names.test.tsx`,
-`test/read-only.test.tsx`, `test/store-banner.test.tsx` (read-only), `test/screen-boundary.test.tsx`
+`test/read-only.test.tsx`, `test/equipment-runtime-view.test.ts` and `test/equipment-runtime.test.tsx`
+(the runtime lines), `test/store-banner.test.tsx` (read-only), `test/screen-boundary.test.tsx`
 (unknown values), and Playwright: `e2e/setup.spec.ts` (onboarding by hand with two people, three
 places, a solar array and 14 days, then a reload; the fixture household with a medication edit and
 delete with undo), `e2e/document.spec.ts` (an edit then a reload, ten times) and `e2e/phone.spec.ts`

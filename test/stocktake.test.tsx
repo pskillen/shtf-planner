@@ -166,6 +166,27 @@ describe('Stocktake: the step machine', () => {
     await open();
     expect(screen.queryByText(/Red line for the barcode, yellow box for the date/)).toBeNull();
   });
+  it('the hint hides at the first barcode and stays gone', async () => {
+    await open();
+    const gone = () => expect(screen.queryByText(/Red line for the barcode/)).toBeNull();
+    expect(screen.getByText(/Red line for the barcode/)).toBeTruthy();
+    await read(KNOWN);
+    await screen.findByText(SPREAD);
+    gone();
+    cleanup();
+    await open();
+    gone();
+  });
+  it('a typed barcode hides the hint too', async () => {
+    await open();
+    expect(screen.getByText(/Red line for the barcode/)).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Or type the barcode number'), {
+      target: { value: KNOWN },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Use this number' }));
+    await screen.findByText(SPREAD);
+    expect(screen.queryByText(/Red line for the barcode/)).toBeNull();
+  });
   it('Undo after a scan that made a product leaves the product and barcode remembered', async () => {
     fakeOff({ [UNKNOWN]: beans });
     const s = await open();

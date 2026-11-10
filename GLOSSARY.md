@@ -37,6 +37,8 @@ product, then batches. **`src/store`** in code is the document store, not a reso
 
 - **Counts as.** The item a product counts through; also the one line an item shows about what it
   counts towards ("Wet wipes: 1 wipe = 1 hand clean (hygiene)"). `Item.countsAs`.
+- **Hand clean.** The unit hygiene supplies are counted in: 1 wipe or 5 ml of hand sanitiser.
+  Three a person a day is the target. `hygieneUses` in code, `RESOURCE_EXPLAIN` for the words.
 - **Size.** Amount and unit on a product (g, kg, ml, L, pieces); a multipack is count × size
   ("24 × 500 ml") and its total counts. `Size`.
 - **Label kcal.** The kcal per 100 g or ml from a product's label (Open Food Facts); replaces the

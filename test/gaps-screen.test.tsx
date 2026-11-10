@@ -87,6 +87,17 @@ describe('gaps overview', () => {
   });
 });
 
+describe('hand cleans', () => {
+  it('explain the unit on the sanitation need', () => {
+    const s = liveStore(biggarDocument());
+    render(s.wrap(<GapsScreen />));
+    fireEvent.click(screen.getByRole('button', { name: 'Show all needs' }));
+    expect(
+      screen.getAllByText(/A hand clean is 1 wipe or 5 ml of hand sanitiser\./).length,
+    ).toBeGreaterThan(0);
+  });
+});
+
 describe('fuel shopping alternatives', () => {
   it('keeps one actionable exact fuel and its alternative on the full and heat lists', () => {
     const doc = biggarDocument();
@@ -154,3 +165,86 @@ it.each([
     expect(button.closest('li')?.textContent).toMatch(/equipment manual/i);
   },
 );
+
+describe('links to the exact equipment', () => {
+  const mount = (path: string, doc = biggarDocument(), screen_: 'shop' | 'gaps' = 'shop') => {
+    const s = liveStore(doc);
+    return render(
+      <MemoryRouter initialEntries={[path]}>
+        <StoreContext.Provider value={s.store}>
+          {screen_ === 'shop' ? <ShoppingScreen /> : <GapsScreen />}
+        </StoreContext.Provider>
+      </MemoryRouter>,
+    );
+  };
+  const month = () => {
+    const doc = biggarDocument();
+    doc.settings.horizonDays = 28;
+    return doc;
+  };
+
+  it.each(['/app/gaps/shopping', '/app/gaps/shopping?need=cooking'])(
+    'shopping %s opens the Gas BBQ, and the tick still opens Quick add',
+    (path) => {
+      mount(path, month());
+      const link = screen.getByRole('link', { name: 'Open Gas BBQ' });
+      expect(link.getAttribute('href')).toBe('/app/assets?edit=asset-bbq');
+      expect(link.closest('button')).toBeNull();
+      fireEvent.click(screen.getByRole('button', { name: /Bought: Propane bottle/ }));
+      expect(screen.getByRole('dialog')).toBeTruthy();
+    },
+  );
+
+  it('keeps the link when grouped by aisle', () => {
+    mount('/app/gaps/shopping', month());
+    fireEvent.click(screen.getByRole('radio', { name: 'By aisle' }));
+    expect(screen.getByRole('link', { name: 'Open Gas BBQ' })).toBeTruthy();
+  });
+
+  it('shows one link per piece of equipment on a merged row', () => {
+    const doc = month();
+    delete doc.stock['stock-propane'];
+    doc.assets['asset-heater'] = {
+      id: 'asset-heater',
+      typeId: 'assets-base:catalytic-heater',
+      name: 'Hall heater',
+      maintenance: {},
+      answers: {
+        chosenLpg: 'items-base:propane-bottle',
+        fuelConfirmed: true,
+        indoorUse: 'permitted',
+        highRise: 'no',
+      },
+    };
+    mount('/app/gaps/shopping', doc);
+    const li = screen.getByRole('button', { name: /Bought: .*for your equipment/ }).closest('li')!;
+    const links = Array.from(li.querySelectorAll('a')).map((a) => a.getAttribute('href'));
+    expect(links).toEqual(['/app/assets?edit=asset-bbq', '/app/assets?edit=asset-heater']);
+  });
+
+  it('links the equipment of an alternative fuel as well as the main one', () => {
+    const doc = biggarDocument();
+    doc.settings.horizonDays = 3;
+    delete doc.stock['stock-propane'];
+    const heater = (id: string, name: string, lpg: string) => ({
+      id,
+      typeId: 'assets-base:catalytic-heater',
+      name,
+      maintenance: {},
+      answers: { chosenLpg: lpg, fuelConfirmed: true, indoorUse: 'permitted', highRise: 'no' },
+    });
+    doc.assets.a = heater('a', 'Hall heater', 'items-base:butane-bottle');
+    doc.assets.b = heater('b', 'Loft heater', 'items-base:propane-bottle');
+    mount('/app/gaps/shopping', doc);
+    const li = screen.getByRole('link', { name: 'Open Hall heater' }).closest('li')!;
+    expect(li.textContent).toMatch(/or Propane bottle/);
+    const links = Array.from(li.querySelectorAll('a')).map((a) => a.getAttribute('href'));
+    expect(links).toEqual(['/app/assets?edit=a', '/app/assets?edit=b']);
+  });
+
+  it('opens Roof solar from the blocked-equipment task', () => {
+    mount('/app/gaps', biggarDocument(), 'gaps');
+    const link = screen.getByRole('link', { name: 'Open Roof solar' });
+    expect(link.getAttribute('href')).toBe('/app/assets?edit=asset-solar');
+  });
+});

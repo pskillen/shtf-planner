@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { CATEGORIES, type Asset, type AssetType, type Category } from '../../model';
-import { coverage, maintenanceDue, addMonths, type BlockedAsset } from '../../engine';
+import {
+  coverage,
+  equipmentRuntime,
+  maintenanceDue,
+  addMonths,
+  type BlockedAsset,
+} from '../../engine';
 import { blockedBadge } from '../blocked';
 import { formatVolume, today } from '../../util';
 import { Field } from '../components/controls';
@@ -16,6 +22,9 @@ import { useChange, useDocument } from '../state';
 import { usePacks } from '../usePacks';
 import { QuestionField } from './assets/QuestionField';
 import { defaultAnswers, describeContributions, setAnswer } from './assets/questionnaire';
+import { RuntimeQuickAdd, RuntimeText } from './assets/RuntimeLines';
+import { runtimeLines } from './assets/runtimeView';
+import { QuickAdd, type QuickAddPrefill } from './stores/QuickAdd';
 
 const newId = () => crypto.randomUUID();
 
@@ -93,6 +102,11 @@ function AssetForm({
   const [a, setA] = useState<Asset>(initial);
   const locations = Object.values(doc.locations);
   const lines = describeContributions(type, a.answers);
+  // What the fuel gives this equipment with the answers as they stand now (the engine's numbers).
+  const runtime = useMemo(() => {
+    const draft = { ...doc, assets: { ...doc.assets, [a.id]: a } };
+    return runtimeLines(equipmentRuntime(draft, packs, today()), draft, packs).get(a.id) ?? [];
+  }, [doc, packs, a]);
 
   return (
     <Sheet
@@ -159,6 +173,14 @@ function AssetForm({
         ) : (
           lines.map((l) => <p key={l.capability}>{l.text}</p>)
         )}
+        {runtime.length > 0 ? (
+          <>
+            {isDirty(a, initial) ? <p>With these answers:</p> : null}
+            {runtime.map((l) => (
+              <p key={l.key}>{l.text}</p>
+            ))}
+          </>
+        ) : null}
       </div>
 
       <Field label="Where is it kept?">
@@ -284,6 +306,12 @@ export function AssetsScreen() {
     return out;
   }, [doc, packs]);
 
+  const runtime = useMemo(
+    () => runtimeLines(equipmentRuntime(doc, packs, today()), doc, packs),
+    [doc, packs],
+  );
+  const [buying, setBuying] = useState<QuickAddPrefill | null>(null);
+
   const available = useMemo(() => {
     const enabled = new Set(packs.enabledPacks(doc.settings).map((p) => p.id));
     return Object.values(packs.assets).filter((t) => enabled.has(t.id.split(':')[0]!));
@@ -325,8 +353,10 @@ export function AssetsScreen() {
               const type = packs.assets[a.typeId];
               const where = a.locationId ? doc.locations[a.locationId]?.name : undefined;
               const why = blocked.get(a.id);
+              const lines = runtime.get(a.id) ?? [];
+              const wraps = why || lines.some((l) => l.quickAdd);
               return (
-                <li className={why ? 'row-item row-item-wrap' : 'row-item'} key={a.id}>
+                <li className={wraps ? 'row-item row-item-wrap' : 'row-item'} key={a.id}>
                   <button
                     type="button"
                     className="row-main"
@@ -353,7 +383,9 @@ export function AssetsScreen() {
                     {why ? (
                       <span className="warn">{[...new Set(why.map(blockedBadge))].join(', ')}</span>
                     ) : null}
+                    <RuntimeText lines={lines} />
                   </button>
+                  <RuntimeQuickAdd lines={lines} onQuickAdd={setBuying} />
                   {why ? (
                     <details className="why">
                       <summary>Why?</summary>
@@ -441,6 +473,7 @@ export function AssetsScreen() {
           onClose={() => setEditing(null)}
         />
       ) : null}
+      {buying ? <QuickAdd prefill={buying} onClose={() => setBuying(null)} /> : null}
       {remove.toast}
     </div>
   );
