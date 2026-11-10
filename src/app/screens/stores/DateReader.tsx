@@ -148,6 +148,10 @@ export function DateReader({
     if (!cam || !autoStart || paused) return;
     if (phaseRef.current === 'got' || phaseRef.current === 'none') return;
     let gone = false;
+    // A restart (a new camera stream after the page was shown again) is a load, whatever the last
+    // run left on the line: "unavailable" or a stale "Reading…" must not sit over a live camera.
+    setPhase('loading');
+    setLine('');
     // A browser with no Worker throws here: that is "not available", like a failed load.
     const loaded = Promise.resolve()
       .then(() => getDateReader(readUseWebGpu()))
