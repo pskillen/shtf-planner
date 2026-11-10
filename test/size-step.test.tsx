@@ -78,6 +78,21 @@ describe('SizeStep new product form: a typed size', () => {
     expect(onDone).toHaveBeenCalledWith(expect.objectContaining({ size: beans().sizes[0] }));
   });
 
+  it('disables Save product while the Amount is blank, so a stale size cannot be saved', () => {
+    const onDone = vi.fn();
+    const s = liveStore(biggarDocument());
+    render(s.wrap(<SizeStep confirm item={beans()} initialName="Beans" onDone={onDone} />));
+    fireEvent.click(screen.getByRole('button', { name: 'Another size' }));
+    const amount = screen.getByLabelText('Amount');
+    fireEvent.change(amount, { target: { value: '330' } });
+    const save = screen.getByRole('button', { name: 'Save product' }) as HTMLButtonElement;
+    expect(save.disabled).toBe(false);
+    fireEvent.change(amount, { target: { value: '' } });
+    expect(save.disabled).toBe(true);
+    fireEvent.click(save);
+    expect(onDone).not.toHaveBeenCalled();
+  });
+
   it('puts "Same as a product you already have?" before the size, not between it and Save', () => {
     const s = liveStore(biggarDocument());
     render(s.wrap(<SizeStep confirm item={beans()} onDone={vi.fn()} />));

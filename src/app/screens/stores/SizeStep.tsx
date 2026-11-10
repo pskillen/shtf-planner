@@ -39,7 +39,7 @@ export function SizeStep({
   const defaultUnit = item.sizes[0]?.unit ?? units[0]!;
 
   const [custom, setCustom] = useState(false);
-  const [amount, setAmount] = useState(item.sizes[0]?.amount ?? 1);
+  const [amount, setAmount] = useState<number | undefined>(item.sizes[0]?.amount ?? 1);
   const [unit, setUnit] = useState<SizeUnit>(defaultUnit);
   const [multipack, setMultipack] = useState<number | undefined>(undefined);
   const [name, setName] = useState(initialName ?? '');
@@ -73,7 +73,7 @@ export function SizeStep({
 
   /** The "Another size" form's values as a size, or undefined while the amount is not valid. */
   const customSize = (): Size | undefined => {
-    if (!Number.isFinite(amount) || amount <= 0) return undefined;
+    if (amount === undefined || !Number.isFinite(amount) || amount <= 0) return undefined;
     const count = multipack !== undefined && multipack >= 2 ? Math.round(multipack) : undefined;
     return { amount, unit, ...(count ? { count } : {}) };
   };
@@ -172,7 +172,7 @@ export function SizeStep({
               min={0.01}
               step="any"
               ariaLabel="Amount, number"
-              onChange={(n) => n !== undefined && setAmount(n)}
+              onChange={setAmount}
             />
           </Field>
           <div className="segmented" role="radiogroup" aria-label="Unit">
